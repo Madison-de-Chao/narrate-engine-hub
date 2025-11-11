@@ -6,6 +6,22 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarIcon, Loader2 } from "lucide-react";
 
+// 时辰选项（子时到亥时）
+const HOUR_OPTIONS = [
+  { value: "23", label: "子时 (23:00-01:00)" },
+  { value: "1", label: "丑时 (01:00-03:00)" },
+  { value: "3", label: "寅时 (03:00-05:00)" },
+  { value: "5", label: "卯时 (05:00-07:00)" },
+  { value: "7", label: "辰时 (07:00-09:00)" },
+  { value: "9", label: "巳时 (09:00-11:00)" },
+  { value: "11", label: "午时 (11:00-13:00)" },
+  { value: "13", label: "未时 (13:00-15:00)" },
+  { value: "15", label: "申时 (15:00-17:00)" },
+  { value: "17", label: "酉时 (17:00-19:00)" },
+  { value: "19", label: "戌时 (19:00-21:00)" },
+  { value: "21", label: "亥时 (21:00-23:00)" }
+];
+
 interface BaziInputFormProps {
   onCalculate: (formData: any) => void;
   isCalculating: boolean;
@@ -69,10 +85,10 @@ export const BaziInputForm = ({ onCalculate, isCalculating }: BaziInputFormProps
           <div className="space-y-2">
             <Label htmlFor="gender" className="text-foreground">性別</Label>
             <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-              <SelectTrigger className="bg-input border-border text-foreground">
+              <SelectTrigger className="bg-input border-border text-foreground z-50">
                 <SelectValue placeholder="請選擇性別" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover border-border z-50">
                 <SelectItem value="male">男</SelectItem>
                 <SelectItem value="female">女</SelectItem>
               </SelectContent>
@@ -80,10 +96,10 @@ export const BaziInputForm = ({ onCalculate, isCalculating }: BaziInputFormProps
           </div>
         </div>
 
-        {/* 出生日期時間 */}
+        {/* 出生日期 */}
         <div className="space-y-2">
-          <Label className="text-foreground">出生日期與時間</Label>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Label className="text-foreground">出生日期</Label>
+          <div className="grid grid-cols-3 gap-3">
             <Input
               type="number"
               placeholder="年份"
@@ -114,17 +130,24 @@ export const BaziInputForm = ({ onCalculate, isCalculating }: BaziInputFormProps
               className="bg-input border-border text-foreground"
               required
             />
-            <Input
-              type="number"
-              placeholder="時辰"
-              min="0"
-              max="23"
-              value={formData.hour}
-              onChange={(e) => setFormData({ ...formData, hour: e.target.value })}
-              className="bg-input border-border text-foreground"
-              required
-            />
           </div>
+        </div>
+
+        {/* 出生時辰 */}
+        <div className="space-y-2">
+          <Label htmlFor="hour" className="text-foreground">出生時辰</Label>
+          <Select value={formData.hour} onValueChange={(value) => setFormData({ ...formData, hour: value })}>
+            <SelectTrigger className="bg-input border-border text-foreground z-50">
+              <SelectValue placeholder="請選擇時辰" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border-border z-50 max-h-[300px]">
+              {HOUR_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* 出生地點 */}

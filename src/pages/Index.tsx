@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { BaziInputForm } from "@/components/BaziInputForm";
 import { TraditionalBaziDisplay } from "@/components/TraditionalBaziDisplay";
 import { LegionCards } from "@/components/LegionCards";
 import { AnalysisCharts } from "@/components/AnalysisCharts";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, LogOut } from "lucide-react";
 import { generatePDF } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
+import type { User, Session } from "@supabase/supabase-js";
 
 export interface BaziResult {
   name: string;
@@ -36,61 +39,92 @@ export interface BaziResult {
 }
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [baziResult, setBaziResult] = useState<BaziResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
+  useEffect(() => {
+    // 设置认证状态监听器
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (!session) {
+          navigate("/auth");
+        }
+      }
+    );
+
+    // 检查当前会话
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (!session) {
+        navigate("/auth");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("已退出登录");
+    navigate("/auth");
+  };
+
   const handleCalculate = async (formData: any) => {
+    if (!session) {
+      toast.error("请先登录");
+      navigate("/auth");
+      return;
+    }
+
     setIsCalculating(true);
     
-    // TODO: 調用後端計算 API
-    // 暫時使用模擬數據
-    setTimeout(() => {
-      const mockResult: BaziResult = {
-        name: formData.name,
-        birthDate: formData.birthDate,
-        gender: formData.gender,
-        pillars: {
-          year: { stem: "乙", branch: "丑" },
-          month: { stem: "乙", branch: "酉" },
-          day: { stem: "戊", branch: "寅" },
-          hour: { stem: "壬", branch: "戌" },
-        },
-        hiddenStems: {
-          year: ["癸", "辛", "己"],
-          month: ["辛"],
-          day: ["甲", "丙", "戊"],
-          hour: ["辛", "丁", "戊"],
-        },
-        tenGods: {
-          year: { stem: "偏印", branch: "比肩" },
-          month: { stem: "偏印", branch: "傷官" },
-          day: { stem: "日主", branch: "偏財" },
-          hour: { stem: "正財", branch: "食神" },
-        },
-        nayin: {
-          year: "海中金",
-          month: "泉中水",
-          day: "城牆土",
-          hour: "大海水",
-        },
-        shensha: ["天乙貴人", "文昌貴人", "桃花", "驛馬"],
-        wuxing: {
-          wood: 3.2,
-          fire: 1.8,
-          earth: 4.5,
-          metal: 3.8,
-          water: 2.7,
-        },
-        yinyang: {
-          yin: 45,
-          yang: 55,
-        },
-      };
-      
-      setBaziResult(mockResult);
+    try {
+      // 调用后端计算 API
+      const { data, error } = await supabase.functions.invoke('calculate-bazi', {
+        body: {
+          name: formData.name,
+          gender: formData.gender,
+          birthDate: formData.birthDate.toISOString(),
+          birthTime: `${formData.hour}:00`,
+          location: formData.location || null,
+          useSolarTime: true
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.calculation) {
+        const result: BaziResult = {
+          name: formData.name,
+          birthDate: formData.birthDate,
+          gender: formData.gender,
+          pillars: data.calculation.pillars,
+          hiddenStems: {},
+          tenGods: {},
+          nayin: data.calculation.nayin,
+          shensha: [],
+          wuxing: data.calculation.wuxingScores,
+          yinyang: data.calculation.yinyangRatio
+        };
+        
+        setBaziResult(result);
+        toast.success("命盘生成成功！");
+      }
+    } catch (error: any) {
+      console.error("计算失败:", error);
+      toast.error("计算失败：" + error.message);
+    } finally {
       setIsCalculating(false);
-    }, 2000);
+    }
   };
 
   const handleDownloadReport = async () => {
@@ -111,15 +145,30 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
-      {/* 頂部標題 */}
+      {/* 顶部标题 */}
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-4xl md:text-5xl font-bold text-center bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent text-neon">
-            🌈 虹靈御所八字人生兵法
-          </h1>
-          <p className="text-center text-muted-foreground mt-2">
-            八字不是宿命，而是靈魂的戰場
-          </p>
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <h1 className="text-4xl md:text-5xl font-bold text-center bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent text-neon">
+                🌈 虹靈御所八字人生兵法
+              </h1>
+              <p className="text-center text-muted-foreground mt-2">
+                八字不是宿命，而是靈魂的戰場
+              </p>
+            </div>
+            {user && (
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                size="sm"
+                className="ml-4"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                登出
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 

@@ -150,8 +150,6 @@ export function calculateMonthPillar(date: Date, yearStem: string): { stem: stri
   const mapping = (fiveTigersData.mapping as any)[yearStem];
   const stem = mapping ? mapping[branch] : TIANGAN[0];
   
-  console.log(`[月柱] ${date.toISOString().split('T')[0]} - 年干:${yearStem}, 月支:${branch}(${branchIndex}), 月干:${stem}`);
-  
   return { stem, branch };
 }
 
@@ -170,8 +168,6 @@ export function calculateDayPillar(date: Date): { stem: string; branch: string }
   
   const stemIndex = jiaziIndex % 10;
   const branchIndex = jiaziIndex % 12;
-  
-  console.log(`[日柱] ${date.toISOString().split('T')[0]} - 天数差:${daysDiff}, 甲子索引:${jiaziIndex}, 干:${TIANGAN[stemIndex]}, 支:${DIZHI[branchIndex]}`);
   
   return {
     stem: TIANGAN[stemIndex],

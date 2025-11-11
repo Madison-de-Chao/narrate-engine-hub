@@ -1,1 +1,4 @@
 project_id = "ncpqlfwllxkwkxcqmrdi"
+
+[functions.generate-legion-story]
+verify_jwt = false

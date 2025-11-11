@@ -106,16 +106,23 @@ export function calculateYearPillar(date: Date): { stem: string; branch: string 
  */
 export function calculateMonthPillar(date: Date, yearStem: string): { stem: string; branch: string } {
   const month = date.getMonth(); // 0-11
+  const day = date.getDate();
   
   // 月支对应表（从立春开始为寅月）
   const monthBranches = ["寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子", "丑"];
   
-  // 简化版：暂时按阳历月份对应
-  // TODO: 后续需要根据节气精确时刻判断
-  let branchIndex = (month + 2) % 12; // 1月=寅，2月=卯...
+  // 简化版：节气大致在每月7-8日，如果日期<8则算上个月的节气月
+  let branchIndex;
+  if (day < 8) {
+    // 节气前，用上个月
+    branchIndex = (month + 10) % 12;
+  } else {
+    // 节气后，用当月
+    branchIndex = (month + 11) % 12;
+  }
   const branch = monthBranches[branchIndex];
   
-  // 五虎遁月口诀
+  // 五虎遁月口诀：甲己丙作首，乙庚戊为头，丙辛庚寅起，丁壬壬寅顺，戊癸甲寅求
   const yearStemIndex = TIANGAN.indexOf(yearStem);
   let monthStemStart = 0;
   
@@ -138,16 +145,24 @@ export function calculateMonthPillar(date: Date, yearStem: string): { stem: stri
  * 使用基准日推算法
  */
 export function calculateDayPillar(date: Date): { stem: string; branch: string } {
-  const timeDiff = date.getTime() - BASE_DATE.getTime();
+  // 使用1900-01-01（庚戌日）作为基准，这是常用的基准日
+  const baseDate = new Date(1900, 0, 1); // 1900年1月1日 = 庚戌日
+  const baseStemIndex = 6; // 庚
+  const baseBranchIndex = 10; // 戌
+  
+  const timeDiff = date.getTime() - baseDate.getTime();
   const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
   
-  const jiaziIndex = (BASE_JIAZI_INDEX + daysDiff) % 60;
-  const stemIndex = jiaziIndex % 10;
-  const branchIndex = jiaziIndex % 12;
+  let stemIndex = (baseStemIndex + daysDiff) % 10;
+  let branchIndex = (baseBranchIndex + daysDiff) % 12;
+  
+  // 处理负数情况
+  if (stemIndex < 0) stemIndex += 10;
+  if (branchIndex < 0) branchIndex += 12;
   
   return {
-    stem: TIANGAN[stemIndex < 0 ? stemIndex + 10 : stemIndex],
-    branch: DIZHI[branchIndex < 0 ? branchIndex + 12 : branchIndex]
+    stem: TIANGAN[stemIndex],
+    branch: DIZHI[branchIndex]
   };
 }
 

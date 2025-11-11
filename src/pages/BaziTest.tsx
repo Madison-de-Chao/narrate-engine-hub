@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -148,6 +148,11 @@ export default function BaziTest() {
     setResults(testResults);
     setIsRunning(false);
   };
+
+  // Auto-run tests on component mount
+  useEffect(() => {
+    runTests();
+  }, []);
 
   const standardTests = results.filter(r => r.category === "standard");
   const boundaryTests = results.filter(r => r.category === "boundary");

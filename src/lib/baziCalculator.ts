@@ -30,9 +30,9 @@ export const DIZHI_CANGGAN: Record<string, string[]> = Object.fromEntries(
 // 纳音五行表
 const NAYIN_TABLE: Record<string, string> = nayinData.nayin;
 
-// 基准日期: 1900-01-31 = 甲辰日（索引40）
-const BASE_DATE = new Date(1900, 0, 31);
-const BASE_JIAZI_INDEX = 40; // 甲辰的索引为40（甲=0辰=4，按60甲子顺序）
+// 基准日期: 1985-09-22 = 甲子日（权威基准，已验证）
+const BASE_DATE = new Date(1985, 8, 22); // 1985年9月22日
+const BASE_JIAZI_INDEX = 0; // 甲子的索引为0
 
 /**
  * 获取节气时刻
@@ -82,39 +82,59 @@ export function calculateYearPillar(date: Date): { stem: string; branch: string 
  */
 function getMonthBranchIndex(date: Date): number {
   const year = date.getFullYear();
-  const month = date.getMonth() + 1; // 1-12
   
-  // 节气月对应表：立春(寅2)、惊蛰(卯3)、清明(辰4)、立夏(巳5)、芒种(午6)、小暑(未7)
-  // 立秋(申8)、白露(酉9)、寒露(戌10)、立冬(亥11)、大雪(子0)、小寒(丑1)
-  const termToMonth: Record<string, number> = {
-    '立春': 2, '惊蛰': 3, '清明': 4, '立夏': 5, '芒种': 6, '小暑': 7,
-    '立秋': 8, '白露': 9, '寒露': 10, '立冬': 11, '大雪': 0, '小寒': 1
+  // 节气对应的月支（节气开始对应的月份）
+  const termToBranch: Record<string, number> = {
+    '立春': 2,  // 寅
+    '惊蛰': 3,  // 卯
+    '清明': 4,  // 辰
+    '立夏': 5,  // 巳
+    '芒种': 6,  // 午
+    '小暑': 7,  // 未
+    '立秋': 8,  // 申
+    '白露': 9,  // 酉
+    '寒露': 10, // 戌
+    '立冬': 11, // 亥
+    '大雪': 0,  // 子
+    '小寒': 1   // 丑
   };
   
-  // 获取当月的主要节气
-  const monthTerms = [
-    '立春', '惊蛰', '清明', '立夏', '芒种', '小暑',
-    '立秋', '白露', '寒露', '立冬', '大雪', '小寒'
-  ];
-  
-  // 根据公历月份找对应的节气
-  const termIndex = month - 2; // 2月立春=0
-  let currentTerm = monthTerms[(termIndex + 12) % 12];
-  let nextTerm = monthTerms[(termIndex + 1 + 12) % 12];
-  
-  // 获取节气时刻
-  const currentTermDate = getSolarTerm(month === 1 ? year - 1 : year, currentTerm);
-  const nextTermDate = getSolarTerm(year, nextTerm);
-  
-  // 判断是哪个节气月
-  if (nextTermDate && date >= nextTermDate) {
-    return termToMonth[nextTerm];
-  } else if (currentTermDate) {
-    return termToMonth[currentTerm];
+  // 获取年度所有节气
+  const yearData = (solarTermsData.years as any)[year.toString()];
+  if (!yearData) {
+    // 如果没有节气数据，用简化计算
+    const month = date.getMonth() + 1;
+    return (month + 1) % 12;
   }
   
-  // 如果没有节气数据，简化处理
-  return (month + 1) % 12;
+  // 找出当前日期在哪个节气月
+  const terms = Object.keys(termToBranch);
+  let currentBranch = 1; // 默认丑月
+  
+  for (const term of terms) {
+    const termDate = getSolarTerm(year, term);
+    if (termDate && date >= termDate) {
+      currentBranch = termToBranch[term];
+    }
+  }
+  
+  // 处理跨年情况（小寒在1月但属于前一年的丑月）
+  const lichun = getSolarTerm(year, '立春');
+  if (lichun && date < lichun) {
+    // 立春前，需要查看是否过了小寒
+    const xiaohan = getSolarTerm(year, '小寒');
+    if (xiaohan && date >= xiaohan) {
+      currentBranch = 1; // 丑月
+    } else {
+      // 查前一年的大雪
+      const prevDaxue = getSolarTerm(year - 1, '大雪');
+      if (prevDaxue && date >= prevDaxue) {
+        currentBranch = 0; // 子月
+      }
+    }
+  }
+  
+  return currentBranch;
 }
 
 /**

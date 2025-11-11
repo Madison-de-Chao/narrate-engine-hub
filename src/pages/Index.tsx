@@ -3,6 +3,10 @@ import { BaziInputForm } from "@/components/BaziInputForm";
 import { TraditionalBaziDisplay } from "@/components/TraditionalBaziDisplay";
 import { LegionCards } from "@/components/LegionCards";
 import { AnalysisCharts } from "@/components/AnalysisCharts";
+import { Button } from "@/components/ui/button";
+import { Download, Loader2 } from "lucide-react";
+import { generatePDF } from "@/lib/pdfGenerator";
+import { toast } from "sonner";
 
 export interface BaziResult {
   name: string;
@@ -34,6 +38,7 @@ export interface BaziResult {
 const Index = () => {
   const [baziResult, setBaziResult] = useState<BaziResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleCalculate = async (formData: any) => {
     setIsCalculating(true);
@@ -88,6 +93,22 @@ const Index = () => {
     }, 2000);
   };
 
+  const handleDownloadReport = async () => {
+    if (!baziResult) return;
+    
+    setIsDownloading(true);
+    try {
+      const fileName = `${baziResult.name}_八字命盤報告_${new Date().toLocaleDateString("zh-TW").replace(/\//g, "")}.pdf`;
+      await generatePDF("bazi-report-content", fileName);
+      toast.success("報告下載成功！");
+    } catch (error) {
+      console.error("下載報告失敗:", error);
+      toast.error("下載報告失敗，請稍後再試");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
       {/* 頂部標題 */}
@@ -111,20 +132,44 @@ const Index = () => {
         {/* 當有計算結果時顯示以下區域 */}
         {baziResult && (
           <>
-            {/* 區域2：傳統八字排盤區 */}
-            <section className="animate-fade-in">
-              <TraditionalBaziDisplay baziResult={baziResult} />
+            {/* 下載按鈕 */}
+            <section className="animate-fade-in flex justify-center">
+              <Button
+                onClick={handleDownloadReport}
+                disabled={isDownloading}
+                className="bg-gradient-to-r from-primary via-accent to-secondary hover:opacity-90 text-primary-foreground font-bold text-lg px-8 py-6 shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.7)] transition-all"
+              >
+                {isDownloading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    正在生成報告...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-5 w-5" />
+                    下載完整報告
+                  </>
+                )}
+              </Button>
             </section>
 
-            {/* 區域3：四時軍團分析區 */}
-            <section className="animate-fade-in">
-              <LegionCards baziResult={baziResult} />
-            </section>
+            {/* 報告內容區 - 用於 PDF 生成 */}
+            <div id="bazi-report-content" className="space-y-8">
+              {/* 區域2：傳統八字排盤區 */}
+              <section className="animate-fade-in">
+                <TraditionalBaziDisplay baziResult={baziResult} />
+              </section>
 
-            {/* 區域4：詳細分析區 */}
-            <section className="animate-fade-in">
-              <AnalysisCharts baziResult={baziResult} />
-            </section>
+              {/* 區域3：四時軍團分析區 */}
+              <section className="animate-fade-in">
+                <LegionCards baziResult={baziResult} />
+              </section>
+
+              {/* 區域4：詳細分析區 */}
+              <section className="animate-fade-in">
+                <AnalysisCharts baziResult={baziResult} />
+              </section>
+            </div>
           </>
         )}
       </main>

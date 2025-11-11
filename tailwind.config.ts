@@ -57,6 +57,12 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        legion: {
+          family: "hsl(var(--family-legion))",
+          growth: "hsl(var(--growth-legion))",
+          self: "hsl(var(--self-legion))",
+          future: "hsl(var(--future-legion))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -1,0 +1,16 @@
+{
+  "hiddenStems": {
+    "子": { "stems": [{ "stem": "癸", "weight": 1.0 }] },
+    "丑": { "stems": [{ "stem": "己", "weight": 0.6 }, { "stem": "癸", "weight": 0.3 }, { "stem": "辛", "weight": 0.3 }] },
+    "寅": { "stems": [{ "stem": "甲", "weight": 0.6 }, { "stem": "丙", "weight": 0.3 }, { "stem": "戊", "weight": 0.3 }] },
+    "卯": { "stems": [{ "stem": "乙", "weight": 1.0 }] },
+    "辰": { "stems": [{ "stem": "戊", "weight": 0.6 }, { "stem": "乙", "weight": 0.3 }, { "stem": "癸", "weight": 0.3 }] },
+    "巳": { "stems": [{ "stem": "丙", "weight": 0.6 }, { "stem": "戊", "weight": 0.3 }, { "stem": "庚", "weight": 0.3 }] },
+    "午": { "stems": [{ "stem": "丁", "weight": 0.6 }, { "stem": "己", "weight": 0.4 }] },
+    "未": { "stems": [{ "stem": "己", "weight": 0.6 }, { "stem": "丁", "weight": 0.3 }, { "stem": "乙", "weight": 0.3 }] },
+    "申": { "stems": [{ "stem": "庚", "weight": 0.6 }, { "stem": "壬", "weight": 0.3 }, { "stem": "戊", "weight": 0.3 }] },
+    "酉": { "stems": [{ "stem": "辛", "weight": 1.0 }] },
+    "戌": { "stems": [{ "stem": "戊", "weight": 0.6 }, { "stem": "辛", "weight": 0.3 }, { "stem": "丁", "weight": 0.3 }] },
+    "亥": { "stems": [{ "stem": "壬", "weight": 0.6 }, { "stem": "甲", "weight": 0.4 }] }
+  }
+}

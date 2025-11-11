@@ -1,79 +1,47 @@
-// 八字精准计算引擎 - 基于文档规则实现
+// 🌈 八字精准计算引擎 - 基于虹灵御所数据
+import solarTermsData from '@/data/solar_terms.json';
+import fiveTigersData from '@/data/five_tigers.json';
+import fiveRatsData from '@/data/five_rats.json';
+import ganZhiData from '@/data/gan_zhi.json';
+import nayinData from '@/data/nayin.json';
+import hiddenStemsData from '@/data/hidden_stems.json';
 
 // 天干地支常量
-export const TIANGAN = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
-export const DIZHI = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+export const TIANGAN = ganZhiData.stems;
+export const DIZHI = ganZhiData.branches;
 
 // 天干地支对应的五行
-export const TIANGAN_WUXING: Record<string, string> = {
-  "甲": "木", "乙": "木",
-  "丙": "火", "丁": "火",
-  "戊": "土", "己": "土",
-  "庚": "金", "辛": "金",
-  "壬": "水", "癸": "水"
-};
+export const TIANGAN_WUXING: Record<string, string> = Object.fromEntries(
+  TIANGAN.map(stem => [stem, ganZhiData.stemProperties[stem].element])
+);
 
-export const DIZHI_WUXING: Record<string, string> = {
-  "寅": "木", "卯": "木",
-  "巳": "火", "午": "火",
-  "辰": "土", "戌": "土", "丑": "土", "未": "土",
-  "申": "金", "酉": "金",
-  "子": "水", "亥": "水"
-};
+export const DIZHI_WUXING: Record<string, string> = Object.fromEntries(
+  DIZHI.map(branch => [branch, ganZhiData.branchProperties[branch].element])
+);
 
 // 地支藏干表
-export const DIZHI_CANGGAN: Record<string, string[]> = {
-  "子": ["癸"],
-  "丑": ["己", "癸", "辛"],
-  "寅": ["甲", "丙", "戊"],
-  "卯": ["乙"],
-  "辰": ["戊", "乙", "癸"],
-  "巳": ["丙", "庚", "戊"],
-  "午": ["丁", "己"],
-  "未": ["己", "丁", "乙"],
-  "申": ["庚", "壬", "戊"],
-  "酉": ["辛"],
-  "戌": ["戊", "辛", "丁"],
-  "亥": ["壬", "甲"]
-};
+export const DIZHI_CANGGAN: Record<string, string[]> = Object.fromEntries(
+  Object.entries(hiddenStemsData.hiddenStems).map(([branch, data]: [string, any]) => [
+    branch,
+    data.stems.map((s: any) => s.stem)
+  ])
+);
 
-// 纳音五行表（60甲子）
-const NAYIN_TABLE: Record<string, string> = {
-  "甲子": "海中金", "乙丑": "海中金",
-  "丙寅": "炉中火", "丁卯": "炉中火",
-  "戊辰": "大林木", "己巳": "大林木",
-  "庚午": "路旁土", "辛未": "路旁土",
-  "壬申": "剑锋金", "癸酉": "剑锋金",
-  "甲戌": "山头火", "乙亥": "山头火",
-  "丙子": "涧下水", "丁丑": "涧下水",
-  "戊寅": "城墙土", "己卯": "城墙土",
-  "庚辰": "白蜡金", "辛巳": "白蜡金",
-  "壬午": "杨柳木", "癸未": "杨柳木",
-  "甲申": "泉中水", "乙酉": "泉中水",
-  "丙戌": "屋上土", "丁亥": "屋上土",
-  "戊子": "霹雳火", "己丑": "霹雳火",
-  "庚寅": "松柏木", "辛卯": "松柏木",
-  "壬辰": "长流水", "癸巳": "长流水",
-  "甲午": "砂石金", "乙未": "砂石金",
-  "丙申": "山下火", "丁酉": "山下火",
-  "戊戌": "平地木", "己亥": "平地木",
-  "庚子": "壁上土", "辛丑": "壁上土",
-  "壬寅": "金箔金", "癸卯": "金箔金",
-  "甲辰": "覆灯火", "乙巳": "覆灯火",
-  "丙午": "天河水", "丁未": "天河水",
-  "戊申": "大驿土", "己酉": "大驿土",
-  "庚戌": "钗钏金", "辛亥": "钗钏金",
-  "壬子": "桑柘木", "癸丑": "桑柘木",
-  "甲寅": "大溪水", "乙卯": "大溪水",
-  "丙辰": "沙中土", "丁巳": "沙中土",
-  "戊午": "天上火", "己未": "天上火",
-  "庚申": "石榴木", "辛酉": "石榴木",
-  "壬戌": "大海水", "癸亥": "大海水"
-};
+// 纳音五行表
+const NAYIN_TABLE: Record<string, string> = nayinData.nayin;
 
-// 基准日期: 1985年9月22日 = 甲子日
-const BASE_DATE = new Date(1985, 8, 22); // 月份从0开始，8=9月
-const BASE_JIAZI_INDEX = 0; // 甲子的索引
+// 基准日期: 1900-01-31 = 甲辰日（索引40）
+const BASE_DATE = new Date(1900, 0, 31);
+const BASE_JIAZI_INDEX = 40; // 甲辰的索引为40（甲=0辰=4，按60甲子顺序）
+
+/**
+ * 获取节气时刻
+ */
+function getSolarTerm(year: number, termName: string): Date | null {
+  const yearData = (solarTermsData.years as any)[year.toString()];
+  if (!yearData || !yearData[termName]) return null;
+  return new Date(yearData[termName].date);
+}
 
 /**
  * 计算年柱
@@ -82,81 +50,24 @@ const BASE_JIAZI_INDEX = 0; // 甲子的索引
 export function calculateYearPillar(date: Date): { stem: string; branch: string } {
   const year = date.getFullYear();
   
-  // 简化版：暂时用2月4日作为立春分界
-  // TODO: 后续需要精确到时刻
-  const lichun = new Date(year, 1, 4); // 2月4日
+  // 获取立春时刻
+  const lichun = getSolarTerm(year, '立春');
   
-  let targetYear = year;
-  if (date < lichun) {
-    targetYear = year - 1; // 立春前算前一年
-  }
-  
-  const stemIndex = (targetYear - 4) % 10;
-  const branchIndex = (targetYear - 4) % 12;
-  
-  return {
-    stem: TIANGAN[stemIndex],
-    branch: DIZHI[branchIndex]
-  };
-}
-
-/**
- * 计算月柱
- * 规则: 以节气为界，使用五虎遁月
- */
-export function calculateMonthPillar(date: Date, yearStem: string): { stem: string; branch: string } {
-  const month = date.getMonth(); // 0-11
-  const day = date.getDate();
-  
-  // 月支对应表（从立春开始为寅月）
-  const monthBranches = ["寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥", "子", "丑"];
-  
-  // 简化版：节气大致在每月7-8日，如果日期<8则算上个月的节气月
-  let branchIndex;
-  if (day < 8) {
-    // 节气前，用上个月
-    branchIndex = (month + 10) % 12;
+  // 如果没有立春数据，用2月4日作为近似
+  let actualYear = year;
+  if (lichun) {
+    actualYear = date >= lichun ? year : year - 1;
   } else {
-    // 节气后，用当月
-    branchIndex = (month + 11) % 12;
+    const approxLichun = new Date(year, 1, 4); // 2月4日
+    actualYear = date >= approxLichun ? year : year - 1;
   }
-  const branch = monthBranches[branchIndex];
   
-  // 五虎遁月口诀：甲己丙作首，乙庚戊为头，丙辛庚寅起，丁壬壬寅顺，戊癸甲寅求
-  const yearStemIndex = TIANGAN.indexOf(yearStem);
-  let monthStemStart = 0;
+  // 1984年 = 甲子年，计算偏移
+  const yearsSince1984 = actualYear - 1984;
+  let stemIndex = yearsSince1984 % 10;
+  let branchIndex = yearsSince1984 % 12;
   
-  if (yearStemIndex === 0 || yearStemIndex === 5) monthStemStart = 2; // 甲己年 - 丙寅开始
-  else if (yearStemIndex === 1 || yearStemIndex === 6) monthStemStart = 4; // 乙庚年 - 戊寅开始
-  else if (yearStemIndex === 2 || yearStemIndex === 7) monthStemStart = 6; // 丙辛年 - 庚寅开始
-  else if (yearStemIndex === 3 || yearStemIndex === 8) monthStemStart = 8; // 丁壬年 - 壬寅开始
-  else if (yearStemIndex === 4 || yearStemIndex === 9) monthStemStart = 0; // 戊癸年 - 甲寅开始
-  
-  const stemIndex = (monthStemStart + branchIndex) % 10;
-  
-  return {
-    stem: TIANGAN[stemIndex],
-    branch: branch
-  };
-}
-
-/**
- * 计算日柱
- * 使用基准日推算法
- */
-export function calculateDayPillar(date: Date): { stem: string; branch: string } {
-  // 使用1900-01-01（庚戌日）作为基准，这是常用的基准日
-  const baseDate = new Date(1900, 0, 1); // 1900年1月1日 = 庚戌日
-  const baseStemIndex = 6; // 庚
-  const baseBranchIndex = 10; // 戌
-  
-  const timeDiff = date.getTime() - baseDate.getTime();
-  const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-  
-  let stemIndex = (baseStemIndex + daysDiff) % 10;
-  let branchIndex = (baseBranchIndex + daysDiff) % 12;
-  
-  // 处理负数情况
+  // 处理负数
   if (stemIndex < 0) stemIndex += 10;
   if (branchIndex < 0) branchIndex += 12;
   
@@ -167,33 +78,110 @@ export function calculateDayPillar(date: Date): { stem: string; branch: string }
 }
 
 /**
+ * 获取月支的节气月
+ */
+function getMonthBranchIndex(date: Date): number {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1; // 1-12
+  
+  // 节气月对应表：立春(寅2)、惊蛰(卯3)、清明(辰4)、立夏(巳5)、芒种(午6)、小暑(未7)
+  // 立秋(申8)、白露(酉9)、寒露(戌10)、立冬(亥11)、大雪(子0)、小寒(丑1)
+  const termToMonth: Record<string, number> = {
+    '立春': 2, '惊蛰': 3, '清明': 4, '立夏': 5, '芒种': 6, '小暑': 7,
+    '立秋': 8, '白露': 9, '寒露': 10, '立冬': 11, '大雪': 0, '小寒': 1
+  };
+  
+  // 获取当月的主要节气
+  const monthTerms = [
+    '立春', '惊蛰', '清明', '立夏', '芒种', '小暑',
+    '立秋', '白露', '寒露', '立冬', '大雪', '小寒'
+  ];
+  
+  // 根据公历月份找对应的节气
+  const termIndex = month - 2; // 2月立春=0
+  let currentTerm = monthTerms[(termIndex + 12) % 12];
+  let nextTerm = monthTerms[(termIndex + 1 + 12) % 12];
+  
+  // 获取节气时刻
+  const currentTermDate = getSolarTerm(month === 1 ? year - 1 : year, currentTerm);
+  const nextTermDate = getSolarTerm(year, nextTerm);
+  
+  // 判断是哪个节气月
+  if (nextTermDate && date >= nextTermDate) {
+    return termToMonth[nextTerm];
+  } else if (currentTermDate) {
+    return termToMonth[currentTerm];
+  }
+  
+  // 如果没有节气数据，简化处理
+  return (month + 1) % 12;
+}
+
+/**
+ * 计算月柱
+ * 规则: 以节气为界，使用五虎遁月
+ */
+export function calculateMonthPillar(date: Date, yearStem: string): { stem: string; branch: string } {
+  // 获取月支索引
+  const branchIndex = getMonthBranchIndex(date);
+  const branch = DIZHI[branchIndex];
+  
+  // 使用五虎遁查表获取月干
+  const mapping = (fiveTigersData.mapping as any)[yearStem];
+  const stem = mapping ? mapping[branch] : TIANGAN[0];
+  
+  console.log(`[月柱] ${date.toISOString().split('T')[0]} - 年干:${yearStem}, 月支:${branch}(${branchIndex}), 月干:${stem}`);
+  
+  return { stem, branch };
+}
+
+/**
+ * 计算日柱
+ * 使用基准日推算法: 1900-01-31 = 甲子日
+ */
+export function calculateDayPillar(date: Date): { stem: string; branch: string } {
+  // 计算天数差
+  const timeDiff = date.getTime() - BASE_DATE.getTime();
+  const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+  
+  // 计算干支索引（60甲子循环）
+  let jiaziIndex = (BASE_JIAZI_INDEX + daysDiff) % 60;
+  if (jiaziIndex < 0) jiaziIndex += 60;
+  
+  const stemIndex = jiaziIndex % 10;
+  const branchIndex = jiaziIndex % 12;
+  
+  console.log(`[日柱] ${date.toISOString().split('T')[0]} - 天数差:${daysDiff}, 甲子索引:${jiaziIndex}, 干:${TIANGAN[stemIndex]}, 支:${DIZHI[branchIndex]}`);
+  
+  return {
+    stem: TIANGAN[stemIndex],
+    branch: DIZHI[branchIndex]
+  };
+}
+
+/**
+ * 获取时支索引
+ */
+function getHourBranchIndex(hour: number): number {
+  // 23-1点为子时(0), 1-3点为丑时(1), ...
+  if (hour >= 23 || hour < 1) return 0; // 子
+  return Math.floor((hour + 1) / 2);
+}
+
+/**
  * 计算时柱
  * 使用五鼠遁时
  */
 export function calculateHourPillar(hour: number, dayStem: string): { stem: string; branch: string } {
-  // 时辰对应表
-  const hourBranches = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+  // 获取时支
+  const branchIndex = getHourBranchIndex(hour);
+  const branch = DIZHI[branchIndex];
   
-  // 时辰计算（23-1点为子时，1-3点为丑时...）
-  let branchIndex = Math.floor((hour + 1) / 2) % 12;
-  const branch = hourBranches[branchIndex];
+  // 使用五鼠遁查表获取时干
+  const mapping = (fiveRatsData.mapping as any)[dayStem];
+  const stem = mapping ? mapping[branch] : TIANGAN[0];
   
-  // 五鼠遁时口诀
-  const dayStemIndex = TIANGAN.indexOf(dayStem);
-  let hourStemStart = 0;
-  
-  if (dayStemIndex === 0 || dayStemIndex === 5) hourStemStart = 0; // 甲己日 - 甲子开始
-  else if (dayStemIndex === 1 || dayStemIndex === 6) hourStemStart = 2; // 乙庚日 - 丙子开始
-  else if (dayStemIndex === 2 || dayStemIndex === 7) hourStemStart = 4; // 丙辛日 - 戊子开始
-  else if (dayStemIndex === 3 || dayStemIndex === 8) hourStemStart = 6; // 丁壬日 - 庚子开始
-  else if (dayStemIndex === 4 || dayStemIndex === 9) hourStemStart = 8; // 戊癸日 - 壬子开始
-  
-  const stemIndex = (hourStemStart + branchIndex) % 10;
-  
-  return {
-    stem: TIANGAN[stemIndex],
-    branch: branch
-  };
+  return { stem, branch };
 }
 
 /**
@@ -202,24 +190,26 @@ export function calculateHourPillar(hour: number, dayStem: string): { stem: stri
 export function calculateWuxing(pillars: any) {
   const wuxing = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
   
+  const elementMap: Record<string, keyof typeof wuxing> = {
+    '木': 'wood',
+    '火': 'fire',
+    '土': 'earth',
+    '金': 'metal',
+    '水': 'water'
+  };
+  
   // 天干得分 (每个1.5分)
   [pillars.year.stem, pillars.month.stem, pillars.day.stem, pillars.hour.stem].forEach(stem => {
     const element = TIANGAN_WUXING[stem];
-    if (element === "木") wuxing.wood += 1.5;
-    else if (element === "火") wuxing.fire += 1.5;
-    else if (element === "土") wuxing.earth += 1.5;
-    else if (element === "金") wuxing.metal += 1.5;
-    else if (element === "水") wuxing.water += 1.5;
+    const key = elementMap[element];
+    if (key) wuxing[key] += 1.5;
   });
   
   // 地支得分 (每个1分)
   [pillars.year.branch, pillars.month.branch, pillars.day.branch, pillars.hour.branch].forEach(branch => {
     const element = DIZHI_WUXING[branch];
-    if (element === "木") wuxing.wood += 1;
-    else if (element === "火") wuxing.fire += 1;
-    else if (element === "土") wuxing.earth += 1;
-    else if (element === "金") wuxing.metal += 1;
-    else if (element === "水") wuxing.water += 1;
+    const key = elementMap[element];
+    if (key) wuxing[key] += 1;
   });
   
   return wuxing;
@@ -232,15 +222,15 @@ export function calculateYinYang(pillars: any) {
   let yang = 0, yin = 0;
   
   // 天干阴阳
-  const yangtian = ["甲", "丙", "戊", "庚", "壬"];
   [pillars.year.stem, pillars.month.stem, pillars.day.stem, pillars.hour.stem].forEach(stem => {
-    if (yangtian.includes(stem)) yang++; else yin++;
+    const yinyang = ganZhiData.stemProperties[stem].yinyang;
+    if (yinyang === '陽') yang++; else yin++;
   });
   
   // 地支阴阳
-  const yangdi = ["子", "寅", "辰", "午", "申", "戌"];
   [pillars.year.branch, pillars.month.branch, pillars.day.branch, pillars.hour.branch].forEach(branch => {
-    if (yangdi.includes(branch)) yang++; else yin++;
+    const yinyang = ganZhiData.branchProperties[branch].yinyang;
+    if (yinyang === '陽') yang++; else yin++;
   });
   
   const total = yang + yin;

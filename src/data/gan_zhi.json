@@ -1,0 +1,30 @@
+{
+  "stems": ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"],
+  "branches": ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"],
+  "stemProperties": {
+    "甲": { "element": "木", "yinyang": "陽" },
+    "乙": { "element": "木", "yinyang": "陰" },
+    "丙": { "element": "火", "yinyang": "陽" },
+    "丁": { "element": "火", "yinyang": "陰" },
+    "戊": { "element": "土", "yinyang": "陽" },
+    "己": { "element": "土", "yinyang": "陰" },
+    "庚": { "element": "金", "yinyang": "陽" },
+    "辛": { "element": "金", "yinyang": "陰" },
+    "壬": { "element": "水", "yinyang": "陽" },
+    "癸": { "element": "水", "yinyang": "陰" }
+  },
+  "branchProperties": {
+    "子": { "element": "水", "yinyang": "陽" },
+    "丑": { "element": "土", "yinyang": "陰" },
+    "寅": { "element": "木", "yinyang": "陽" },
+    "卯": { "element": "木", "yinyang": "陰" },
+    "辰": { "element": "土", "yinyang": "陽" },
+    "巳": { "element": "火", "yinyang": "陰" },
+    "午": { "element": "火", "yinyang": "陽" },
+    "未": { "element": "土", "yinyang": "陰" },
+    "申": { "element": "金", "yinyang": "陽" },
+    "酉": { "element": "金", "yinyang": "陰" },
+    "戌": { "element": "土", "yinyang": "陽" },
+    "亥": { "element": "水", "yinyang": "陰" }
+  }
+}

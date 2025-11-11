@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,7 +12,18 @@ serve(async (req) => {
   }
 
   try {
-    const { legionType, pillarData, name } = await req.json();
+    const { legionType, pillarData, name, calculationId } = await req.json();
+    
+    // 初始化 Supabase 客戶端
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
+    );
     
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -88,6 +100,21 @@ ${legionType === 'future' ? '这是时柱，代表晚年运势、子女关系、
 
     const data = await response.json();
     const story = data.choices[0]?.message?.content || '故事生成失败';
+
+    // 儲存故事到資料庫
+    if (calculationId) {
+      const { error: dbError } = await supabaseClient
+        .from('legion_stories')
+        .insert({
+          calculation_id: calculationId,
+          legion_type: legionType,
+          story: story
+        });
+
+      if (dbError) {
+        console.error('Failed to save story to database:', dbError);
+      }
+    }
 
     return new Response(
       JSON.stringify({ story }),

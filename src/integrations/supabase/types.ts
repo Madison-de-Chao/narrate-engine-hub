@@ -110,6 +110,38 @@ export type Database = {
         }
         Relationships: []
       }
+      legion_stories: {
+        Row: {
+          calculation_id: string
+          created_at: string
+          id: string
+          legion_type: string
+          story: string
+        }
+        Insert: {
+          calculation_id: string
+          created_at?: string
+          id?: string
+          legion_type: string
+          story: string
+        }
+        Update: {
+          calculation_id?: string
+          created_at?: string
+          id?: string
+          legion_type?: string
+          story?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legion_stories_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "bazi_calculations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null

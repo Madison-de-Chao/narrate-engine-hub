@@ -148,12 +148,14 @@ const Index = () => {
       {/* 顶部标题 */}
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h1 className="text-4xl md:text-5xl font-bold text-center bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent text-neon">
-                🌈 虹靈御所八字人生兵法
-              </h1>
-              <p className="text-center text-muted-foreground mt-2">
+          <div className="flex items-center justify-between gap-4">
+            <img 
+              src="/src/assets/logo-sishi.png" 
+              alt="四時系統" 
+              className="h-16 md:h-20 object-contain"
+            />
+            <div className="flex-1 text-center">
+              <p className="text-lg md:text-xl text-muted-foreground">
                 八字不是宿命，而是靈魂的戰場
               </p>
             </div>
@@ -162,7 +164,6 @@ const Index = () => {
                 onClick={handleLogout}
                 variant="outline"
                 size="sm"
-                className="ml-4"
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 登出
@@ -225,8 +226,22 @@ const Index = () => {
 
       {/* 底部 */}
       <footer className="border-t border-border/50 mt-16 py-8">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>© 2024 虹靈御所 • 你不是棋子，而是指揮官</p>
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <img 
+              src="/src/assets/logo-honglingyusuo.png" 
+              alt="虹靈御所" 
+              className="h-12 object-contain"
+            />
+            <p className="text-muted-foreground text-center">
+              你不是棋子，而是指揮官
+            </p>
+            <img 
+              src="/src/assets/logo-chaoxuan.png" 
+              alt="超烜創意" 
+              className="h-12 object-contain"
+            />
+          </div>
         </div>
       </footer>
     </div>

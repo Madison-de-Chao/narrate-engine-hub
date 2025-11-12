@@ -162,20 +162,27 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                   </div>
                 </div>
 
-                {/* 150字軍團故事 */}
+                {/* AI生成的150字軍團傳說故事 */}
                 <div className={`p-5 rounded-lg ${legion.gradient} border-2 border-accent/30`}>
                   <h4 className="font-bold text-xl mb-3 flex items-center gap-2">
                     <Sparkles className="w-6 h-6 text-accent" />
                     軍團傳說
                   </h4>
-                  <p className="text-base leading-relaxed text-foreground">
-                    在{pillarName === 'year' ? '你生命的源頭' : pillarName === 'month' ? '人際關係的戰場上' : pillarName === 'day' ? '你內心的核心要塞中' : '未來的地平線上'}，
-                    {stem}將軍{pillarName === 'year' ? '統領著' : pillarName === 'month' ? '率領著' : pillarName === 'day' ? '統治著最重要的' : '領導著前瞻'}軍團。
-                    這支由{stem}{branch}組成的部隊，蘊含著{nayin[pillarName] || "神秘"}的神秘力量。{commanderRole?.role}，
-                    {pillarName === 'year' ? '掌管著你的根基與傳承' : pillarName === 'month' ? '專精於外交與合作策略' : pillarName === 'day' ? '是你真實自我的化身與代表' : '具有預見未來的卓越能力'}。
-                    地支{branch}化身為{advisorRole?.role}，以其{advisorRole?.trait}的特質輔佐軍團。
-                    這個軍團象徵著你的{legion.lifeDomain}，在{legion.stage}階段發揮重要作用...
-                  </p>
+                  <div className="text-base leading-relaxed text-foreground whitespace-pre-wrap">
+                    {baziResult.legionStories?.[pillarName] || (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <div className="animate-pulse">✨</div>
+                        <span>正在生成專屬軍團傳說故事...</span>
+                      </div>
+                    )}
+                  </div>
+                  {baziResult.legionStories?.[pillarName] && (
+                    <div className="mt-3 pt-3 border-t border-border/30">
+                      <p className="text-xs text-muted-foreground italic">
+                        💡 這個故事展示了{legion.name}對你在{legion.stage}的影響。記住：這些是天賦潛能的展現，真正的選擇權永遠在你手中。
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* 深度分析標題 */}

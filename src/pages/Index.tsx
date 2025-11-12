@@ -56,6 +56,12 @@ export interface BaziResult {
     yin: number;
     yang: number;
   };
+  legionStories?: {
+    year?: string;
+    month?: string;
+    day?: string;
+    hour?: string;
+  };
 }
 
 const Index = () => {
@@ -107,6 +113,55 @@ const Index = () => {
     }
   };
 
+  const generateLegionStories = async (result: BaziResult, calculationId?: string) => {
+    const legionTypes = [
+      { type: 'year', pillar: 'year' },
+      { type: 'month', pillar: 'month' },
+      { type: 'day', pillar: 'day' },
+      { type: 'hour', pillar: 'hour' }
+    ];
+
+    const stories: { [key: string]: string } = {};
+    
+    for (const { type, pillar } of legionTypes) {
+      try {
+        const pillarData = result.pillars[pillar as keyof typeof result.pillars];
+        const { data: storyData, error } = await supabase.functions.invoke('generate-legion-story', {
+          body: {
+            legionType: type,
+            pillarData: {
+              stem: pillarData.stem,
+              branch: pillarData.branch,
+              nayin: result.nayin[pillar as keyof typeof result.nayin],
+              tenGod: result.tenGods[pillar as keyof typeof result.tenGods],
+              hiddenStems: result.hiddenStems[pillar as keyof typeof result.hiddenStems]
+            },
+            name: result.name,
+            calculationId: calculationId
+          }
+        });
+
+        if (error) {
+          console.error(`生成${type}軍團故事失敗:`, error);
+          stories[type] = '故事生成中...';
+        } else if (storyData?.story) {
+          stories[type] = storyData.story;
+        }
+      } catch (error) {
+        console.error(`生成${type}軍團故事錯誤:`, error);
+        stories[type] = '故事生成失敗，請稍後重試';
+      }
+    }
+
+    // 更新結果中的故事
+    setBaziResult(prev => prev ? {
+      ...prev,
+      legionStories: stories
+    } : null);
+
+    toast.success("軍團傳說故事生成完成！");
+  };
+
   const handleCalculate = async (formData: Record<string, unknown>) => {
     // Guest users can calculate but won't save to database
     if (!session && !isGuest) {
@@ -138,32 +193,36 @@ const Index = () => {
           birthDate: formData.birthDate as Date,
           gender: formData.gender as string,
           pillars: data.calculation.pillars,
-          hiddenStems: {
+          hiddenStems: data.calculation.hiddenStems || {
             year: [],
             month: [],
             day: [],
             hour: []
           },
-          tenGods: {
+          tenGods: data.calculation.tenGods || {
             year: { stem: "待計算", branch: "待計算" },
             month: { stem: "待計算", branch: "待計算" },
             day: { stem: "待計算", branch: "待計算" },
             hour: { stem: "待計算", branch: "待計算" }
           },
           nayin: data.calculation.nayin,
-          shensha: [],
+          shensha: data.calculation.shensha || [],
           wuxing: data.calculation.wuxingScores,
-          yinyang: data.calculation.yinyangRatio
+          yinyang: data.calculation.yinyangRatio,
+          legionStories: {}
         };
         
         setBaziResult(result);
         
         // Show different message for guest users
         if (isGuest) {
-          toast.success("命盤生成成功！(訪客模式下結果不會儲存)");
+          toast.success("命盤生成成功！正在生成軍團傳說故事...");
         } else {
-          toast.success("命盤生成成功！");
+          toast.success("命盤生成成功！正在生成軍團傳說故事...");
         }
+
+        // 生成四個軍團的AI故事
+        generateLegionStories(result, data.calculation.id);
       }
     } catch (error: unknown) {
       console.error("計算失敗:", error);

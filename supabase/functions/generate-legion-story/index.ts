@@ -30,38 +30,86 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    // 定义军团类型的中文名称
-    const legionNames: Record<string, string> = {
-      family: "家族军团",
-      growth: "成长军团", 
-      self: "自我军团",
-      future: "未来军团"
+    // 定义军团类型的中文名称和详细信息
+    const legionContext: Record<string, any> = {
+      year: { 
+        name: "祖源軍團",
+        stage: '童年至青少年', 
+        domain: '家族傳承、童年環境、祖輩影響、早期價值觀形成', 
+        focus: '根基與起點' 
+      },
+      month: { 
+        name: "關係軍團",
+        stage: '青年至中年', 
+        domain: '社會關係、事業發展、人際互動、社會地位建立', 
+        focus: '成長與拓展' 
+      },
+      day: { 
+        name: "核心軍團",
+        stage: '成年核心期', 
+        domain: '個人特質、婚姻感情、核心自我、內在品格', 
+        focus: '本質與實現' 
+      },
+      hour: { 
+        name: "未來軍團",
+        stage: '中年至晚年', 
+        domain: '未來規劃、子女關係、晚年運勢、智慧傳承', 
+        focus: '展望與延續' 
+      }
     };
 
-    // 构建 AI 提示词
-    const systemPrompt = `你是一位资深的八字命理大师，擅长用生动的军团故事来解释八字命盘。
-你需要根据四柱信息创作一个约150字的军团传说故事。
+    const context = legionContext[legionType];
 
-故事要求：
-1. 必须准确反映天干地支的五行属性和角色特质
-2. 以军团战争、策略、角色互动为主题
-3. 要体现该柱对命主人生的影响
-4. 语言要生动、富有画面感
-5. 严格控制在150字左右`;
+    // 构建 AI 提示词 - 強調命理是建議而非宿命
+    const systemPrompt = `你是一位資深的八字命理大師，擅長用生動的軍團故事來解釋八字命盤。
 
-    const userPrompt = `请为${name}创作${legionNames[legionType]}的传说故事。
+核心理念：命理展示的是一條「相對好走但不一定是你要走的路」。這是上天給予的天賦與建議，而非不可改變的宿命。
 
-四柱信息：
-- 天干：${pillarData.stem}
-- 地支：${pillarData.branch}
-- 组合：${pillarData.stem}${pillarData.branch}
+你需要根據完整的四柱信息創作一個150字內的軍團傳說故事。
 
-${legionType === 'family' ? '这是年柱，代表家族传承、祖辈影响、人生根基。' : ''}
-${legionType === 'growth' ? '这是月柱，代表成长环境、青年时期、事业发展。' : ''}
-${legionType === 'self' ? '这是日柱，代表自我本质、核心性格、夫妻关系。' : ''}
-${legionType === 'future' ? '这是时柱，代表晚年运势、子女关系、人生结局。' : ''}
+故事創作要求：
+1. 必須融合天干、地支、十神、納音、藏干的所有信息
+2. 以軍團戰爭、策略、角色互動為主題包裝命盤解讀
+3. 體現該柱對命主在特定人生階段的性格特質與機遇
+4. 語言生動富有畫面感，讓讀者感受到命理的深度
+5. 強調這是天賦潛能的展現，而非註定的命運
+6. 故事結尾要帶出「選擇權在你手中」的啟發
+7. 嚴格控制在150字以內
 
-请创作一个150字的军团故事，要生动、富有深意。`;
+敘事風格：
+- 用軍團戰爭隱喻人生挑戰
+- 用指揮官（天干）與軍師（地支）的配合展現性格特質
+- 用戰略選擇隱喻人生抉擇的自由
+- 避免絕對化的預言，多用「傾向」「潛能」「機會」等詞`;
+
+    const userPrompt = `請為${name}創作${context.name}的傳說故事。
+
+完整四柱信息：
+【基礎信息】
+- 天干（指揮官）：${pillarData.stem}
+- 地支（軍師）：${pillarData.branch}
+- 干支組合：${pillarData.stem}${pillarData.branch}
+- 納音五行：${pillarData.nayin || '未知'}
+
+【十神關係】
+- 天干十神：${pillarData.tenGod?.stem || '未知'}
+- 地支十神：${pillarData.tenGod?.branch || '未知'}
+
+【藏干信息】
+- 地支藏干：${pillarData.hiddenStems?.join('、') || '未知'}
+
+【人生階段】
+- 影響時期：${context.stage}
+- 生活領域：${context.domain}
+- 核心主題：${context.focus}
+
+請創作一個150字內的軍團故事，要：
+1. 巧妙融入以上所有命理元素
+2. 用軍團戰爭隱喻${name}在${context.stage}的性格與機遇
+3. 展現${pillarData.stem}指揮官與${pillarData.branch}軍師的配合特質
+4. 體現十神關係帶來的能量特徵
+5. 最後點出「這些是天賦潛能，真正的選擇權在你手中」的啟發
+6. 語言生動、富有深意、給人啟發而非束縛`;
 
     // 调用 Lovable AI
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -83,13 +131,13 @@ ${legionType === 'future' ? '这是时柱，代表晚年运势、子女关系、
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: '请求过于频繁，请稍后再试' }),
+          JSON.stringify({ error: '請求過於頻繁，請稍後再試' }),
           { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: '配额不足，请联系管理员' }),
+          JSON.stringify({ error: '配額不足，請聯系管理員' }),
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -99,7 +147,7 @@ ${legionType === 'future' ? '这是时柱，代表晚年运势、子女关系、
     }
 
     const data = await response.json();
-    const story = data.choices[0]?.message?.content || '故事生成失败';
+    const story = data.choices[0]?.message?.content || '故事生成失敗';
 
     // 儲存故事到資料庫
     if (calculationId) {

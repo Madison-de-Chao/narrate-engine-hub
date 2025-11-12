@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BaziResult } from "@/pages/Index";
-import { Swords, Users, Heart, Sparkles, Crown, Shield } from "lucide-react";
+import { Swords, Users, Heart, Sparkles, Crown, Shield, Star, Zap } from "lucide-react";
+import tenGodsData from "@/data/ten_gods.json";
+import shenshaData from "@/data/shensha.json";
 
 interface LegionCardsProps {
   baziResult: BaziResult;
@@ -121,13 +123,19 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                     <p className="text-xs text-muted-foreground mb-1">納音</p>
                     <p className="font-semibold text-lg">{nayin[pillarName] || "-"}</p>
                   </div>
-                  <div className="p-3 bg-card/50 rounded-lg border border-border/50">
-                    <p className="text-xs text-muted-foreground mb-1">十神</p>
-                    <p className="font-semibold text-lg">{tenGod?.stem || "-"}</p>
+                  <div className="p-3 bg-gradient-to-br from-accent/20 to-accent/5 rounded-lg border border-accent/30">
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                      <Star className="w-3 h-3" />
+                      十神(天干)
+                    </p>
+                    <p className="font-bold text-lg text-accent">{tenGod?.stem || "-"}</p>
                   </div>
-                  <div className="p-3 bg-card/50 rounded-lg border border-border/50">
-                    <p className="text-xs text-muted-foreground mb-1">神煞</p>
-                    <p className="font-semibold text-sm">{baziResult.shensha.slice(0, 2).join('、')}</p>
+                  <div className="p-3 bg-gradient-to-br from-secondary/20 to-secondary/5 rounded-lg border border-secondary/30">
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                      <Zap className="w-3 h-3" />
+                      十神(地支)
+                    </p>
+                    <p className="font-bold text-lg text-secondary">{tenGod?.branch || "-"}</p>
                   </div>
                 </div>
 
@@ -214,25 +222,119 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                   </div>
 
                   {/* 十神關係分析 */}
-                  <div className="p-4 bg-card/40 rounded-lg border border-border/40">
-                    <h5 className="font-bold text-lg mb-3 flex items-center gap-2">
-                      ⚔️ 十神關係分析
+                  <div className="p-5 bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg border-2 border-accent/30">
+                    <h5 className="font-bold text-xl mb-4 flex items-center gap-2 text-accent">
+                      <Star className="w-6 h-6" />
+                      十神關係分析
                     </h5>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      作為{tenGod?.stem || "未知"}，此柱體現了特定的命理特質。
-                      在人生格局中扮演重要角色，影響著你的{pillarName === 'year' ? '根基與傳承' : pillarName === 'month' ? '事業與人際' : pillarName === 'day' ? '性格與感情' : '創造與未來'}發展方向。
-                    </p>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {/* 天干十神 */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="bg-primary/20 border-primary/40">
+                            天干：{tenGod?.stem || "未知"}
+                          </Badge>
+                        </div>
+                        {tenGod?.stem && tenGodsData.tenGodsRules[tenGod.stem as keyof typeof tenGodsData.tenGodsRules] && (
+                          <div className="space-y-2 text-sm">
+                            <p className="text-foreground">
+                              <span className="font-semibold">象徵：</span>
+                              {tenGodsData.tenGodsRules[tenGod.stem as keyof typeof tenGodsData.tenGodsRules].象徵}
+                            </p>
+                            <p className="text-green-600 dark:text-green-400">
+                              <span className="font-semibold">正面：</span>
+                              {tenGodsData.tenGodsRules[tenGod.stem as keyof typeof tenGodsData.tenGodsRules].正面}
+                            </p>
+                            <p className="text-amber-600 dark:text-amber-400">
+                              <span className="font-semibold">負面：</span>
+                              {tenGodsData.tenGodsRules[tenGod.stem as keyof typeof tenGodsData.tenGodsRules].負面}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      {/* 地支十神 */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="bg-secondary/20 border-secondary/40">
+                            地支：{tenGod?.branch || "未知"}
+                          </Badge>
+                        </div>
+                        {tenGod?.branch && tenGodsData.tenGodsRules[tenGod.branch as keyof typeof tenGodsData.tenGodsRules] && (
+                          <div className="space-y-2 text-sm">
+                            <p className="text-foreground">
+                              <span className="font-semibold">象徵：</span>
+                              {tenGodsData.tenGodsRules[tenGod.branch as keyof typeof tenGodsData.tenGodsRules].象徵}
+                            </p>
+                            <p className="text-green-600 dark:text-green-400">
+                              <span className="font-semibold">正面：</span>
+                              {tenGodsData.tenGodsRules[tenGod.branch as keyof typeof tenGodsData.tenGodsRules].正面}
+                            </p>
+                            <p className="text-amber-600 dark:text-amber-400">
+                              <span className="font-semibold">負面：</span>
+                              {tenGodsData.tenGodsRules[tenGod.branch as keyof typeof tenGodsData.tenGodsRules].負面}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* 神煞加持效應 */}
-                  <div className="p-4 bg-card/40 rounded-lg border border-border/40">
-                    <h5 className="font-bold text-lg mb-3 flex items-center gap-2">
-                      🔮 神煞加持效應
+                  <div className="p-5 bg-gradient-to-br from-purple-500/10 to-purple-500/5 rounded-lg border-2 border-purple-500/30">
+                    <h5 className="font-bold text-xl mb-4 flex items-center gap-2 text-purple-600 dark:text-purple-400">
+                      <Sparkles className="w-6 h-6" />
+                      神煞加持效應
                     </h5>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {baziResult.shensha.slice(0, 2).join('、')}等神煞的出現，
-                      為此柱增添了{pillarName === 'year' ? '家族運勢與祖德庇佑' : pillarName === 'month' ? '事業發展與貴人助力' : pillarName === 'day' ? '個人魅力與感情運勢' : '創造靈感與子女運勢'}的特殊能量。
-                    </p>
+                    {baziResult.shensha.length > 0 ? (
+                      <div className="grid gap-3">
+                        {baziResult.shensha.slice(0, 4).map((sha, idx) => {
+                          // 查找神煞詳細資訊
+                          let shenshaInfo: any = null;
+                          let category = '';
+                          
+                          if (shenshaData.吉神[sha as keyof typeof shenshaData.吉神]) {
+                            shenshaInfo = shenshaData.吉神[sha as keyof typeof shenshaData.吉神];
+                            category = '吉神';
+                          } else if (shenshaData.凶煞[sha as keyof typeof shenshaData.凶煞]) {
+                            shenshaInfo = shenshaData.凶煞[sha as keyof typeof shenshaData.凶煞];
+                            category = '凶煞';
+                          } else if (shenshaData.桃花[sha as keyof typeof shenshaData.桃花]) {
+                            shenshaInfo = shenshaData.桃花[sha as keyof typeof shenshaData.桃花];
+                            category = '桃花';
+                          } else if (shenshaData.特殊神煞[sha as keyof typeof shenshaData.特殊神煞]) {
+                            shenshaInfo = shenshaData.特殊神煞[sha as keyof typeof shenshaData.特殊神煞];
+                            category = '特殊';
+                          }
+
+                          const categoryColor = category === '吉神' ? 'bg-green-500/20 border-green-500/40 text-green-700 dark:text-green-300' :
+                                               category === '凶煞' ? 'bg-red-500/20 border-red-500/40 text-red-700 dark:text-red-300' :
+                                               category === '桃花' ? 'bg-pink-500/20 border-pink-500/40 text-pink-700 dark:text-pink-300' :
+                                               'bg-purple-500/20 border-purple-500/40 text-purple-700 dark:text-purple-300';
+
+                          return (
+                            <div key={idx} className={`p-3 rounded-lg border ${categoryColor}`}>
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="font-bold text-base">{sha}</div>
+                                <Badge variant="outline" className="text-xs">{category}</Badge>
+                              </div>
+                              {shenshaInfo && (
+                                <div className="space-y-1">
+                                  <p className="text-sm font-medium">{shenshaInfo.作用}</p>
+                                  <p className="text-xs opacity-90">{shenshaInfo.現代意義}</p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                        {baziResult.shensha.length > 4 && (
+                          <p className="text-xs text-center text-muted-foreground mt-2">
+                            還有 {baziResult.shensha.length - 4} 個神煞未顯示
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">此柱暫無特殊神煞</p>
+                    )}
                   </div>
 
                   {/* 發展策略建議 */}

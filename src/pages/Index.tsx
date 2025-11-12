@@ -12,6 +12,9 @@ import { toast } from "sonner";
 import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
 import { useGuestMode } from "@/hooks/useGuestMode";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import logoSishi from "@/assets/logo-sishi.png";
+import logoHonglingyusuo from "@/assets/logo-honglingyusuo.png";
+import logoChaoxuan from "@/assets/logo-chaoxuan.png";
 
 export interface BaziResult {
   name: string;
@@ -95,11 +98,11 @@ const Index = () => {
   const handleLogout = async () => {
     if (isGuest) {
       disableGuestMode();
-      toast.success("已退出访客模式");
+      toast.success("已退出訪客模式");
       navigate("/auth");
     } else {
       await supabase.auth.signOut();
-      toast.success("已退出登录");
+      toast.success("已登出");
       navigate("/auth");
     }
   };
@@ -107,7 +110,7 @@ const Index = () => {
   const handleCalculate = async (formData: Record<string, unknown>) => {
     // Guest users can calculate but won't save to database
     if (!session && !isGuest) {
-      toast.error("请先登录");
+      toast.error("請先登入");
       navigate("/auth");
       return;
     }
@@ -157,13 +160,13 @@ const Index = () => {
         
         // Show different message for guest users
         if (isGuest) {
-          toast.success("命盘生成成功！(访客模式下结果不会保存)");
+          toast.success("命盤生成成功！(訪客模式下結果不會儲存)");
         } else {
-          toast.success("命盘生成成功！");
+          toast.success("命盤生成成功！");
         }
       }
     } catch (error: unknown) {
-      console.error("计算失败:", error);
+      console.error("計算失敗:", error);
       let errorMessage = 'Unknown error';
       
       if (error instanceof FunctionsHttpError) {
@@ -178,7 +181,7 @@ const Index = () => {
         errorMessage = error.message;
       }
       
-      toast.error("计算失败：" + errorMessage);
+      toast.error("計算失敗：" + errorMessage);
     } finally {
       setIsCalculating(false);
     }
@@ -202,12 +205,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
-      {/* 顶部标题 */}
+      {/* 頂部標題 */}
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between gap-4">
             <img 
-              src="/src/assets/logo-sishi.png" 
+              src={logoSishi}
               alt="四時系統" 
               className="h-16 md:h-20 object-contain"
             />
@@ -220,7 +223,7 @@ const Index = () => {
               {isGuest && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-md">
                   <UserRound className="h-4 w-4" />
-                  <span>访客模式</span>
+                  <span>訪客模式</span>
                 </div>
               )}
               {(user || isGuest) && (
@@ -230,7 +233,7 @@ const Index = () => {
                   size="sm"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  {isGuest ? "退出访客" : "登出"}
+                  {isGuest ? "退出訪客" : "登出"}
                 </Button>
               )}
             </div>
@@ -244,15 +247,15 @@ const Index = () => {
           <Alert className="border-primary/50 bg-primary/5">
             <UserRound className="h-4 w-4" />
             <AlertDescription>
-              您正在使用访客模式。
+              您正在使用訪客模式。
               <Button
                 variant="link"
                 className="h-auto p-0 ml-1"
                 onClick={() => navigate("/auth")}
               >
-                注册账户
+                註冊帳戶
               </Button>
-              以保存您的计算历史和享受完整功能。
+              以儲存您的計算歷史和享受完整功能。
             </AlertDescription>
           </Alert>
         )}
@@ -312,7 +315,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <img 
-              src="/src/assets/logo-honglingyusuo.png" 
+              src={logoHonglingyusuo}
               alt="虹靈御所" 
               className="h-12 object-contain"
             />
@@ -320,7 +323,7 @@ const Index = () => {
               你不是棋子，而是指揮官
             </p>
             <img 
-              src="/src/assets/logo-chaoxuan.png" 
+              src={logoChaoxuan}
               alt="超烜創意" 
               className="h-12 object-contain"
             />

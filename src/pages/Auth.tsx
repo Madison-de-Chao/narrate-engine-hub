@@ -21,7 +21,7 @@ export default function Auth() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-    // 检查是否已登录
+    // 檢查是否已登入
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         navigate("/");
@@ -33,7 +33,7 @@ export default function Auth() {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error("请填写所有字段");
+      toast.error("請填寫所有欄位");
       return;
     }
 
@@ -47,17 +47,17 @@ export default function Auth() {
 
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
-          toast.error("电子邮件或密码错误");
+          toast.error("電子郵件或密碼錯誤");
         } else {
           toast.error(error.message);
         }
       } else {
-        toast.success("登录成功！");
+        toast.success("登入成功！");
         navigate("/");
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      toast.error("登录失败：" + errorMessage);
+      toast.error("登入失敗：" + errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -67,17 +67,17 @@ export default function Auth() {
     e.preventDefault();
     
     if (!email || !password || !confirmPassword) {
-      toast.error("请填写所有字段");
+      toast.error("請填寫所有欄位");
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error("两次输入的密码不一致");
+      toast.error("兩次輸入的密碼不一致");
       return;
     }
 
     if (password.length < 6) {
-      toast.error("密码至少需要6个字符");
+      toast.error("密碼至少需要6個字元");
       return;
     }
 
@@ -96,17 +96,17 @@ export default function Auth() {
 
       if (error) {
         if (error.message.includes("already registered")) {
-          toast.error("此电子邮件已被注册");
+          toast.error("此電子郵件已被註冊");
         } else {
           toast.error(error.message);
         }
       } else {
-        toast.success("注册成功！正在登录...");
+        toast.success("註冊成功！正在登入...");
         navigate("/");
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      toast.error("注册失败：" + errorMessage);
+      toast.error("註冊失敗：" + errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -125,7 +125,7 @@ export default function Auth() {
       });
       
       if (error) throw error;
-      // OAuth 會自動重定向，不需要手動導航
+      // OAuth 會自動重新導向，不需要手動導航
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       toast.error(`${provider === 'google' ? 'Google' : 'Facebook'} 登入失敗：${errorMessage}`);
@@ -135,7 +135,7 @@ export default function Auth() {
 
   const handleGuestMode = () => {
     enableGuestMode();
-    toast.success("已切换到访客模式");
+    toast.success("已切換到訪客模式");
     navigate("/");
   };
 
@@ -146,19 +146,19 @@ export default function Auth() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
             虹靈御所八字人生兵法
           </h1>
-          <p className="text-muted-foreground mt-2">登录或注册开始你的命盘之旅</p>
+          <p className="text-muted-foreground mt-2">登入或註冊開始你的命盤之旅</p>
         </div>
 
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="signin">登录</TabsTrigger>
-            <TabsTrigger value="signup">注册</TabsTrigger>
+            <TabsTrigger value="signin">登入</TabsTrigger>
+            <TabsTrigger value="signup">註冊</TabsTrigger>
           </TabsList>
 
           <TabsContent value="signin">
             <form onSubmit={handleSignIn} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="signin-email">电子邮件</Label>
+                <Label htmlFor="signin-email">電子郵件</Label>
                 <Input
                   id="signin-email"
                   type="email"
@@ -172,7 +172,7 @@ export default function Auth() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signin-password">密码</Label>
+                <Label htmlFor="signin-password">密碼</Label>
                 <Input
                   id="signin-password"
                   type="password"
@@ -193,10 +193,10 @@ export default function Auth() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    登录中...
+                    登入中...
                   </>
                 ) : (
-                  "登录"
+                  "登入"
                 )}
               </Button>
 
@@ -269,7 +269,7 @@ export default function Auth() {
           <TabsContent value="signup">
             <form onSubmit={handleSignUp} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="signup-email">电子邮件</Label>
+                <Label htmlFor="signup-email">電子郵件</Label>
                 <Input
                   id="signup-email"
                   type="email"
@@ -283,11 +283,11 @@ export default function Auth() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="signup-password">密码</Label>
+                <Label htmlFor="signup-password">密碼</Label>
                 <Input
                   id="signup-password"
                   type="password"
-                  placeholder="至少6个字符"
+                  placeholder="至少6個字元"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -297,11 +297,11 @@ export default function Auth() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">确认密码</Label>
+                <Label htmlFor="confirm-password">確認密碼</Label>
                 <Input
                   id="confirm-password"
                   type="password"
-                  placeholder="再次输入密码"
+                  placeholder="再次輸入密碼"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
@@ -318,10 +318,10 @@ export default function Auth() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    注册中...
+                    註冊中...
                   </>
                 ) : (
-                  "注册"
+                  "註冊"
                 )}
               </Button>
 
@@ -412,11 +412,11 @@ export default function Auth() {
             className="w-full mt-4 border-dashed border-2"
           >
             <UserRound className="mr-2 h-4 w-4" />
-            以访客身份继续
+            以訪客身份繼續
           </Button>
           
           <p className="text-xs text-muted-foreground text-center mt-2">
-            访客模式下可体验功能，但无法保存计算历史
+            訪客模式下可體驗功能，但無法儲存計算歷史
           </p>
         </div>
       </Card>

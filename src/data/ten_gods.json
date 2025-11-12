@@ -1,0 +1,90 @@
+{
+  "tenGodsRules": {
+    "比肩": {
+      "condition": "same_element_same_yinyang",
+      "description": "同我、同性",
+      "象徵": "兄弟、同輩、合夥人",
+      "正面": "獨立、自信、有主見",
+      "負面": "固執、競爭、自我"
+    },
+    "劫財": {
+      "condition": "same_element_diff_yinyang",
+      "description": "同我、異性",
+      "象徵": "朋友、競爭者",
+      "正面": "果斷、勇於爭取、有爆發力",
+      "負面": "破財、搶奪、是非"
+    },
+    "食神": {
+      "condition": "i_generate_same_yinyang",
+      "description": "我生、同性",
+      "象徵": "兒子、作品、享樂",
+      "正面": "才華洋溢、樂觀愉快、創意強",
+      "負面": "懶散、不切實際"
+    },
+    "傷官": {
+      "condition": "i_generate_diff_yinyang",
+      "description": "我生、異性",
+      "象徵": "女兒、表達、叛逆",
+      "正面": "聰明伶俐、創新力強、敢於挑戰",
+      "負面": "好勝、易惹官非"
+    },
+    "正財": {
+      "condition": "i_control_diff_yinyang",
+      "description": "我克、異性",
+      "象徵": "妻子、正當收入",
+      "正面": "務實、守成、有責任感、穩定可靠",
+      "負面": "小氣、保守"
+    },
+    "偏財": {
+      "condition": "i_control_same_yinyang",
+      "description": "我克、同性",
+      "象徵": "情人、偏門財",
+      "正面": "大方靈活、喜歡冒險、善抓機會",
+      "負面": "投機、花心、缺乏持續力"
+    },
+    "正官": {
+      "condition": "control_me_diff_yinyang",
+      "description": "克我、異性",
+      "象徵": "丈夫、規範、權威",
+      "正面": "有責任感、重原則、正直",
+      "負面": "保守、壓抑、容易受限"
+    },
+    "七殺": {
+      "condition": "control_me_same_yinyang",
+      "description": "克我、同性",
+      "象徵": "小人、壓力、挑戰",
+      "正面": "果斷、魄力大、能成將才",
+      "負面": "極端、暴躁"
+    },
+    "正印": {
+      "condition": "generate_me_diff_yinyang",
+      "description": "生我、異性",
+      "象徵": "母親、庇護、學習",
+      "正面": "仁慈、智慧、有學習力、懂感恩",
+      "負面": "依賴、懶散、缺乏行動"
+    },
+    "偏印": {
+      "condition": "generate_me_same_yinyang",
+      "description": "生我、同性",
+      "象徵": "繼母、靈感、偏門知識",
+      "正面": "直覺敏銳、思維獨特",
+      "負面": "孤僻、多疑、偏激"
+    }
+  },
+  "elementRelations": {
+    "生": {
+      "木": "火",
+      "火": "土",
+      "土": "金",
+      "金": "水",
+      "水": "木"
+    },
+    "克": {
+      "木": "土",
+      "土": "水",
+      "水": "火",
+      "火": "金",
+      "金": "木"
+    }
+  }
+}

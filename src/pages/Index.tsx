@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Loader2, LogOut, UserRound } from "lucide-react";
 import { generatePDF } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
-import type { User, Session } from "@supabase/supabase-js";
+import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
 import { useGuestMode } from "@/hooks/useGuestMode";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -139,7 +139,20 @@ const Index = () => {
       }
     } catch (error: unknown) {
       console.error("计算失败:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      let errorMessage = 'Unknown error';
+      
+      if (error instanceof FunctionsHttpError) {
+        try {
+          const errorContext = await error.context.json();
+          console.log('Function returned an error', errorContext);
+          errorMessage = errorContext.error || error.message;
+        } catch {
+          errorMessage = error.message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast.error("计算失败：" + errorMessage);
     } finally {
       setIsCalculating(false);

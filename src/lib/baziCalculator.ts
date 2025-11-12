@@ -1,10 +1,56 @@
 // 🌈 八字精准计算引擎 - 基于虹灵御所数据
-import solarTermsData from '@/data/solar_terms.json';
-import fiveTigersData from '@/data/five_tigers.json';
-import fiveRatsData from '@/data/five_rats.json';
-import ganZhiData from '@/data/gan_zhi.json';
-import nayinData from '@/data/nayin.json';
-import hiddenStemsData from '@/data/hidden_stems.json';
+import solarTermsData from "@/data/solar_terms.json";
+import fiveTigersData from "@/data/five_tigers.json";
+import fiveRatsData from "@/data/five_rats.json";
+import ganZhiData from "@/data/gan_zhi.json";
+import nayinData from "@/data/nayin.json";
+import hiddenStemsData from "@/data/hidden_stems.json";
+
+const MS_PER_MINUTE = 60 * 1000;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const SOLAR_TERM_BRANCH_ORDER: Array<{ term: string; branchIndex: number }> = [
+  { term: "立春", branchIndex: 2 },
+  { term: "驚蟄", branchIndex: 3 },
+  { term: "清明", branchIndex: 4 },
+  { term: "立夏", branchIndex: 5 },
+  { term: "芒種", branchIndex: 6 },
+  { term: "小暑", branchIndex: 7 },
+  { term: "立秋", branchIndex: 8 },
+  { term: "白露", branchIndex: 9 },
+  { term: "寒露", branchIndex: 10 },
+  { term: "立冬", branchIndex: 11 },
+  { term: "大雪", branchIndex: 0 },
+  { term: "小寒", branchIndex: 1 }
+];
+
+const MONTH_COMMAND_MULTIPLIER = 1.5;
+
+type SolarTermsYearData = Record<string, { date: string }>;
+type SolarTermsDataset = { years: Record<string, SolarTermsYearData> };
+
+export interface HiddenStemEntry {
+  stem: string;
+  weight: number;
+}
+
+interface HiddenStemConfig {
+  stems: HiddenStemEntry[];
+}
+
+type HiddenStemsDataset = { hiddenStems: Record<string, HiddenStemConfig> };
+
+const solarTermsYears = solarTermsData as SolarTermsDataset;
+const hiddenStems = hiddenStemsData as HiddenStemsDataset;
+
+type PillarName = "year" | "month" | "day" | "hour";
+
+interface PillarDetail {
+  stem: string;
+  branch: string;
+}
+
+type FourPillars = Record<PillarName, PillarDetail>;
 
 // 天干地支常量
 export const TIANGAN = ganZhiData.stems;
@@ -20,10 +66,10 @@ export const DIZHI_WUXING: Record<string, string> = Object.fromEntries(
 );
 
 // 地支藏干表
-export const DIZHI_CANGGAN: Record<string, string[]> = Object.fromEntries(
-  Object.entries(hiddenStemsData.hiddenStems).map(([branch, data]: [string, any]) => [
+export const DIZHI_CANGGAN: Record<string, HiddenStemEntry[]> = Object.fromEntries(
+  Object.entries(hiddenStems.hiddenStems).map(([branch, data]) => [
     branch,
-    data.stems.map((s: any) => s.stem)
+    data.stems
   ])
 );
 
@@ -31,35 +77,114 @@ export const DIZHI_CANGGAN: Record<string, string[]> = Object.fromEntries(
 const NAYIN_TABLE: Record<string, string> = nayinData.nayin;
 
 // 基准日期: 1985-09-22 = 甲子日（权威基准，已验证）
-const BASE_DATE = new Date(1985, 8, 22); // 1985年9月22日
+const BASE_DATE = new Date(Date.UTC(1985, 8, 22));
 const BASE_JIAZI_INDEX = 0; // 甲子的索引为0
+
+interface DateComponents {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+}
+
+function normalizeIsoString(input: string): string {
+  const trimmed = input.trim();
+  const spaced = trimmed.replace(" ", "T");
+  if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(spaced)) {
+    return spaced;
+  }
+  return `${spaced}Z`;
+}
+
+function parseSolarTermDate(dateString: string | undefined): Date | null {
+  if (!dateString) return null;
+  const parsed = new Date(normalizeIsoString(dateString));
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+}
+
+function getLocalComponents(dateUtc: Date, timezoneOffsetMinutes: number): DateComponents {
+  const local = new Date(dateUtc.getTime() + timezoneOffsetMinutes * MS_PER_MINUTE);
+
+  return {
+    year: local.getUTCFullYear(),
+    month: local.getUTCMonth() + 1,
+    day: local.getUTCDate(),
+    hour: local.getUTCHours(),
+    minute: local.getUTCMinutes(),
+    second: local.getUTCSeconds()
+  };
+}
+
+function buildLocalDateUtc(
+  components: Pick<DateComponents, "year" | "month" | "day">,
+  timezoneOffsetMinutes: number
+): Date {
+  const utcMs = Date.UTC(components.year, components.month - 1, components.day) - timezoneOffsetMinutes * MS_PER_MINUTE;
+  return new Date(utcMs);
+}
 
 /**
  * 获取节气时刻
  */
-function getSolarTerm(year: number, termName: string): Date | null {
-  const yearData = (solarTermsData.years as any)[year.toString()];
-  if (!yearData || !yearData[termName]) return null;
-  return new Date(yearData[termName].date);
+function getSolarTermUtc(year: number, termName: string): Date | null {
+  const yearData = solarTermsYears.years[year.toString()];
+  if (!yearData) return null;
+  return parseSolarTermDate(yearData[termName]?.date) ?? null;
+}
+
+function findNearestSolarTerm(
+  dateUtc: Date,
+  termName: string,
+  timezoneOffsetMinutes: number
+): { date: Date; year: number } | null {
+  const localYear = getLocalComponents(dateUtc, timezoneOffsetMinutes).year;
+  const searchYears = [localYear - 1, localYear, localYear + 1];
+  let best: { date: Date; year: number } | null = null;
+  let bestDiff = Number.POSITIVE_INFINITY;
+
+  for (const candidateYear of searchYears) {
+    const termDate = getSolarTermUtc(candidateYear, termName);
+    if (!termDate) continue;
+    const diff = Math.abs(termDate.getTime() - dateUtc.getTime());
+    if (diff < bestDiff) {
+      best = { date: termDate, year: candidateYear };
+      bestDiff = diff;
+    }
+  }
+
+  return best;
 }
 
 /**
  * 计算年柱
  * 规则: 以立春为界
  */
-export function calculateYearPillar(date: Date): { stem: string; branch: string } {
-  const year = date.getFullYear();
-  
-  // 获取立春时刻
-  const lichun = getSolarTerm(year, '立春');
-  
-  // 如果没有立春数据，用2月4日作为近似
-  let actualYear = year;
-  if (lichun) {
-    actualYear = date >= lichun ? year : year - 1;
+export function calculateYearPillar(dateUtc: Date, timezoneOffsetMinutes = 0): { stem: string; branch: string } {
+  const local = getLocalComponents(dateUtc, timezoneOffsetMinutes);
+
+  const lichunInfo = findNearestSolarTerm(dateUtc, "立春", timezoneOffsetMinutes);
+
+  let actualYear = local.year;
+  if (lichunInfo) {
+    actualYear = dateUtc >= lichunInfo.date ? lichunInfo.year : lichunInfo.year - 1;
   } else {
-    const approxLichun = new Date(year, 1, 4); // 2月4日
-    actualYear = date >= approxLichun ? year : year - 1;
+    const approxLocal = { year: local.year, month: 2, day: 4, hour: 0, minute: 0, second: 0 };
+    const approx = new Date(
+      Date.UTC(
+        approxLocal.year,
+        approxLocal.month - 1,
+        approxLocal.day,
+        approxLocal.hour,
+        approxLocal.minute,
+        approxLocal.second
+      ) - timezoneOffsetMinutes * MS_PER_MINUTE
+    );
+    actualYear = dateUtc >= approx ? local.year : local.year - 1;
   }
   
   // 1984年 = 甲子年，计算偏移
@@ -80,76 +205,59 @@ export function calculateYearPillar(date: Date): { stem: string; branch: string 
 /**
  * 获取月支的节气月
  */
-function getMonthBranchIndex(date: Date): number {
-  const year = date.getFullYear();
-  
-  // 节气对应的月支（节气开始对应的月份）
-  const termToBranch: Record<string, number> = {
-    '立春': 2,  // 寅
-    '惊蛰': 3,  // 卯
-    '清明': 4,  // 辰
-    '立夏': 5,  // 巳
-    '芒种': 6,  // 午
-    '小暑': 7,  // 未
-    '立秋': 8,  // 申
-    '白露': 9,  // 酉
-    '寒露': 10, // 戌
-    '立冬': 11, // 亥
-    '大雪': 0,  // 子
-    '小寒': 1   // 丑
-  };
-  
-  // 获取年度所有节气
-  const yearData = (solarTermsData.years as any)[year.toString()];
-  if (!yearData) {
-    // 如果没有节气数据，用简化计算
-    const month = date.getMonth() + 1;
-    return (month + 1) % 12;
-  }
-  
-  // 找出当前日期在哪个节气月
-  const terms = Object.keys(termToBranch);
-  let currentBranch = 1; // 默认丑月
-  
-  for (const term of terms) {
-    const termDate = getSolarTerm(year, term);
-    if (termDate && date >= termDate) {
-      currentBranch = termToBranch[term];
+function getMonthBranchIndex(dateUtc: Date, timezoneOffsetMinutes: number): number {
+  const localYear = getLocalComponents(dateUtc, timezoneOffsetMinutes).year;
+  const searchYears = [localYear - 1, localYear, localYear + 1];
+
+  const occurrences: Array<{ date: Date; branchIndex: number }> = [];
+
+  for (const yearCandidate of searchYears) {
+    const yearData = solarTermsYears.years[yearCandidate.toString()];
+    if (!yearData) continue;
+
+    for (const { term, branchIndex } of SOLAR_TERM_BRANCH_ORDER) {
+      const termDate = parseSolarTermDate(yearData[term]?.date);
+      if (!termDate) continue;
+      occurrences.push({ date: termDate, branchIndex });
     }
   }
-  
-  // 处理跨年情况（小寒在1月但属于前一年的丑月）
-  const lichun = getSolarTerm(year, '立春');
-  if (lichun && date < lichun) {
-    // 立春前，需要查看是否过了小寒
-    const xiaohan = getSolarTerm(year, '小寒');
-    if (xiaohan && date >= xiaohan) {
-      currentBranch = 1; // 丑月
-    } else {
-      // 查前一年的大雪
-      const prevDaxue = getSolarTerm(year - 1, '大雪');
-      if (prevDaxue && date >= prevDaxue) {
-        currentBranch = 0; // 子月
-      }
+
+  if (occurrences.length === 0) {
+    const month = getLocalComponents(dateUtc, timezoneOffsetMinutes).month;
+    const fallbackMapping = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0];
+    return fallbackMapping[month] ?? 1;
+  }
+
+  occurrences.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  for (let i = occurrences.length - 1; i >= 0; i--) {
+    if (occurrences[i].date.getTime() <= dateUtc.getTime()) {
+      return occurrences[i].branchIndex;
     }
   }
-  
-  return currentBranch;
+
+  return SOLAR_TERM_BRANCH_ORDER[0].branchIndex;
 }
 
 /**
  * 计算月柱
  * 规则: 以节气为界，使用五虎遁月
  */
-export function calculateMonthPillar(date: Date, yearStem: string): { stem: string; branch: string } {
+export function calculateMonthPillar(
+  dateUtc: Date,
+  timezoneOffsetMinutes = 0
+): { stem: string; branch: string } {
   // 获取月支索引
-  const branchIndex = getMonthBranchIndex(date);
+  const branchIndex = getMonthBranchIndex(dateUtc, timezoneOffsetMinutes);
   const branch = DIZHI[branchIndex];
-  
+
   // 使用五虎遁查表获取月干
-  const mapping = (fiveTigersData.mapping as any)[yearStem];
+  const local = getLocalComponents(dateUtc, timezoneOffsetMinutes);
+  const solarYearStemIndex = ((local.year - 4) % 10 + 10) % 10;
+  const solarYearStem = TIANGAN[solarYearStemIndex];
+  const mapping = (fiveTigersData.mapping as Record<string, Record<string, string>>)[solarYearStem];
   const stem = mapping ? mapping[branch] : TIANGAN[0];
-  
+
   return { stem, branch };
 }
 
@@ -194,7 +302,7 @@ export function calculateHourPillar(hour: number, dayStem: string): { stem: stri
   const branch = DIZHI[branchIndex];
   
   // 使用五鼠遁查表获取时干
-  const mapping = (fiveRatsData.mapping as any)[dayStem];
+  const mapping = (fiveRatsData.mapping as Record<string, Record<string, string>>)[dayStem];
   const stem = mapping ? mapping[branch] : TIANGAN[0];
   
   return { stem, branch };
@@ -203,38 +311,64 @@ export function calculateHourPillar(hour: number, dayStem: string): { stem: stri
 /**
  * 计算五行分数
  */
-export function calculateWuxing(pillars: any) {
-  const wuxing = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
-  
-  const elementMap: Record<string, keyof typeof wuxing> = {
-    '木': 'wood',
-    '火': 'fire',
-    '土': 'earth',
-    '金': 'metal',
-    '水': 'water'
+export interface WuxingScore {
+  wood: number;
+  fire: number;
+  earth: number;
+  metal: number;
+  water: number;
+}
+
+export interface WuxingBreakdownEntry {
+  element: keyof WuxingScore;
+  value: number;
+  source: string;
+}
+
+export function calculateWuxing(
+  pillars: FourPillars,
+  hiddenStemConfig: Record<PillarName, HiddenStemEntry[]>
+): { totals: WuxingScore; breakdown: WuxingBreakdownEntry[] } {
+  const totals: WuxingScore = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
+  const breakdown: WuxingBreakdownEntry[] = [];
+
+  const elementMap: Record<string, keyof WuxingScore> = {
+    木: "wood",
+    火: "fire",
+    土: "earth",
+    金: "metal",
+    水: "water"
   };
-  
-  // 天干得分 (每个1.5分)
-  [pillars.year.stem, pillars.month.stem, pillars.day.stem, pillars.hour.stem].forEach(stem => {
-    const element = TIANGAN_WUXING[stem];
-    const key = elementMap[element];
-    if (key) wuxing[key] += 1.5;
+
+  const pushContribution = (stemOrBranch: string, value: number, descriptor: string, isStem = true) => {
+    const elementSymbol = isStem ? TIANGAN_WUXING[stemOrBranch] : DIZHI_WUXING[stemOrBranch];
+    const key = elementMap[elementSymbol];
+    if (!key || value <= 0) return;
+    totals[key] += value;
+    breakdown.push({ element: key, value, source: descriptor });
+  };
+
+  (Object.entries(pillars) as Array<[PillarName, PillarDetail]>).forEach(([pillarName, pillar]) => {
+    pushContribution(pillar.stem, 1.0, `${pillarName}天干(${pillar.stem})`);
+    pushContribution(pillar.branch, 0.8, `${pillarName}地支(${pillar.branch})`, false);
+
+    const entries = hiddenStemConfig[pillarName] ?? [];
+    entries.forEach((entry, index) => {
+      let weight = entry.weight;
+      if (pillarName === "month" && index === 0) {
+        weight *= MONTH_COMMAND_MULTIPLIER;
+      }
+      pushContribution(entry.stem, weight, `${pillarName}藏干(${entry.stem})`);
+    });
   });
-  
-  // 地支得分 (每个1分)
-  [pillars.year.branch, pillars.month.branch, pillars.day.branch, pillars.hour.branch].forEach(branch => {
-    const element = DIZHI_WUXING[branch];
-    const key = elementMap[element];
-    if (key) wuxing[key] += 1;
-  });
-  
-  return wuxing;
+
+  return { totals, breakdown };
 }
 
 /**
  * 计算阴阳比例
  */
-export function calculateYinYang(pillars: any) {
+export function calculateYinYang(pillars: FourPillars) {
   let yang = 0, yin = 0;
   
   // 天干阴阳
@@ -270,38 +404,25 @@ export function getNayin(stem: string, branch: string): string {
 export interface BaziCalculationInput {
   birthDate: Date;
   birthHour: number;
+  birthMinute?: number;
   name: string;
   gender: string;
   location?: string;
   useSolarTime?: boolean;
+  timezoneOffsetMinutes?: number;
 }
 
 export interface BaziCalculationResult {
-  pillars: {
-    year: { stem: string; branch: string };
-    month: { stem: string; branch: string };
-    day: { stem: string; branch: string };
-    hour: { stem: string; branch: string };
-  };
-  hiddenStems: {
-    year: string[];
-    month: string[];
-    day: string[];
-    hour: string[];
-  };
+  pillars: FourPillars;
+  hiddenStems: Record<PillarName, HiddenStemEntry[]>;
   nayin: {
     year: string;
     month: string;
     day: string;
     hour: string;
   };
-  wuxing: {
-    wood: number;
-    fire: number;
-    earth: number;
-    metal: number;
-    water: number;
-  };
+  wuxing: WuxingScore;
+  wuxingBreakdown: WuxingBreakdownEntry[];
   yinyang: {
     yang: number;
     yin: number;
@@ -309,27 +430,48 @@ export interface BaziCalculationResult {
 }
 
 export function calculateBazi(input: BaziCalculationInput): BaziCalculationResult {
-  const { birthDate, birthHour } = input;
-  
+  const {
+    birthDate,
+    birthHour,
+    birthMinute = 0,
+    timezoneOffsetMinutes = 0
+  } = input;
+
+  const baseYear = birthDate.getUTCFullYear();
+  const baseMonth = birthDate.getUTCMonth();
+  const baseDay = birthDate.getUTCDate();
+
+  const birthUtc = new Date(
+    Date.UTC(baseYear, baseMonth, baseDay, birthHour, birthMinute) - timezoneOffsetMinutes * MS_PER_MINUTE
+  );
+
+  const localComponents = getLocalComponents(birthUtc, timezoneOffsetMinutes);
+
   // 计算四柱
-  const yearPillar = calculateYearPillar(birthDate);
-  const monthPillar = calculateMonthPillar(birthDate, yearPillar.stem);
-  const dayPillar = calculateDayPillar(birthDate);
-  const hourPillar = calculateHourPillar(birthHour, dayPillar.stem);
+  const yearPillar = calculateYearPillar(birthUtc, timezoneOffsetMinutes);
+  const monthPillar = calculateMonthPillar(birthUtc, timezoneOffsetMinutes);
+
+  const dayStartUtc = new Date(Date.UTC(localComponents.year, localComponents.month - 1, localComponents.day));
+
+  const ziHourCrossDay = localComponents.hour === 23;
+  const adjustedDayUtc = ziHourCrossDay ? new Date(dayStartUtc.getTime() + MS_PER_DAY) : dayStartUtc;
+
+  const dayPillar = calculateDayPillar(adjustedDayUtc);
+  const hourPillar = calculateHourPillar(localComponents.hour, dayPillar.stem);
   
-  const pillars = {
+  const pillars: FourPillars = {
     year: yearPillar,
     month: monthPillar,
     day: dayPillar,
     hour: hourPillar
   };
-  
+
   // 计算藏干
-  const hiddenStems = {
-    year: DIZHI_CANGGAN[yearPillar.branch],
-    month: DIZHI_CANGGAN[monthPillar.branch],
-    day: DIZHI_CANGGAN[dayPillar.branch],
-    hour: DIZHI_CANGGAN[hourPillar.branch]
+  const hiddenStems: Record<PillarName, HiddenStemEntry[]> = {
+    year: DIZHI_CANGGAN[yearPillar.branch] ?? [],
+    month: DIZHI_CANGGAN[monthPillar.branch] ?? [],
+    day: DIZHI_CANGGAN[dayPillar.branch] ?? [],
+    hour: DIZHI_CANGGAN[hourPillar.branch] ?? []
   };
   
   // 计算纳音
@@ -339,16 +481,17 @@ export function calculateBazi(input: BaziCalculationInput): BaziCalculationResul
     day: getNayin(dayPillar.stem, dayPillar.branch),
     hour: getNayin(hourPillar.stem, hourPillar.branch)
   };
-  
+
   // 计算五行和阴阳
-  const wuxing = calculateWuxing(pillars);
+  const { totals: wuxing, breakdown: wuxingBreakdown } = calculateWuxing(pillars, hiddenStems);
   const yinyang = calculateYinYang(pillars);
-  
+
   return {
     pillars,
     hiddenStems,
     nayin,
     wuxing,
+    wuxingBreakdown,
     yinyang
   };
 }

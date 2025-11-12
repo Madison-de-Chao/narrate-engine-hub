@@ -1,7 +1,7 @@
 project_id = "ncpqlfwllxkwkxcqmrdi"
 
 [functions.calculate-bazi]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-legion-story]
 verify_jwt = false

@@ -189,17 +189,19 @@ serve(async (req) => {
       },
     });
 
+    // 支援訪客模式：嘗試獲取用戶，但不強制要求
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('Missing authorization header');
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      throw new Error('Unauthorized');
+    let user = null;
+    
+    if (authHeader) {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser(
+          authHeader.replace('Bearer ', '')
+        );
+        user = authUser;
+      } catch (error) {
+        console.log('Auth check failed, continuing as guest:', error);
+      }
     }
 
     const { name, gender, birthDate, birthTime, location, useSolarTime } = await req.json();
@@ -242,52 +244,61 @@ serve(async (req) => {
     const wuxingScores = calculateWuxingScores(pillars);
     const yinyangRatio = calculateYinYangRatio(pillars);
 
-    // 保存到数据库
-    const { data: calculation, error: insertError } = await supabase
-      .from('bazi_calculations')
-      .insert({
-        user_id: user.id,
-        name,
-        gender,
-        birth_date: birth.toISOString(),
-        birth_time: birthTime,
-        location: location || null,
-        use_solar_time: useSolarTime !== false,
-        year_stem: yearPillar.stem,
-        year_branch: yearPillar.branch,
-        month_stem: monthPillar.stem,
-        month_branch: monthPillar.branch,
-        day_stem: dayPillar.stem,
-        day_branch: dayPillar.branch,
-        hour_stem: hourPillar.stem,
-        hour_branch: hourPillar.branch,
-        year_nayin: nayin.year,
-        month_nayin: nayin.month,
-        day_nayin: nayin.day,
-        hour_nayin: nayin.hour,
-        wuxing_scores: wuxingScores,
-        yinyang_ratio: yinyangRatio,
-        hidden_stems: {},
-        ten_gods: {},
-        shensha: [],
-        legion_analysis: {},
-        legion_stories: {}
-      })
-      .select()
-      .single();
+    // 僅在有登入用戶時保存到數據庫
+    let calculationId = null;
+    if (user) {
+      const { data: calculation, error: insertError } = await supabase
+        .from('bazi_calculations')
+        .insert({
+          user_id: user.id,
+          name,
+          gender,
+          birth_date: birth.toISOString(),
+          birth_time: birthTime,
+          location: location || null,
+          use_solar_time: useSolarTime !== false,
+          year_stem: yearPillar.stem,
+          year_branch: yearPillar.branch,
+          month_stem: monthPillar.stem,
+          month_branch: monthPillar.branch,
+          day_stem: dayPillar.stem,
+          day_branch: dayPillar.branch,
+          hour_stem: hourPillar.stem,
+          hour_branch: hourPillar.branch,
+          year_nayin: nayin.year,
+          month_nayin: nayin.month,
+          day_nayin: nayin.day,
+          hour_nayin: nayin.hour,
+          wuxing_scores: wuxingScores,
+          yinyang_ratio: yinyangRatio,
+          hidden_stems: {},
+          ten_gods: {},
+          shensha: [],
+          legion_analysis: {},
+          legion_stories: {}
+        })
+        .select()
+        .single();
 
-    if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Database insert error:', insertError);
+        // 不中斷流程，繼續返回計算結果
+      } else {
+        calculationId = calculation?.id;
+      }
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
         calculation: {
-          id: calculation.id,
+          id: calculationId,
           pillars,
           nayin,
           wuxingScores,
           yinyangRatio
-        }
+        },
+        isGuest: !user
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

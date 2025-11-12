@@ -23,9 +23,24 @@ export interface BaziResult {
     day: { stem: string; branch: string };
     hour: { stem: string; branch: string };
   };
-  hiddenStems: Record<string, unknown>;
-  tenGods: Record<string, unknown>;
-  nayin: Record<string, unknown>;
+  hiddenStems: {
+    year: string[];
+    month: string[];
+    day: string[];
+    hour: string[];
+  };
+  tenGods: {
+    year: { stem: string; branch: string };
+    month: { stem: string; branch: string };
+    day: { stem: string; branch: string };
+    hour: { stem: string; branch: string };
+  };
+  nayin: {
+    year: string;
+    month: string;
+    day: string;
+    hour: string;
+  };
   shensha: string[];
   wuxing: {
     wood: number;
@@ -120,8 +135,18 @@ const Index = () => {
           birthDate: formData.birthDate as Date,
           gender: formData.gender as string,
           pillars: data.calculation.pillars,
-          hiddenStems: {},
-          tenGods: {},
+          hiddenStems: {
+            year: [],
+            month: [],
+            day: [],
+            hour: []
+          },
+          tenGods: {
+            year: { stem: "待計算", branch: "待計算" },
+            month: { stem: "待計算", branch: "待計算" },
+            day: { stem: "待計算", branch: "待計算" },
+            hour: { stem: "待計算", branch: "待計算" }
+          },
           nayin: data.calculation.nayin,
           shensha: [],
           wuxing: data.calculation.wuxingScores,

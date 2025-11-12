@@ -91,7 +91,7 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
           const legion = legionConfig[pillarName];
           const pillar = pillars[pillarName];
           const { stem, branch } = pillar;
-          const tenGod = tenGods[pillarName];
+          const tenGod = tenGods[pillarName] || { stem: "待計算", branch: "待計算" };
           
           const commanderRole = tianganRoles[stem];
           const advisorRole = dizhiRoles[branch];
@@ -119,11 +119,11 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                   </div>
                   <div className="p-3 bg-card/50 rounded-lg border border-border/50">
                     <p className="text-xs text-muted-foreground mb-1">納音</p>
-                    <p className="font-semibold text-lg">{nayin[pillarName]}</p>
+                    <p className="font-semibold text-lg">{nayin[pillarName] || "-"}</p>
                   </div>
                   <div className="p-3 bg-card/50 rounded-lg border border-border/50">
                     <p className="text-xs text-muted-foreground mb-1">十神</p>
-                    <p className="font-semibold text-lg">{tenGod.stem}</p>
+                    <p className="font-semibold text-lg">{tenGod?.stem || "-"}</p>
                   </div>
                   <div className="p-3 bg-card/50 rounded-lg border border-border/50">
                     <p className="text-xs text-muted-foreground mb-1">神煞</p>
@@ -163,7 +163,7 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                   <p className="text-base leading-relaxed text-foreground">
                     在{pillarName === 'year' ? '你生命的源頭' : pillarName === 'month' ? '人際關係的戰場上' : pillarName === 'day' ? '你內心的核心要塞中' : '未來的地平線上'}，
                     {stem}將軍{pillarName === 'year' ? '統領著' : pillarName === 'month' ? '率領著' : pillarName === 'day' ? '統治著最重要的' : '領導著前瞻'}軍團。
-                    這支由{stem}{branch}組成的部隊，蘊含著{nayin[pillarName]}的神秘力量。{commanderRole?.role}，
+                    這支由{stem}{branch}組成的部隊，蘊含著{nayin[pillarName] || "神秘"}的神秘力量。{commanderRole?.role}，
                     {pillarName === 'year' ? '掌管著你的根基與傳承' : pillarName === 'month' ? '專精於外交與合作策略' : pillarName === 'day' ? '是你真實自我的化身與代表' : '具有預見未來的卓越能力'}。
                     地支{branch}化身為{advisorRole?.role}，以其{advisorRole?.trait}的特質輔佐軍團。
                     這個軍團象徵著你的{legion.lifeDomain}，在{legion.stage}階段發揮重要作用...
@@ -195,7 +195,7 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                       🎵 納音深度解讀
                     </h5>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      {nayin[pillarName]}在命理學中代表獨特的命格特質。在{legion.name}的位置上，
+                      {nayin[pillarName] || "此納音"}在命理學中代表獨特的命格特質。在{legion.name}的位置上，
                       象徵著{pillarName === 'year' ? '童年環境與家族傳承' : pillarName === 'month' ? '社會關係與事業發展' : pillarName === 'day' ? '個人特質與內在品格' : '未來發展與子女運勢'}的體現。
                       此納音與生俱來的特質將在{legion.stage}階段發揮重要作用。
                     </p>
@@ -219,7 +219,7 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                       ⚔️ 十神關係分析
                     </h5>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      作為{tenGod.stem}，此柱體現了特定的命理特質。
+                      作為{tenGod?.stem || "未知"}，此柱體現了特定的命理特質。
                       在人生格局中扮演重要角色，影響著你的{pillarName === 'year' ? '根基與傳承' : pillarName === 'month' ? '事業與人際' : pillarName === 'day' ? '性格與感情' : '創造與未來'}發展方向。
                     </p>
                   </div>
@@ -242,7 +242,7 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                     </h5>
                     <p className="text-sm leading-relaxed">
                       充分發揮{stem}的{commanderRole?.trait}特質，同時運用{branch}的{advisorRole?.trait}能力，
-                      結合{nayin[pillarName]}的優勢，可以在{pillarName === 'year' ? '家庭關係與個人根基' : pillarName === 'month' ? '事業發展與人際網絡' : pillarName === 'day' ? '個人成長與感情生活' : '創新創造與未來規劃'}方面取得重大突破。
+                      結合{nayin[pillarName] || "此納音"}的優勢，可以在{pillarName === 'year' ? '家庭關係與個人根基' : pillarName === 'month' ? '事業發展與人際網絡' : pillarName === 'day' ? '個人成長與感情生活' : '創新創造與未來規劃'}方面取得重大突破。
                     </p>
                   </div>
 

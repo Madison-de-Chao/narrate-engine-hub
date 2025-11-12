@@ -36,12 +36,12 @@ export const TraditionalBaziDisplay = ({ baziResult }: TraditionalBaziDisplayPro
         <div>
           <h3 className="text-lg font-semibold text-foreground mb-3">藏干</h3>
           <div className="grid grid-cols-4 gap-4">
-            {["year", "month", "day", "hour"].map((pillar) => {
-              const stems = hiddenStems[pillar as keyof typeof hiddenStems];
+        {["year", "month", "day", "hour"].map((pillar) => {
+              const stems = hiddenStems[pillar as keyof typeof hiddenStems] || [];
               return (
                 <div key={pillar} className="bg-muted/20 rounded p-3 text-center">
                   <div className="flex justify-center gap-1">
-                    {stems.map((stem: string, idx: number) => (
+                    {Array.isArray(stems) && stems.map((stem: string, idx: number) => (
                       <span key={idx} className="text-sm text-muted-foreground">
                         {stem}
                       </span>
@@ -58,11 +58,11 @@ export const TraditionalBaziDisplay = ({ baziResult }: TraditionalBaziDisplayPro
           <h3 className="text-lg font-semibold text-foreground mb-3">十神</h3>
           <div className="grid grid-cols-4 gap-4">
             {["year", "month", "day", "hour"].map((pillar) => {
-              const gods = tenGods[pillar as keyof typeof tenGods];
+              const gods = tenGods[pillar as keyof typeof tenGods] || { stem: "", branch: "" };
               return (
                 <div key={pillar} className="bg-muted/20 rounded p-3 text-center space-y-1">
-                  <div className="text-sm text-accent">{gods.stem}</div>
-                  <div className="text-sm text-secondary">{gods.branch}</div>
+                  <div className="text-sm text-accent">{gods.stem || "-"}</div>
+                  <div className="text-sm text-secondary">{gods.branch || "-"}</div>
                 </div>
               );
             })}
@@ -74,7 +74,7 @@ export const TraditionalBaziDisplay = ({ baziResult }: TraditionalBaziDisplayPro
           <h3 className="text-lg font-semibold text-foreground mb-3">納音五行</h3>
           <div className="grid grid-cols-4 gap-4">
             {["year", "month", "day", "hour"].map((pillar) => {
-              const nayinValue = nayin[pillar as keyof typeof nayin];
+              const nayinValue = nayin[pillar as keyof typeof nayin] || "-";
               return (
                 <div key={pillar} className="bg-muted/20 rounded p-3 text-center">
                   <div className="text-sm text-primary">{nayinValue}</div>

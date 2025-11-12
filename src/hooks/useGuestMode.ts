@@ -26,7 +26,9 @@ export const useGuestMode = () => {
 
   const enableGuestMode = () => {
     const guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    setGuestData({ isGuest: true, guestId });
+    const newGuestData = { isGuest: true, guestId };
+    setGuestData(newGuestData);
+    localStorage.setItem(GUEST_MODE_KEY, JSON.stringify(newGuestData));
   };
 
   const disableGuestMode = () => {

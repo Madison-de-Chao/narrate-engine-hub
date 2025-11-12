@@ -23,7 +23,7 @@ const HOUR_OPTIONS = [
 ];
 
 interface BaziInputFormProps {
-  onCalculate: (formData: any) => void;
+  onCalculate: (formData: Record<string, unknown>) => void;
   isCalculating: boolean;
 }
 

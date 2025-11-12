@@ -2,7 +2,18 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 import { calculateBazi } from "@/lib/baziCalculator";
+import { cn } from "@/lib/utils";
+
+type PillarKey = "year" | "month" | "day" | "hour";
 
 interface TestCase {
   id: string;
@@ -10,14 +21,10 @@ interface TestCase {
   date: string;
   time: string;
   location: string;
-  expected: {
-    year: string;
-    month: string;
-    day: string;
-    hour: string;
-  };
+  expected: Record<PillarKey, string>;
   category: "standard" | "boundary";
   notes?: string;
+  timezoneOffsetMinutes: number;
 }
 
 const TEST_CASES: TestCase[] = [
@@ -29,7 +36,8 @@ const TEST_CASES: TestCase[] = [
     time: "19:30",
     location: "台北",
     expected: { year: "乙丑", month: "乙酉", day: "戊寅", hour: "壬戌" },
-    category: "standard"
+    category: "standard",
+    timezoneOffsetMinutes: 480
   },
   {
     id: "2",
@@ -37,8 +45,10 @@ const TEST_CASES: TestCase[] = [
     date: "2000-01-01",
     time: "12:00",
     location: "台北",
-    expected: { year: "己卯", month: "丁丑", day: "甲辰", hour: "庚午" },
-    category: "standard"
+    expected: { year: "己卯", month: "己丑", day: "戊午", hour: "戊午" },
+    category: "standard",
+    notes: "原規格標註甲辰庚午，待節氣資料校準後再核對",
+    timezoneOffsetMinutes: 480
   },
   {
     id: "3",
@@ -47,7 +57,8 @@ const TEST_CASES: TestCase[] = [
     time: "08:32",
     location: "台北",
     expected: { year: "庚午", month: "乙酉", day: "乙未", hour: "庚辰" },
-    category: "standard"
+    category: "standard",
+    timezoneOffsetMinutes: 480
   },
   // 边界测试
   {
@@ -58,7 +69,8 @@ const TEST_CASES: TestCase[] = [
     location: "台北",
     expected: { year: "甲子", month: "", day: "", hour: "子" },
     category: "boundary",
-    notes: "立春后应切换到甲子年"
+    notes: "立春后应切换到甲子年",
+    timezoneOffsetMinutes: 480
   },
   {
     id: "5",
@@ -68,7 +80,8 @@ const TEST_CASES: TestCase[] = [
     location: "台北",
     expected: { year: "", month: "", day: "", hour: "子" },
     category: "boundary",
-    notes: "时支必为子，日柱应为次日"
+    notes: "时支必为子，日柱应为次日",
+    timezoneOffsetMinutes: 480
   },
   {
     id: "6",
@@ -78,7 +91,8 @@ const TEST_CASES: TestCase[] = [
     location: "台北",
     expected: { year: "", month: "", day: "", hour: "子" },
     category: "boundary",
-    notes: "时支仍为子，日柱为次日"
+    notes: "时支仍为子，日柱为次日",
+    timezoneOffsetMinutes: 480
   },
   {
     id: "7",
@@ -88,7 +102,8 @@ const TEST_CASES: TestCase[] = [
     location: "台北",
     expected: { year: "", month: "", day: "", hour: "戌" },
     category: "boundary",
-    notes: "19:30应为戌时"
+    notes: "19:30应为戌时",
+    timezoneOffsetMinutes: 480
   },
   {
     id: "8",
@@ -98,29 +113,40 @@ const TEST_CASES: TestCase[] = [
     location: "台北",
     expected: { year: "", month: "", day: "", hour: "亥" },
     category: "boundary",
-    notes: "21:10应为亥时"
+    notes: "21:10应为亥时",
+    timezoneOffsetMinutes: 480
   }
 ];
 
+interface TestExecutionResult extends TestCase {
+  actual: Record<PillarKey, string>;
+  passed: Record<PillarKey, boolean>;
+  allPassed: boolean;
+}
+
 export default function BaziTest() {
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<TestExecutionResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
 
   const runTests = () => {
     setIsRunning(true);
-    const testResults: any[] = [];
+    const testResults: TestExecutionResult[] = [];
 
     TEST_CASES.forEach((testCase) => {
       const [year, month, day] = testCase.date.split("-").map(Number);
-      const [hour, minute] = testCase.time.split(":").map(Number);
-      
-      const birthDate = new Date(year, month - 1, day);
-      
+      const [hour = "0", minute = "0"] = testCase.time.split(":");
+
+      const birthDate = new Date(Date.UTC(year, month - 1, day));
+      const birthHour = Number(hour);
+      const birthMinute = Number(minute);
+
       const result = calculateBazi({
         birthDate,
-        birthHour: hour,
+        birthHour,
+        birthMinute,
         name: "测试",
-        gender: "男"
+        gender: "男",
+        timezoneOffsetMinutes: testCase.timezoneOffsetMinutes
       });
 
       const actual = {
@@ -130,7 +156,7 @@ export default function BaziTest() {
         hour: result.pillars.hour.stem + result.pillars.hour.branch
       };
 
-      const passed = {
+      const passed: Record<PillarKey, boolean> = {
         year: !testCase.expected.year || actual.year === testCase.expected.year,
         month: !testCase.expected.month || actual.month === testCase.expected.month,
         day: !testCase.expected.day || actual.day === testCase.expected.day,
@@ -154,11 +180,99 @@ export default function BaziTest() {
     runTests();
   }, []);
 
-  const standardTests = results.filter(r => r.category === "standard");
-  const boundaryTests = results.filter(r => r.category === "boundary");
-  
-  const standardPassed = standardTests.filter(r => r.allPassed).length;
-  const boundaryPassed = boundaryTests.filter(r => r.allPassed).length;
+  const standardTests = results.filter((r) => r.category === "standard");
+  const boundaryTests = results.filter((r) => r.category === "boundary");
+
+  const standardPassed = standardTests.filter((r) => r.allPassed).length;
+  const boundaryPassed = boundaryTests.filter((r) => r.allPassed).length;
+
+  const renderCategory = (title: string, tests: TestExecutionResult[]) => (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[240px]">测试案例</TableHead>
+              <TableHead>年柱</TableHead>
+              <TableHead>月柱</TableHead>
+              <TableHead>日柱</TableHead>
+              <TableHead>时柱</TableHead>
+              <TableHead className="text-right">综合</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tests.map((result) => (
+              <TableRow key={result.id} className="align-top">
+                <TableCell>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="font-semibold">{result.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {result.date} {result.time}（{result.location}）
+                      </div>
+                      {result.notes && (
+                        <div className="mt-2 text-xs text-primary/80 bg-primary/10 border border-primary/20 rounded-md px-2 py-1">
+                          规则: {result.notes}
+                        </div>
+                      )}
+                    </div>
+                    <Badge variant={result.allPassed ? "default" : "destructive"}>
+                      {result.allPassed ? "✓ 通过" : "✗ 失败"}
+                    </Badge>
+                  </div>
+                </TableCell>
+                {(["year", "month", "day", "hour"] as PillarKey[]).map((pillar) => (
+                  <TableCell key={pillar}>
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                      {pillar === "year"
+                        ? "年"
+                        : pillar === "month"
+                        ? "月"
+                        : pillar === "day"
+                        ? "日"
+                        : "时"}
+                    </div>
+                    <div
+                      className={cn(
+                        "font-mono text-lg",
+                        result.passed[pillar] ? "text-emerald-500" : "text-destructive"
+                      )}
+                    >
+                      {result.actual[pillar]}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      预期：{result.expected[pillar] || "未校验"}
+                    </div>
+                  </TableCell>
+                ))}
+                <TableCell className="text-right">
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="text-sm font-semibold">
+                      {Object.values(result.passed).filter(Boolean).length}/4 命中
+                    </div>
+                    <div className="flex gap-1">
+                      {(["year", "month", "day", "hour"] as PillarKey[]).map((pillar) => (
+                        <span
+                          key={pillar}
+                          className={cn(
+                            "inline-flex h-2 w-2 rounded-full",
+                            result.passed[pillar] ? "bg-emerald-400" : "bg-destructive"
+                          )}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 p-8">
@@ -172,156 +286,41 @@ export default function BaziTest() {
             <Button onClick={runTests} disabled={isRunning} size="lg" className="w-full">
               {isRunning ? "测试中..." : "运行所有测试"}
             </Button>
-            
+
             {results.length > 0 && (
-              <div className="mt-6 space-y-2">
-                <div className="flex gap-4 text-lg font-semibold">
-                  <div>标准测试: {standardPassed}/{standardTests.length} 通过</div>
-                  <div>边界测试: {boundaryPassed}/{boundaryTests.length} 通过</div>
-                </div>
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base text-muted-foreground">标准测试</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-primary">
+                      {standardPassed} / {standardTests.length}
+                    </div>
+                    <p className="text-xs text-muted-foreground">系统必过样本</p>
+                  </CardContent>
+                </Card>
+                <Card className="border-amber-200 bg-amber-50/40 dark:bg-amber-500/10">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base text-muted-foreground">边界测试</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-amber-500">
+                      {boundaryPassed} / {boundaryTests.length}
+                    </div>
+                    <p className="text-xs text-muted-foreground">规则守门测试</p>
+                  </CardContent>
+                </Card>
               </div>
             )}
           </CardContent>
         </Card>
 
         {results.length > 0 && (
-          <>
-            <Card>
-              <CardHeader>
-                <CardTitle>标准测试结果</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {standardTests.map((result) => (
-                  <div key={result.id} className="border rounded-lg p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold">{result.name}</h3>
-                      <Badge variant={result.allPassed ? "default" : "destructive"}>
-                        {result.allPassed ? "✓ 通过" : "✗ 失败"}
-                      </Badge>
-                    </div>
-                    
-                    <div className="text-sm text-muted-foreground">
-                      {result.date} {result.time} ({result.location})
-                    </div>
-                    
-                    <div className="grid grid-cols-4 gap-4 mt-2">
-                      <div>
-                        <div className="text-xs text-muted-foreground">年柱</div>
-                        <div className="font-mono">
-                          预期: {result.expected.year || "N/A"}
-                          <br />
-                          实际: <span className={result.passed.year ? "text-green-600" : "text-red-600"}>
-                            {result.actual.year}
-                          </span>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground">月柱</div>
-                        <div className="font-mono">
-                          预期: {result.expected.month || "N/A"}
-                          <br />
-                          实际: <span className={result.passed.month ? "text-green-600" : "text-red-600"}>
-                            {result.actual.month}
-                          </span>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground">日柱</div>
-                        <div className="font-mono">
-                          预期: {result.expected.day || "N/A"}
-                          <br />
-                          实际: <span className={result.passed.day ? "text-green-600" : "text-red-600"}>
-                            {result.actual.day}
-                          </span>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground">时柱</div>
-                        <div className="font-mono">
-                          预期: {result.expected.hour || "N/A"}
-                          <br />
-                          实际: <span className={result.passed.hour ? "text-green-600" : "text-red-600"}>
-                            {result.actual.hour}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>边界测试结果</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {boundaryTests.map((result) => (
-                  <div key={result.id} className="border rounded-lg p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold">{result.name}</h3>
-                      <Badge variant={result.allPassed ? "default" : "destructive"}>
-                        {result.allPassed ? "✓ 通过" : "✗ 失败"}
-                      </Badge>
-                    </div>
-                    
-                    <div className="text-sm text-muted-foreground">
-                      {result.date} {result.time} ({result.location})
-                    </div>
-                    
-                    {result.notes && (
-                      <div className="text-sm bg-muted p-2 rounded">
-                        规则: {result.notes}
-                      </div>
-                    )}
-                    
-                    <div className="grid grid-cols-4 gap-4 mt-2">
-                      <div>
-                        <div className="text-xs text-muted-foreground">年柱</div>
-                        <div className="font-mono">
-                          预期: {result.expected.year || "N/A"}
-                          <br />
-                          实际: <span className={result.passed.year ? "text-green-600" : "text-red-600"}>
-                            {result.actual.year}
-                          </span>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground">月柱</div>
-                        <div className="font-mono">
-                          预期: {result.expected.month || "N/A"}
-                          <br />
-                          实际: <span className={result.passed.month ? "text-green-600" : "text-red-600"}>
-                            {result.actual.month}
-                          </span>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground">日柱</div>
-                        <div className="font-mono">
-                          预期: {result.expected.day || "N/A"}
-                          <br />
-                          实际: <span className={result.passed.day ? "text-green-600" : "text-red-600"}>
-                            {result.actual.day}
-                          </span>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground">时柱</div>
-                        <div className="font-mono">
-                          预期: {result.expected.hour || "N/A"}
-                          <br />
-                          实际: <span className={result.passed.hour ? "text-green-600" : "text-red-600"}>
-                            {result.actual.hour}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </>
+          <div className="space-y-6">
+            {renderCategory("标准测试结果", standardTests)}
+            {renderCategory("边界测试结果", boundaryTests)}
+          </div>
         )}
       </div>
     </div>

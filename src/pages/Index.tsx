@@ -6,10 +6,12 @@ import { TraditionalBaziDisplay } from "@/components/TraditionalBaziDisplay";
 import { LegionCards } from "@/components/LegionCards";
 import { AnalysisCharts } from "@/components/AnalysisCharts";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, LogOut } from "lucide-react";
+import { Download, Loader2, LogOut, UserRound } from "lucide-react";
 import { generatePDF } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 import type { User, Session } from "@supabase/supabase-js";
+import { useGuestMode } from "@/hooks/useGuestMode";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export interface BaziResult {
   name: string;
@@ -21,9 +23,9 @@ export interface BaziResult {
     day: { stem: string; branch: string };
     hour: { stem: string; branch: string };
   };
-  hiddenStems: any;
-  tenGods: any;
-  nayin: any;
+  hiddenStems: Record<string, unknown>;
+  tenGods: Record<string, unknown>;
+  nayin: Record<string, unknown>;
   shensha: string[];
   wuxing: {
     wood: number;
@@ -40,6 +42,7 @@ export interface BaziResult {
 
 const Index = () => {
   const navigate = useNavigate();
+  const { isGuest, disableGuestMode } = useGuestMode();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [baziResult, setBaziResult] = useState<BaziResult | null>(null);
@@ -53,7 +56,8 @@ const Index = () => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (!session) {
+        // Only redirect to auth if not in guest mode and no session
+        if (!session && !isGuest) {
           navigate("/auth");
         }
       }
@@ -64,22 +68,30 @@ const Index = () => {
       setSession(session);
       setUser(session?.user ?? null);
       
-      if (!session) {
+      // Only redirect to auth if not in guest mode and no session
+      if (!session && !isGuest) {
         navigate("/auth");
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, isGuest]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("已退出登录");
-    navigate("/auth");
+    if (isGuest) {
+      disableGuestMode();
+      toast.success("已退出访客模式");
+      navigate("/auth");
+    } else {
+      await supabase.auth.signOut();
+      toast.success("已退出登录");
+      navigate("/auth");
+    }
   };
 
-  const handleCalculate = async (formData: any) => {
-    if (!session) {
+  const handleCalculate = async (formData: Record<string, unknown>) => {
+    // Guest users can calculate but won't save to database
+    if (!session && !isGuest) {
       toast.error("请先登录");
       navigate("/auth");
       return;
@@ -91,9 +103,9 @@ const Index = () => {
       // 调用后端计算 API
       const { data, error } = await supabase.functions.invoke('calculate-bazi', {
         body: {
-          name: formData.name,
-          gender: formData.gender,
-          birthDate: formData.birthDate.toISOString(),
+          name: formData.name as string,
+          gender: formData.gender as string,
+          birthDate: (formData.birthDate as Date).toISOString(),
           birthTime: `${formData.hour}:00`,
           location: formData.location || null,
           useSolarTime: true
@@ -104,9 +116,9 @@ const Index = () => {
 
       if (data?.calculation) {
         const result: BaziResult = {
-          name: formData.name,
-          birthDate: formData.birthDate,
-          gender: formData.gender,
+          name: formData.name as string,
+          birthDate: formData.birthDate as Date,
+          gender: formData.gender as string,
           pillars: data.calculation.pillars,
           hiddenStems: {},
           tenGods: {},
@@ -117,11 +129,18 @@ const Index = () => {
         };
         
         setBaziResult(result);
-        toast.success("命盘生成成功！");
+        
+        // Show different message for guest users
+        if (isGuest) {
+          toast.success("命盘生成成功！(访客模式下结果不会保存)");
+        } else {
+          toast.success("命盘生成成功！");
+        }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("计算失败:", error);
-      toast.error("计算失败：" + error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error("计算失败：" + errorMessage);
     } finally {
       setIsCalculating(false);
     }
@@ -159,21 +178,47 @@ const Index = () => {
                 八字不是宿命，而是靈魂的戰場
               </p>
             </div>
-            {user && (
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                size="sm"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                登出
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {isGuest && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-md">
+                  <UserRound className="h-4 w-4" />
+                  <span>访客模式</span>
+                </div>
+              )}
+              {(user || isGuest) && (
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  size="sm"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {isGuest ? "退出访客" : "登出"}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Guest Mode Alert */}
+        {isGuest && (
+          <Alert className="border-primary/50 bg-primary/5">
+            <UserRound className="h-4 w-4" />
+            <AlertDescription>
+              您正在使用访客模式。
+              <Button
+                variant="link"
+                className="h-auto p-0 ml-1"
+                onClick={() => navigate("/auth")}
+              >
+                注册账户
+              </Button>
+              以保存您的计算历史和享受完整功能。
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {/* 區域1：資料輸入區 */}
         <section className="animate-fade-in">
           <BaziInputForm onCalculate={handleCalculate} isCalculating={isCalculating} />

@@ -8,10 +8,12 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserRound } from "lucide-react";
+import { useGuestMode } from "@/hooks/useGuestMode";
 
 export default function Auth() {
   const navigate = useNavigate();
+  const { enableGuestMode } = useGuestMode();
   const [isLoading, setIsLoading] = useState(false);
   const [isSocialLoading, setIsSocialLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -53,8 +55,9 @@ export default function Auth() {
         toast.success("登录成功！");
         navigate("/");
       }
-    } catch (error: any) {
-      toast.error("登录失败：" + error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error("登录失败：" + errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -101,8 +104,9 @@ export default function Auth() {
         toast.success("注册成功！正在登录...");
         navigate("/");
       }
-    } catch (error: any) {
-      toast.error("注册失败：" + error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error("注册失败：" + errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -122,10 +126,17 @@ export default function Auth() {
       
       if (error) throw error;
       // OAuth 會自動重定向，不需要手動導航
-    } catch (error: any) {
-      toast.error(`${provider === 'google' ? 'Google' : 'Facebook'} 登入失敗：${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`${provider === 'google' ? 'Google' : 'Facebook'} 登入失敗：${errorMessage}`);
       setIsSocialLoading(false);
     }
+  };
+
+  const handleGuestMode = () => {
+    enableGuestMode();
+    toast.success("已切换到访客模式");
+    navigate("/");
   };
 
   return (
@@ -380,6 +391,34 @@ export default function Auth() {
             </form>
           </TabsContent>
         </Tabs>
+
+        {/* Guest Mode Section */}
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator className="w-full" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">
+                或
+              </span>
+            </div>
+          </div>
+          
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGuestMode}
+            className="w-full mt-4 border-dashed border-2"
+          >
+            <UserRound className="mr-2 h-4 w-4" />
+            以访客身份继续
+          </Button>
+          
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            访客模式下可体验功能，但无法保存计算历史
+          </p>
+        </div>
       </Card>
     </div>
   );

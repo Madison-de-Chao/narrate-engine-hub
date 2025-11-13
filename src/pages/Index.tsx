@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BaziInputForm } from "@/components/BaziInputForm";
 import { TraditionalBaziDisplay } from "@/components/TraditionalBaziDisplay";
+import { CompleteBaziReport } from "@/components/CompleteBaziReport";
 import { LegionCards } from "@/components/LegionCards";
 import { AnalysisCharts } from "@/components/AnalysisCharts";
 import { Button } from "@/components/ui/button";
@@ -350,6 +351,11 @@ const Index = () => {
 
             {/* 報告內容區 - 用於 PDF 生成 */}
             <div id="bazi-report-content" className="space-y-8">
+              {/* 完整測算報告 */}
+              <section className="animate-fade-in">
+                <CompleteBaziReport baziResult={baziResult} />
+              </section>
+
               {/* 區域2：傳統八字排盤區 */}
               <section className="animate-fade-in">
                 <TraditionalBaziDisplay baziResult={baziResult} />

@@ -8,14 +8,17 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Loader2, UserRound } from "lucide-react";
+import { Loader2, UserRound, Mail, Phone } from "lucide-react";
 import { useGuestMode } from "@/hooks/useGuestMode";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function Auth() {
   const navigate = useNavigate();
   const { enableGuestMode } = useGuestMode();
   const [isLoading, setIsLoading] = useState(false);
+  const [authMethod, setAuthMethod] = useState<"email" | "phone">("phone");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -31,7 +34,8 @@ export default function Auth() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    const identifier = authMethod === "email" ? email : phone;
+    if (!identifier || !password) {
       toast.error("請填寫所有欄位");
       return;
     }
@@ -39,14 +43,15 @@ export default function Auth() {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await supabase.auth.signInWithPassword(
+        authMethod === "email"
+          ? { email, password }
+          : { phone, password }
+      );
 
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
-          toast.error("電子郵件或密碼錯誤");
+          toast.error(authMethod === "email" ? "電子郵件或密碼錯誤" : "手機號碼或密碼錯誤");
         } else {
           toast.error(error.message);
         }
@@ -65,7 +70,8 @@ export default function Auth() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password || !confirmPassword) {
+    const identifier = authMethod === "email" ? email : phone;
+    if (!identifier || !password || !confirmPassword) {
       toast.error("請填寫所有欄位");
       return;
     }
@@ -80,22 +86,32 @@ export default function Auth() {
       return;
     }
 
+    if (authMethod === "phone" && !phone.match(/^\+?[1-9]\d{1,14}$/)) {
+      toast.error("請輸入有效的手機號碼（含國碼，例如：+886912345678）");
+      return;
+    }
+
     setIsLoading(true);
     
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl
-        }
-      });
+      const { error } = await supabase.auth.signUp(
+        authMethod === "email"
+          ? {
+              email,
+              password,
+              options: { emailRedirectTo: redirectUrl }
+            }
+          : {
+              phone,
+              password,
+            }
+      );
 
       if (error) {
         if (error.message.includes("already registered")) {
-          toast.error("此電子郵件已被註冊");
+          toast.error(authMethod === "email" ? "此電子郵件已被註冊" : "此手機號碼已被註冊");
         } else {
           toast.error(error.message);
         }
@@ -135,19 +151,60 @@ export default function Auth() {
 
           <TabsContent value="signin">
             <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signin-email">電子郵件</Label>
-                <Input
-                  id="signin-email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className="bg-input border-border"
-                />
+              <div className="space-y-3">
+                <Label>登入方式</Label>
+                <RadioGroup 
+                  value={authMethod} 
+                  onValueChange={(value) => setAuthMethod(value as "email" | "phone")}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="phone" id="signin-phone-option" />
+                    <Label htmlFor="signin-phone-option" className="cursor-pointer flex items-center gap-1">
+                      <Phone className="h-4 w-4" />
+                      手機
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="email" id="signin-email-option" />
+                    <Label htmlFor="signin-email-option" className="cursor-pointer flex items-center gap-1">
+                      <Mail className="h-4 w-4" />
+                      Email
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
+
+              {authMethod === "email" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="signin-email">電子郵件</Label>
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="bg-input border-border"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="signin-phone">手機號碼</Label>
+                  <Input
+                    id="signin-phone"
+                    type="tel"
+                    placeholder="+886912345678"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="bg-input border-border"
+                  />
+                  <p className="text-xs text-muted-foreground">請包含國碼，例如：+886</p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="signin-password">密碼</Label>
@@ -182,19 +239,60 @@ export default function Auth() {
 
           <TabsContent value="signup">
             <form onSubmit={handleSignUp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">電子郵件</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className="bg-input border-border"
-                />
+              <div className="space-y-3">
+                <Label>註冊方式</Label>
+                <RadioGroup 
+                  value={authMethod} 
+                  onValueChange={(value) => setAuthMethod(value as "email" | "phone")}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="phone" id="signup-phone-option" />
+                    <Label htmlFor="signup-phone-option" className="cursor-pointer flex items-center gap-1">
+                      <Phone className="h-4 w-4" />
+                      手機
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="email" id="signup-email-option" />
+                    <Label htmlFor="signup-email-option" className="cursor-pointer flex items-center gap-1">
+                      <Mail className="h-4 w-4" />
+                      Email
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
+
+              {authMethod === "email" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">電子郵件</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="bg-input border-border"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="signup-phone">手機號碼</Label>
+                  <Input
+                    id="signup-phone"
+                    type="tel"
+                    placeholder="+886912345678"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="bg-input border-border"
+                  />
+                  <p className="text-xs text-muted-foreground">請包含國碼，例如：+886</p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="signup-password">密碼</Label>

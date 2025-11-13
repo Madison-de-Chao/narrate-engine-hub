@@ -48,32 +48,198 @@ const legionConfig = {
   },
 };
 
-const tianganRoles: { [key: string]: { role: string; trait: string } } = {
-  甲: { role: "陽木棟樑", trait: "堅毅不拔的領導者" },
-  乙: { role: "陰木花草", trait: "柔韌適應的智者" },
-  丙: { role: "陽火烈日", trait: "熱情奔放的先驅" },
-  丁: { role: "陰火燭光", trait: "溫暖細膩的啟發者" },
-  戊: { role: "陽土高山", trait: "穩重可靠的守護者" },
-  己: { role: "陰土田園", trait: "包容滋養的培育者" },
-  庚: { role: "陽金鋼鐵", trait: "果斷剛毅的戰士" },
-  辛: { role: "陰金珠玉", trait: "精緻優雅的鑑賞家" },
-  壬: { role: "陽水江河", trait: "靈活變通的探索者" },
-  癸: { role: "陰水雨露", trait: "純淨透澈的療癒者" },
+const tianganRoles: { [key: string]: { role: string; image: string; style: string; weakness: string; buff: string; debuff: string } } = {
+  甲: { 
+    role: "森林將軍", 
+    image: "參天大樹，堅毅直立",
+    style: "重承諾，敢開疆拓土", 
+    weakness: "固執，不易轉彎",
+    buff: "規劃長遠",
+    debuff: "剛愎自用"
+  },
+  乙: { 
+    role: "花草軍師", 
+    image: "藤蔓花草，柔韌適應",
+    style: "協調圓融，善於美化", 
+    weakness: "優柔寡斷，隨境而變",
+    buff: "靈活應變",
+    debuff: "過度依附"
+  },
+  丙: { 
+    role: "烈日戰神", 
+    image: "太陽，光明外放",
+    style: "熱情奔放，感染全軍", 
+    weakness: "急躁衝動，消耗過快",
+    buff: "激勵士氣",
+    debuff: "燒盡自己"
+  },
+  丁: { 
+    role: "燭光法師", 
+    image: "溫柔燭火，能照亮黑暗",
+    style: "細膩體貼，擅啟蒙", 
+    weakness: "情感敏感，力量有限",
+    buff: "溫暖療癒",
+    debuff: "情緒波動"
+  },
+  戊: { 
+    role: "山岳守護", 
+    image: "高山厚土，穩重承載",
+    style: "可靠堅實，能守護全軍", 
+    weakness: "過於保守，難以靈活",
+    buff: "穩定防禦",
+    debuff: "固執僵化"
+  },
+  己: { 
+    role: "大地母親", 
+    image: "田園沃土，滋養萬物",
+    style: "包容細膩，善於培育", 
+    weakness: "過於忍讓，缺乏魄力",
+    buff: "滋養培育",
+    debuff: "過度犧牲"
+  },
+  庚: { 
+    role: "鋼鐵騎士", 
+    image: "礦石鋼鐵，剛健果決",
+    style: "直接強硬，果斷決斷", 
+    weakness: "過於剛烈，易傷盟友",
+    buff: "一擊必中",
+    debuff: "剛硬破裂"
+  },
+  辛: { 
+    role: "珠寶商人", 
+    image: "珠玉寶石，精緻優雅",
+    style: "重視品質，善於鑑賞", 
+    weakness: "過於挑剔，脆弱易傷",
+    buff: "精緻完美",
+    debuff: "苛刻敏感"
+  },
+  壬: { 
+    role: "江河船長", 
+    image: "江河大海，奔放靈活",
+    style: "胸懷寬廣，靈活多變", 
+    weakness: "漂泊善變，缺乏定性",
+    buff: "靈動探索",
+    debuff: "隨波逐流"
+  },
+  癸: { 
+    role: "甘露天使", 
+    image: "雨露泉水，潤物無聲",
+    style: "溫柔細膩，智慧含蓄", 
+    weakness: "過於感性，憂慮纏身",
+    buff: "細膩滋養",
+    debuff: "多愁善感"
+  },
 };
 
-const dizhiRoles: { [key: string]: { role: string; trait: string } } = {
-  子: { role: "水鼠", trait: "機智靈活，善於謀略" },
-  丑: { role: "土牛", trait: "勤勞踏實，穩健持久" },
-  寅: { role: "木虎", trait: "勇猛果敢，開拓進取" },
-  卯: { role: "木兔", trait: "溫文儒雅，和諧共處" },
-  辰: { role: "土龍", trait: "變化多端，威嚴神秘" },
-  巳: { role: "火蛇", trait: "深沉智慧，洞察先機" },
-  午: { role: "火馬", trait: "熱情奔放，積極向上" },
-  未: { role: "土羊", trait: "溫順善良，藝術氣質" },
-  申: { role: "金猴", trait: "聰明活潑，靈巧多變" },
-  酉: { role: "金雞", trait: "精明細緻，條理分明" },
-  戌: { role: "土犬", trait: "忠誠守護，正直可靠" },
-  亥: { role: "水豬", trait: "福德圓滿，寬厚仁慈" },
+const dizhiRoles: { [key: string]: { role: string; symbol: string; character: string; hiddenStems: string; weakness: string; buff: string; debuff: string } } = {
+  子: { 
+    role: "夜行刺客", 
+    symbol: "冬至之水，潛藏黑夜",
+    character: "聰明靈活，反應快", 
+    hiddenStems: "癸水 → 單一純粹，行事乾脆",
+    weakness: "缺乏耐心，情緒化",
+    buff: "瞬間奇襲",
+    debuff: "易動不安"
+  },
+  丑: { 
+    role: "忠犬守衛", 
+    symbol: "寒冬大地，厚重封藏",
+    character: "勤勞耐力，穩中帶剛", 
+    hiddenStems: "己土、癸水、辛金 → 複合多層",
+    weakness: "遲緩、保守",
+    buff: "後勤補給",
+    debuff: "遲疑不決"
+  },
+  寅: { 
+    role: "森林獵人", 
+    symbol: "春雷初動，草木萌發",
+    character: "勇猛果敢，開創力強", 
+    hiddenStems: "甲木、丙火、戊土 → 多元兼具",
+    weakness: "急躁，缺耐性",
+    buff: "先鋒衝陣",
+    debuff: "草率行事"
+  },
+  卯: { 
+    role: "春兔使者", 
+    symbol: "春花盛開，柔美雅靜",
+    character: "溫文儒雅，和諧共處", 
+    hiddenStems: "乙木 → 單一柔韌",
+    weakness: "軟弱，易受影響",
+    buff: "和諧調解",
+    debuff: "優柔被動"
+  },
+  辰: { 
+    role: "龍族法師", 
+    symbol: "水土交雜，能量複合",
+    character: "多才多變，能容納百川", 
+    hiddenStems: "戊土、乙木、癸水 → 複合多元",
+    weakness: "內在矛盾，常陷糾結",
+    buff: "變化萬端",
+    debuff: "自相矛盾"
+  },
+  巳: { 
+    role: "火蛇術士", 
+    symbol: "夏日將至，熱力蘊藏",
+    character: "聰慧靈動，足智多謀", 
+    hiddenStems: "丙火、戊土、庚金 → 智略與理性兼具",
+    weakness: "多疑、善於隱匿",
+    buff: "謀略之眼",
+    debuff: "多疑內耗"
+  },
+  午: { 
+    role: "烈馬騎兵", 
+    symbol: "盛夏正陽，光明外放",
+    character: "熱情奔放，行動力強", 
+    hiddenStems: "丁火、己土 → 主攻兼守",
+    weakness: "衝動，耐力不足",
+    buff: "士氣高昂",
+    debuff: "精力耗盡"
+  },
+  未: { 
+    role: "溫羊牧者", 
+    symbol: "夏末收成，和氣守成",
+    character: "溫和耐心，注重和諧", 
+    hiddenStems: "己土、丁火、乙木 → 和諧混合",
+    weakness: "優柔寡斷，缺魄力",
+    buff: "調和人心",
+    debuff: "猶疑不決"
+  },
+  申: { 
+    role: "靈猴戰士", 
+    symbol: "秋風肅殺，行動敏捷",
+    character: "聰明機警，反應靈巧", 
+    hiddenStems: "庚金、壬水、戊土 → 力量兼智慧",
+    weakness: "反覆無常，善變狡黠",
+    buff: "隨機應變",
+    debuff: "善變浮躁"
+  },
+  酉: { 
+    role: "金雞衛士", 
+    symbol: "秋收精煉，嚴謹守護",
+    character: "細膩、注重品質，重原則", 
+    hiddenStems: "辛金 → 純粹單一",
+    weakness: "過於嚴格，缺溫情",
+    buff: "精準守護",
+    debuff: "苛刻冷漠"
+  },
+  戌: { 
+    role: "戰犬統領", 
+    symbol: "深秋守土，忠誠護疆",
+    character: "忠誠可靠，重責任", 
+    hiddenStems: "戊土、辛金、丁火 → 剛中帶柔",
+    weakness: "頑固，不善變通",
+    buff: "忠誠護主",
+    debuff: "固執保守"
+  },
+  亥: { 
+    role: "智豬先知", 
+    symbol: "冬水潛藏，蓄勢待發",
+    character: "福德圓滿，寬厚仁慈", 
+    hiddenStems: "壬水、甲木 → 智慧與生長",
+    weakness: "過於理想化，逃避現實",
+    buff: "福德智慧",
+    debuff: "逃避散漫"
+  },
 };
 
 export const LegionCards = ({ baziResult }: LegionCardsProps) => {
@@ -148,7 +314,14 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                     </div>
                     <p className="text-3xl font-bold mb-2">{stem}</p>
                     <p className="text-lg font-semibold text-primary mb-2">{commanderRole?.role}</p>
-                    <p className="text-sm text-muted-foreground">{commanderRole?.trait}</p>
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">形象：{commanderRole?.image}</p>
+                      <p className="text-sm text-muted-foreground">風格：{commanderRole?.style}</p>
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant="default" className="text-xs">✨ {commanderRole?.buff}</Badge>
+                        <Badge variant="destructive" className="text-xs">⚠️ {commanderRole?.debuff}</Badge>
+                      </div>
+                    </div>
                   </div>
 
                   <div className={`p-5 rounded-lg border-2 ${legion.gradient} border-secondary/30`}>
@@ -158,7 +331,15 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                     </div>
                     <p className="text-3xl font-bold mb-2">{branch}</p>
                     <p className="text-lg font-semibold text-secondary mb-2">{advisorRole?.role}</p>
-                    <p className="text-sm text-muted-foreground">{advisorRole?.trait}</p>
+                    <div className="space-y-1">
+                      <p className="text-sm text-muted-foreground">象徵：{advisorRole?.symbol}</p>
+                      <p className="text-sm text-muted-foreground">性格：{advisorRole?.character}</p>
+                      <p className="text-sm text-muted-foreground">藏干：{advisorRole?.hiddenStems}</p>
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant="default" className="text-xs">✨ {advisorRole?.buff}</Badge>
+                        <Badge variant="destructive" className="text-xs">⚠️ {advisorRole?.debuff}</Badge>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -223,7 +404,7 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                     </h5>
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       此柱在現實生活中主要影響{legion.lifeDomain}。
-                      天干{stem}的{commanderRole?.trait}特質，結合地支{branch}的{advisorRole?.trait}能量，
+                      天干{stem}的{commanderRole?.style}風格，結合地支{branch}的{advisorRole?.character}特質，
                       在這些方面要{pillarName === 'year' ? '重視家族傳統，保持與長輩的良好關係' : pillarName === 'month' ? '積極建立人脈，把握事業發展機會' : pillarName === 'day' ? '認識真實自我，經營好親密關係' : '提前規劃未來，注重自我實現'}。
                     </p>
                   </div>
@@ -350,7 +531,8 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                       🌟 發展策略建議
                     </h5>
                     <p className="text-sm leading-relaxed">
-                      充分發揮{stem}的{commanderRole?.trait}特質，同時運用{branch}的{advisorRole?.trait}能力，
+                      充分發揮{stem}的{commanderRole?.buff}優勢，同時運用{branch}的{advisorRole?.buff}能力，
+                      並注意避免{commanderRole?.debuff}和{advisorRole?.debuff}的負面影響。
                       結合{nayin[pillarName] || "此納音"}的優勢，可以在{pillarName === 'year' ? '家庭關係與個人根基' : pillarName === 'month' ? '事業發展與人際網絡' : pillarName === 'day' ? '個人成長與感情生活' : '創新創造與未來規劃'}方面取得重大突破。
                     </p>
                   </div>

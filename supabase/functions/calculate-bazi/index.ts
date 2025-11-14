@@ -74,7 +74,8 @@ function calculateYearPillar(year: number, lichunDate: Date, birthDate: Date): {
   };
 }
 
-// 计算月柱（五虎遁月）
+// 计算月柱（五虎遁月） - 此函數已廢棄，應使用 baziCalculator.ts 中的實現
+// 保留此處僅作為參考
 function calculateMonthPillar(yearStem: string, month: number): { stem: string, branch: string } {
   const stemStartMap: { [key: string]: number } = {
     "甲": 2, "己": 2,  // 丙寅开始

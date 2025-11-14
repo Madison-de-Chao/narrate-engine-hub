@@ -251,11 +251,12 @@ export function calculateMonthPillar(
   const branchIndex = getMonthBranchIndex(dateUtc, timezoneOffsetMinutes);
   const branch = DIZHI[branchIndex];
 
+  // 先計算年柱以獲得正確的年干（以立春為界）
+  const yearPillar = calculateYearPillar(dateUtc, timezoneOffsetMinutes);
+  const yearStem = yearPillar.stem;
+  
   // 使用五虎遁查表获取月干
-  const local = getLocalComponents(dateUtc, timezoneOffsetMinutes);
-  const solarYearStemIndex = ((local.year - 4) % 10 + 10) % 10;
-  const solarYearStem = TIANGAN[solarYearStemIndex];
-  const mapping = (fiveTigersData.mapping as Record<string, Record<string, string>>)[solarYearStem];
+  const mapping = (fiveTigersData.mapping as Record<string, Record<string, string>>)[yearStem];
   const stem = mapping ? mapping[branch] : TIANGAN[0];
 
   return { stem, branch };

@@ -74,25 +74,198 @@ function calculateYearPillar(year: number, lichunDate: Date, birthDate: Date): {
   };
 }
 
-// 计算月柱（五虎遁月） - 此函數已廢棄，應使用 baziCalculator.ts 中的實現
-// 保留此處僅作為參考
-function calculateMonthPillar(yearStem: string, month: number): { stem: string, branch: string } {
-  const stemStartMap: { [key: string]: number } = {
-    "甲": 2, "己": 2,  // 丙寅开始
-    "乙": 4, "庚": 4,  // 戊寅开始
-    "丙": 6, "辛": 6,  // 庚寅开始
-    "丁": 8, "壬": 8,  // 壬寅开始
-    "戊": 0, "癸": 0   // 甲寅开始
-  };
-  
-  const startStem = stemStartMap[yearStem] || 0;
-  const stemIndex = (startStem + month - 1) % 10;
-  
+// 计算月柱（基于節氣的精確算法）
+// 使用 24 節氣中的「節」作為月份分界：
+// 立春→寅、驚蟄→卯、清明→辰、立夏→巳、芒種→午、小暑→未、立秋→申、白露→酉、寒露→戌、立冬→亥、大雪→子、小寒→丑
+// 並配合五虎遁月推算月干
+
+// 對應表（節氣 → 地支索引） 0=子,1=丑,2=寅,...,11=亥
+const SOLAR_TERM_BRANCH_ORDER = [
+  { term: "立春", branchIndex: 2 },
+  { term: "驚蟄", branchIndex: 3 },
+  { term: "清明", branchIndex: 4 },
+  { term: "立夏", branchIndex: 5 },
+  { term: "芒種", branchIndex: 6 },
+  { term: "小暑", branchIndex: 7 },
+  { term: "立秋", branchIndex: 8 },
+  { term: "白露", branchIndex: 9 },
+  { term: "寒露", branchIndex: 10 },
+  { term: "立冬", branchIndex: 11 },
+  { term: "大雪", branchIndex: 0 },
+  { term: "小寒", branchIndex: 1 },
+] as const;
+
+type SolarTermsYearData = Record<string, { date: string }>;
+const SOLAR_TERMS_DATA: { years: Record<string, SolarTermsYearData> } = {
+  years: {
+    "1984": {
+      "立春": { "date": "1984-02-04T14:20:00Z" },
+      "雨水": { "date": "1984-02-19T14:37:00Z" },
+      "驚蟄": { "date": "1984-03-05T16:59:00Z" },
+      "春分": { "date": "1984-03-20T16:24:00Z" },
+      "清明": { "date": "1984-04-04T22:45:00Z" },
+      "穀雨": { "date": "1984-04-20T05:26:00Z" },
+      "立夏": { "date": "1984-05-05T14:19:00Z" },
+      "小滿": { "date": "1984-05-20T23:41:00Z" },
+      "芒種": { "date": "1984-06-05T18:21:00Z" },
+      "夏至": { "date": "1984-06-21T08:02:00Z" },
+      "小暑": { "date": "1984-07-07T05:26:00Z" },
+      "大暑": { "date": "1984-07-22T16:26:00Z" },
+      "立秋": { "date": "1984-08-07T09:09:00Z" },
+      "處暑": { "date": "1984-08-23T04:05:00Z" },
+      "白露": { "date": "1984-09-07T16:15:00Z" },
+      "秋分": { "date": "1984-09-22T22:33:00Z" },
+      "寒露": { "date": "1984-10-08T05:55:00Z" },
+      "霜降": { "date": "1984-10-23T03:16:00Z" },
+      "立冬": { "date": "1984-11-07T13:17:00Z" },
+      "小雪": { "date": "1984-11-22T10:19:00Z" },
+      "大雪": { "date": "1984-12-07T06:24:00Z" },
+      "冬至": { "date": "1984-12-21T23:23:00Z" },
+      "小寒": { "date": "1985-01-05T16:51:00Z" },
+      "大寒": { "date": "1985-01-20T09:59:00Z" }
+    },
+    "1985": {
+      "立春": { "date": "1985-02-03T21:30:00Z" },
+      "雨水": { "date": "1985-02-18T20:27:00Z" },
+      "驚蟄": { "date": "1985-03-05T22:46:00Z" },
+      "春分": { "date": "1985-03-20T22:14:00Z" },
+      "清明": { "date": "1985-04-05T04:32:00Z" },
+      "穀雨": { "date": "1985-04-20T11:15:00Z" },
+      "立夏": { "date": "1985-05-05T20:04:00Z" },
+      "小滿": { "date": "1985-05-21T05:23:00Z" },
+      "芒種": { "date": "1985-06-06T00:07:00Z" },
+      "夏至": { "date": "1985-06-21T13:44:00Z" },
+      "小暑": { "date": "1985-07-07T11:09:00Z" },
+      "大暑": { "date": "1985-07-22T22:06:00Z" },
+      "立秋": { "date": "1985-08-07T14:54:00Z" },
+      "處暑": { "date": "1985-08-23T09:46:00Z" },
+      "白露": { "date": "1985-09-07T22:00:00Z" },
+      "秋分": { "date": "1985-09-23T04:08:00Z" },
+      "寒露": { "date": "1985-10-08T11:35:00Z" },
+      "霜降": { "date": "1985-10-23T08:50:00Z" },
+      "立冬": { "date": "1985-11-07T19:00:00Z" },
+      "小雪": { "date": "1985-11-22T16:01:00Z" },
+      "大雪": { "date": "1985-12-07T12:11:00Z" },
+      "冬至": { "date": "1985-12-22T05:08:00Z" },
+      "小寒": { "date": "1986-01-05T22:39:00Z" },
+      "大寒": { "date": "1986-01-20T15:45:00Z" }
+    },
+    "2024": {
+      "立春": { "date": "2024-02-04T09:27:00Z" },
+      "雨水": { "date": "2024-02-19T06:13:00Z" },
+      "驚蟄": { "date": "2024-03-05T04:23:00Z" },
+      "春分": { "date": "2024-03-20T03:06:00Z" },
+      "清明": { "date": "2024-04-04T09:09:00Z" },
+      "穀雨": { "date": "2024-04-19T15:59:00Z" },
+      "立夏": { "date": "2024-05-05T02:10:00Z" },
+      "小滿": { "date": "2024-05-20T12:59:00Z" },
+      "芒種": { "date": "2024-06-05T06:10:00Z" },
+      "夏至": { "date": "2024-06-20T20:51:00Z" },
+      "小暑": { "date": "2024-07-06T16:20:00Z" },
+      "大暑": { "date": "2024-07-22T03:44:00Z" },
+      "立秋": { "date": "2024-08-07T02:09:00Z" },
+      "處暑": { "date": "2024-08-23T00:55:00Z" },
+      "白露": { "date": "2024-09-07T10:10:00Z" },
+      "秋分": { "date": "2024-09-22T12:43:00Z" },
+      "寒露": { "date": "2024-10-08T14:59:00Z" },
+      "霜降": { "date": "2024-10-23T10:14:00Z" },
+      "立冬": { "date": "2024-11-07T21:19:00Z" },
+      "小雪": { "date": "2024-11-22T18:54:00Z" },
+      "大雪": { "date": "2024-12-07T14:32:00Z" },
+      "冬至": { "date": "2024-12-21T09:20:00Z" },
+      "小寒": { "date": "2025-01-05T02:33:00Z" },
+      "大寒": { "date": "2025-01-20T19:07:00Z" }
+    }
+  }
+};
+
+function parseTermDate(s: string | undefined): Date | null {
+  if (!s) return null;
+  const fixed = s.replace(" ", "T"); // 修正極少數缺少 T 的資料
+  const d = new Date(fixed);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function toLocal(dateUtc: Date, tzMinutes: number): Date {
+  return new Date(dateUtc.getTime() + tzMinutes * 60 * 1000);
+}
+
+function getMonthBranchIndexBySolarTerms(birthUtc: Date, tzMinutes: number): number | null {
+  const local = toLocal(birthUtc, tzMinutes);
+  const y = local.getUTCFullYear();
+  const current = SOLAR_TERMS_DATA.years[String(y)] || {};
+  const prev = SOLAR_TERMS_DATA.years[String(y - 1)] || {};
+
+  const timeline: Array<{ term: string; date: Date; branchIndex: number }> = [];
+
+  // 前一年重要節氣（覆蓋 12→1 月過渡）
+  ["大雪", "小寒"].forEach((t) => {
+    const d = parseTermDate(prev[t]?.date);
+    if (d) {
+      const bi = SOLAR_TERM_BRANCH_ORDER.find((x) => x.term === t)!.branchIndex;
+      timeline.push({ term: t, date: toLocal(d, tzMinutes), branchIndex: bi });
+    }
+  });
+
+  // 本年所有節氣（含年末的大雪/小寒，資料里已跨年）
+  SOLAR_TERM_BRANCH_ORDER.forEach(({ term, branchIndex }) => {
+    const d = parseTermDate(current[term]?.date);
+    if (d) timeline.push({ term, date: toLocal(d, tzMinutes), branchIndex });
+  });
+
+  timeline.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  // 取小於等於出生時刻的最後一個節氣
+  let chosen = timeline[0] || null;
+  for (const item of timeline) {
+    if (item.date.getTime() <= local.getTime()) chosen = item; else break;
+  }
+  return chosen ? chosen.branchIndex : null;
+}
+
+function calculateYearPillarAccurate(dateUtc: Date, tzMinutes: number): { stem: string; branch: string } {
+  const local = toLocal(dateUtc, tzMinutes);
+  const year = local.getUTCFullYear();
+  const st = SOLAR_TERMS_DATA.years[String(year)] || {};
+  const lichunUtc = parseTermDate(st["立春"]?.date);
+  if (!lichunUtc) {
+    // 回退舊算法（約略 2/4 5:30 UTC）
+    const lichunApprox = new Date(Date.UTC(year, 1, 4, 5, 30));
+    return calculateYearPillar(year, lichunApprox, dateUtc);
+  }
+  const lichunLocal = toLocal(lichunUtc, tzMinutes);
+  const adjustedYear = local < lichunLocal ? year - 1 : year;
+  const stemIndex = (adjustedYear - 4) % 10;
+  const branchIndex = (adjustedYear - 4) % 12;
   return {
-    stem: TIANGAN[stemIndex],
-    branch: DIZHI[(month + 1) % 12]  // 寅月开始
+    stem: TIANGAN[stemIndex < 0 ? stemIndex + 10 : stemIndex],
+    branch: DIZHI[branchIndex < 0 ? branchIndex + 12 : branchIndex],
   };
 }
+
+function calculateMonthPillarAccurate(yearStem: string, birthUtc: Date, tzMinutes: number): { stem: string; branch: string } {
+  const branchIndex = getMonthBranchIndexBySolarTerms(birthUtc, tzMinutes);
+  if (branchIndex == null) {
+    // 回退：若無資料，保留舊函式結果（不建議，但確保不中斷）
+    const fallback = calculateMonthPillar(yearStem, (toLocal(birthUtc, tzMinutes).getUTCMonth() + 1));
+    return fallback;
+  }
+
+  // 五虎遁月：以年干決定寅月起干
+  const stemStartMap: { [key: string]: number } = {
+    "甲": 2, "己": 2,  // 丙寅
+    "乙": 4, "庚": 4,  // 戊寅
+    "丙": 6, "辛": 6,  // 庚寅
+    "丁": 8, "壬": 8,  // 壬寅
+    "戊": 0, "癸": 0   // 甲寅
+  };
+  const startStem = stemStartMap[yearStem] || 0;
+  const offsetFromYin = (branchIndex - 2 + 12) % 12; // 寅=2
+  const stemIndex = (startStem + offsetFromYin) % 10;
+
+  return { stem: TIANGAN[stemIndex], branch: DIZHI[branchIndex] };
+}
+
 
 // 计算日柱（基准日算法）
 function calculateDayPillar(birthDate: Date): { stem: string, branch: string } {
@@ -123,6 +296,7 @@ function calculateHourPillar(dayStem: string, hour: number): { stem: string, bra
     "戊": 8, "癸": 8   // 壬子开始
   };
   
+  // 使用本地時刻的時支換算（0點為子初）
   const hourBranch = Math.floor((hour + 1) / 2) % 12;
   const startStem = stemStartMap[dayStem] || 0;
   const stemIndex = (startStem + hourBranch) % 10;
@@ -339,13 +513,13 @@ serve(async (req) => {
       minute
     ) - tzOffset * 60 * 1000);
 
-    // 获取立春时间（简化处理，实际应查solar_terms.json）
+    // 使用精確的立春時間（來自資料集）；保留近似值僅作後備
     const lichunYear = birth.getUTCFullYear();
-    const lichun = new Date(Date.UTC(lichunYear, 1, 4, 5, 30)); // UTC时间的立春大约在2月4日5:30
+    const lichun = new Date(Date.UTC(lichunYear, 1, 4, 5, 30)); // 保留變數以維持兼容，不再用於計算
 
     // 计算四柱
-    const yearPillar = calculateYearPillar(lichunYear, lichun, birthUtc);
-    const monthPillar = calculateMonthPillar(yearPillar.stem, birthUtc.getUTCMonth() + 1);
+    const yearPillar = calculateYearPillarAccurate(birthUtc, tzOffset);
+    const monthPillar = calculateMonthPillarAccurate(yearPillar.stem, birthUtc, tzOffset);
     const dayPillar = calculateDayPillar(birthUtc);
     const hourPillar = calculateHourPillar(dayPillar.stem, hour);
 

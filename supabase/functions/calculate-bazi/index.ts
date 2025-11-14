@@ -175,6 +175,116 @@ function calculateYinYangRatio(pillars: any): any {
   };
 }
 
+// 五行生克关系
+const ELEMENT_RELATIONS = {
+  生: { '木': '火', '火': '土', '土': '金', '金': '水', '水': '木' },
+  克: { '木': '土', '土': '水', '水': '火', '火': '金', '金': '木' }
+};
+
+// 计算天干十神
+function calculateTenGodForStem(dayStem: string, targetStem: string): string {
+  if (dayStem === targetStem) return '比肩';
+  
+  const dayElement = WUXING_MAP[dayStem];
+  const targetElement = WUXING_MAP[targetStem];
+  const dayYang = ["甲", "丙", "戊", "庚", "壬"].includes(dayStem);
+  const targetYang = ["甲", "丙", "戊", "庚", "壬"].includes(targetStem);
+  const sameYinyang = dayYang === targetYang;
+  
+  if (dayElement === targetElement) {
+    return sameYinyang ? '比肩' : '劫財';
+  }
+  if (ELEMENT_RELATIONS.生[dayElement as keyof typeof ELEMENT_RELATIONS.生] === targetElement) {
+    return sameYinyang ? '食神' : '傷官';
+  }
+  if (ELEMENT_RELATIONS.克[dayElement as keyof typeof ELEMENT_RELATIONS.克] === targetElement) {
+    return sameYinyang ? '偏財' : '正財';
+  }
+  if (ELEMENT_RELATIONS.克[targetElement as keyof typeof ELEMENT_RELATIONS.克] === dayElement) {
+    return sameYinyang ? '七殺' : '正官';
+  }
+  if (ELEMENT_RELATIONS.生[targetElement as keyof typeof ELEMENT_RELATIONS.生] === dayElement) {
+    return sameYinyang ? '偏印' : '正印';
+  }
+  return '未知';
+}
+
+// 计算地支十神
+function calculateTenGodForBranch(dayStem: string, branch: string): string {
+  const dayElement = WUXING_MAP[dayStem];
+  const branchElement = WUXING_MAP[branch];
+  const dayYang = ["甲", "丙", "戊", "庚", "壬"].includes(dayStem);
+  const branchYang = ["子", "寅", "辰", "午", "申", "戌"].includes(branch);
+  const sameYinyang = dayYang === branchYang;
+  
+  if (dayElement === branchElement) {
+    return sameYinyang ? '比肩' : '劫財';
+  }
+  if (ELEMENT_RELATIONS.生[dayElement as keyof typeof ELEMENT_RELATIONS.生] === branchElement) {
+    return sameYinyang ? '食神' : '傷官';
+  }
+  if (ELEMENT_RELATIONS.克[dayElement as keyof typeof ELEMENT_RELATIONS.克] === branchElement) {
+    return sameYinyang ? '偏財' : '正財';
+  }
+  if (ELEMENT_RELATIONS.克[branchElement as keyof typeof ELEMENT_RELATIONS.克] === dayElement) {
+    return sameYinyang ? '七殺' : '正官';
+  }
+  if (ELEMENT_RELATIONS.生[branchElement as keyof typeof ELEMENT_RELATIONS.生] === dayElement) {
+    return sameYinyang ? '偏印' : '正印';
+  }
+  return '未知';
+}
+
+// 简化版神煞计算
+function calculateShenshaSimple(
+  dayStem: string,
+  yearBranch: string,
+  monthBranch: string,
+  dayBranch: string,
+  hourBranch: string
+): string[] {
+  const shensha: string[] = [];
+  const allBranches = [yearBranch, monthBranch, dayBranch, hourBranch];
+  
+  // 天乙贵人查法（简化版）
+  const tianYiMap: { [key: string]: string[] } = {
+    "甲": ["丑", "未"], "戊": ["丑", "未"],
+    "乙": ["子", "申"], "己": ["子", "申"],
+    "丙": ["亥", "酉"], "丁": ["亥", "酉"],
+    "庚": ["丑", "未"], "辛": ["寅", "午"],
+    "壬": ["卯", "巳"], "癸": ["卯", "巳"]
+  };
+  
+  if (tianYiMap[dayStem] && tianYiMap[dayStem].some(b => allBranches.includes(b))) {
+    shensha.push('天乙貴人');
+  }
+  
+  // 文昌贵人查法
+  const wenChangMap: { [key: string]: string[] } = {
+    "甲": ["巳"], "乙": ["午"], "丙": ["申"], "丁": ["酉"],
+    "戊": ["申"], "己": ["酉"], "庚": ["亥"], "辛": ["子"],
+    "壬": ["寅"], "癸": ["卯"]
+  };
+  
+  if (wenChangMap[dayStem] && wenChangMap[dayStem].some(b => allBranches.includes(b))) {
+    shensha.push('文昌貴人');
+  }
+  
+  // 桃花（咸池）查法
+  const taoHuaMap: { [key: string]: string } = {
+    "申": "酉", "子": "酉", "辰": "酉",
+    "亥": "子", "卯": "子", "未": "子",
+    "寅": "卯", "午": "卯", "戌": "卯",
+    "巳": "午", "酉": "午", "丑": "午"
+  };
+  
+  if (allBranches.includes(taoHuaMap[yearBranch])) {
+    shensha.push('桃花');
+  }
+  
+  return shensha;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -205,25 +315,38 @@ serve(async (req) => {
       }
     }
 
-    const { name, gender, birthDate, birthTime, location, useSolarTime } = await req.json();
+    const { name, gender, birthDate, birthTime, location, useSolarTime, timezoneOffsetMinutes } = await req.json();
 
     if (!name || !gender || !birthDate || !birthTime) {
       throw new Error('Missing required fields');
     }
 
-    // 解析出生日期和时间
+    // 解析出生日期和时间 - 使用UTC创建，传入时区偏移
     const birth = new Date(birthDate);
-    const [hourStr] = birthTime.split(':');
+    const [hourStr, minuteStr] = birthTime.split(':');
     const hour = parseInt(hourStr);
-    birth.setHours(hour);
+    const minute = parseInt(minuteStr) || 0;
+    const tzOffset = timezoneOffsetMinutes || 480; // 默認UTC+8
+    
+    // 使用edge function版本的计算（简化版，但保留原有逻辑）
+    // 注意：這裡仍使用簡化的算法，主要問題在於沒有準確的節氣數據
+    // 未來應該導入solar_terms.json到edge function
+    const birthUtc = new Date(Date.UTC(
+      birth.getUTCFullYear(),
+      birth.getUTCMonth(),
+      birth.getUTCDate(),
+      hour,
+      minute
+    ) - tzOffset * 60 * 1000);
 
-    // 获取立春时间（这里简化处理，实际应查表）
-    const lichun = new Date(birth.getFullYear(), 1, 4, 20, 32);
+    // 获取立春时间（简化处理，实际应查solar_terms.json）
+    const lichunYear = birth.getUTCFullYear();
+    const lichun = new Date(Date.UTC(lichunYear, 1, 4, 5, 30)); // UTC时间的立春大约在2月4日5:30
 
     // 计算四柱
-    const yearPillar = calculateYearPillar(birth.getFullYear(), lichun, birth);
-    const monthPillar = calculateMonthPillar(yearPillar.stem, birth.getMonth() + 1);
-    const dayPillar = calculateDayPillar(birth);
+    const yearPillar = calculateYearPillar(lichunYear, lichun, birthUtc);
+    const monthPillar = calculateMonthPillar(yearPillar.stem, birthUtc.getUTCMonth() + 1);
+    const dayPillar = calculateDayPillar(birthUtc);
     const hourPillar = calculateHourPillar(dayPillar.stem, hour);
 
     const pillars = {
@@ -244,6 +367,35 @@ serve(async (req) => {
     // 计算五行分数和阴阳比例
     const wuxingScores = calculateWuxingScores(pillars);
     const yinyangRatio = calculateYinYangRatio(pillars);
+    
+    // 计算十神
+    const tenGods = {
+      year: {
+        stem: calculateTenGodForStem(dayPillar.stem, yearPillar.stem),
+        branch: calculateTenGodForBranch(dayPillar.stem, yearPillar.branch)
+      },
+      month: {
+        stem: calculateTenGodForStem(dayPillar.stem, monthPillar.stem),
+        branch: calculateTenGodForBranch(dayPillar.stem, monthPillar.branch)
+      },
+      day: {
+        stem: "日元",
+        branch: calculateTenGodForBranch(dayPillar.stem, dayPillar.branch)
+      },
+      hour: {
+        stem: calculateTenGodForStem(dayPillar.stem, hourPillar.stem),
+        branch: calculateTenGodForBranch(dayPillar.stem, hourPillar.branch)
+      }
+    };
+    
+    // 计算神煞
+    const shensha = calculateShenshaSimple(
+      dayPillar.stem,
+      yearPillar.branch,
+      monthPillar.branch,
+      dayPillar.branch,
+      hourPillar.branch
+    );
 
     // 僅在有登入用戶時保存到數據庫
     let calculationId = null;
@@ -273,8 +425,8 @@ serve(async (req) => {
           wuxing_scores: wuxingScores,
           yinyang_ratio: yinyangRatio,
           hidden_stems: {},
-          ten_gods: {},
-          shensha: [],
+          ten_gods: tenGods,
+          shensha: shensha,
           legion_analysis: {},
           legion_stories: {}
         })
@@ -297,7 +449,9 @@ serve(async (req) => {
           pillars,
           nayin,
           wuxingScores,
-          yinyangRatio
+          yinyangRatio,
+          tenGods,
+          shensha
         },
         isGuest: !user
       }),

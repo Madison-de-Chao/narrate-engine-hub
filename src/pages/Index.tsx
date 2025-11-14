@@ -181,7 +181,8 @@ const Index = () => {
           birthDate: (formData.birthDate as Date).toISOString(),
           birthTime: `${formData.hour}:00`,
           location: formData.location || null,
-          useSolarTime: true
+          useSolarTime: true,
+          timezoneOffsetMinutes: formData.timezoneOffsetMinutes || 480
         }
       });
 

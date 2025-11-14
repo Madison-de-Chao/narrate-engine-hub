@@ -46,16 +46,22 @@ export const BaziInputForm = ({ onCalculate, isCalculating }: BaziInputFormProps
       return;
     }
 
+    // 使用UTC創建日期，然後傳入中國時區偏移（+8小時 = 480分鐘）
     const birthDate = new Date(
-      parseInt(formData.year),
-      parseInt(formData.month) - 1,
-      parseInt(formData.day),
-      parseInt(formData.hour)
+      Date.UTC(
+        parseInt(formData.year),
+        parseInt(formData.month) - 1,
+        parseInt(formData.day),
+        0, 0, 0
+      )
     );
 
     onCalculate({
       ...formData,
       birthDate,
+      birthHour: parseInt(formData.hour),
+      birthMinute: 0,
+      timezoneOffsetMinutes: 480 // UTC+8 中國標準時間
     });
   };
 

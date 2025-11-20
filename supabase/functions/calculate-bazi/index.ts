@@ -243,12 +243,32 @@ function calculateYearPillarAccurate(dateUtc: Date, tzMinutes: number): { stem: 
   };
 }
 
+// 简单的月柱计算（不基于节气的近似算法，仅作后备）
+function calculateMonthPillarSimple(yearStem: string, month: number): { stem: string, branch: string } {
+  // 月份对应地支（近似，不考虑节气）：寅=正月(2月)，卯=二月(3月)，...
+  const branchIndex = (month + 10) % 12; // 1月→丑(1), 2月→寅(2), 3月→卯(3)...
+  
+  // 五虎遁月
+  const stemStartMap: { [key: string]: number } = {
+    "甲": 2, "己": 2,  // 丙寅
+    "乙": 4, "庚": 4,  // 戊寅
+    "丙": 6, "辛": 6,  // 庚寅
+    "丁": 8, "壬": 8,  // 壬寅
+    "戊": 0, "癸": 0   // 甲寅
+  };
+  const startStem = stemStartMap[yearStem] || 0;
+  const offsetFromYin = (branchIndex - 2 + 12) % 12;
+  const stemIndex = (startStem + offsetFromYin) % 10;
+  
+  return { stem: TIANGAN[stemIndex], branch: DIZHI[branchIndex] };
+}
+
 function calculateMonthPillarAccurate(yearStem: string, birthUtc: Date, tzMinutes: number): { stem: string; branch: string } {
   const branchIndex = getMonthBranchIndexBySolarTerms(birthUtc, tzMinutes);
   if (branchIndex == null) {
-    // 回退：若無資料，保留舊函式結果（不建議，但確保不中斷）
-    const fallback = calculateMonthPillar(yearStem, (toLocal(birthUtc, tzMinutes).getUTCMonth() + 1));
-    return fallback;
+    // 回退：若無資料，使用简化算法
+    const localMonth = toLocal(birthUtc, tzMinutes).getUTCMonth() + 1;
+    return calculateMonthPillarSimple(yearStem, localMonth);
   }
 
   // 五虎遁月：以年干決定寅月起干
@@ -518,8 +538,11 @@ serve(async (req) => {
     const lichun = new Date(Date.UTC(lichunYear, 1, 4, 5, 30)); // 保留變數以維持兼容，不再用於計算
 
     // 计算四柱
+    console.log('Birth UTC:', birthUtc.toISOString(), 'tzOffset:', tzOffset);
     const yearPillar = calculateYearPillarAccurate(birthUtc, tzOffset);
+    console.log('Year Pillar:', yearPillar);
     const monthPillar = calculateMonthPillarAccurate(yearPillar.stem, birthUtc, tzOffset);
+    console.log('Month Pillar:', monthPillar);
     const dayPillar = calculateDayPillar(birthUtc);
     const hourPillar = calculateHourPillar(dayPillar.stem, hour);
 

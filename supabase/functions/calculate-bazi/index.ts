@@ -209,6 +209,8 @@ async function fetchSolarTermsData(
   data.forEach((row: SolarTermRow) => {
     const { year, term_name, term_date } = row;
     if (year === undefined || year === null || !term_name?.trim() || !term_date?.trim()) return;
+    const parsed = new Date(term_date);
+    if (isNaN(parsed.getTime())) return;
     const yearKey = String(year);
     if (!dataset[yearKey]) {
       dataset[yearKey] = {};
@@ -593,7 +595,7 @@ serve(async (req) => {
       solarTermsYears[year] = { ...(solarTermsYears[year] || {}), ...data };
     });
     
-    // 使用edge function版本的计算（简化版，但已整合動態節氣資料）
+    // 使用edge function版本的计算（已整合動態節氣資料與靜態備援）
     const birthUtc = new Date(Date.UTC(
       birth.getUTCFullYear(),
       birth.getUTCMonth(),

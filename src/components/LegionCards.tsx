@@ -3,8 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { BaziResult } from "@/pages/Index";
 import { Swords, Users, Heart, Sparkles, Crown, Shield, Star, Zap, BookOpen, TrendingUp, Target } from "lucide-react";
 import tenGodsData from "@/data/ten_gods.json";
-import charactersData from "@/data/characters.json";
-import shenshaCompleteData from "@/data/shensha_complete.json";
+import { storyMaterialsManager } from "@/lib/storyMaterials";
 import { shenshaEngine, type ShenshaMatch } from "@/lib/shenshaRuleEngine";
 import { ArmyCard } from "./ArmyCard";
 import { ShenshaCardList } from "./ShenshaCard";
@@ -170,14 +169,14 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                     character={stem} 
                     role={commanderRole} 
                     legionColor={legion.gradient}
-                    characterColor={charactersData.gan_roles[stem as keyof typeof charactersData.gan_roles]?.color}
+                    characterColor={storyMaterialsManager.getGanRole(stem)?.color}
                   />
                   <ArmyCard 
                     type="advisor" 
                     character={branch} 
                     role={advisorRole} 
                     legionColor={legion.gradient}
-                    characterColor={charactersData.zhi_roles[branch as keyof typeof charactersData.zhi_roles]?.color}
+                    characterColor={storyMaterialsManager.getZhiRole(branch)?.color}
                   />
                 </div>
 

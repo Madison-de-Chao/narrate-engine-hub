@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { type ShenshaMatch } from "@/lib/shenshaRuleEngine";
 import { Sparkles, AlertTriangle, Heart, Wand2, Crown, Gem, Star, Circle, MapPin } from "lucide-react";
-import shenshaCompleteData from "@/data/shensha_complete.json";
+import { storyMaterialsManager } from "@/lib/storyMaterials";
 
 interface ShenshaCardProps {
   shensha: ShenshaMatch;
@@ -81,15 +81,12 @@ const pillarMapping: Record<string, 'year' | 'month' | 'day' | 'hour'> = {
   '時柱': 'hour'
 };
 
-// 獲取神煞的柱位意義
+// 使用素材管理器獲取神煞的柱位意義
 function getPillarMeaning(shenshaName: string, matchedPillar: string): string | null {
-  const shenshaData = (shenshaCompleteData.shensha_effects as Record<string, any>)[shenshaName];
-  if (!shenshaData?.pillar_meaning) return null;
-  
   const pillarKey = pillarMapping[matchedPillar];
   if (!pillarKey) return null;
   
-  return shenshaData.pillar_meaning[pillarKey] || null;
+  return storyMaterialsManager.getShenshaPillarMeaning(shenshaName, pillarKey);
 }
 
 export const ShenshaCard = ({ shensha, showEvidence = false }: ShenshaCardProps) => {

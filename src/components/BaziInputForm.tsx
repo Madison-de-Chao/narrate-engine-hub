@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarIcon, Loader2 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // 时辰选项（子时到亥时）
 const HOUR_OPTIONS = [
@@ -89,16 +90,21 @@ export const BaziInputForm = ({ onCalculate, isCalculating }: BaziInputFormProps
 
           {/* 性別 */}
           <div className="space-y-2">
-            <Label htmlFor="gender" className="text-foreground">性別</Label>
-            <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-              <SelectTrigger className="bg-input border-border text-foreground z-50">
-                <SelectValue placeholder="請選擇性別" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover border-border z-50">
-                <SelectItem value="male">男</SelectItem>
-                <SelectItem value="female">女</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="gender-male" className="text-foreground">性別</Label>
+            <RadioGroup
+              className="flex gap-4"
+              value={formData.gender}
+              onValueChange={(value) => setFormData({ ...formData, gender: value })}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem id="gender-male" value="male" />
+                <Label htmlFor="gender-male" className="text-foreground">男</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem id="gender-female" value="female" />
+                <Label htmlFor="gender-female" className="text-foreground">女</Label>
+              </div>
+            </RadioGroup>
           </div>
         </div>
 

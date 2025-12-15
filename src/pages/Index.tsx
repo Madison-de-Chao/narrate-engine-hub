@@ -322,7 +322,7 @@ const Index = () => {
         
         {/* 區域1：資料輸入區 */}
         <section className="animate-fade-in">
-          <BaziInputForm onCalculate={handleCalculate} isCalculating={isCalculating} />
+          <BaziInputForm onCalculate={handleCalculate} isCalculating={isCalculating} userId={user?.id} />
         </section>
 
         {/* 當有計算結果時顯示以下區域 */}

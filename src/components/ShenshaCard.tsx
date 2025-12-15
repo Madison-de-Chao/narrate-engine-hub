@@ -94,7 +94,7 @@ export const ShenshaCard = ({ shensha, showEvidence = false }: ShenshaCardProps)
   const categoryInfo = categoryConfig[shensha.category] || categoryConfig["特殊"];
   
   // 獲取柱位意義
-  const matchedPillar = shensha.evidence?.matchedPillar || '';
+  const matchedPillar = shensha.evidence?.matched_pillar || '';
   const pillarMeaning = getPillarMeaning(shensha.name, matchedPillar);
 
   return (
@@ -193,7 +193,7 @@ export const ShenshaCard = ({ shensha, showEvidence = false }: ShenshaCardProps)
           <div className="mt-3 pt-3 border-t border-border/30">
             <p className="text-xs text-muted-foreground flex items-start gap-1.5">
               <span className="text-primary/70">📍</span>
-              <span>{shensha.evidence.whyMatched}</span>
+              <span>{shensha.evidence.why_matched}</span>
             </p>
           </div>
         )}
@@ -222,7 +222,7 @@ export const ShenshaCardList = ({
       <div className="grid gap-3">
         {displayList.map((shensha, idx) => (
           <div 
-            key={`${shensha.id}-${idx}`}
+            key={`${shensha.name}-${idx}`}
             className="animate-fade-in"
             style={{ animationDelay: `${idx * 100}ms` }}
           >

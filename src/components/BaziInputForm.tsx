@@ -90,9 +90,10 @@ export const BaziInputForm = ({ onCalculate, isCalculating }: BaziInputFormProps
 
           {/* 性別 */}
           <div className="space-y-2">
-            <Label className="text-foreground">性別</Label>
+            <Label id="gender-label" className="text-foreground">性別</Label>
             <RadioGroup
               className="flex gap-4"
+              aria-labelledby="gender-label"
               value={formData.gender}
               onValueChange={(value) => setFormData({ ...formData, gender: value })}
             >

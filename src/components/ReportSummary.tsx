@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BaziResult } from "@/pages/Index";
 import { 
-  Star, Shield, TrendingUp, Heart, Briefcase, Users,
+  Star, Shield, TrendingUp, Heart, Briefcase,
   Sparkles, ArrowUpRight, ArrowDownRight, Minus
 } from "lucide-react";
 
@@ -11,7 +11,7 @@ interface ReportSummaryProps {
 }
 
 export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
-  const { pillars, wuxing, yinyang, shensha, name, gender, fourSeasonsTeam } = baziResult;
+  const { pillars, wuxing, yinyang, shensha, name, gender } = baziResult;
   
   // 計算命格強弱
   const totalWuxing = Object.values(wuxing).reduce((sum, val) => sum + val, 0);
@@ -142,34 +142,6 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
           </div>
         </div>
 
-        {/* 四時軍團摘要 */}
-        {fourSeasonsTeam && (
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
-            <h4 className="font-semibold mb-3 flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              四時軍團陣容
-            </h4>
-            <div className="grid grid-cols-4 gap-3">
-              {(['spring', 'summer', 'autumn', 'winter'] as const).map((season) => {
-                const seasonNames = { spring: '春', summer: '夏', autumn: '秋', winter: '冬' };
-                const seasonColors = { 
-                  spring: 'text-green-500', 
-                  summer: 'text-red-500', 
-                  autumn: 'text-yellow-600', 
-                  winter: 'text-blue-500' 
-                };
-                return (
-                  <div key={season} className="text-center">
-                    <Badge variant="outline" className={`${seasonColors[season]} mb-1`}>
-                      {seasonNames[season]}
-                    </Badge>
-                    <p className="text-2xl font-bold">{fourSeasonsTeam[season]?.toFixed(1) || 0}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         {/* 速覽提示 */}
         <div className="grid md:grid-cols-3 gap-3">

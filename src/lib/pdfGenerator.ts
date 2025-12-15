@@ -55,22 +55,196 @@ const drawCornerDecoration = (pdf: jsPDF, x: number, y: number, size: number, po
 };
 
 // 繪製傳統印章
-const drawSeal = (pdf: jsPDF, x: number, y: number, text: string) => {
-  const sealSize = 18;
+const drawSeal = (pdf: jsPDF, x: number, y: number, text: string, size: number = 18) => {
+  const sealSize = size;
   
   // 印章外框
   pdf.setDrawColor(180, 50, 50);
-  pdf.setLineWidth(1.2);
+  pdf.setLineWidth(size > 30 ? 2 : 1.2);
   pdf.rect(x - sealSize / 2, y - sealSize / 2, sealSize, sealSize);
   
   // 印章內框
-  pdf.setLineWidth(0.4);
-  pdf.rect(x - sealSize / 2 + 2, y - sealSize / 2 + 2, sealSize - 4, sealSize - 4);
+  pdf.setLineWidth(size > 30 ? 0.8 : 0.4);
+  pdf.rect(x - sealSize / 2 + 3, y - sealSize / 2 + 3, sealSize - 6, sealSize - 6);
   
   // 印章文字
   pdf.setTextColor(180, 50, 50);
+  pdf.setFontSize(size > 30 ? size / 2.5 : 8);
+  pdf.text(text, x, y + (size > 30 ? size / 6 : 3), { align: "center" });
+};
+
+// 繪製大型封面印章
+const drawLargeSeal = (pdf: jsPDF, x: number, y: number, text: string) => {
+  const sealSize = 50;
+  
+  // 外框
+  pdf.setDrawColor(180, 50, 50);
+  pdf.setLineWidth(2.5);
+  pdf.rect(x - sealSize / 2, y - sealSize / 2, sealSize, sealSize);
+  
+  // 內框
+  pdf.setLineWidth(1);
+  pdf.rect(x - sealSize / 2 + 4, y - sealSize / 2 + 4, sealSize - 8, sealSize - 8);
+  
+  // 裝飾線
+  pdf.setLineWidth(0.5);
+  pdf.rect(x - sealSize / 2 + 6, y - sealSize / 2 + 6, sealSize - 12, sealSize - 12);
+  
+  // 印章文字 - 兩行顯示
+  pdf.setTextColor(180, 50, 50);
+  pdf.setFontSize(14);
+  if (text.length <= 2) {
+    pdf.text(text, x, y + 5, { align: "center" });
+  } else {
+    const half = Math.ceil(text.length / 2);
+    pdf.text(text.slice(0, half), x, y - 2, { align: "center" });
+    pdf.text(text.slice(half), x, y + 10, { align: "center" });
+  }
+};
+
+// 封面資料介面
+export interface CoverPageData {
+  name: string;
+  birthDate: string;
+  birthTime: string;
+  gender: string;
+  yearPillar: { stem: string; branch: string };
+  monthPillar: { stem: string; branch: string };
+  dayPillar: { stem: string; branch: string };
+  hourPillar: { stem: string; branch: string };
+}
+
+// 繪製封面頁
+const drawCoverPage = (pdf: jsPDF, data: CoverPageData) => {
+  const pdfWidth = 210;
+  const pdfHeight = 297;
+  
+  // 深色背景
+  pdf.setFillColor(10, 10, 15);
+  pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
+  
+  // 傳統邊框
+  drawTraditionalBorder(pdf, pdfWidth, pdfHeight);
+  
+  // 額外裝飾邊框
+  pdf.setDrawColor(140, 110, 60);
+  pdf.setLineWidth(0.3);
+  pdf.rect(12, 12, pdfWidth - 24, pdfHeight - 24);
+  
+  // 頂部裝飾圖案
+  pdf.setDrawColor(180, 140, 80);
+  pdf.setLineWidth(0.8);
+  const centerX = pdfWidth / 2;
+  
+  // 上方祥雲紋飾
+  for (let i = 0; i < 3; i++) {
+    const offset = (i - 1) * 25;
+    pdf.circle(centerX + offset, 35, 3, 'S');
+    pdf.circle(centerX + offset - 4, 33, 2, 'S');
+    pdf.circle(centerX + offset + 4, 33, 2, 'S');
+  }
+  
+  // 主標題區
+  pdf.setFontSize(28);
+  pdf.setTextColor(200, 170, 100);
+  pdf.text("虹靈御所", centerX, 60, { align: "center" });
+  
+  pdf.setFontSize(16);
+  pdf.setTextColor(160, 140, 90);
+  pdf.text("八字人生兵法命盤", centerX, 72, { align: "center" });
+  
+  // 標題下裝飾線
+  pdf.setDrawColor(180, 140, 80);
+  pdf.setLineWidth(0.5);
+  pdf.line(centerX - 60, 80, centerX + 60, 80);
+  pdf.circle(centerX - 62, 80, 1.5, 'S');
+  pdf.circle(centerX + 62, 80, 1.5, 'S');
+  
+  // 命主姓名區
+  pdf.setFontSize(10);
+  pdf.setTextColor(140, 130, 100);
+  pdf.text("命主", centerX, 100, { align: "center" });
+  
+  pdf.setFontSize(32);
+  pdf.setTextColor(220, 200, 140);
+  pdf.text(data.name, centerX, 118, { align: "center" });
+  
+  // 性別標示
+  pdf.setFontSize(10);
+  pdf.setTextColor(120, 120, 120);
+  const genderText = data.gender === 'male' ? '乾造（男）' : '坤造（女）';
+  pdf.text(genderText, centerX, 128, { align: "center" });
+  
+  // 生辰資訊區
+  pdf.setDrawColor(100, 80, 50);
+  pdf.setLineWidth(0.3);
+  pdf.line(centerX - 50, 140, centerX + 50, 140);
+  
+  pdf.setFontSize(9);
+  pdf.setTextColor(140, 140, 140);
+  pdf.text("出生時間", centerX, 150, { align: "center" });
+  
+  pdf.setFontSize(12);
+  pdf.setTextColor(180, 170, 140);
+  pdf.text(`${data.birthDate}  ${data.birthTime}`, centerX, 162, { align: "center" });
+  
+  // 四柱八字區
+  pdf.setDrawColor(160, 130, 80);
+  pdf.setLineWidth(0.5);
+  pdf.line(centerX - 70, 178, centerX + 70, 178);
+  
+  pdf.setFontSize(10);
+  pdf.setTextColor(140, 130, 100);
+  pdf.text("四柱八字", centerX, 188, { align: "center" });
+  
+  // 繪製四柱
+  const pillarLabels = ["年柱", "月柱", "日柱", "時柱"];
+  const pillars = [data.yearPillar, data.monthPillar, data.dayPillar, data.hourPillar];
+  const pillarStartX = centerX - 52;
+  const pillarSpacing = 35;
+  
+  pillars.forEach((pillar, index) => {
+    const x = pillarStartX + index * pillarSpacing;
+    
+    // 柱標籤
+    pdf.setFontSize(8);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(pillarLabels[index], x, 198, { align: "center" });
+    
+    // 柱框
+    pdf.setDrawColor(140, 110, 70);
+    pdf.setLineWidth(0.5);
+    pdf.rect(x - 12, 202, 24, 40);
+    
+    // 天干
+    pdf.setFontSize(16);
+    pdf.setTextColor(200, 180, 120);
+    pdf.text(pillar.stem, x, 218, { align: "center" });
+    
+    // 分隔線
+    pdf.setDrawColor(100, 80, 50);
+    pdf.setLineWidth(0.3);
+    pdf.line(x - 10, 222, x + 10, 222);
+    
+    // 地支
+    pdf.setFontSize(16);
+    pdf.setTextColor(180, 160, 100);
+    pdf.text(pillar.branch, x, 238, { align: "center" });
+  });
+  
+  // 大型印章
+  drawLargeSeal(pdf, pdfWidth - 45, pdfHeight - 70, "御所");
+  
+  // 底部裝飾線
+  pdf.setDrawColor(140, 110, 60);
+  pdf.setLineWidth(0.5);
+  pdf.line(20, pdfHeight - 35, pdfWidth - 20, pdfHeight - 35);
+  
+  // 底部說明文字
   pdf.setFontSize(8);
-  pdf.text(text, x, y + 3, { align: "center" });
+  pdf.setTextColor(100, 100, 100);
+  pdf.text("命理展示的是一條「相對好走但不一定是你要走的路」", centerX, pdfHeight - 25, { align: "center" });
+  pdf.text("選擇權在於你", centerX, pdfHeight - 18, { align: "center" });
 };
 
 // 繪製頁面標題裝飾線
@@ -87,7 +261,7 @@ const drawTitleDecoration = (pdf: jsPDF, x: number, y: number, width: number) =>
   pdf.circle(x + width - 33, y, 1.5, 'S');
 };
 
-export const generatePDF = async (elementId: string, fileName: string) => {
+export const generatePDF = async (elementId: string, fileName: string, coverData?: CoverPageData) => {
   const element = document.getElementById(elementId);
   if (!element) {
     throw new Error("找不到要下載的元素");
@@ -157,17 +331,23 @@ export const generatePDF = async (elementId: string, fileName: string) => {
       minute: "2-digit"
     });
 
-    // 計算總頁數
+    // 計算總頁數（加1是因為有封面頁）
     const pageContentHeight = pdfHeight - headerHeight - footerHeight;
-    const totalPages = Math.ceil(imgHeight / pageContentHeight);
+    const totalContentPages = Math.ceil(imgHeight / pageContentHeight);
+    const hasCover = !!coverData;
+    const totalPages = totalContentPages + (hasCover ? 1 : 0);
+    
+    // 如果有封面資料，先繪製封面
+    if (coverData) {
+      drawCoverPage(pdf, coverData);
+    }
     
     // 添加主圖片
     const imgData = canvas.toDataURL("image/png", 1.0);
     
-    for (let page = 0; page < totalPages; page++) {
-      if (page > 0) {
-        pdf.addPage();
-      }
+    for (let page = 0; page < totalContentPages; page++) {
+      // 封面後的每一頁都需要新增頁面
+      pdf.addPage();
       
       // 深色背景
       pdf.setFillColor(10, 10, 15);
@@ -248,9 +428,10 @@ export const generatePDF = async (elementId: string, fileName: string) => {
         { align: "center" }
       );
       
-      // 右側頁碼
+      // 右側頁碼（內容頁從第2頁開始，封面是第1頁）
       pdf.setTextColor(140, 140, 140);
-      pdf.text(`第 ${page + 1} 頁 / 共 ${totalPages} 頁`, pdfWidth - margin, pdfHeight - 10, { align: "right" });
+      const currentPage = hasCover ? page + 2 : page + 1;
+      pdf.text(`第 ${currentPage} 頁 / 共 ${totalPages} 頁`, pdfWidth - margin, pdfHeight - 10, { align: "right" });
     }
 
     // 下載 PDF

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Loader2, History, User, ChevronDown } from "lucide-react";
+import { CalendarIcon, Loader2, History, User, ChevronDown, Trash2 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -12,8 +12,19 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 const GUEST_STORAGE_KEY = 'bazi_guest_form_data';
 
 // 時辰選項（子時到亥時）
@@ -68,6 +79,8 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
   });
   const [historyRecords, setHistoryRecords] = useState<HistoryRecord[]>([]);
   const [dataSource, setDataSource] = useState<'none' | 'history' | 'guest'>('none');
+  const [deleteTarget, setDeleteTarget] = useState<HistoryRecord | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // 從 localStorage 載入訪客資料
   const loadGuestData = () => {
@@ -155,6 +168,30 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
     return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
   };
 
+  // 刪除歷史記錄
+  const handleDeleteRecord = async () => {
+    if (!deleteTarget) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('bazi_calculations')
+        .delete()
+        .eq('id', deleteTarget.id);
+
+      if (error) throw error;
+
+      setHistoryRecords(prev => prev.filter(r => r.id !== deleteTarget.id));
+      toast.success('已刪除記錄');
+    } catch (err) {
+      console.error('刪除記錄失敗:', err);
+      toast.error('刪除失敗，請稍後再試');
+    } finally {
+      setIsDeleting(false);
+      setDeleteTarget(null);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -188,6 +225,7 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
   };
 
   return (
+    <>
     <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20 relative overflow-hidden">
       {/* 邊框光效 */}
       <div className="absolute inset-0 rounded-lg opacity-50 pointer-events-none"
@@ -213,16 +251,28 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64">
                   {historyRecords.map((record) => (
-                    <DropdownMenuItem
-                      key={record.id}
-                      onClick={() => applyHistoryRecord(record)}
-                      className="flex flex-col items-start gap-0.5 cursor-pointer"
-                    >
-                      <span className="font-medium">{record.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {formatHistoryDate(record.birth_date)} · {record.gender === 'male' ? '男' : '女'}
-                      </span>
-                    </DropdownMenuItem>
+                    <div key={record.id} className="flex items-center group">
+                      <DropdownMenuItem
+                        onClick={() => applyHistoryRecord(record)}
+                        className="flex-1 flex flex-col items-start gap-0.5 cursor-pointer"
+                      >
+                        <span className="font-medium">{record.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatHistoryDate(record.birth_date)} · {record.gender === 'male' ? '男' : '女'}
+                        </span>
+                      </DropdownMenuItem>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/10 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteTarget(record);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -368,5 +418,29 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
         </form>
       </div>
     </Card>
+
+    {/* 刪除確認對話框 */}
+    <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>確認刪除</AlertDialogTitle>
+          <AlertDialogDescription>
+            確定要刪除「{deleteTarget?.name}」的命盤記錄嗎？此操作無法復原。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>取消</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDeleteRecord}
+            disabled={isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            刪除
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 };

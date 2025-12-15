@@ -314,7 +314,7 @@ function calculateYearPillarAccurate(
 // 简单的月柱计算（不基于节气的近似算法，仅作后备）
 function calculateMonthPillarSimple(yearStem: string, month: number): { stem: string, branch: string } {
   // 月份对应地支（近似，不考虑节气）：1月(小寒/大寒)→丑，2月→寅，3月→卯 ... 12月→子
-  const branchIndexMap = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0]; // 以公历月(1-12)索引，0位为1月
+  const branchIndexMap = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0]; // 陣列第0項對應1月的地支索引（丑=1）
   const branchIndex = branchIndexMap[month - 1]; // 保守近似，用于缺少节气数据时的后备计算
   
   // 五虎遁月

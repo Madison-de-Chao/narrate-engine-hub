@@ -91,7 +91,10 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
     yearBranch: pillars.year.branch,
     monthBranch: pillars.month.branch,
     dayBranch: pillars.day.branch,
-    hourBranch: pillars.hour.branch
+    hourBranch: pillars.hour.branch,
+    yearStem: pillars.year.stem,
+    monthStem: pillars.month.stem,
+    hourStem: pillars.hour.stem
   });
 
   return (

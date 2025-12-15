@@ -61,8 +61,8 @@ export interface ShenshaInput {
   hourBranch: string;
   yearStem?: string;
   monthStem?: string;
-  dayStem2?: string;
   hourStem?: string;
+  dayPillar?: string;
 }
 
 // 三合局對照表
@@ -137,9 +137,16 @@ export class ShenshaRuleEngine {
       { branch: input.dayBranch, pillar: '日柱' },
       { branch: input.hourBranch, pillar: '時柱' }
     ];
+    
+    const allStems = [
+      { stem: input.yearStem || '', pillar: '年柱' },
+      { stem: input.monthStem || '', pillar: '月柱' },
+      { stem: input.dayStem, pillar: '日柱' },
+      { stem: input.hourStem || '', pillar: '時柱' }
+    ];
 
     for (const rule of this.rules) {
-      const result = this.evaluateRule(rule, input, allBranches);
+      const result = this.evaluateRule(rule, input, allBranches, allStems);
       if (result) {
         matches.push(result);
       }
@@ -155,11 +162,14 @@ export class ShenshaRuleEngine {
   private evaluateRule(
     rule: ShenshaRule, 
     input: ShenshaInput, 
-    allBranches: { branch: string; pillar: string }[]
+    allBranches: { branch: string; pillar: string }[],
+    allStems: { stem: string; pillar: string }[]
   ): ShenshaMatch | null {
     let anchorValue: string | null = null;
     let targetBranches: string[] = [];
+    let targetStems: string[] = [];
     let anchorBasis = '';
+    const matchTarget = rule.matchTarget || 'anyBranch';
 
     switch (rule.anchor) {
       case 'dayStem':
@@ -204,6 +214,26 @@ export class ShenshaRuleEngine {
         }
         break;
 
+      case 'monthBranch':
+        anchorValue = input.monthBranch;
+        anchorBasis = `月支 ${anchorValue}`;
+        if (rule.conditions && typeof rule.conditions === 'object' && !Array.isArray(rule.conditions)) {
+          const condValue = rule.conditions[anchorValue];
+          if (condValue) {
+            const values = Array.isArray(condValue) ? condValue : [condValue];
+            // 根據 matchTarget 決定是查天干還是地支
+            if (matchTarget === 'anyStem') {
+              targetStems = values;
+            } else if (matchTarget === 'anyStemOrBranch') {
+              targetStems = values;
+              targetBranches = values;
+            } else {
+              targetBranches = values;
+            }
+          }
+        }
+        break;
+
       case 'dayPillar':
         if (rule.anchorType === 'xunkong') {
           const xun = getXun(input.dayStem, input.dayBranch);
@@ -223,13 +253,68 @@ export class ShenshaRuleEngine {
           targetBranches = rule.conditions;
         }
         break;
+
+      case 'combo':
+        // 強桃花等組合規則：需要多柱同時見到桃花位
+        if (rule.anchorType === 'multiMatch') {
+          const triad = TRIAD_MAP[input.yearBranch];
+          anchorBasis = `年支 ${input.yearBranch} (${triad}) 多柱組合`;
+          if (rule.conditions && typeof rule.conditions === 'object' && !Array.isArray(rule.conditions)) {
+            const condValue = rule.conditions[triad] as any;
+            if (condValue && typeof condValue === 'object' && condValue.taohua) {
+              const taohuaBranch = condValue.taohua;
+              const requirePillars = condValue.requireMultiple || [];
+              
+              // 檢查是否多柱都有桃花位
+              let matchCount = 0;
+              const matchedPillars: string[] = [];
+              
+              if (requirePillars.includes('monthBranch') && input.monthBranch === taohuaBranch) {
+                matchCount++;
+                matchedPillars.push('月柱');
+              }
+              if (requirePillars.includes('dayBranch') && input.dayBranch === taohuaBranch) {
+                matchCount++;
+                matchedPillars.push('日柱');
+              }
+              if (requirePillars.includes('hourBranch') && input.hourBranch === taohuaBranch) {
+                matchCount++;
+                matchedPillars.push('時柱');
+              }
+              
+              // 需要至少兩柱見到桃花
+              if (matchCount >= 2) {
+                return {
+                  id: rule.id,
+                  name: rule.name,
+                  category: rule.category,
+                  rarity: rule.rarity,
+                  priority: rule.priority,
+                  effect: rule.effect,
+                  modernMeaning: rule.modernMeaning,
+                  buff: rule.buff,
+                  debuff: rule.debuff,
+                  evidence: {
+                    anchorBasis,
+                    anchorValue: input.yearBranch,
+                    matchedBranch: taohuaBranch,
+                    matchedPillar: matchedPillars.join('、'),
+                    whyMatched: `${anchorBasis} 桃花位 ${taohuaBranch}，見於 ${matchedPillars.join('、')}（${matchCount}柱同見）`
+                  }
+                };
+              }
+            }
+          }
+        }
+        return null;
     }
 
     // 檢查匹配
-    if (targetBranches.length === 0) {
+    if (targetBranches.length === 0 && targetStems.length === 0) {
       return null;
     }
 
+    // 檢查地支匹配
     for (const { branch, pillar } of allBranches) {
       if (targetBranches.includes(branch)) {
         return {
@@ -248,6 +333,30 @@ export class ShenshaRuleEngine {
             matchedBranch: branch,
             matchedPillar: pillar,
             whyMatched: `${anchorBasis} 查得 ${targetBranches.join('/')}，見於 ${pillar} ${branch}`
+          }
+        };
+      }
+    }
+
+    // 檢查天干匹配（用於天德、月德等）
+    for (const { stem, pillar } of allStems) {
+      if (stem && targetStems.includes(stem)) {
+        return {
+          id: rule.id,
+          name: rule.name,
+          category: rule.category,
+          rarity: rule.rarity,
+          priority: rule.priority,
+          effect: rule.effect,
+          modernMeaning: rule.modernMeaning,
+          buff: rule.buff,
+          debuff: rule.debuff,
+          evidence: {
+            anchorBasis,
+            anchorValue: anchorValue || '',
+            matchedBranch: stem,
+            matchedPillar: pillar,
+            whyMatched: `${anchorBasis} 查得 ${targetStems.join('/')}，見於 ${pillar} 天干 ${stem}`
           }
         };
       }

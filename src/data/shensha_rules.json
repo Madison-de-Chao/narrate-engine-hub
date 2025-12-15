@@ -481,6 +481,122 @@
       "modernMeaning": "易陷入困局，需智慧應對",
       "buff": null,
       "debuff": "困局陷阱"
+    },
+    {
+      "id": "yima",
+      "name": "驛馬",
+      "category": "吉神",
+      "rarity": "SR",
+      "priority": 78,
+      "anchor": "yearBranch",
+      "anchorType": "triad",
+      "conditions": {
+        "申子辰": "寅",
+        "寅午戌": "申",
+        "巳酉丑": "亥",
+        "亥卯未": "巳"
+      },
+      "matchTarget": "anyBranch",
+      "effect": "驛馬星動，主變遷、外出、升遷",
+      "modernMeaning": "適合外派、出差、搬遷，事業有變動機會",
+      "buff": "遷移貴人",
+      "debuff": "漂泊不定"
+    },
+    {
+      "id": "tiande",
+      "name": "天德",
+      "category": "吉神",
+      "rarity": "SR",
+      "priority": 82,
+      "anchor": "monthBranch",
+      "anchorType": "direct",
+      "conditions": {
+        "寅": ["丁"],
+        "卯": ["申"],
+        "辰": ["壬"],
+        "巳": ["辛"],
+        "午": ["亥"],
+        "未": ["甲"],
+        "申": ["癸"],
+        "酉": ["寅"],
+        "戌": ["丙"],
+        "亥": ["乙"],
+        "子": ["巳"],
+        "丑": ["庚"]
+      },
+      "matchTarget": "anyStemOrBranch",
+      "effect": "天德照命，逢凶化吉，消災解難",
+      "modernMeaning": "天生福德深厚，遇難呈祥",
+      "buff": "天德護佑",
+      "debuff": null
+    },
+    {
+      "id": "yuede",
+      "name": "月德",
+      "category": "吉神",
+      "rarity": "R",
+      "priority": 72,
+      "anchor": "monthBranch",
+      "anchorType": "direct",
+      "conditions": {
+        "寅": ["丙"],
+        "卯": ["甲"],
+        "辰": ["壬"],
+        "巳": ["庚"],
+        "午": ["丙"],
+        "未": ["甲"],
+        "申": ["壬"],
+        "酉": ["庚"],
+        "戌": ["丙"],
+        "亥": ["甲"],
+        "子": ["壬"],
+        "丑": ["庚"]
+      },
+      "matchTarget": "anyStem",
+      "effect": "月德照命，仁慈和善，福報綿延",
+      "modernMeaning": "性格和善，人緣佳，貴人運好",
+      "buff": "月德加持",
+      "debuff": null
+    },
+    {
+      "id": "taohua",
+      "name": "桃花",
+      "category": "桃花",
+      "rarity": "R",
+      "priority": 70,
+      "anchor": "yearBranch",
+      "anchorType": "triad",
+      "conditions": {
+        "申子辰": "酉",
+        "寅午戌": "卯",
+        "巳酉丑": "午",
+        "亥卯未": "子"
+      },
+      "matchTarget": "anyBranch",
+      "effect": "桃花星動，人緣佳，異性緣重",
+      "modernMeaning": "社交魅力強，感情機會多，但需理智處理",
+      "buff": "桃花人緣",
+      "debuff": "情感紛擾"
+    },
+    {
+      "id": "qiang_taohua",
+      "name": "強桃花",
+      "category": "桃花",
+      "rarity": "SSR",
+      "priority": 92,
+      "anchor": "combo",
+      "anchorType": "multiMatch",
+      "conditions": {
+        "申子辰": { "taohua": "酉", "requireMultiple": ["monthBranch", "dayBranch"] },
+        "寅午戌": { "taohua": "卯", "requireMultiple": ["monthBranch", "dayBranch"] },
+        "巳酉丑": { "taohua": "午", "requireMultiple": ["monthBranch", "dayBranch"] },
+        "亥卯未": { "taohua": "子", "requireMultiple": ["monthBranch", "dayBranch"] }
+      },
+      "matchTarget": "multipleMatch",
+      "effect": "桃花極旺，魅力超群，感情經歷豐富",
+      "modernMeaning": "異性緣極佳，需謹慎處理感情關係",
+      "buff": "萬人迷",
+      "debuff": "情劫深重"
     }
   ],
   "rarityConfig": {

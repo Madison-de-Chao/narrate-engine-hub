@@ -1,5 +1,5 @@
-// 🌈 八字精准计算引擎 - 基于虹灵御所数据
-import solarTermsData from "@/data/solar_terms.json";
+// 🌈 八字精准计算引擎 - 基于香港天文台資料
+import keySolarTermsData from "@/data/key_solar_terms_database.json";
 import fiveTigersData from "@/data/five_tigers.json";
 import fiveRatsData from "@/data/five_rats.json";
 import ganZhiData from "@/data/gan_zhi.json";
@@ -26,8 +26,31 @@ const SOLAR_TERM_BRANCH_ORDER: Array<{ term: string; branchIndex: number }> = [
 
 const MONTH_COMMAND_MULTIPLIER = 1.5;
 
-type SolarTermsYearData = Record<string, { date: string }>;
-type SolarTermsDataset = { years: Record<string, SolarTermsYearData> };
+// 香港天文台關鍵節氣資料類型
+interface HkoTermData {
+  month: number;
+  day: number;
+  date: string;
+  month_zhi?: string;
+  description?: string;
+}
+
+interface HkoYearData {
+  [termName: string]: HkoTermData;
+}
+
+interface HkoSolarTermsData {
+  metadata: {
+    source: string;
+    coverage: string;
+    total_years: number;
+  };
+  key_solar_terms: {
+    [year: string]: HkoYearData;
+  };
+}
+
+const hkoData = keySolarTermsData as HkoSolarTermsData;
 
 export interface HiddenStemEntry {
   stem: string;
@@ -40,7 +63,6 @@ interface HiddenStemConfig {
 
 type HiddenStemsDataset = { hiddenStems: Record<string, HiddenStemConfig> };
 
-const solarTermsYears = solarTermsData as SolarTermsDataset;
 const hiddenStems = hiddenStemsData as HiddenStemsDataset;
 
 type PillarName = "year" | "month" | "day" | "hour";
@@ -129,12 +151,12 @@ function buildLocalDateUtc(
 }
 
 /**
- * 获取节气时刻
+ * 获取节气时刻（使用 HKO 資料）
  */
 function getSolarTermUtc(year: number, termName: string): Date | null {
-  const yearData = solarTermsYears.years[year.toString()];
-  if (!yearData) return null;
-  return parseSolarTermDate(yearData[termName]?.date) ?? null;
+  const yearData = hkoData.key_solar_terms[year.toString()];
+  if (!yearData || !yearData[termName]) return null;
+  return parseSolarTermDate(yearData[termName].date) ?? null;
 }
 
 function findNearestSolarTerm(
@@ -212,11 +234,13 @@ function getMonthBranchIndex(dateUtc: Date, timezoneOffsetMinutes: number): numb
   const occurrences: Array<{ date: Date; branchIndex: number }> = [];
 
   for (const yearCandidate of searchYears) {
-    const yearData = solarTermsYears.years[yearCandidate.toString()];
+    const yearData = hkoData.key_solar_terms[yearCandidate.toString()];
     if (!yearData) continue;
 
     for (const { term, branchIndex } of SOLAR_TERM_BRANCH_ORDER) {
-      const termDate = parseSolarTermDate(yearData[term]?.date);
+      const termData = yearData[term];
+      if (!termData) continue;
+      const termDate = parseSolarTermDate(termData.date);
       if (!termDate) continue;
       occurrences.push({ date: termDate, branchIndex });
     }

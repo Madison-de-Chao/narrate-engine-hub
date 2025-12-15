@@ -299,7 +299,7 @@ function calculateYearPillarAccurate(
 // 简单的月柱计算（不基于节气的近似算法，仅作后备）
 function calculateMonthPillarSimple(yearStem: string, month: number): { stem: string, branch: string } {
   // 月份对应地支（近似，不考虑节气）：寅=正月(2月)，卯=二月(3月)，...
-  const branchIndex = (month + 10) % 12; // 1月→丑(1), 2月→寅(2), 3月→卯(3)...
+  const branchIndex = month % 12; // 1月→丑(1), 2月→寅(2), 3月→卯(3)...
   
   // 五虎遁月
   const stemStartMap: { [key: string]: number } = {
@@ -579,7 +579,14 @@ serve(async (req) => {
     const hour = parseInt(hourStr);
     const minute = parseInt(minuteStr) || 0;
     const tzOffset = timezoneOffsetMinutes || 480; // 默認UTC+8
-    const birthLocal = toLocal(birth, tzOffset);
+    const birthUtc = new Date(Date.UTC(
+      birth.getUTCFullYear(),
+      birth.getUTCMonth(),
+      birth.getUTCDate(),
+      hour,
+      minute
+    ) - tzOffset * 60 * 1000);
+    const birthLocal = toLocal(birthUtc, tzOffset);
 
     // 嘗試從資料庫取得當年與前一年的節氣資料，若失敗則使用內建資料
     const targetYears = [birthLocal.getUTCFullYear(), birthLocal.getUTCFullYear() - 1];
@@ -595,15 +602,6 @@ serve(async (req) => {
       solarTermsYears[year] = { ...(solarTermsYears[year] || {}), ...data };
     });
     
-    // 使用edge function版本的计算（已整合動態節氣資料與靜態備援）
-    const birthUtc = new Date(Date.UTC(
-      birth.getUTCFullYear(),
-      birth.getUTCMonth(),
-      birth.getUTCDate(),
-      hour,
-      minute
-    ) - tzOffset * 60 * 1000);
-
     // 使用精確的立春時間（來自資料集）；保留近似值僅作後備
     const lichunYear = birth.getUTCFullYear();
     const lichun = new Date(Date.UTC(lichunYear, 1, 4, 5, 30)); // 保留變數以維持兼容，不再用於計算
@@ -614,7 +612,7 @@ serve(async (req) => {
     console.log('Year Pillar:', yearPillar);
     const monthPillar = calculateMonthPillarAccurate(yearPillar.stem, birthUtc, tzOffset, solarTermsYears);
     console.log('Month Pillar:', monthPillar);
-    const dayPillar = calculateDayPillar(birthUtc);
+    const dayPillar = calculateDayPillar(birthLocal);
     const hourPillar = calculateHourPillar(dayPillar.stem, hour);
 
     const pillars = {

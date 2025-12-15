@@ -362,12 +362,12 @@ function calculateMonthPillarAccurate(
 
 
 // 计算日柱（基准日算法）
-function calculateDayPillar(birthDate: Date): { stem: string, branch: string } {
-  // 基准日：1985年9月22日 = 甲子日
-  const baseDate = new Date(1985, 8, 22);
+function calculateDayPillar(birthDate: Date, tzMinutes: number): { stem: string, branch: string } {
+  // 基准日：1985年9月22日 = 甲子日（按指定时区当日零时）
+  const baseDateLocal = new Date(Date.UTC(1985, 8, 22) - tzMinutes * 60 * 1000);
   const baseDayOffset = 0; // 甲子日的偏移量
   
-  const diffTime = birthDate.getTime() - baseDate.getTime();
+  const diffTime = birthDate.getTime() - baseDateLocal.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   
   const totalDays = baseDayOffset + diffDays;
@@ -623,7 +623,7 @@ serve(async (req) => {
     console.log('Year Pillar:', yearPillar);
     const monthPillar = calculateMonthPillarAccurate(yearPillar.stem, birthUtc, tzOffset, solarTermsYears);
     console.log('Month Pillar:', monthPillar);
-    const dayPillar = calculateDayPillar(birthLocal);
+    const dayPillar = calculateDayPillar(birthLocal, tzOffset);
     const hourPillar = calculateHourPillar(dayPillar.stem, hour);
 
     const pillars = {

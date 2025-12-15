@@ -96,6 +96,14 @@ const SOLAR_TERM_BRANCH_ORDER = [
   { term: "小寒", branchIndex: 1 },
 ] as const;
 
+const SOLAR_TERM_BRANCH_MAP: Record<string, number> = SOLAR_TERM_BRANCH_ORDER.reduce(
+  (acc, { term, branchIndex }) => {
+    acc[term] = branchIndex;
+    return acc;
+  },
+  {} as Record<string, number>
+);
+
 type SolarTermsYearData = Record<string, { date: string }>;
 const SOLAR_TERMS_DATA: { years: Record<string, SolarTermsYearData> } = {
   years: {
@@ -198,7 +206,7 @@ async function fetchSolarTermsData(
   }
 
   data.forEach((row: { year: number; term_name: string; term_date: string }) => {
-    const { year, term_name, term_date } = row || {};
+    const { year, term_name, term_date } = row;
     if (year === undefined || year === null || !term_name?.trim() || !term_date?.trim()) return;
     const yearKey = String(year);
     if (!dataset[yearKey]) {
@@ -237,10 +245,9 @@ function getMonthBranchIndexBySolarTerms(
   ["大雪", "小寒"].forEach((t) => {
     const d = parseTermDate(prev[t]?.date);
     if (d) {
-      // 防禦性檢查：若資料不完整時避免拋出錯誤
-      const match = SOLAR_TERM_BRANCH_ORDER.find((x) => x.term === t);
-      if (match) {
-        timeline.push({ term: t, date: toLocal(d, tzMinutes), branchIndex: match.branchIndex });
+      const branchIndex = SOLAR_TERM_BRANCH_MAP[t];
+      if (branchIndex !== undefined) {
+        timeline.push({ term: t, date: toLocal(d, tzMinutes), branchIndex });
       }
     }
   });
@@ -571,14 +578,14 @@ serve(async (req) => {
     const birthLocal = toLocal(birth, tzOffset);
 
     // 嘗試從資料庫取得當年與前一年的節氣資料，若失敗則使用內建資料
-    const dynamicSolarTerms = await fetchSolarTermsData(supabase, [
-      birthLocal.getUTCFullYear(),
-      birthLocal.getUTCFullYear() - 1
-    ]);
-    const solarTermsYears: SolarTermsYears = {
-      ...SOLAR_TERMS_DATA.years,
-      ...dynamicSolarTerms
-    };
+    const targetYears = [birthLocal.getUTCFullYear(), birthLocal.getUTCFullYear() - 1];
+    const dynamicSolarTerms = await fetchSolarTermsData(supabase, targetYears);
+    const staticSolarTerms: SolarTermsYears = {};
+    targetYears.forEach((year) => {
+      const yearData = SOLAR_TERMS_DATA.years[String(year)];
+      if (yearData) staticSolarTerms[String(year)] = yearData;
+    });
+    const solarTermsYears: SolarTermsYears = { ...staticSolarTerms, ...dynamicSolarTerms };
     
     // 使用edge function版本的计算（简化版，但保留原有逻辑）
     // 注意：這裡仍使用簡化的算法，主要問題在於沒有準確的節氣數據

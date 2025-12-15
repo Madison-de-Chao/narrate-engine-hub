@@ -232,6 +232,21 @@ function toLocal(dateUtc: Date, tzMinutes: number): Date {
   return new Date(dateUtc.getTime() + tzMinutes * 60 * 1000);
 }
 
+function createUtcFromLocalParts(
+  birth: Date,
+  hour: number,
+  minute: number,
+  tzMinutes: number
+): Date {
+  return new Date(Date.UTC(
+    birth.getUTCFullYear(),
+    birth.getUTCMonth(),
+    birth.getUTCDate(),
+    hour,
+    minute
+  ) - tzMinutes * 60 * 1000);
+}
+
 function getMonthBranchIndexBySolarTerms(
   birthUtc: Date,
   tzMinutes: number,
@@ -300,7 +315,7 @@ function calculateYearPillarAccurate(
 function calculateMonthPillarSimple(yearStem: string, month: number): { stem: string, branch: string } {
   // 月份对应地支（近似，不考虑节气）：1月(小寒/大寒)→丑，2月→寅，3月→卯 ... 12月→子
   const branchIndexMap = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0]; // 以公历月(1-12)索引，0位为1月
-  const branchIndex = branchIndexMap[(month - 1 + 12) % 12]; // 保守近似，用于缺少节气数据时的后备计算
+  const branchIndex = branchIndexMap[month - 1]; // 保守近似，用于缺少节气数据时的后备计算
   
   // 五虎遁月
   const stemStartMap: { [key: string]: number } = {
@@ -580,14 +595,8 @@ serve(async (req) => {
     const hour = parseInt(hourStr);
     const minute = parseInt(minuteStr) || 0;
     const tzOffset = timezoneOffsetMinutes || 480; // 默認UTC+8
-    // birthTime 為當地時間：使用 Date.UTC 固定輸入年月日時分，再扣除時區分鐘以取得對應的 UTC 時刻
-    const birthUtc = new Date(Date.UTC(
-      birth.getUTCFullYear(),
-      birth.getUTCMonth(),
-      birth.getUTCDate(),
-      hour,
-      minute
-    ) - tzOffset * 60 * 1000);
+    // birthTime 為當地時間：以 helper 轉成 UTC 時刻供後續計算
+    const birthUtc = createUtcFromLocalParts(birth, hour, minute, tzOffset);
     const birthLocal = toLocal(birthUtc, tzOffset);
 
     // 嘗試從資料庫取得當年與前一年的節氣資料，若失敗則使用內建資料

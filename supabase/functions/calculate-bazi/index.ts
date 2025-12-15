@@ -198,12 +198,13 @@ async function fetchSolarTermsData(
   }
 
   data.forEach((row: { year: number; term_name: string; term_date: string }) => {
-    if (!row || !row.term_name || !row.term_date || row.year === undefined || row.year === null) return;
-    const yearKey = String(row.year);
+    const { year, term_name, term_date } = row || {};
+    if (year === undefined || year === null || !term_name?.trim() || !term_date?.trim()) return;
+    const yearKey = String(year);
     if (!dataset[yearKey]) {
       dataset[yearKey] = {};
     }
-    dataset[yearKey][row.term_name] = { date: row.term_date };
+    dataset[yearKey][term_name] = { date: term_date };
   });
 
   return dataset;
@@ -236,6 +237,7 @@ function getMonthBranchIndexBySolarTerms(
   ["大雪", "小寒"].forEach((t) => {
     const d = parseTermDate(prev[t]?.date);
     if (d) {
+      // 防禦性檢查：若資料不完整時避免拋出錯誤
       const match = SOLAR_TERM_BRANCH_ORDER.find((x) => x.term === t);
       if (match) {
         timeline.push({ term: t, date: toLocal(d, tzMinutes), branchIndex: match.branchIndex });

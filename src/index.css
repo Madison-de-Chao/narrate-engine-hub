@@ -7,8 +7,42 @@
   100% { transform: translateX(100%); }
 }
 
+@keyframes glow-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(251,191,36,0.4), 0 0 40px rgba(251,191,36,0.2);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(251,191,36,0.6), 0 0 60px rgba(251,191,36,0.3);
+  }
+}
+
+@keyframes rainbow-border {
+  0% { border-color: rgba(251,191,36,0.6); }
+  25% { border-color: rgba(253,224,71,0.6); }
+  50% { border-color: rgba(249,115,22,0.6); }
+  75% { border-color: rgba(253,224,71,0.6); }
+  100% { border-color: rgba(251,191,36,0.6); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
 .animate-shimmer {
   animation: shimmer 2s infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-rainbow-border {
+  animation: rainbow-border 3s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 

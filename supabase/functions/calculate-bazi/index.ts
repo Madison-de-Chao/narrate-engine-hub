@@ -189,7 +189,7 @@ const SOLAR_TERMS_DATA: { years: Record<string, SolarTermsYearData> } = {
 };
 
 type SolarTermsYears = Record<string, SolarTermsYearData>;
-type SolarTermRow = { year: number; term_name: string; term_date: string };
+type SolarTermRow = { year?: number; term_name?: string; term_date?: string };
 
 async function fetchSolarTermsData(
   supabaseClient: SupabaseClient,
@@ -586,7 +586,7 @@ serve(async (req) => {
     });
     const solarTermsYears: SolarTermsYears = { ...staticSolarTerms };
     Object.entries(dynamicSolarTerms).forEach(([year, data]) => {
-      solarTermsYears[year] = data;
+      solarTermsYears[year] = { ...(solarTermsYears[year] || {}), ...data };
     });
     
     // 使用edge function版本的计算（简化版，但保留原有逻辑）

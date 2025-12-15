@@ -44,7 +44,7 @@ const NAYIN_MEANINGS: Record<string, { image: string; traits: string; fortune: s
   '城頭土': { image: '城牆上的堅土', traits: '堅固穩重，有保護欲，責任感強', fortune: '適合管理和安全相關行業' },
   '屋上土': { image: '屋頂的泥瓦', traits: '有遮蔽保護之意，顧家愛家', fortune: '家庭運好，房產運佳' },
   '壁上土': { image: '牆壁上的泥土', traits: '需要支撐，依賴他人，善於配合', fortune: '與人合作事半功倍' },
-  '大驛土': { image: '驛站的大道', traits: '四通八達，人際廣闘，善於交際', fortune: '貴人運強，事業多變' },
+  '大驛土': { image: '驛站的大道', traits: '四通八達，人際廣闊，善於交際', fortune: '貴人運強，事業多變' },
   '沙中土': { image: '沙漠中的土地', traits: '需要滋潤，潛力待發，耐得住考驗', fortune: '早年辛苦，中晚年順遂' },
   '桑柘木': { image: '桑樹和柘樹', traits: '柔韌有彈性，適應力強，務實勤勞', fortune: '穩健發展，細水長流' },
   '楊柳木': { image: '隨風搖曳的柳樹', traits: '柔美優雅，多才多藝，感情豐富', fortune: '藝術天賦，感情運多變' },
@@ -65,10 +65,10 @@ const ELEMENT_CONFIG: Record<string, { color: string; bgColor: string; icon: Rea
 
 export const NayinAnalysis = ({ nayin }: NayinAnalysisProps) => {
   const pillars = [
-    { key: 'year', label: '年柱', desc: '代表祖上、童年' },
-    { key: 'month', label: '月柱', desc: '代表父母、青年' },
-    { key: 'day', label: '日柱', desc: '代表自己、中年' },
-    { key: 'hour', label: '時柱', desc: '代表子女、晚年' },
+    { key: 'year', label: '年柱', desc: '代表祖業根基' },
+    { key: 'month', label: '月柱', desc: '代表事業發展' },
+    { key: 'day', label: '日柱', desc: '代表自身核心' },
+    { key: 'hour', label: '時柱', desc: '代表子女成就' },
   ] as const;
 
   // 統計納音五行分布

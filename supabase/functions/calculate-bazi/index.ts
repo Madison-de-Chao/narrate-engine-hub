@@ -237,6 +237,7 @@ function getMonthBranchIndexBySolarTerms(
 ): number | null {
   const local = toLocal(birthUtc, tzMinutes);
   const y = local.getUTCFullYear();
+  // 防禦性檢查：確保節氣資料存在於對照表中
   const current = solarTermsYears[String(y)] || {};
   const prev = solarTermsYears[String(y - 1)] || {};
 

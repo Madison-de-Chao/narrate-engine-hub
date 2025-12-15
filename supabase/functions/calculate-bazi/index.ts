@@ -159,6 +159,32 @@ const SOLAR_TERMS_DATA: { years: Record<string, SolarTermsYearData> } = {
       "小寒": { "date": "1986-01-05T22:39:00Z" },
       "大寒": { "date": "1986-01-20T15:45:00Z" }
     },
+    "1994": {
+      "立春": { "date": "1994-02-04T03:31:00Z" },
+      "雨水": { "date": "1994-02-19T05:22:00Z" },
+      "驚蟄": { "date": "1994-03-06T01:38:00Z" },
+      "春分": { "date": "1994-03-21T00:28:00Z" },
+      "清明": { "date": "1994-04-05T08:11:00Z" },
+      "穀雨": { "date": "1994-04-20T15:36:00Z" },
+      "立夏": { "date": "1994-05-06T01:36:00Z" },
+      "小滿": { "date": "1994-05-21T12:49:00Z" },
+      "芒種": { "date": "1994-06-06T06:26:00Z" },
+      "夏至": { "date": "1994-06-21T20:48:00Z" },
+      "小暑": { "date": "1994-07-07T17:25:00Z" },
+      "大暑": { "date": "1994-07-23T04:41:00Z" },
+      "立秋": { "date": "1994-08-07T20:23:00Z" },
+      "處暑": { "date": "1994-08-23T15:44:00Z" },
+      "白露": { "date": "1994-09-08T03:35:00Z" },
+      "秋分": { "date": "1994-09-23T10:19:00Z" },
+      "寒露": { "date": "1994-10-08T23:25:00Z" },
+      "霜降": { "date": "1994-10-23T20:36:00Z" },
+      "立冬": { "date": "1994-11-07T06:36:00Z" },
+      "小雪": { "date": "1994-11-22T04:06:00Z" },
+      "大雪": { "date": "1994-12-07T00:07:00Z" },
+      "冬至": { "date": "1994-12-21T17:23:00Z" },
+      "小寒": { "date": "1995-01-06T10:09:00Z" },
+      "大寒": { "date": "1995-01-20T03:00:00Z" }
+    },
     "2024": {
       "立春": { "date": "2024-02-04T09:27:00Z" },
       "雨水": { "date": "2024-02-19T06:13:00Z" },
@@ -362,17 +388,25 @@ function calculateMonthPillarAccurate(
 
 
 // 计算日柱（基准日算法）
-function calculateDayPillar(birthDate: Date, tzMinutes: number): { stem: string, branch: string } {
-  // 基准日：1985年9月22日 = 甲子日（按指定时区当日零时）
-  const baseDateLocal = new Date(Date.UTC(1985, 8, 22) - tzMinutes * 60 * 1000);
-  const baseDayOffset = 0; // 甲子日的偏移量
+// 基准：1985-09-22 = 甲子日 (60甲子索引0)
+function calculateDayPillar(birthLocal: Date): { stem: string, branch: string } {
+  // 使用本地日期的 00:00 來計算天數差
+  const baseDate = new Date(Date.UTC(1985, 8, 22)); // 1985-09-22 00:00 UTC
+  const birthDayStart = new Date(Date.UTC(
+    birthLocal.getUTCFullYear(),
+    birthLocal.getUTCMonth(),
+    birthLocal.getUTCDate()
+  ));
   
-  const diffTime = birthDate.getTime() - baseDateLocal.getTime();
+  const diffTime = birthDayStart.getTime() - baseDate.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   
-  const totalDays = baseDayOffset + diffDays;
-  const stemIndex = ((totalDays % 10) + 10) % 10;
-  const branchIndex = ((totalDays % 12) + 12) % 12;
+  // 60甲子循環
+  let jiaziIndex = diffDays % 60;
+  if (jiaziIndex < 0) jiaziIndex += 60;
+  
+  const stemIndex = jiaziIndex % 10;
+  const branchIndex = jiaziIndex % 12;
   
   return {
     stem: TIANGAN[stemIndex],
@@ -623,7 +657,7 @@ serve(async (req) => {
     console.log('Year Pillar:', yearPillar);
     const monthPillar = calculateMonthPillarAccurate(yearPillar.stem, birthUtc, tzOffset, solarTermsYears);
     console.log('Month Pillar:', monthPillar);
-    const dayPillar = calculateDayPillar(birthLocal, tzOffset);
+    const dayPillar = calculateDayPillar(birthLocal);
     const hourPillar = calculateHourPillar(dayPillar.stem, hour);
 
     const pillars = {

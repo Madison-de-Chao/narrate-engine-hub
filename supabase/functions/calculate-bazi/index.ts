@@ -189,6 +189,7 @@ const SOLAR_TERMS_DATA: { years: Record<string, SolarTermsYearData> } = {
 };
 
 type SolarTermsYears = Record<string, SolarTermsYearData>;
+type SolarTermRow = { year: number; term_name: string; term_date: string };
 
 async function fetchSolarTermsData(
   supabaseClient: SupabaseClient,
@@ -205,7 +206,7 @@ async function fetchSolarTermsData(
     return dataset;
   }
 
-  data.forEach((row: { year: number; term_name: string; term_date: string }) => {
+  data.forEach((row: SolarTermRow) => {
     const { year, term_name, term_date } = row;
     if (year === undefined || year === null || !term_name?.trim() || !term_date?.trim()) return;
     const yearKey = String(year);
@@ -246,9 +247,7 @@ function getMonthBranchIndexBySolarTerms(
     const d = parseTermDate(prev[t]?.date);
     if (d) {
       const branchIndex = SOLAR_TERM_BRANCH_MAP[t];
-      if (branchIndex !== undefined) {
-        timeline.push({ term: t, date: toLocal(d, tzMinutes), branchIndex });
-      }
+      timeline.push({ term: t, date: toLocal(d, tzMinutes), branchIndex });
     }
   });
 
@@ -585,7 +584,10 @@ serve(async (req) => {
       const yearData = SOLAR_TERMS_DATA.years[String(year)];
       if (yearData) staticSolarTerms[String(year)] = yearData;
     });
-    const solarTermsYears: SolarTermsYears = { ...staticSolarTerms, ...dynamicSolarTerms };
+    const solarTermsYears: SolarTermsYears = { ...staticSolarTerms };
+    Object.entries(dynamicSolarTerms).forEach(([year, data]) => {
+      solarTermsYears[year] = data;
+    });
     
     // 使用edge function版本的计算（简化版，但保留原有逻辑）
     // 注意：這裡仍使用簡化的算法，主要問題在於沒有準確的節氣數據

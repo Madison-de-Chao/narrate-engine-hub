@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -95,6 +96,14 @@ const SOLAR_TERM_BRANCH_ORDER = [
   { term: "小寒", branchIndex: 1 },
 ] as const;
 
+const SOLAR_TERM_BRANCH_MAP: Record<string, number> = SOLAR_TERM_BRANCH_ORDER.reduce(
+  (acc, { term, branchIndex }) => {
+    acc[term] = branchIndex;
+    return acc;
+  },
+  {} as Record<string, number>
+);
+
 type SolarTermsYearData = Record<string, { date: string }>;
 const SOLAR_TERMS_DATA: { years: Record<string, SolarTermsYearData> } = {
   years: {
@@ -179,6 +188,39 @@ const SOLAR_TERMS_DATA: { years: Record<string, SolarTermsYearData> } = {
   }
 };
 
+type SolarTermsYears = Record<string, SolarTermsYearData>;
+type SolarTermRow = { year?: number; term_name?: string; term_date?: string };
+
+async function fetchSolarTermsData(
+  supabaseClient: SupabaseClient,
+  years: number[]
+): Promise<SolarTermsYears> {
+  const dataset: SolarTermsYears = {};
+  const { data, error } = await supabaseClient
+    .from('solar_terms')
+    .select('year, term_name, term_date')
+    .in('year', years);
+
+  if (error || !data) {
+    console.error('Solar terms fetch failed, falling back to static data', error);
+    return dataset;
+  }
+
+  data.forEach((row: SolarTermRow) => {
+    const { year, term_name, term_date } = row;
+    if (year === undefined || year === null || !term_name?.trim() || !term_date?.trim()) return;
+    const parsed = new Date(term_date);
+    if (isNaN(parsed.getTime())) return;
+    const yearKey = String(year);
+    if (!dataset[yearKey]) {
+      dataset[yearKey] = {};
+    }
+    dataset[yearKey][term_name] = { date: term_date };
+  });
+
+  return dataset;
+}
+
 function parseTermDate(s: string | undefined): Date | null {
   if (!s) return null;
   const fixed = s.replace(" ", "T"); // 修正極少數缺少 T 的資料
@@ -190,11 +232,16 @@ function toLocal(dateUtc: Date, tzMinutes: number): Date {
   return new Date(dateUtc.getTime() + tzMinutes * 60 * 1000);
 }
 
-function getMonthBranchIndexBySolarTerms(birthUtc: Date, tzMinutes: number): number | null {
+function getMonthBranchIndexBySolarTerms(
+  birthUtc: Date,
+  tzMinutes: number,
+  solarTermsYears: SolarTermsYears
+): number | null {
   const local = toLocal(birthUtc, tzMinutes);
   const y = local.getUTCFullYear();
-  const current = SOLAR_TERMS_DATA.years[String(y)] || {};
-  const prev = SOLAR_TERMS_DATA.years[String(y - 1)] || {};
+  // 防禦性檢查：確保節氣資料存在於對照表中
+  const current = solarTermsYears[String(y)] || {};
+  const prev = solarTermsYears[String(y - 1)] || {};
 
   const timeline: Array<{ term: string; date: Date; branchIndex: number }> = [];
 
@@ -202,8 +249,10 @@ function getMonthBranchIndexBySolarTerms(birthUtc: Date, tzMinutes: number): num
   ["大雪", "小寒"].forEach((t) => {
     const d = parseTermDate(prev[t]?.date);
     if (d) {
-      const bi = SOLAR_TERM_BRANCH_ORDER.find((x) => x.term === t)!.branchIndex;
-      timeline.push({ term: t, date: toLocal(d, tzMinutes), branchIndex: bi });
+      const branchIndex = SOLAR_TERM_BRANCH_MAP[t];
+      if (branchIndex !== undefined) {
+        timeline.push({ term: t, date: toLocal(d, tzMinutes), branchIndex });
+      }
     }
   });
 
@@ -223,10 +272,14 @@ function getMonthBranchIndexBySolarTerms(birthUtc: Date, tzMinutes: number): num
   return chosen ? chosen.branchIndex : null;
 }
 
-function calculateYearPillarAccurate(dateUtc: Date, tzMinutes: number): { stem: string; branch: string } {
+function calculateYearPillarAccurate(
+  dateUtc: Date,
+  tzMinutes: number,
+  solarTermsYears: SolarTermsYears
+): { stem: string; branch: string } {
   const local = toLocal(dateUtc, tzMinutes);
   const year = local.getUTCFullYear();
-  const st = SOLAR_TERMS_DATA.years[String(year)] || {};
+  const st = solarTermsYears[String(year)] || {};
   const lichunUtc = parseTermDate(st["立春"]?.date);
   if (!lichunUtc) {
     // 回退舊算法（約略 2/4 5:30 UTC）
@@ -263,8 +316,13 @@ function calculateMonthPillarSimple(yearStem: string, month: number): { stem: st
   return { stem: TIANGAN[stemIndex], branch: DIZHI[branchIndex] };
 }
 
-function calculateMonthPillarAccurate(yearStem: string, birthUtc: Date, tzMinutes: number): { stem: string; branch: string } {
-  const branchIndex = getMonthBranchIndexBySolarTerms(birthUtc, tzMinutes);
+function calculateMonthPillarAccurate(
+  yearStem: string,
+  birthUtc: Date,
+  tzMinutes: number,
+  solarTermsYears: SolarTermsYears
+): { stem: string; branch: string } {
+  const branchIndex = getMonthBranchIndexBySolarTerms(birthUtc, tzMinutes, solarTermsYears);
   if (branchIndex == null) {
     // 回退：若無資料，使用简化算法
     const localMonth = toLocal(birthUtc, tzMinutes).getUTCMonth() + 1;
@@ -521,10 +579,23 @@ serve(async (req) => {
     const hour = parseInt(hourStr);
     const minute = parseInt(minuteStr) || 0;
     const tzOffset = timezoneOffsetMinutes || 480; // 默認UTC+8
+    const birthLocal = toLocal(birth, tzOffset);
+
+    // 嘗試從資料庫取得當年與前一年的節氣資料，若失敗則使用內建資料
+    const targetYears = [birthLocal.getUTCFullYear(), birthLocal.getUTCFullYear() - 1];
+    const dynamicSolarTerms = await fetchSolarTermsData(supabase, targetYears);
+    const staticSolarTerms: SolarTermsYears = {};
+    targetYears.forEach((year) => {
+      const yearData = SOLAR_TERMS_DATA.years[String(year)];
+      if (yearData) staticSolarTerms[String(year)] = yearData;
+    });
+    const solarTermsYears: SolarTermsYears = { ...staticSolarTerms };
+    Object.entries(dynamicSolarTerms).forEach(([year, data]) => {
+      // DB values intentionally override bundled fallbacks when present
+      solarTermsYears[year] = { ...(solarTermsYears[year] || {}), ...data };
+    });
     
-    // 使用edge function版本的计算（简化版，但保留原有逻辑）
-    // 注意：這裡仍使用簡化的算法，主要問題在於沒有準確的節氣數據
-    // 未來應該導入solar_terms.json到edge function
+    // 使用edge function版本的计算（已整合動態節氣資料與靜態備援）
     const birthUtc = new Date(Date.UTC(
       birth.getUTCFullYear(),
       birth.getUTCMonth(),
@@ -539,9 +610,9 @@ serve(async (req) => {
 
     // 计算四柱
     console.log('Birth UTC:', birthUtc.toISOString(), 'tzOffset:', tzOffset);
-    const yearPillar = calculateYearPillarAccurate(birthUtc, tzOffset);
+    const yearPillar = calculateYearPillarAccurate(birthUtc, tzOffset, solarTermsYears);
     console.log('Year Pillar:', yearPillar);
-    const monthPillar = calculateMonthPillarAccurate(yearPillar.stem, birthUtc, tzOffset);
+    const monthPillar = calculateMonthPillarAccurate(yearPillar.stem, birthUtc, tzOffset, solarTermsYears);
     console.log('Month Pillar:', monthPillar);
     const dayPillar = calculateDayPillar(birthUtc);
     const hourPillar = calculateHourPillar(dayPillar.stem, hour);

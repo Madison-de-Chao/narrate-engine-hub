@@ -1,4 +1,5 @@
 // 🌈 八字精准计算引擎 - 基于香港天文台資料
+// 參考 lookup-calculator.ts 專業計算邏輯改進
 import keySolarTermsData from "@/data/key_solar_terms_database.json";
 import fiveTigersData from "@/data/five_tigers.json";
 import fiveRatsData from "@/data/five_rats.json";
@@ -9,6 +10,7 @@ import { getFourSeasonsTeam as calculateFourSeasonsTeam } from "./fourSeasonsAna
 
 const MS_PER_MINUTE = 60 * 1000;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const STANDARD_LONGITUDE = 120; // 中國標準時間基於東經120度
 
 const SOLAR_TERM_BRANCH_ORDER: Array<{ term: string; branchIndex: number }> = [
   { term: "立春", branchIndex: 2 },
@@ -325,12 +327,50 @@ export function calculateDayPillar(date: Date): { stem: string; branch: string }
 }
 
 /**
- * 获取时支索引
+ * 获取时支索引 - 精確兩小時一支查表
  */
 function getHourBranchIndex(hour: number): number {
   // 23-1点为子时(0), 1-3点为丑时(1), ...
   if (hour >= 23 || hour < 1) return 0; // 子
-  return Math.floor((hour + 1) / 2);
+  if (hour >= 1 && hour < 3) return 1;  // 丑
+  if (hour >= 3 && hour < 5) return 2;  // 寅
+  if (hour >= 5 && hour < 7) return 3;  // 卯
+  if (hour >= 7 && hour < 9) return 4;  // 辰
+  if (hour >= 9 && hour < 11) return 5; // 巳
+  if (hour >= 11 && hour < 13) return 6; // 午
+  if (hour >= 13 && hour < 15) return 7; // 未
+  if (hour >= 15 && hour < 17) return 8; // 申
+  if (hour >= 17 && hour < 19) return 9; // 酉
+  if (hour >= 19 && hour < 21) return 10; // 戌
+  return 11; // 亥 (21-23)
+}
+
+/**
+ * 真太陽時調整計算
+ * @param longitude 經度（正為東經，負為西經）
+ * @returns 時間調整量（小時）
+ */
+export function calculateTrueSolarTimeAdjustment(longitude: number): number {
+  // 每15度差1小時
+  return (longitude - STANDARD_LONGITUDE) / 15;
+}
+
+/**
+ * 應用真太陽時調整
+ */
+export function applyTrueSolarTime(hour: number, minute: number, longitude: number): { hour: number; minute: number } {
+  const adjustment = calculateTrueSolarTimeAdjustment(longitude);
+  const totalMinutes = hour * 60 + minute + adjustment * 60;
+  
+  // 處理跨日
+  let adjustedMinutes = totalMinutes;
+  if (adjustedMinutes < 0) adjustedMinutes += 24 * 60;
+  if (adjustedMinutes >= 24 * 60) adjustedMinutes -= 24 * 60;
+  
+  return {
+    hour: Math.floor(adjustedMinutes / 60),
+    minute: Math.floor(adjustedMinutes % 60)
+  };
 }
 
 /**
@@ -440,6 +480,18 @@ export function getNayin(stem: string, branch: string): string {
 }
 
 /**
+ * 計算日誌介面
+ */
+export interface CalculationLogs {
+  year_log: string[];
+  month_log: string[];
+  day_log: string[];
+  hour_log: string[];
+  solar_terms_log: string[];
+  five_elements_log: string[];
+}
+
+/**
  * 完整八字计算
  */
 export interface BaziCalculationInput {
@@ -451,6 +503,9 @@ export interface BaziCalculationInput {
   location?: string;
   useSolarTime?: boolean;
   timezoneOffsetMinutes?: number;
+  longitude?: number; // 經度（用於真太陽時計算）
+  useEarlyZi?: boolean; // 子時是否換日（早子時模式）
+  debug?: boolean; // 是否返回計算日誌
 }
 
 export interface BaziCalculationResult {
@@ -469,6 +524,7 @@ export interface BaziCalculationResult {
     yin: number;
   };
   fourSeasonsTeam: import('./fourSeasonsAnalyzer').FourSeasonsTeam;
+  calculationLogs?: CalculationLogs; // 可選的計算日誌
 }
 
 export function calculateBazi(input: BaziCalculationInput): BaziCalculationResult {
@@ -476,30 +532,69 @@ export function calculateBazi(input: BaziCalculationInput): BaziCalculationResul
     birthDate,
     birthHour,
     birthMinute = 0,
-    timezoneOffsetMinutes = 0
+    timezoneOffsetMinutes = 0,
+    longitude,
+    useEarlyZi = true, // 預設使用早子時換日
+    debug = false
   } = input;
+
+  // 初始化計算日誌
+  const logs: CalculationLogs = {
+    year_log: [],
+    month_log: [],
+    day_log: [],
+    hour_log: [],
+    solar_terms_log: [],
+    five_elements_log: []
+  };
 
   const baseYear = birthDate.getUTCFullYear();
   const baseMonth = birthDate.getUTCMonth();
   const baseDay = birthDate.getUTCDate();
 
+  // 處理真太陽時調整
+  let adjustedHour = birthHour;
+  let adjustedMinute = birthMinute;
+  if (longitude !== undefined) {
+    const trueSolar = applyTrueSolarTime(birthHour, birthMinute, longitude);
+    adjustedHour = trueSolar.hour;
+    adjustedMinute = trueSolar.minute;
+    const adjustment = calculateTrueSolarTimeAdjustment(longitude);
+    logs.hour_log.push(
+      `真太陽時調整: 經度${longitude}° → 時間調整${adjustment.toFixed(2)}小時 → ${adjustedHour}時${adjustedMinute}分`
+    );
+  }
+
   const birthUtc = new Date(
-    Date.UTC(baseYear, baseMonth, baseDay, birthHour, birthMinute) - timezoneOffsetMinutes * MS_PER_MINUTE
+    Date.UTC(baseYear, baseMonth, baseDay, adjustedHour, adjustedMinute) - timezoneOffsetMinutes * MS_PER_MINUTE
   );
 
   const localComponents = getLocalComponents(birthUtc, timezoneOffsetMinutes);
 
   // 计算四柱
   const yearPillar = calculateYearPillar(birthUtc, timezoneOffsetMinutes);
+  logs.year_log.push(`年柱計算: ${localComponents.year}年 → ${yearPillar.stem}${yearPillar.branch}`);
+  
   const monthPillar = calculateMonthPillar(birthUtc, timezoneOffsetMinutes);
+  logs.month_log.push(`月柱計算: 五虎遁 年干${yearPillar.stem} + 月支${monthPillar.branch} → ${monthPillar.stem}${monthPillar.branch}`);
 
   const dayStartUtc = new Date(Date.UTC(localComponents.year, localComponents.month - 1, localComponents.day));
 
-  const ziHourCrossDay = localComponents.hour === 23;
+  // 子時換日處理 - 根據 useEarlyZi 設定決定
+  const ziHourCrossDay = localComponents.hour >= 23 && useEarlyZi;
   const adjustedDayUtc = ziHourCrossDay ? new Date(dayStartUtc.getTime() + MS_PER_DAY) : dayStartUtc;
+  
+  if (localComponents.hour >= 23) {
+    logs.day_log.push(
+      `子時處理: ${localComponents.hour}時 → ${useEarlyZi ? '早子時換日模式（計入次日）' : '晚子時不換日模式（仍屬當日）'}`
+    );
+  }
 
   const dayPillar = calculateDayPillar(adjustedDayUtc);
+  logs.day_log.push(`日柱計算: 基準日1985/09/22甲子 → ${dayPillar.stem}${dayPillar.branch}`);
+  
   const hourPillar = calculateHourPillar(localComponents.hour, dayPillar.stem);
+  logs.hour_log.push(`時柱計算: 五鼠遁 日干${dayPillar.stem} + ${localComponents.hour}時 → ${hourPillar.stem}${hourPillar.branch}`);
   
   const pillars: FourPillars = {
     year: yearPillar,
@@ -528,10 +623,15 @@ export function calculateBazi(input: BaziCalculationInput): BaziCalculationResul
   const { totals: wuxing, breakdown: wuxingBreakdown } = calculateWuxing(pillars, hiddenStems);
   const yinyang = calculateYinYang(pillars);
 
+  // 添加五行計算日誌
+  wuxingBreakdown.forEach(entry => {
+    logs.five_elements_log.push(`${entry.source}: ${entry.element} +${entry.value.toFixed(2)}`);
+  });
+
   // 计算四时军团
   const fourSeasonsTeam = calculateFourSeasonsTeam(pillars);
 
-  return {
+  const result: BaziCalculationResult = {
     pillars,
     hiddenStems,
     nayin,
@@ -540,4 +640,11 @@ export function calculateBazi(input: BaziCalculationInput): BaziCalculationResul
     yinyang,
     fourSeasonsTeam
   };
+
+  // 如果開啟 debug 模式，添加計算日誌
+  if (debug) {
+    result.calculationLogs = logs;
+  }
+
+  return result;
 }

@@ -28,10 +28,10 @@ interface TestCase {
 }
 
 const TEST_CASES: TestCase[] = [
-  // 标准测试
+  // 標準測試
   {
     id: "1",
-    name: "标准测试1",
+    name: "標準測試1",
     date: "1985-10-06",
     time: "19:30",
     location: "台北",
@@ -41,7 +41,7 @@ const TEST_CASES: TestCase[] = [
   },
   {
     id: "2",
-    name: "标准测试2",
+    name: "標準測試2",
     date: "2000-01-01",
     time: "12:00",
     location: "台北",
@@ -52,7 +52,7 @@ const TEST_CASES: TestCase[] = [
   },
   {
     id: "3",
-    name: "标准测试3",
+    name: "標準測試3",
     date: "1990-09-27",
     time: "08:32",
     location: "台北",
@@ -60,60 +60,60 @@ const TEST_CASES: TestCase[] = [
     category: "standard",
     timezoneOffsetMinutes: 480
   },
-  // 边界测试
+  // 邊界測試
   {
     id: "4",
-    name: "年柱换年边界",
+    name: "年柱換年邊界",
     date: "1984-02-04",
     time: "23:00",
     location: "台北",
     expected: { year: "甲子", month: "", day: "", hour: "子" },
     category: "boundary",
-    notes: "立春后应切换到甲子年",
+    notes: "立春後應切換到甲子年",
     timezoneOffsetMinutes: 480
   },
   {
     id: "5",
-    name: "子时跨日A",
+    name: "子時跨日A",
     date: "2000-01-01",
     time: "23:10",
     location: "台北",
     expected: { year: "", month: "", day: "", hour: "子" },
     category: "boundary",
-    notes: "时支必为子，日柱应为次日",
+    notes: "時支必為子,日柱應為次日",
     timezoneOffsetMinutes: 480
   },
   {
     id: "6",
-    name: "子时跨日B",
+    name: "子時跨日B",
     date: "2000-01-02",
     time: "00:40",
     location: "台北",
     expected: { year: "", month: "", day: "", hour: "子" },
     category: "boundary",
-    notes: "时支仍为子，日柱为次日",
+    notes: "時支仍為子,日柱為次日",
     timezoneOffsetMinutes: 480
   },
   {
     id: "7",
-    name: "时支边界-戌时",
+    name: "時支邊界-戌時",
     date: "2000-01-01",
     time: "19:30",
     location: "台北",
     expected: { year: "", month: "", day: "", hour: "戌" },
     category: "boundary",
-    notes: "19:30应为戌时",
+    notes: "19:30應為戌時",
     timezoneOffsetMinutes: 480
   },
   {
     id: "8",
-    name: "时支边界-亥时",
+    name: "時支邊界-亥時",
     date: "2000-01-01",
     time: "21:10",
     location: "台北",
     expected: { year: "", month: "", day: "", hour: "亥" },
     category: "boundary",
-    notes: "21:10应为亥时",
+    notes: "21:10應為亥時",
     timezoneOffsetMinutes: 480
   }
 ];
@@ -144,7 +144,7 @@ export default function BaziTest() {
         birthDate,
         birthHour,
         birthMinute,
-        name: "测试",
+        name: "測試",
         gender: "男",
         timezoneOffsetMinutes: testCase.timezoneOffsetMinutes
       });
@@ -195,12 +195,12 @@ export default function BaziTest() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[240px]">测试案例</TableHead>
+              <TableHead className="w-[240px]">測試案例</TableHead>
               <TableHead>年柱</TableHead>
               <TableHead>月柱</TableHead>
               <TableHead>日柱</TableHead>
-              <TableHead>时柱</TableHead>
-              <TableHead className="text-right">综合</TableHead>
+              <TableHead>時柱</TableHead>
+              <TableHead className="text-right">綜合</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -233,7 +233,7 @@ export default function BaziTest() {
                         ? "月"
                         : pillar === "day"
                         ? "日"
-                        : "时"}
+                        : "時"}
                     </div>
                     <div
                       className={cn(
@@ -244,7 +244,7 @@ export default function BaziTest() {
                       {result.actual[pillar]}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      预期：{result.expected[pillar] || "未校验"}
+                      預期：{result.expected[pillar] || "未校驗"}
                     </div>
                   </TableCell>
                 ))}
@@ -279,36 +279,36 @@ export default function BaziTest() {
       <div className="max-w-6xl mx-auto space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-3xl">八字计算系统测试</CardTitle>
-            <p className="text-muted-foreground">验证计算准确性与边界处理</p>
+            <CardTitle className="text-3xl">八字計算系統測試</CardTitle>
+            <p className="text-muted-foreground">驗證計算準確性與邊界處理</p>
           </CardHeader>
           <CardContent>
             <Button onClick={runTests} disabled={isRunning} size="lg" className="w-full">
-              {isRunning ? "测试中..." : "运行所有测试"}
+              {isRunning ? "測試中..." : "運行所有測試"}
             </Button>
 
             {results.length > 0 && (
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <Card className="border-primary/20 bg-primary/5">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base text-muted-foreground">标准测试</CardTitle>
+                    <CardTitle className="text-base text-muted-foreground">標準測試</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-primary">
                       {standardPassed} / {standardTests.length}
                     </div>
-                    <p className="text-xs text-muted-foreground">系统必过样本</p>
+                    <p className="text-xs text-muted-foreground">系統必過樣本</p>
                   </CardContent>
                 </Card>
                 <Card className="border-amber-200 bg-amber-50/40 dark:bg-amber-500/10">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base text-muted-foreground">边界测试</CardTitle>
+                    <CardTitle className="text-base text-muted-foreground">邊界測試</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-amber-500">
                       {boundaryPassed} / {boundaryTests.length}
                     </div>
-                    <p className="text-xs text-muted-foreground">规则守门测试</p>
+                    <p className="text-xs text-muted-foreground">規則守門測試</p>
                   </CardContent>
                 </Card>
               </div>
@@ -318,8 +318,8 @@ export default function BaziTest() {
 
         {results.length > 0 && (
           <div className="space-y-6">
-            {renderCategory("标准测试结果", standardTests)}
-            {renderCategory("边界测试结果", boundaryTests)}
+            {renderCategory("標準測試結果", standardTests)}
+            {renderCategory("邊界測試結果", boundaryTests)}
           </div>
         )}
       </div>

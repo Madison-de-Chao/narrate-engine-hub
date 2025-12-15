@@ -7,20 +7,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-// 时辰选项（子时到亥时）
+// 時辰選項（子時到亥時）
 const HOUR_OPTIONS = [
-  { value: "23", label: "子时 (23:00-01:00)" },
-  { value: "1", label: "丑时 (01:00-03:00)" },
-  { value: "3", label: "寅时 (03:00-05:00)" },
-  { value: "5", label: "卯时 (05:00-07:00)" },
-  { value: "7", label: "辰时 (07:00-09:00)" },
-  { value: "9", label: "巳时 (09:00-11:00)" },
-  { value: "11", label: "午时 (11:00-13:00)" },
-  { value: "13", label: "未时 (13:00-15:00)" },
-  { value: "15", label: "申时 (15:00-17:00)" },
-  { value: "17", label: "酉时 (17:00-19:00)" },
-  { value: "19", label: "戌时 (19:00-21:00)" },
-  { value: "21", label: "亥时 (21:00-23:00)" }
+  { value: "23", label: "子時 (23:00-01:00)" },
+  { value: "1", label: "丑時 (01:00-03:00)" },
+  { value: "3", label: "寅時 (03:00-05:00)" },
+  { value: "5", label: "卯時 (05:00-07:00)" },
+  { value: "7", label: "辰時 (07:00-09:00)" },
+  { value: "9", label: "巳時 (09:00-11:00)" },
+  { value: "11", label: "午時 (11:00-13:00)" },
+  { value: "13", label: "未時 (13:00-15:00)" },
+  { value: "15", label: "申時 (15:00-17:00)" },
+  { value: "17", label: "酉時 (17:00-19:00)" },
+  { value: "19", label: "戌時 (19:00-21:00)" },
+  { value: "21", label: "亥時 (21:00-23:00)" }
 ];
 
 interface BaziInputFormProps {
@@ -151,10 +151,10 @@ export const BaziInputForm = ({ onCalculate, isCalculating }: BaziInputFormProps
         <div className="space-y-2">
           <Label htmlFor="hour" className="text-foreground">出生時辰</Label>
           <Select value={formData.hour} onValueChange={(value) => setFormData({ ...formData, hour: value })}>
-            <SelectTrigger className="bg-input border-border text-foreground z-50">
+            <SelectTrigger className="bg-input border-border text-foreground">
               <SelectValue placeholder="請選擇時辰" />
             </SelectTrigger>
-            <SelectContent className="bg-popover border-border z-50 max-h-[300px]">
+            <SelectContent className="bg-popover border-border max-h-[300px] z-[9999]">
               {HOUR_OPTIONS.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}

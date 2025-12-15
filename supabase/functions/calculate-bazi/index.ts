@@ -202,7 +202,7 @@ async function fetchSolarTermsData(
     .in('year', years);
 
   if (error || !data) {
-    console.log('Solar terms fetch failed, falling back to static data', error);
+    console.log('Solar terms fetch failed for years', years, 'falling back to static data', error);
     return dataset;
   }
 
@@ -587,12 +587,11 @@ serve(async (req) => {
     });
     const solarTermsYears: SolarTermsYears = { ...staticSolarTerms };
     Object.entries(dynamicSolarTerms).forEach(([year, data]) => {
+      // DB values intentionally override bundled fallbacks when present
       solarTermsYears[year] = { ...(solarTermsYears[year] || {}), ...data };
     });
     
-    // 使用edge function版本的计算（简化版，但保留原有逻辑）
-    // 注意：這裡仍使用簡化的算法，主要問題在於沒有準確的節氣數據
-    // 未來應該導入solar_terms.json到edge function
+    // 使用edge function版本的计算（简化版，但已整合動態節氣資料）
     const birthUtc = new Date(Date.UTC(
       birth.getUTCFullYear(),
       birth.getUTCMonth(),

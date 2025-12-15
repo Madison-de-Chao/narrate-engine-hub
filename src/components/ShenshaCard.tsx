@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { type ShenshaMatch } from "@/lib/shenshaRuleEngine";
-import { Sparkles, AlertTriangle, Heart, Wand2, Crown, Gem, Star, Circle } from "lucide-react";
+import { Sparkles, AlertTriangle, Heart, Wand2, Crown, Gem, Star, Circle, MapPin } from "lucide-react";
+import shenshaCompleteData from "@/data/shensha_complete.json";
 
 interface ShenshaCardProps {
   shensha: ShenshaMatch;
@@ -72,10 +73,32 @@ const categoryConfig: Record<string, { icon: React.ReactNode; color: string; bgC
   }
 };
 
+// 柱位中文對照
+const pillarMapping: Record<string, 'year' | 'month' | 'day' | 'hour'> = {
+  '年柱': 'year',
+  '月柱': 'month',
+  '日柱': 'day',
+  '時柱': 'hour'
+};
+
+// 獲取神煞的柱位意義
+function getPillarMeaning(shenshaName: string, matchedPillar: string): string | null {
+  const shenshaData = (shenshaCompleteData.shensha_effects as Record<string, any>)[shenshaName];
+  if (!shenshaData?.pillar_meaning) return null;
+  
+  const pillarKey = pillarMapping[matchedPillar];
+  if (!pillarKey) return null;
+  
+  return shenshaData.pillar_meaning[pillarKey] || null;
+}
+
 export const ShenshaCard = ({ shensha, showEvidence = false }: ShenshaCardProps) => {
   const style = rarityStyles[shensha.rarity] || rarityStyles.N;
   const categoryInfo = categoryConfig[shensha.category] || categoryConfig["特殊"];
-  const isHighRarity = shensha.rarity === 'SSR' || shensha.rarity === 'SR';
+  
+  // 獲取柱位意義
+  const matchedPillar = shensha.evidence?.matchedPillar || '';
+  const pillarMeaning = getPillarMeaning(shensha.name, matchedPillar);
 
   return (
     <div 
@@ -117,9 +140,17 @@ export const ShenshaCard = ({ shensha, showEvidence = false }: ShenshaCardProps)
             <div className={`p-1.5 rounded-lg ${categoryInfo.bgColor}`}>
               <span className={categoryInfo.color}>{categoryInfo.icon}</span>
             </div>
-            <h4 className={`font-bold text-lg ${style.textColor}`}>
-              {shensha.name}
-            </h4>
+            <div>
+              <h4 className={`font-bold text-lg ${style.textColor}`}>
+                {shensha.name}
+              </h4>
+              {matchedPillar && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  {matchedPillar}
+                </span>
+              )}
+            </div>
           </div>
           <Badge 
             variant="outline" 
@@ -129,6 +160,16 @@ export const ShenshaCard = ({ shensha, showEvidence = false }: ShenshaCardProps)
             {style.label}
           </Badge>
         </div>
+
+        {/* 柱位特定意義 - 新增 */}
+        {pillarMeaning && (
+          <div className="mb-3 p-2.5 rounded-lg bg-primary/10 border border-primary/20">
+            <p className="text-sm text-primary font-medium flex items-start gap-2">
+              <span className="text-base">💡</span>
+              <span>{pillarMeaning}</span>
+            </p>
+          </div>
+        )}
 
         {/* 效果描述 */}
         <p className="text-sm mb-2 text-foreground/90 leading-relaxed">{shensha.effect}</p>

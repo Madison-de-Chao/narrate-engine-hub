@@ -7,7 +7,9 @@ import {
   Shield, 
   BarChart3, 
   FileText,
-  ChevronDown
+  ChevronDown,
+  Sparkles,
+  User
 } from "lucide-react";
 
 interface ReportNavigationProps {
@@ -18,8 +20,10 @@ interface ReportNavigationProps {
 const sections = [
   { id: 'summary', label: '總覽', icon: LayoutDashboard },
   { id: 'bazi', label: '八字排盤', icon: Scroll },
+  { id: 'shensha', label: '神煞分析', icon: Sparkles },
+  { id: 'personality', label: '性格分析', icon: User },
   { id: 'legion', label: '四時軍團', icon: Shield },
-  { id: 'analysis', label: '詳細分析', icon: BarChart3 },
+  { id: 'analysis', label: '五行分析', icon: BarChart3 },
   { id: 'logs', label: '計算日誌', icon: FileText },
 ];
 

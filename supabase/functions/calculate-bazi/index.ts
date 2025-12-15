@@ -179,6 +179,35 @@ const SOLAR_TERMS_DATA: { years: Record<string, SolarTermsYearData> } = {
   }
 };
 
+type SolarTermsYears = Record<string, SolarTermsYearData>;
+
+async function fetchSolarTermsData(
+  supabaseClient: any,
+  years: number[]
+): Promise<SolarTermsYears> {
+  const dataset: SolarTermsYears = {};
+  const { data, error } = await supabaseClient
+    .from('solar_terms')
+    .select('year, term_name, term_date')
+    .in('year', years);
+
+  if (error || !data) {
+    console.log('Solar terms fetch failed, falling back to static data', error);
+    return dataset;
+  }
+
+  data.forEach((row: { year: number; term_name: string; term_date: string }) => {
+    if (!row || !row.term_name || !row.term_date || row.year == null) return;
+    const yearKey = String(row.year);
+    if (!dataset[yearKey]) {
+      dataset[yearKey] = {};
+    }
+    dataset[yearKey][row.term_name] = { date: row.term_date };
+  });
+
+  return dataset;
+}
+
 function parseTermDate(s: string | undefined): Date | null {
   if (!s) return null;
   const fixed = s.replace(" ", "T"); // 修正極少數缺少 T 的資料
@@ -190,11 +219,15 @@ function toLocal(dateUtc: Date, tzMinutes: number): Date {
   return new Date(dateUtc.getTime() + tzMinutes * 60 * 1000);
 }
 
-function getMonthBranchIndexBySolarTerms(birthUtc: Date, tzMinutes: number): number | null {
+function getMonthBranchIndexBySolarTerms(
+  birthUtc: Date,
+  tzMinutes: number,
+  solarTermsYears: SolarTermsYears
+): number | null {
   const local = toLocal(birthUtc, tzMinutes);
   const y = local.getUTCFullYear();
-  const current = SOLAR_TERMS_DATA.years[String(y)] || {};
-  const prev = SOLAR_TERMS_DATA.years[String(y - 1)] || {};
+  const current = solarTermsYears[String(y)] || {};
+  const prev = solarTermsYears[String(y - 1)] || {};
 
   const timeline: Array<{ term: string; date: Date; branchIndex: number }> = [];
 
@@ -223,10 +256,14 @@ function getMonthBranchIndexBySolarTerms(birthUtc: Date, tzMinutes: number): num
   return chosen ? chosen.branchIndex : null;
 }
 
-function calculateYearPillarAccurate(dateUtc: Date, tzMinutes: number): { stem: string; branch: string } {
+function calculateYearPillarAccurate(
+  dateUtc: Date,
+  tzMinutes: number,
+  solarTermsYears: SolarTermsYears
+): { stem: string; branch: string } {
   const local = toLocal(dateUtc, tzMinutes);
   const year = local.getUTCFullYear();
-  const st = SOLAR_TERMS_DATA.years[String(year)] || {};
+  const st = solarTermsYears[String(year)] || {};
   const lichunUtc = parseTermDate(st["立春"]?.date);
   if (!lichunUtc) {
     // 回退舊算法（約略 2/4 5:30 UTC）
@@ -263,8 +300,13 @@ function calculateMonthPillarSimple(yearStem: string, month: number): { stem: st
   return { stem: TIANGAN[stemIndex], branch: DIZHI[branchIndex] };
 }
 
-function calculateMonthPillarAccurate(yearStem: string, birthUtc: Date, tzMinutes: number): { stem: string; branch: string } {
-  const branchIndex = getMonthBranchIndexBySolarTerms(birthUtc, tzMinutes);
+function calculateMonthPillarAccurate(
+  yearStem: string,
+  birthUtc: Date,
+  tzMinutes: number,
+  solarTermsYears: SolarTermsYears
+): { stem: string; branch: string } {
+  const branchIndex = getMonthBranchIndexBySolarTerms(birthUtc, tzMinutes, solarTermsYears);
   if (branchIndex == null) {
     // 回退：若無資料，使用简化算法
     const localMonth = toLocal(birthUtc, tzMinutes).getUTCMonth() + 1;
@@ -521,6 +563,17 @@ serve(async (req) => {
     const hour = parseInt(hourStr);
     const minute = parseInt(minuteStr) || 0;
     const tzOffset = timezoneOffsetMinutes || 480; // 默認UTC+8
+    const birthLocal = toLocal(birth, tzOffset);
+
+    // 嘗試從資料庫取得當年與前一年的節氣資料，若失敗則使用內建資料
+    const dynamicSolarTerms = await fetchSolarTermsData(supabase, [
+      birthLocal.getUTCFullYear(),
+      birthLocal.getUTCFullYear() - 1
+    ]);
+    const solarTermsYears: SolarTermsYears = {
+      ...SOLAR_TERMS_DATA.years,
+      ...dynamicSolarTerms
+    };
     
     // 使用edge function版本的计算（简化版，但保留原有逻辑）
     // 注意：這裡仍使用簡化的算法，主要問題在於沒有準確的節氣數據
@@ -539,9 +592,9 @@ serve(async (req) => {
 
     // 计算四柱
     console.log('Birth UTC:', birthUtc.toISOString(), 'tzOffset:', tzOffset);
-    const yearPillar = calculateYearPillarAccurate(birthUtc, tzOffset);
+    const yearPillar = calculateYearPillarAccurate(birthUtc, tzOffset, solarTermsYears);
     console.log('Year Pillar:', yearPillar);
-    const monthPillar = calculateMonthPillarAccurate(yearPillar.stem, birthUtc, tzOffset);
+    const monthPillar = calculateMonthPillarAccurate(yearPillar.stem, birthUtc, tzOffset, solarTermsYears);
     console.log('Month Pillar:', monthPillar);
     const dayPillar = calculateDayPillar(birthUtc);
     const hourPillar = calculateHourPillar(dayPillar.stem, hour);

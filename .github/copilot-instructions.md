@@ -43,7 +43,7 @@ npm install        # Install dependencies
 
 ### Development
 ```bash
-npm run dev        # Start dev server on port 8080
+npm run dev        # Start dev server on port 8080 (custom port configuration)
 npm run preview    # Preview production build
 ```
 
@@ -63,10 +63,11 @@ npm test           # Run tests with bun
 
 ### TypeScript
 - TypeScript strict mode is **relaxed** in this project:
+  - `strict: false`
   - `noImplicitAny: false`
   - `noUnusedParameters: false`
   - `noUnusedLocals: false`
-  - `strictNullChecks: false`
+  - `noFallthroughCasesInSwitch: false`
 - Use TypeScript for all new files (`.tsx` for components, `.ts` for utilities)
 - Prefer interfaces over types for object shapes
 
@@ -135,7 +136,7 @@ Environment variables are prefixed with `VITE_` and defined in `.env`:
 3. Update navigation if needed
 
 ### Adding a new UI component
-1. Check if shadcn-ui has the component (`npx shadcn-ui@latest add <component>`)
+1. Check if shadcn-ui has the component (`npx shadcn@latest add <component>`)
 2. If not available, create in `/src/components/`
 3. Use Radix UI primitives for accessibility
 

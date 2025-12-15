@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -182,7 +183,7 @@ const SOLAR_TERMS_DATA: { years: Record<string, SolarTermsYearData> } = {
 type SolarTermsYears = Record<string, SolarTermsYearData>;
 
 async function fetchSolarTermsData(
-  supabaseClient: any,
+  supabaseClient: SupabaseClient,
   years: number[]
 ): Promise<SolarTermsYears> {
   const dataset: SolarTermsYears = {};
@@ -197,7 +198,7 @@ async function fetchSolarTermsData(
   }
 
   data.forEach((row: { year: number; term_name: string; term_date: string }) => {
-    if (!row || !row.term_name || !row.term_date || row.year == null) return;
+    if (!row || !row.term_name || !row.term_date || row.year === undefined || row.year === null) return;
     const yearKey = String(row.year);
     if (!dataset[yearKey]) {
       dataset[yearKey] = {};
@@ -235,8 +236,10 @@ function getMonthBranchIndexBySolarTerms(
   ["大雪", "小寒"].forEach((t) => {
     const d = parseTermDate(prev[t]?.date);
     if (d) {
-      const bi = SOLAR_TERM_BRANCH_ORDER.find((x) => x.term === t)!.branchIndex;
-      timeline.push({ term: t, date: toLocal(d, tzMinutes), branchIndex: bi });
+      const match = SOLAR_TERM_BRANCH_ORDER.find((x) => x.term === t);
+      if (match) {
+        timeline.push({ term: t, date: toLocal(d, tzMinutes), branchIndex: match.branchIndex });
+      }
     }
   });
 

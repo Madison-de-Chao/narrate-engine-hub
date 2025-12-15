@@ -96,6 +96,7 @@ export const BaziInputForm = ({ onCalculate, isCalculating }: BaziInputFormProps
               aria-labelledby="gender-label"
               value={formData.gender}
               onValueChange={(value) => setFormData({ ...formData, gender: value })}
+              required
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem id="gender-male" value="male" />

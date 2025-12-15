@@ -202,7 +202,7 @@ async function fetchSolarTermsData(
     .in('year', years);
 
   if (error || !data) {
-    console.log('Solar terms fetch failed for years', years, 'falling back to static data', error);
+    console.error('Solar terms fetch failed, falling back to static data', error);
     return dataset;
   }
 

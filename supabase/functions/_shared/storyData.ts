@@ -376,6 +376,7 @@ export const aiPrompts = {
       nayin?: string;
       tenGod?: { stem: string; branch: string };
       hiddenStems?: string[];
+      shensha?: string[];  // 新增：該柱專屬的神煞列表
     };
   }) => {
     const { name, context, tianganRole, dizhiRole, pillarData } = params;
@@ -440,18 +441,25 @@ export function generateLocalStory(params: {
   stem: string;
   branch: string;
   nayin?: string;
+  shensha?: string[];  // 新增：該柱專屬的神煞列表
 }): string {
-  const { name, legionType, stem, branch, nayin } = params;
+  const { name, legionType, stem, branch, nayin, shensha } = params;
   const context = getLegionContext(legionType);
   const tianganRole = getTianganRole(stem);
   const dizhiRole = getDizhiRole(branch);
   const templates = storyTemplates['zh-TW'];
+  
+  // 神煞描述
+  const shenshaDesc = shensha && shensha.length > 0 
+    ? `此柱帶有${shensha.join('、')}等神煞，為軍團增添獨特氣場。`
+    : '';
 
   return [
     templates.intro(name, context.name),
     templates.commander(tianganRole.role, tianganRole.buff),
     templates.strategist(dizhiRole.role, dizhiRole.buff),
     nayin ? `納音「${nayin}」為戰場賦予獨特能量。` : '',
+    shenshaDesc,
     templates.warning(tianganRole.debuff, dizhiRole.debuff),
     templates.closing(name)
   ].filter(Boolean).join('');

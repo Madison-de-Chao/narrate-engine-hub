@@ -22,6 +22,7 @@ serve(async (req) => {
     const { legionType, pillarData, name, calculationId, useLocalOnly } = await req.json();
     
     console.log(`Generating story for ${name}, legion: ${legionType}, pillar: ${pillarData.stem}${pillarData.branch}`);
+    console.log(`Shensha for this pillar: ${pillarData.shensha?.join('、') || '無'}`);
     
     // 獲取角色資料（使用共用模組）
     const context = getLegionContext(legionType);
@@ -37,7 +38,8 @@ serve(async (req) => {
         legionType,
         stem: pillarData.stem,
         branch: pillarData.branch,
-        nayin: pillarData.nayin
+        nayin: pillarData.nayin,
+        shensha: pillarData.shensha
       });
       
       return new Response(
@@ -66,7 +68,8 @@ serve(async (req) => {
         legionType,
         stem: pillarData.stem,
         branch: pillarData.branch,
-        nayin: pillarData.nayin
+        nayin: pillarData.nayin,
+        shensha: pillarData.shensha
       });
       return new Response(
         JSON.stringify({ story: localStory, source: 'local' }),
@@ -76,13 +79,19 @@ serve(async (req) => {
 
     // 構建 AI 提示詞（使用共用模組）
     const systemPrompt = aiPrompts.systemPrompt;
+    
+    // 構建神煞資訊字串
+    const shenshaInfo = pillarData.shensha && pillarData.shensha.length > 0 
+      ? pillarData.shensha.join('、') 
+      : '無特殊神煞';
+    
     const userPrompt = aiPrompts.buildUserPrompt({
       name,
       context,
       tianganRole,
       dizhiRole,
       pillarData
-    });
+    }) + `\n\n【此柱神煞】\n${shenshaInfo}\n（請在故事中適當融入這些神煞的影響力）`;
 
     // 調用 Lovable AI
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -125,7 +134,8 @@ serve(async (req) => {
         legionType,
         stem: pillarData.stem,
         branch: pillarData.branch,
-        nayin: pillarData.nayin
+        nayin: pillarData.nayin,
+        shensha: pillarData.shensha
       });
       return new Response(
         JSON.stringify({ story: localStory, source: 'local' }),

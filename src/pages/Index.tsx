@@ -164,9 +164,37 @@ const Index = () => {
 
     const stories: { [key: string]: string } = {};
     
+    // 計算神煞並按柱位分組
+    const { calculateShenshaWithEvidence } = await import('@/lib/shenshaCalculator');
+    const allShenshaMatches = calculateShenshaWithEvidence(
+      result.pillars.day.stem,
+      result.pillars.year.branch,
+      result.pillars.month.branch,
+      result.pillars.day.branch,
+      result.pillars.hour.branch
+    );
+    
+    // 按 matched_pillar 分組神煞
+    const shenshaByPillar: Record<string, string[]> = {
+      year: [],
+      month: [],
+      day: [],
+      hour: []
+    };
+    
+    allShenshaMatches.forEach(match => {
+      const pillar = match.evidence.matched_pillar;
+      if (pillar && shenshaByPillar[pillar]) {
+        shenshaByPillar[pillar].push(match.name);
+      }
+    });
+    
     for (const { type, pillar } of legionTypes) {
       try {
         const pillarData = result.pillars[pillar as keyof typeof result.pillars];
+        // 獲取該柱位專屬的神煞列表
+        const pillarShensha = shenshaByPillar[pillar] || [];
+        
         const { data: storyData, error } = await supabase.functions.invoke('generate-legion-story', {
           body: {
             legionType: type,
@@ -175,7 +203,8 @@ const Index = () => {
               branch: pillarData.branch,
               nayin: result.nayin[pillar as keyof typeof result.nayin],
               tenGod: result.tenGods[pillar as keyof typeof result.tenGods],
-              hiddenStems: result.hiddenStems[pillar as keyof typeof result.hiddenStems]
+              hiddenStems: result.hiddenStems[pillar as keyof typeof result.hiddenStems],
+              shensha: pillarShensha  // 傳入該柱專屬的神煞
             },
             name: result.name,
             calculationId: calculationId

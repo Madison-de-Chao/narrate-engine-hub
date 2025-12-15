@@ -8,6 +8,7 @@ import { AnalysisCharts } from "@/components/AnalysisCharts";
 import { CalculationLogs } from "@/components/CalculationLogs";
 import { ReportSummary } from "@/components/ReportSummary";
 import { ReportNavigation } from "@/components/ReportNavigation";
+import { ShenshaStats } from "@/components/ShenshaStats";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, LogOut, UserRound, Sparkles } from "lucide-react";
 import { generatePDF } from "@/lib/pdfGenerator";
@@ -19,6 +20,8 @@ import logoSishi from "@/assets/logo-sishi.png";
 import logoHonglingyusuo from "@/assets/logo-honglingyusuo.png";
 import logoChaoxuan from "@/assets/logo-chaoxuan.png";
 import { getFourSeasonsTeam } from "@/lib/fourSeasonsAnalyzer";
+import { ModularShenshaEngine } from "@/lib/shenshaRuleEngine";
+import type { ShenshaMatch } from "@/data/shenshaTypes";
 
 import type { FourSeasonsTeam } from "@/lib/fourSeasonsAnalyzer";
 import type { CalculationLogs as CalculationLogsType } from "@/lib/baziCalculator";
@@ -51,7 +54,7 @@ export interface BaziResult {
     day: string;
     hour: string;
   };
-  shensha: string[];
+  shensha: (ShenshaMatch | string)[];  // 支援新舊格式
   wuxing: {
     wood: number;
     fire: number;
@@ -222,6 +225,21 @@ const Index = () => {
         // 計算四時軍團分析
         const fourSeasonsTeam = getFourSeasonsTeam(data.calculation.pillars);
         
+        // 使用模組化神煞引擎計算神煞（含完整證據鏈）
+        const shenshaEngine = new ModularShenshaEngine('trad');
+        const shenshaMatches = shenshaEngine.calculate({
+          dayStem: data.calculation.pillars.day.stem,
+          yearBranch: data.calculation.pillars.year.branch,
+          monthBranch: data.calculation.pillars.month.branch,
+          dayBranch: data.calculation.pillars.day.branch,
+          hourBranch: data.calculation.pillars.hour.branch,
+          yearStem: data.calculation.pillars.year.stem,
+          monthStem: data.calculation.pillars.month.stem,
+          hourStem: data.calculation.pillars.hour.stem,
+        });
+        
+        console.log('神煞計算結果:', shenshaMatches);
+        
         const result: BaziResult = {
           name: formData.name as string,
           birthDate: formData.birthDate as Date,
@@ -240,7 +258,7 @@ const Index = () => {
             hour: { stem: "待計算", branch: "待計算" }
           },
           nayin: data.calculation.nayin,
-          shensha: data.calculation.shensha || [],
+          shensha: shenshaMatches,  // 使用新的模組化引擎計算結果
           wuxing: data.calculation.wuxingScores,
           yinyang: data.calculation.yinyangRatio,
           fourSeasonsTeam,
@@ -403,6 +421,13 @@ const Index = () => {
               <section ref={sectionRefs.legion} className="animate-fade-in scroll-mt-36">
                 <LegionCards baziResult={baziResult} />
               </section>
+
+              {/* 神煞統計分析區 */}
+              {baziResult.shensha && baziResult.shensha.length > 0 && (
+                <section className="animate-fade-in scroll-mt-36">
+                  <ShenshaStats shenshaList={baziResult.shensha.filter((s): s is ShenshaMatch => typeof s === 'object' && 'evidence' in s)} />
+                </section>
+              )}
 
               {/* 詳細分析區 */}
               <section ref={sectionRefs.analysis} className="animate-fade-in scroll-mt-36">

@@ -235,14 +235,22 @@ function getDayMasterElement(stem: string): string {
   return stemElements[stem] || 'earth';
 }
 
-function isJiShen(sha: string): boolean {
+function isJiShen(sha: string | { category?: string; name?: string }): boolean {
+  // 支援新格式 ShenshaMatch
+  if (typeof sha === 'object' && sha !== null) {
+    return sha.category === '吉神' || sha.category === '桃花';
+  }
   const jiList = ['天乙貴人', '文昌貴人', '太極貴人', '將星', '華蓋', '金輿', '天廚', '福星貴人', '天德', '月德', '紅鸞', '天喜', '驛馬'];
-  return jiList.includes(sha);
+  return jiList.includes(sha as string);
 }
 
-function isXiongSha(sha: string): boolean {
+function isXiongSha(sha: string | { category?: string; name?: string }): boolean {
+  // 支援新格式 ShenshaMatch
+  if (typeof sha === 'object' && sha !== null) {
+    return sha.category === '凶煞';
+  }
   const xiongList = ['羊刃', '劫煞', '災煞', '孤辰', '寡宿', '亡神', '白虎', '天狗', '咸池'];
-  return xiongList.includes(sha);
+  return xiongList.includes(sha as string);
 }
 
 function getPreferredElement(dayElement: string, strength: string): string {

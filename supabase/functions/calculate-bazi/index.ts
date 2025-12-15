@@ -248,7 +248,9 @@ function getMonthBranchIndexBySolarTerms(
     const d = parseTermDate(prev[t]?.date);
     if (d) {
       const branchIndex = SOLAR_TERM_BRANCH_MAP[t];
-      timeline.push({ term: t, date: toLocal(d, tzMinutes), branchIndex });
+      if (branchIndex !== undefined) {
+        timeline.push({ term: t, date: toLocal(d, tzMinutes), branchIndex });
+      }
     }
   });
 

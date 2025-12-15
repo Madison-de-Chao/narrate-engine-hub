@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { BaziInputForm } from "@/components/BaziInputForm";
@@ -6,8 +6,10 @@ import { TraditionalBaziDisplay } from "@/components/TraditionalBaziDisplay";
 import { LegionCards } from "@/components/LegionCards";
 import { AnalysisCharts } from "@/components/AnalysisCharts";
 import { CalculationLogs } from "@/components/CalculationLogs";
+import { ReportSummary } from "@/components/ReportSummary";
+import { ReportNavigation } from "@/components/ReportNavigation";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, LogOut, UserRound } from "lucide-react";
+import { Download, Loader2, LogOut, UserRound, Sparkles } from "lucide-react";
 import { generatePDF } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
@@ -79,6 +81,27 @@ const Index = () => {
   const [baziResult, setBaziResult] = useState<BaziResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [activeSection, setActiveSection] = useState('summary');
+
+  // Section refs for scrolling
+  const sectionRefs = {
+    summary: useRef<HTMLDivElement>(null),
+    bazi: useRef<HTMLDivElement>(null),
+    legion: useRef<HTMLDivElement>(null),
+    analysis: useRef<HTMLDivElement>(null),
+    logs: useRef<HTMLDivElement>(null),
+  };
+
+  const scrollToSection = (sectionId: string) => {
+    setActiveSection(sectionId);
+    const ref = sectionRefs[sectionId as keyof typeof sectionRefs];
+    if (ref?.current) {
+      const headerOffset = 140;
+      const elementPosition = ref.current.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     // 设置认证状态监听器
@@ -340,8 +363,11 @@ const Index = () => {
         {/* 當有計算結果時顯示以下區域 */}
         {baziResult && (
           <>
+            {/* 報告導航 */}
+            <ReportNavigation activeSection={activeSection} onSectionChange={scrollToSection} />
+
             {/* 下載按鈕 */}
-            <section className="animate-fade-in flex justify-center">
+            <section className="animate-fade-in flex justify-center gap-4">
               <Button
                 onClick={handleDownloadReport}
                 disabled={isDownloading}
@@ -363,24 +389,29 @@ const Index = () => {
 
             {/* 報告內容區 - 用於 PDF 生成 */}
             <div id="bazi-report-content" className="space-y-8">
-              {/* 區域2：傳統八字排盤區 */}
-              <section className="animate-fade-in">
+              {/* 命盤總覽 */}
+              <section ref={sectionRefs.summary} className="animate-fade-in scroll-mt-36">
+                <ReportSummary baziResult={baziResult} />
+              </section>
+
+              {/* 傳統八字排盤區 */}
+              <section ref={sectionRefs.bazi} className="animate-fade-in scroll-mt-36">
                 <TraditionalBaziDisplay baziResult={baziResult} />
               </section>
 
-              {/* 區域3：四時軍團分析區 */}
-              <section className="animate-fade-in">
+              {/* 四時軍團分析區 */}
+              <section ref={sectionRefs.legion} className="animate-fade-in scroll-mt-36">
                 <LegionCards baziResult={baziResult} />
               </section>
 
-              {/* 區域4：詳細分析區 */}
-              <section className="animate-fade-in">
+              {/* 詳細分析區 */}
+              <section ref={sectionRefs.analysis} className="animate-fade-in scroll-mt-36">
                 <AnalysisCharts baziResult={baziResult} />
               </section>
 
-              {/* 區域5：計算日誌區 */}
+              {/* 計算日誌區 */}
               {baziResult.calculationLogs && (
-                <section className="animate-fade-in">
+                <section ref={sectionRefs.logs} className="animate-fade-in scroll-mt-36">
                   <CalculationLogs logs={baziResult.calculationLogs} />
                 </section>
               )}

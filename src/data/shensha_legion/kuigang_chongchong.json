@@ -1,0 +1,24 @@
+{
+  "name": "魁罡重重",
+  "enabled": true,
+  "priority": 8,
+  "category": "特殊",
+  "rarity": "SSR",
+  "effect": "多柱見魁罡，性格剛強，有將帥之才",
+  "modernMeaning": "領導能力強，適合管理層，但需收斂鋒芒",
+  "buff": "威震四方",
+  "debuff": "剛愎自用",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "軍團版-日柱為魁罡日",
+      "combo": [
+        {
+          "anchor": "dayPillar",
+          "values": ["壬辰", "庚戌", "庚辰", "戊戌"]
+        }
+      ],
+      "notes": "日柱見魁罡組合（壬辰、庚戌、庚辰、戊戌）"
+    }
+  ]
+}

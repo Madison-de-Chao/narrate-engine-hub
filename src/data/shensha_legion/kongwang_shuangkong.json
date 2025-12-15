@@ -1,0 +1,42 @@
+{
+  "name": "雙空亡",
+  "enabled": true,
+  "priority": 6,
+  "category": "特殊",
+  "rarity": "SR",
+  "effect": "多柱見空亡，虛無飄渺，宜修行",
+  "modernMeaning": "對物質淡泊，適合哲學、宗教、藝術領域",
+  "buff": "超然物外",
+  "debuff": "虛無縹緲",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "軍團版-日柱查空亡位多柱應",
+      "combo": [
+        {
+          "anchor": "dayBranch",
+          "table": {
+            "子": ["戌", "亥"],
+            "丑": ["戌", "亥"],
+            "寅": ["子", "丑"],
+            "卯": ["子", "丑"],
+            "辰": ["寅", "卯"],
+            "巳": ["寅", "卯"],
+            "午": ["辰", "巳"],
+            "未": ["辰", "巳"],
+            "申": ["午", "未"],
+            "酉": ["午", "未"],
+            "戌": ["申", "酉"],
+            "亥": ["申", "酉"]
+          }
+        },
+        {
+          "anchor": "multiMatch",
+          "targets": ["yearBranch", "monthBranch", "hourBranch"],
+          "minMatch": 2
+        }
+      ],
+      "notes": "日支查空亡位，其他柱至少兩柱見到空亡位"
+    }
+  ]
+}

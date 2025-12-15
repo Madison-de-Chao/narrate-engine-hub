@@ -1,0 +1,42 @@
+{
+  "name": "鸞喜雙臨",
+  "enabled": true,
+  "priority": 8,
+  "category": "桃花",
+  "rarity": "SSR",
+  "effect": "紅鸞天喜同現，婚姻美滿，喜事連連",
+  "modernMeaning": "感情順利，適合結婚，家庭幸福",
+  "buff": "姻緣天定",
+  "debuff": "情深不壽",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "軍團版-年支見紅鸞+天喜雙星",
+      "combo": [
+        {
+          "anchor": "yearBranch",
+          "table": {
+            "子": ["卯", "酉"],
+            "丑": ["寅", "申"],
+            "寅": ["丑", "未"],
+            "卯": ["子", "午"],
+            "辰": ["亥", "巳"],
+            "巳": ["戌", "辰"],
+            "午": ["酉", "卯"],
+            "未": ["申", "寅"],
+            "申": ["未", "丑"],
+            "酉": ["午", "子"],
+            "戌": ["巳", "亥"],
+            "亥": ["辰", "戌"]
+          }
+        },
+        {
+          "anchor": "multiMatch",
+          "targets": ["monthBranch", "dayBranch", "hourBranch"],
+          "minMatch": 2
+        }
+      ],
+      "notes": "年支同時查紅鸞天喜位，且其他柱至少見兩個"
+    }
+  ]
+}

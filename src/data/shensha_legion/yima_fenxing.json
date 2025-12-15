@@ -1,0 +1,42 @@
+{
+  "name": "驛馬奔行",
+  "enabled": true,
+  "priority": 7,
+  "category": "特殊",
+  "rarity": "SR",
+  "effect": "多柱見驛馬，奔波不停，但機遇多",
+  "modernMeaning": "適合外出發展，海外運佳，但需注意休息",
+  "buff": "四方通達",
+  "debuff": "居無定所",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "軍團版-年支取驛馬多柱應",
+      "combo": [
+        {
+          "anchor": "yearBranch",
+          "table": {
+            "申": ["寅"],
+            "子": ["寅"],
+            "辰": ["寅"],
+            "寅": ["申"],
+            "午": ["申"],
+            "戌": ["申"],
+            "巳": ["亥"],
+            "酉": ["亥"],
+            "丑": ["亥"],
+            "亥": ["巳"],
+            "卯": ["巳"],
+            "未": ["巳"]
+          }
+        },
+        {
+          "anchor": "multiMatch",
+          "targets": ["monthBranch", "dayBranch", "hourBranch"],
+          "minMatch": 2
+        }
+      ],
+      "notes": "年支取驛馬位，且月/日/時中至少兩柱見到驛馬位"
+    }
+  ]
+}

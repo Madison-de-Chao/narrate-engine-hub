@@ -1,0 +1,42 @@
+{
+  "name": "六合貴人",
+  "enabled": true,
+  "priority": 7,
+  "category": "吉神",
+  "rarity": "SR",
+  "effect": "地支六合，人際和諧，貴人多助",
+  "modernMeaning": "人緣極佳，合作運好，適合團隊工作",
+  "buff": "和合共濟",
+  "debuff": "過於妥協",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "軍團版-四柱見六合",
+      "combo": [
+        {
+          "anchor": "yearBranch",
+          "table": {
+            "子": ["丑"],
+            "丑": ["子"],
+            "寅": ["亥"],
+            "卯": ["戌"],
+            "辰": ["酉"],
+            "巳": ["申"],
+            "午": ["未"],
+            "未": ["午"],
+            "申": ["巳"],
+            "酉": ["辰"],
+            "戌": ["卯"],
+            "亥": ["寅"]
+          }
+        },
+        {
+          "anchor": "anyContains",
+          "targets": ["monthBranch", "dayBranch", "hourBranch"],
+          "minMatch": 1
+        }
+      ],
+      "notes": "年支與其他柱形成六合"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "name": "三合貴局",
+  "enabled": true,
+  "priority": 8,
+  "category": "吉神",
+  "rarity": "SSR",
+  "effect": "地支三合成局，氣勢磅礴，大貴之象",
+  "modernMeaning": "格局高大，適合從事大事業",
+  "buff": "鼎足而立",
+  "debuff": "好高騖遠",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "軍團版-四柱見三合局",
+      "combo": [
+        {
+          "anchor": "anyBranch",
+          "targets": ["yearBranch", "monthBranch", "dayBranch", "hourBranch"],
+          "values": ["申", "子", "辰"]
+        },
+        {
+          "anchor": "multiMatch",
+          "targets": ["yearBranch", "monthBranch", "dayBranch", "hourBranch"],
+          "minMatch": 3,
+          "matchValues": ["申", "子", "辰"]
+        }
+      ],
+      "notes": "四柱中見申子辰/寅午戌/巳酉丑/亥卯未三合"
+    }
+  ]
+}

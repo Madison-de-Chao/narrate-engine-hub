@@ -1,0 +1,40 @@
+{
+  "name": "羊刃七殺",
+  "enabled": true,
+  "priority": 9,
+  "category": "凶煞",
+  "rarity": "SSR",
+  "effect": "羊刃與七殺同現，性格剛烈，易有血光",
+  "modernMeaning": "行動力強但衝動，適合軍警、手術醫生等職業",
+  "buff": "殺伐果斷",
+  "debuff": "禍從口出",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "軍團版-日干見羊刃位於多柱",
+      "combo": [
+        {
+          "anchor": "dayStem",
+          "table": {
+            "甲": ["卯"],
+            "乙": ["辰"],
+            "丙": ["午"],
+            "丁": ["未"],
+            "戊": ["午"],
+            "己": ["未"],
+            "庚": ["酉"],
+            "辛": ["戌"],
+            "壬": ["子"],
+            "癸": ["丑"]
+          }
+        },
+        {
+          "anchor": "multiMatch",
+          "targets": ["yearBranch", "monthBranch", "dayBranch", "hourBranch"],
+          "minMatch": 2
+        }
+      ],
+      "notes": "日干取羊刃位，且四柱中至少兩柱見到羊刃位"
+    }
+  ]
+}

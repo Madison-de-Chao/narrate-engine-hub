@@ -1,0 +1,20 @@
+{
+  "name": "魁罡",
+  "enabled": true,
+  "priority": 12,
+  "category": "特殊",
+  "rarity": "SSR",
+  "effect": "聰明剛毅，具有領導才能和威嚴，但需防剛愎自用",
+  "modernMeaning": "領導力強，決斷果敢，但人際需要柔和",
+  "buff": "帝王之氣",
+  "debuff": "孤高易傷",
+  "rules": [
+    {
+      "anchor": "dayPillar",
+      "anchorType": "specific",
+      "rule_ref": "傳統對照-特定日柱組合",
+      "table": ["庚辰", "庚戌", "壬辰", "戊戌"],
+      "notes": "庚辰、庚戌、壬辰、戊戌四日為魁罡"
+    }
+  ]
+}

@@ -1,58 +1,24 @@
 /**
- * 神煞規則引擎 - Shensha Rule Engine v2.0
- * 支援 JSON 規則定義、優先權評估、證據鏈追蹤
+ * 神煞規則引擎 v3.0 - 模組化架構
+ * 支援多規則集、anyBranch、combo 規則類型、完整證據鏈
  */
 
-import shenshaRules from '@/data/shensha_rules.json';
+import { tradRules } from '@/data/shensha_trad';
+import { legionRules } from '@/data/shensha_legion';
+import type { 
+  ShenshaRuleDefinition, 
+  ShenshaRule, 
+  ShenshaMatch, 
+  ShenshaEvidence,
+  BaziChart,
+  ComboCondition
+} from '@/data/shenshaTypes';
+import { RARITY_CONFIG, CATEGORY_CONFIG } from '@/data/shenshaTypes';
 
-// 類型定義
-export interface ShenshaRule {
-  id: string;
-  name: string;
-  category: string;
-  rarity: 'SSR' | 'SR' | 'R' | 'N';
-  priority: number;
-  anchor: string;
-  anchorType?: string;
-  conditions: Record<string, string | string[]> | string[];
-  matchTarget: string;
-  effect: string;
-  modernMeaning: string;
-  buff: string | null;
-  debuff: string | null;
-}
+// 規則集類型
+export type RulesetType = 'trad' | 'legion';
 
-export interface ShenshaMatch {
-  id: string;
-  name: string;
-  category: string;
-  rarity: 'SSR' | 'SR' | 'R' | 'N';
-  priority: number;
-  effect: string;
-  modernMeaning: string;
-  buff: string | null;
-  debuff: string | null;
-  evidence: {
-    anchorBasis: string;
-    anchorValue: string;
-    matchedBranch: string;
-    matchedPillar: string;
-    whyMatched: string;
-  };
-}
-
-export interface RarityConfig {
-  color: string;
-  label: string;
-  weight: number;
-}
-
-export interface CategoryConfig {
-  color: string;
-  icon: string;
-}
-
-// 輸入參數
+// 向下兼容的輸入格式
 export interface ShenshaInput {
   dayStem: string;
   yearBranch: string;
@@ -62,7 +28,6 @@ export interface ShenshaInput {
   yearStem?: string;
   monthStem?: string;
   hourStem?: string;
-  dayPillar?: string;
 }
 
 // 三合局對照表
@@ -71,14 +36,6 @@ const TRIAD_MAP: Record<string, string> = {
   '寅': '寅午戌', '午': '寅午戌', '戌': '寅午戌',
   '巳': '巳酉丑', '酉': '巳酉丑', '丑': '巳酉丑',
   '亥': '亥卯未', '卯': '亥卯未', '未': '亥卯未'
-};
-
-// 方位組對照表（用於孤辰寡宿）
-const GROUP_MAP: Record<string, string> = {
-  '亥': '亥子丑', '子': '亥子丑', '丑': '亥子丑',
-  '寅': '寅卯辰', '卯': '寅卯辰', '辰': '寅卯辰',
-  '巳': '巳午未', '午': '巳午未', '未': '巳午未',
-  '申': '申酉戌', '酉': '申酉戌', '戌': '申酉戌'
 };
 
 // 六十甲子旬空對照
@@ -99,61 +56,94 @@ function getXun(dayStem: string, dayBranch: string): string {
   const stemIndex = stems.indexOf(dayStem);
   const branchIndex = branches.indexOf(dayBranch);
   
-  // 計算甲子序數
-  let jiazi = (stemIndex - branchIndex + 60) % 60;
-  if (jiazi < 0) jiazi += 60;
+  // 計算在60甲子中的位置
+  let jiazi = (stemIndex * 12 + branchIndex) % 60;
+  if ((stemIndex % 2) !== (branchIndex % 2)) {
+    jiazi = (jiazi + 30) % 60;
+  }
   
   // 確定旬
-  const xunStart = Math.floor(jiazi / 10) * 10;
+  const xunIndex = Math.floor(((stemIndex - branchIndex + 60) % 10) / 2);
   const xunNames = ['甲子旬', '甲戌旬', '甲申旬', '甲午旬', '甲辰旬', '甲寅旬'];
   
-  // 根據旬起始點確定旬名
-  const xunIndex = [0, 10, 20, 30, 40, 50].indexOf(xunStart);
-  return xunNames[xunIndex >= 0 ? xunIndex : 0];
+  return xunNames[xunIndex] || '甲子旬';
 }
 
 /**
- * 神煞規則引擎主類
+ * 模組化神煞引擎
  */
-export class ShenshaRuleEngine {
-  private rules: ShenshaRule[];
-  private rarityConfig: Record<string, RarityConfig>;
-  private categoryConfig: Record<string, CategoryConfig>;
+export class ModularShenshaEngine {
+  private rules: ShenshaRuleDefinition[];
+  private ruleset: RulesetType;
 
-  constructor() {
-    this.rules = shenshaRules.rules as ShenshaRule[];
-    this.rarityConfig = shenshaRules.rarityConfig as Record<string, RarityConfig>;
-    this.categoryConfig = shenshaRules.categoryConfig as Record<string, CategoryConfig>;
+  constructor(ruleset: RulesetType = 'trad') {
+    this.ruleset = ruleset;
+    this.rules = ruleset === 'legion' ? legionRules : tradRules;
+  }
+
+  /**
+   * 切換規則集
+   */
+  setRuleset(ruleset: RulesetType): void {
+    this.ruleset = ruleset;
+    this.rules = ruleset === 'legion' ? legionRules : tradRules;
+  }
+
+  /**
+   * 獲取當前規則集
+   */
+  getRuleset(): RulesetType {
+    return this.ruleset;
   }
 
   /**
    * 計算所有匹配的神煞
    */
-  calculate(input: ShenshaInput): ShenshaMatch[] {
+  calculate(input: ShenshaInput | BaziChart): ShenshaMatch[] {
+    const chart = this.normalizeInput(input);
     const matches: ShenshaMatch[] = [];
-    const allBranches = [
-      { branch: input.yearBranch, pillar: '年柱' },
-      { branch: input.monthBranch, pillar: '月柱' },
-      { branch: input.dayBranch, pillar: '日柱' },
-      { branch: input.hourBranch, pillar: '時柱' }
-    ];
-    
-    const allStems = [
-      { stem: input.yearStem || '', pillar: '年柱' },
-      { stem: input.monthStem || '', pillar: '月柱' },
-      { stem: input.dayStem, pillar: '日柱' },
-      { stem: input.hourStem || '', pillar: '時柱' }
-    ];
 
-    for (const rule of this.rules) {
-      const result = this.evaluateRule(rule, input, allBranches, allStems);
-      if (result) {
-        matches.push(result);
+    for (const ruleDef of this.rules) {
+      if (!ruleDef.enabled) continue;
+
+      for (const rule of ruleDef.rules) {
+        const evidence = this.evaluateRule(rule, chart, ruleDef);
+        if (evidence) {
+          matches.push({
+            name: ruleDef.name,
+            category: ruleDef.category,
+            rarity: ruleDef.rarity,
+            priority: ruleDef.priority,
+            effect: ruleDef.effect,
+            modernMeaning: ruleDef.modernMeaning,
+            buff: ruleDef.buff,
+            debuff: ruleDef.debuff,
+            evidence
+          });
+          break; // 同一神煞只匹配一次
+        }
       }
     }
 
-    // 按優先級排序
-    return matches.sort((a, b) => b.priority - a.priority);
+    // 按優先級排序（數字越小優先級越高）
+    return matches.sort((a, b) => a.priority - b.priority);
+  }
+
+  /**
+   * 標準化輸入格式
+   */
+  private normalizeInput(input: ShenshaInput | BaziChart): BaziChart {
+    if ('year' in input && 'month' in input) {
+      return input as BaziChart;
+    }
+
+    const simple = input as ShenshaInput;
+    return {
+      year: { stem: simple.yearStem || '', branch: simple.yearBranch },
+      month: { stem: simple.monthStem || '', branch: simple.monthBranch },
+      day: { stem: simple.dayStem, branch: simple.dayBranch },
+      hour: { stem: simple.hourStem || '', branch: simple.hourBranch }
+    };
   }
 
   /**
@@ -161,228 +151,78 @@ export class ShenshaRuleEngine {
    */
   private evaluateRule(
     rule: ShenshaRule, 
-    input: ShenshaInput, 
-    allBranches: { branch: string; pillar: string }[],
-    allStems: { stem: string; pillar: string }[]
-  ): ShenshaMatch | null {
-    let anchorValue: string | null = null;
-    let targetBranches: string[] = [];
-    let targetStems: string[] = [];
-    let anchorBasis = '';
-    const matchTarget = rule.matchTarget || 'anyBranch';
+    chart: BaziChart,
+    ruleDef: ShenshaRuleDefinition
+  ): ShenshaEvidence | null {
+    const allBranches = [
+      { value: chart.year.branch, pillar: '年支', type: 'yearBranch' },
+      { value: chart.month.branch, pillar: '月支', type: 'monthBranch' },
+      { value: chart.day.branch, pillar: '日支', type: 'dayBranch' },
+      { value: chart.hour.branch, pillar: '時支', type: 'hourBranch' }
+    ];
+
+    const allStems = [
+      { value: chart.year.stem, pillar: '年干', type: 'yearStem' },
+      { value: chart.month.stem, pillar: '月干', type: 'monthStem' },
+      { value: chart.day.stem, pillar: '日干', type: 'dayStem' },
+      { value: chart.hour.stem, pillar: '時干', type: 'hourStem' }
+    ];
 
     switch (rule.anchor) {
       case 'dayStem':
-        anchorValue = input.dayStem;
-        anchorBasis = `日干 ${anchorValue}`;
-        if (rule.conditions && typeof rule.conditions === 'object' && !Array.isArray(rule.conditions)) {
-          const condValue = rule.conditions[anchorValue];
-          if (condValue) {
-            targetBranches = Array.isArray(condValue) ? condValue : [condValue];
-          }
-        }
-        break;
+        return this.evaluateDayStemRule(rule, chart, allBranches);
 
       case 'yearBranch':
-        anchorValue = input.yearBranch;
-        if (rule.anchorType === 'triad') {
-          const triad = TRIAD_MAP[anchorValue];
-          anchorBasis = `年支 ${anchorValue} (${triad})`;
-          if (rule.conditions && typeof rule.conditions === 'object' && !Array.isArray(rule.conditions)) {
-            const condValue = rule.conditions[triad];
-            if (condValue) {
-              targetBranches = Array.isArray(condValue) ? condValue : [condValue];
-            }
-          }
-        } else if (rule.anchorType === 'group') {
-          const group = GROUP_MAP[anchorValue];
-          anchorBasis = `年支 ${anchorValue} (${group})`;
-          if (rule.conditions && typeof rule.conditions === 'object' && !Array.isArray(rule.conditions)) {
-            const condValue = rule.conditions[group];
-            if (condValue) {
-              targetBranches = Array.isArray(condValue) ? condValue : [condValue];
-            }
-          }
-        } else if (rule.anchorType === 'direct') {
-          anchorBasis = `年支 ${anchorValue}`;
-          if (rule.conditions && typeof rule.conditions === 'object' && !Array.isArray(rule.conditions)) {
-            const condValue = rule.conditions[anchorValue];
-            if (condValue) {
-              targetBranches = Array.isArray(condValue) ? condValue : [condValue];
-            }
-          }
-        }
-        break;
+        return this.evaluateBranchRule(rule, chart.year.branch, '年支', chart, allBranches);
 
       case 'monthBranch':
-        anchorValue = input.monthBranch;
-        anchorBasis = `月支 ${anchorValue}`;
-        if (rule.conditions && typeof rule.conditions === 'object' && !Array.isArray(rule.conditions)) {
-          const condValue = rule.conditions[anchorValue];
-          if (condValue) {
-            const values = Array.isArray(condValue) ? condValue : [condValue];
-            // 根據 matchTarget 決定是查天干還是地支
-            if (matchTarget === 'anyStem') {
-              targetStems = values;
-            } else if (matchTarget === 'anyStemOrBranch') {
-              targetStems = values;
-              targetBranches = values;
-            } else {
-              targetBranches = values;
-            }
-          }
-        }
-        break;
+        return this.evaluateBranchRule(rule, chart.month.branch, '月支', chart, allBranches, allStems);
+
+      case 'dayBranch':
+        return this.evaluateBranchRule(rule, chart.day.branch, '日支', chart, allBranches);
+
+      case 'hourBranch':
+        return this.evaluateBranchRule(rule, chart.hour.branch, '時支', chart, allBranches);
+
+      case 'anyBranch':
+        return this.evaluateAnyBranchRule(rule, chart, allBranches);
 
       case 'dayPillar':
-        if (rule.anchorType === 'xunkong') {
-          const xun = getXun(input.dayStem, input.dayBranch);
-          anchorBasis = `日柱 ${input.dayStem}${input.dayBranch} (${xun})`;
-          if (rule.conditions && typeof rule.conditions === 'object' && !Array.isArray(rule.conditions)) {
-            const condValue = rule.conditions[xun];
-            if (condValue) {
-              targetBranches = Array.isArray(condValue) ? condValue : [condValue];
-            }
-          }
-        } else if (rule.anchorType === 'specific') {
-          // 魁罡等特定日柱組合判斷
-          const dayPillar = `${input.dayStem}${input.dayBranch}`;
-          anchorBasis = `日柱 ${dayPillar}`;
-          if (Array.isArray(rule.conditions) && rule.conditions.includes(dayPillar)) {
-            // 直接匹配成功，返回結果
-            return {
-              id: rule.id,
-              name: rule.name,
-              category: rule.category,
-              rarity: rule.rarity,
-              priority: rule.priority,
-              effect: rule.effect,
-              modernMeaning: rule.modernMeaning,
-              buff: rule.buff,
-              debuff: rule.debuff,
-              evidence: {
-                anchorBasis,
-                anchorValue: dayPillar,
-                matchedBranch: input.dayBranch,
-                matchedPillar: '日柱',
-                whyMatched: `日柱 ${dayPillar} 為特定組合（${(rule.conditions as string[]).join('、')}之一）`
-              }
-            };
-          }
-        }
-        break;
-
-      case 'static':
-        anchorBasis = '固定條件';
-        if (Array.isArray(rule.conditions)) {
-          targetBranches = rule.conditions;
-        }
-        break;
+        return this.evaluateDayPillarRule(rule, chart, allBranches);
 
       case 'combo':
-        // 強桃花等組合規則：需要多柱同時見到桃花位
-        if (rule.anchorType === 'multiMatch') {
-          const triad = TRIAD_MAP[input.yearBranch];
-          anchorBasis = `年支 ${input.yearBranch} (${triad}) 多柱組合`;
-          if (rule.conditions && typeof rule.conditions === 'object' && !Array.isArray(rule.conditions)) {
-            const condValue = rule.conditions[triad] as any;
-            if (condValue && typeof condValue === 'object' && condValue.taohua) {
-              const taohuaBranch = condValue.taohua;
-              const requirePillars = condValue.requireMultiple || [];
-              
-              // 檢查是否多柱都有桃花位
-              let matchCount = 0;
-              const matchedPillars: string[] = [];
-              
-              if (requirePillars.includes('monthBranch') && input.monthBranch === taohuaBranch) {
-                matchCount++;
-                matchedPillars.push('月柱');
-              }
-              if (requirePillars.includes('dayBranch') && input.dayBranch === taohuaBranch) {
-                matchCount++;
-                matchedPillars.push('日柱');
-              }
-              if (requirePillars.includes('hourBranch') && input.hourBranch === taohuaBranch) {
-                matchCount++;
-                matchedPillars.push('時柱');
-              }
-              
-              // 需要至少兩柱見到桃花
-              if (matchCount >= 2) {
-                return {
-                  id: rule.id,
-                  name: rule.name,
-                  category: rule.category,
-                  rarity: rule.rarity,
-                  priority: rule.priority,
-                  effect: rule.effect,
-                  modernMeaning: rule.modernMeaning,
-                  buff: rule.buff,
-                  debuff: rule.debuff,
-                  evidence: {
-                    anchorBasis,
-                    anchorValue: input.yearBranch,
-                    matchedBranch: taohuaBranch,
-                    matchedPillar: matchedPillars.join('、'),
-                    whyMatched: `${anchorBasis} 桃花位 ${taohuaBranch}，見於 ${matchedPillars.join('、')}（${matchCount}柱同見）`
-                  }
-                };
-              }
-            }
-          }
-        }
+        return this.evaluateComboRule(rule, chart, allBranches);
+
+      default:
         return null;
     }
+  }
 
-    // 檢查匹配
-    if (targetBranches.length === 0 && targetStems.length === 0) {
-      return null;
-    }
+  /**
+   * 評估日干規則
+   */
+  private evaluateDayStemRule(
+    rule: ShenshaRule,
+    chart: BaziChart,
+    allBranches: { value: string; pillar: string; type: string }[]
+  ): ShenshaEvidence | null {
+    const dayStem = chart.day.stem;
+    if (!rule.table || Array.isArray(rule.table)) return null;
 
-    // 檢查地支匹配
-    for (const { branch, pillar } of allBranches) {
-      if (targetBranches.includes(branch)) {
+    const targetValues = rule.table[dayStem];
+    if (!targetValues) return null;
+
+    const targets = Array.isArray(targetValues) ? targetValues : [targetValues];
+
+    for (const branch of allBranches) {
+      if (targets.includes(branch.value)) {
         return {
-          id: rule.id,
-          name: rule.name,
-          category: rule.category,
-          rarity: rule.rarity,
-          priority: rule.priority,
-          effect: rule.effect,
-          modernMeaning: rule.modernMeaning,
-          buff: rule.buff,
-          debuff: rule.debuff,
-          evidence: {
-            anchorBasis,
-            anchorValue: anchorValue || '',
-            matchedBranch: branch,
-            matchedPillar: pillar,
-            whyMatched: `${anchorBasis} 查得 ${targetBranches.join('/')}，見於 ${pillar} ${branch}`
-          }
-        };
-      }
-    }
-
-    // 檢查天干匹配（用於天德、月德等）
-    for (const { stem, pillar } of allStems) {
-      if (stem && targetStems.includes(stem)) {
-        return {
-          id: rule.id,
-          name: rule.name,
-          category: rule.category,
-          rarity: rule.rarity,
-          priority: rule.priority,
-          effect: rule.effect,
-          modernMeaning: rule.modernMeaning,
-          buff: rule.buff,
-          debuff: rule.debuff,
-          evidence: {
-            anchorBasis,
-            anchorValue: anchorValue || '',
-            matchedBranch: stem,
-            matchedPillar: pillar,
-            whyMatched: `${anchorBasis} 查得 ${targetStems.join('/')}，見於 ${pillar} 天干 ${stem}`
-          }
+          anchor_basis: `日干=${dayStem}`,
+          anchor_value: dayStem,
+          why_matched: `查表得[${targets.join('/')}]，四柱${branch.pillar}=${branch.value}命中`,
+          rule_ref: rule.rule_ref,
+          matched_pillar: branch.pillar,
+          matched_value: branch.value
         };
       }
     }
@@ -391,28 +231,227 @@ export class ShenshaRuleEngine {
   }
 
   /**
-   * 獲取神煞詳細資訊
+   * 評估地支規則
    */
-  getShenshaInfo(id: string): ShenshaRule | null {
-    return this.rules.find(r => r.id === id) || null;
+  private evaluateBranchRule(
+    rule: ShenshaRule,
+    anchorBranch: string,
+    anchorName: string,
+    chart: BaziChart,
+    allBranches: { value: string; pillar: string; type: string }[],
+    allStems?: { value: string; pillar: string; type: string }[]
+  ): ShenshaEvidence | null {
+    if (!rule.table || Array.isArray(rule.table)) return null;
+
+    let lookupKey = anchorBranch;
+    let anchorBasis = `${anchorName}=${anchorBranch}`;
+
+    // 處理三合局查表
+    if (rule.anchorType === 'triad') {
+      const triad = TRIAD_MAP[anchorBranch];
+      if (triad) {
+        lookupKey = triad;
+        anchorBasis = `${anchorName}=${anchorBranch}(${triad})`;
+      }
+    }
+
+    const targetValues = rule.table[lookupKey];
+    if (!targetValues) return null;
+
+    const targets = Array.isArray(targetValues) ? targetValues : [targetValues];
+    const matchTarget = rule.matchTarget || 'anyBranch';
+
+    // 檢查地支
+    if (matchTarget === 'anyBranch' || matchTarget === 'anyStemOrBranch') {
+      for (const branch of allBranches) {
+        if (targets.includes(branch.value)) {
+          return {
+            anchor_basis: anchorBasis,
+            anchor_value: anchorBranch,
+            why_matched: `查表得[${targets.join('/')}]，四柱${branch.pillar}=${branch.value}命中`,
+            rule_ref: rule.rule_ref,
+            matched_pillar: branch.pillar,
+            matched_value: branch.value
+          };
+        }
+      }
+    }
+
+    // 檢查天干
+    if ((matchTarget === 'anyStem' || matchTarget === 'anyStemOrBranch') && allStems) {
+      for (const stem of allStems) {
+        if (stem.value && targets.includes(stem.value)) {
+          return {
+            anchor_basis: anchorBasis,
+            anchor_value: anchorBranch,
+            why_matched: `查表得[${targets.join('/')}]，四柱${stem.pillar}=${stem.value}命中`,
+            rule_ref: rule.rule_ref,
+            matched_pillar: stem.pillar,
+            matched_value: stem.value
+          };
+        }
+      }
+    }
+
+    return null;
   }
 
   /**
-   * 獲取稀有度配置
+   * 評估 anyBranch 規則（支對支互見）
    */
-  getRarityConfig(rarity: string): RarityConfig | null {
-    return this.rarityConfig[rarity] || null;
+  private evaluateAnyBranchRule(
+    rule: ShenshaRule,
+    chart: BaziChart,
+    allBranches: { value: string; pillar: string; type: string }[]
+  ): ShenshaEvidence | null {
+    if (!rule.table || Array.isArray(rule.table)) return null;
+
+    for (const branch1 of allBranches) {
+      const targetValues = rule.table[branch1.value];
+      if (!targetValues) continue;
+
+      const targets = Array.isArray(targetValues) ? targetValues : [targetValues];
+
+      for (const branch2 of allBranches) {
+        if (branch1.pillar !== branch2.pillar && targets.includes(branch2.value)) {
+          return {
+            anchor_basis: `${branch1.pillar}=${branch1.value}`,
+            anchor_value: branch1.value,
+            why_matched: `${branch1.pillar}${branch1.value}查表得[${targets.join('/')}]，${branch2.pillar}=${branch2.value}互見命中`,
+            rule_ref: rule.rule_ref,
+            matched_pillar: branch2.pillar,
+            matched_value: branch2.value
+          };
+        }
+      }
+    }
+
+    return null;
   }
 
   /**
-   * 獲取分類配置
+   * 評估日柱規則（空亡、魁罡等）
    */
-  getCategoryConfig(category: string): CategoryConfig | null {
-    return this.categoryConfig[category] || null;
+  private evaluateDayPillarRule(
+    rule: ShenshaRule,
+    chart: BaziChart,
+    allBranches: { value: string; pillar: string; type: string }[]
+  ): ShenshaEvidence | null {
+    const dayPillar = `${chart.day.stem}${chart.day.branch}`;
+
+    // 特定日柱組合（魁罡）
+    if (rule.anchorType === 'specific') {
+      if (Array.isArray(rule.table) && rule.table.includes(dayPillar)) {
+        return {
+          anchor_basis: `日柱=${dayPillar}`,
+          anchor_value: dayPillar,
+          why_matched: `日柱${dayPillar}為特定組合（${rule.table.join('/')}之一）`,
+          rule_ref: rule.rule_ref,
+          matched_pillar: '日柱',
+          matched_value: dayPillar
+        };
+      }
+      return null;
+    }
+
+    // 旬空亡
+    if (rule.anchorType === 'xunkong') {
+      const xun = getXun(chart.day.stem, chart.day.branch);
+      if (!rule.table || Array.isArray(rule.table)) return null;
+
+      const emptyBranches = rule.table[xun];
+      if (!emptyBranches) return null;
+
+      const targets = Array.isArray(emptyBranches) ? emptyBranches : [emptyBranches];
+
+      for (const branch of allBranches) {
+        if (targets.includes(branch.value)) {
+          return {
+            anchor_basis: `日柱${dayPillar}(${xun})`,
+            anchor_value: xun,
+            why_matched: `${xun}空亡[${targets.join('/')}]，${branch.pillar}=${branch.value}落空`,
+            rule_ref: rule.rule_ref,
+            matched_pillar: branch.pillar,
+            matched_value: branch.value
+          };
+        }
+      }
+    }
+
+    return null;
   }
 
   /**
-   * 按分類分組神煞
+   * 評估複合規則（combo）
+   */
+  private evaluateComboRule(
+    rule: ShenshaRule,
+    chart: BaziChart,
+    allBranches: { value: string; pillar: string; type: string }[]
+  ): ShenshaEvidence | null {
+    if (!rule.combo || rule.combo.length === 0) return null;
+
+    // 找到基礎規則（通常是第一個 yearBranch 規則）
+    const baseRule = rule.combo.find(c => c.anchor === 'yearBranch' && c.table);
+    if (!baseRule || !baseRule.table) return null;
+
+    // 獲取年支對應的目標值
+    const yearBranch = chart.year.branch;
+    const lookupKey = TRIAD_MAP[yearBranch] || yearBranch;
+    
+    // 嘗試直接查找或通過三合局查找
+    let targetValues = baseRule.table[yearBranch] || baseRule.table[lookupKey];
+    if (!targetValues) return null;
+
+    const targets = Array.isArray(targetValues) ? targetValues : [targetValues];
+
+    // 找到多柱匹配規則
+    const multiMatchRule = rule.combo.find(c => c.anchor === 'multiMatch');
+    const minMatch = multiMatchRule?.minMatch || 2;
+    const targetPillars = multiMatchRule?.targets || ['monthBranch', 'dayBranch', 'hourBranch'];
+
+    // 計算匹配數量
+    let matchCount = 0;
+    const matchedPillars: string[] = [];
+
+    const pillarMap: Record<string, { value: string; name: string }> = {
+      'yearBranch': { value: chart.year.branch, name: '年支' },
+      'monthBranch': { value: chart.month.branch, name: '月支' },
+      'dayBranch': { value: chart.day.branch, name: '日支' },
+      'hourBranch': { value: chart.hour.branch, name: '時支' }
+    };
+
+    for (const pillarType of targetPillars) {
+      const pillar = pillarMap[pillarType];
+      if (pillar && targets.includes(pillar.value)) {
+        matchCount++;
+        matchedPillars.push(pillar.name);
+      }
+    }
+
+    if (matchCount >= minMatch) {
+      return {
+        anchor_basis: `年支=${yearBranch}(${TRIAD_MAP[yearBranch] || yearBranch})`,
+        anchor_value: yearBranch,
+        why_matched: `查表得[${targets.join('/')}]，${matchedPillars.join('、')}同見（${matchCount}柱）`,
+        rule_ref: rule.rule_ref,
+        matched_pillar: matchedPillars.join('、'),
+        matched_value: targets.join('/')
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * 獲取神煞詳情
+   */
+  getShenshaInfo(name: string): ShenshaRuleDefinition | null {
+    return this.rules.find(r => r.name === name) || null;
+  }
+
+  /**
+   * 按分類分組
    */
   groupByCategory(matches: ShenshaMatch[]): Record<string, ShenshaMatch[]> {
     const groups: Record<string, ShenshaMatch[]> = {
@@ -432,7 +471,7 @@ export class ShenshaRuleEngine {
   }
 
   /**
-   * 按稀有度分組神煞
+   * 按稀有度分組
    */
   groupByRarity(matches: ShenshaMatch[]): Record<string, ShenshaMatch[]> {
     const groups: Record<string, ShenshaMatch[]> = {
@@ -450,10 +489,31 @@ export class ShenshaRuleEngine {
 
     return groups;
   }
+
+  /**
+   * 獲取規則數量統計
+   */
+  getStats(): { total: number; byCategory: Record<string, number>; byRarity: Record<string, number> } {
+    const byCategory: Record<string, number> = { '吉神': 0, '凶煞': 0, '桃花': 0, '特殊': 0 };
+    const byRarity: Record<string, number> = { 'SSR': 0, 'SR': 0, 'R': 0, 'N': 0 };
+
+    for (const rule of this.rules) {
+      if (rule.enabled) {
+        byCategory[rule.category]++;
+        byRarity[rule.rarity]++;
+      }
+    }
+
+    return {
+      total: this.rules.filter(r => r.enabled).length,
+      byCategory,
+      byRarity
+    };
+  }
 }
 
-// 導出單例
-export const shenshaEngine = new ShenshaRuleEngine();
+// 導出單例（向下兼容）
+export const shenshaEngine = new ModularShenshaEngine('trad');
 
 // 向下兼容的函數接口
 export function calculateShenshaWithEvidence(
@@ -461,9 +521,11 @@ export function calculateShenshaWithEvidence(
   yearBranch: string,
   monthBranch: string,
   dayBranch: string,
-  hourBranch: string
+  hourBranch: string,
+  ruleset: RulesetType = 'trad'
 ): ShenshaMatch[] {
-  return shenshaEngine.calculate({
+  const engine = new ModularShenshaEngine(ruleset);
+  return engine.calculate({
     dayStem,
     yearBranch,
     monthBranch,
@@ -489,3 +551,7 @@ export function calculateShenshaSimple(
   });
   return matches.map(m => m.name);
 }
+
+// 重新導出類型
+export type { ShenshaMatch, ShenshaEvidence, ShenshaRuleDefinition, BaziChart };
+export { RARITY_CONFIG, CATEGORY_CONFIG };

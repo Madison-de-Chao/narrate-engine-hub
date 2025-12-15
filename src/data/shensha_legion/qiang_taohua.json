@@ -1,0 +1,42 @@
+{
+  "name": "強桃花",
+  "enabled": true,
+  "priority": 8,
+  "category": "桃花",
+  "rarity": "SSR",
+  "effect": "桃花極旺，異性緣極佳，感情豐富但易生糾葛",
+  "modernMeaning": "魅力非凡，異性緣極強，但需慎防感情問題",
+  "buff": "傾城之色",
+  "debuff": "情債難還",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "軍團版-年支取位 + 月/日同應",
+      "combo": [
+        {
+          "anchor": "yearBranch",
+          "table": {
+            "申": ["酉"],
+            "子": ["酉"],
+            "辰": ["酉"],
+            "寅": ["卯"],
+            "午": ["卯"],
+            "戌": ["卯"],
+            "巳": ["午"],
+            "酉": ["午"],
+            "丑": ["午"],
+            "亥": ["子"],
+            "卯": ["子"],
+            "未": ["子"]
+          }
+        },
+        {
+          "anchor": "multiMatch",
+          "targets": ["monthBranch", "dayBranch", "hourBranch"],
+          "minMatch": 2
+        }
+      ],
+      "notes": "年支取桃花位，且月/日/時中至少兩柱見到桃花位"
+    }
+  ]
+}

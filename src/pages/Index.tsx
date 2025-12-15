@@ -15,6 +15,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import logoSishi from "@/assets/logo-sishi.png";
 import logoHonglingyusuo from "@/assets/logo-honglingyusuo.png";
 import logoChaoxuan from "@/assets/logo-chaoxuan.png";
+import { getFourSeasonsTeam } from "@/lib/fourSeasonsAnalyzer";
+
+import type { FourSeasonsTeam } from "@/lib/fourSeasonsAnalyzer";
 
 export interface BaziResult {
   name: string;
@@ -56,6 +59,7 @@ export interface BaziResult {
     yin: number;
     yang: number;
   };
+  fourSeasonsTeam?: FourSeasonsTeam;
   legionStories?: {
     year?: string;
     month?: string;
@@ -189,6 +193,9 @@ const Index = () => {
       if (error) throw error;
 
       if (data?.calculation) {
+        // 計算四時軍團分析
+        const fourSeasonsTeam = getFourSeasonsTeam(data.calculation.pillars);
+        
         const result: BaziResult = {
           name: formData.name as string,
           birthDate: formData.birthDate as Date,
@@ -210,6 +217,7 @@ const Index = () => {
           shensha: data.calculation.shensha || [],
           wuxing: data.calculation.wuxingScores,
           yinyang: data.calculation.yinyangRatio,
+          fourSeasonsTeam,
           legionStories: {}
         };
         

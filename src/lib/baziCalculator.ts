@@ -5,6 +5,7 @@ import fiveRatsData from "@/data/five_rats.json";
 import ganZhiData from "@/data/gan_zhi.json";
 import nayinData from "@/data/nayin.json";
 import hiddenStemsData from "@/data/hidden_stems.json";
+import { getFourSeasonsTeam as calculateFourSeasonsTeam } from "./fourSeasonsAnalyzer";
 
 const MS_PER_MINUTE = 60 * 1000;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -55,6 +56,8 @@ const hkoData = keySolarTermsData as HkoSolarTermsData;
 export interface HiddenStemEntry {
   stem: string;
   weight: number;
+  ratio?: number;  // 百分比 (0-100)
+  type?: '本氣' | '中氣' | '餘氣';  // 藏干類型
 }
 
 interface HiddenStemConfig {
@@ -62,6 +65,19 @@ interface HiddenStemConfig {
 }
 
 type HiddenStemsDataset = { hiddenStems: Record<string, HiddenStemConfig> };
+
+// 導出四時軍團分析器
+export { 
+  getFourSeasonsTeam, 
+  calculateSeasonDistribution, 
+  getSeasonByBranch,
+  getSeasonColor,
+  getSeasonElement,
+  getSeasonFullName,
+  type FourSeasonsTeam,
+  type SeasonCycle,
+  type SeasonDistribution
+} from './fourSeasonsAnalyzer';
 
 const hiddenStems = hiddenStemsData as HiddenStemsDataset;
 
@@ -452,6 +468,7 @@ export interface BaziCalculationResult {
     yang: number;
     yin: number;
   };
+  fourSeasonsTeam: import('./fourSeasonsAnalyzer').FourSeasonsTeam;
 }
 
 export function calculateBazi(input: BaziCalculationInput): BaziCalculationResult {
@@ -511,12 +528,16 @@ export function calculateBazi(input: BaziCalculationInput): BaziCalculationResul
   const { totals: wuxing, breakdown: wuxingBreakdown } = calculateWuxing(pillars, hiddenStems);
   const yinyang = calculateYinYang(pillars);
 
+  // 计算四时军团
+  const fourSeasonsTeam = calculateFourSeasonsTeam(pillars);
+
   return {
     pillars,
     hiddenStems,
     nayin,
     wuxing,
     wuxingBreakdown,
-    yinyang
+    yinyang,
+    fourSeasonsTeam
   };
 }

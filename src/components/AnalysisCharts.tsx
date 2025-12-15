@@ -2,13 +2,14 @@ import { Card } from "@/components/ui/card";
 import { BaziResult } from "@/pages/Index";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { FourSeasonsCard } from "./FourSeasonsCard";
 
 interface AnalysisChartsProps {
   baziResult: BaziResult;
 }
 
 export const AnalysisCharts = ({ baziResult }: AnalysisChartsProps) => {
-  const { wuxing, yinyang } = baziResult;
+  const { wuxing, yinyang, fourSeasonsTeam } = baziResult;
 
   // 計算五行百分比
   const totalWuxing = Object.values(wuxing).reduce((sum, val) => sum + val, 0);
@@ -32,12 +33,24 @@ export const AnalysisCharts = ({ baziResult }: AnalysisChartsProps) => {
     <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20 card-glow">
       <h2 className="text-2xl font-bold text-foreground mb-6">詳細分析報告</h2>
 
-      <Tabs defaultValue="balance" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+      <Tabs defaultValue="fourseasons" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 bg-muted/50">
+          <TabsTrigger value="fourseasons">四時軍團</TabsTrigger>
           <TabsTrigger value="balance">平衡度</TabsTrigger>
           <TabsTrigger value="influence">影響分析</TabsTrigger>
           <TabsTrigger value="suggestions">建議</TabsTrigger>
         </TabsList>
+
+        {/* 四時軍團分析 */}
+        <TabsContent value="fourseasons" className="mt-6">
+          {fourSeasonsTeam ? (
+            <FourSeasonsCard fourSeasonsTeam={fourSeasonsTeam} />
+          ) : (
+            <Card className="p-6 text-center text-muted-foreground">
+              四時軍團分析資料載入中...
+            </Card>
+          )}
+        </TabsContent>
 
         {/* 平衡度分析 */}
         <TabsContent value="balance" className="space-y-6 mt-6">

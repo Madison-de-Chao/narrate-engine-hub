@@ -5,6 +5,7 @@ import { BaziInputForm } from "@/components/BaziInputForm";
 import { TraditionalBaziDisplay } from "@/components/TraditionalBaziDisplay";
 import { LegionCards } from "@/components/LegionCards";
 import { AnalysisCharts } from "@/components/AnalysisCharts";
+import { CalculationLogs } from "@/components/CalculationLogs";
 import { Button } from "@/components/ui/button";
 import { Download, Loader2, LogOut, UserRound } from "lucide-react";
 import { generatePDF } from "@/lib/pdfGenerator";
@@ -18,6 +19,7 @@ import logoChaoxuan from "@/assets/logo-chaoxuan.png";
 import { getFourSeasonsTeam } from "@/lib/fourSeasonsAnalyzer";
 
 import type { FourSeasonsTeam } from "@/lib/fourSeasonsAnalyzer";
+import type { CalculationLogs as CalculationLogsType } from "@/lib/baziCalculator";
 
 export interface BaziResult {
   name: string;
@@ -60,6 +62,7 @@ export interface BaziResult {
     yang: number;
   };
   fourSeasonsTeam?: FourSeasonsTeam;
+  calculationLogs?: CalculationLogsType;
   legionStories?: {
     year?: string;
     month?: string;
@@ -218,6 +221,7 @@ const Index = () => {
           wuxing: data.calculation.wuxingScores,
           yinyang: data.calculation.yinyangRatio,
           fourSeasonsTeam,
+          calculationLogs: data.calculation.calculationLogs,
           legionStories: {}
         };
         
@@ -373,6 +377,13 @@ const Index = () => {
               <section className="animate-fade-in">
                 <AnalysisCharts baziResult={baziResult} />
               </section>
+
+              {/* 區域5：計算日誌區 */}
+              {baziResult.calculationLogs && (
+                <section className="animate-fade-in">
+                  <CalculationLogs logs={baziResult.calculationLogs} />
+                </section>
+              )}
             </div>
           </>
         )}

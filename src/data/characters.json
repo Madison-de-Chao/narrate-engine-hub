@@ -1,0 +1,194 @@
+{
+  "gan_roles": {
+    "甲": {
+      "title": "森林將軍",
+      "description": "威武雄壯的森林守護者，擁有強大的生命力和領導能力",
+      "personality": "剛強、進取、領導",
+      "color": "#228B22",
+      "element": "木",
+      "yin_yang": "陽"
+    },
+    "乙": {
+      "title": "花草軍師",
+      "description": "溫柔而富有智慧的植物智者，善於策略與協調",
+      "personality": "柔順、智慧、協調",
+      "color": "#90EE90",
+      "element": "木",
+      "yin_yang": "陰"
+    },
+    "丙": {
+      "title": "烈日戰神",
+      "description": "熾熱如太陽的戰士，帶來光明與能量",
+      "personality": "熱情、光明、積極",
+      "color": "#FF4500",
+      "element": "火",
+      "yin_yang": "陽"
+    },
+    "丁": {
+      "title": "燭光法師",
+      "description": "溫暖的火焰魔法師，散發穩定而持久的光芒",
+      "personality": "溫和、持續、深邃",
+      "color": "#FF6347",
+      "element": "火",
+      "yin_yang": "陰"
+    },
+    "戊": {
+      "title": "山岳守護",
+      "description": "穩如泰山的大地守護者，提供堅實的防護",
+      "personality": "穩重、可靠、守護",
+      "color": "#8B4513",
+      "element": "土",
+      "yin_yang": "陽"
+    },
+    "己": {
+      "title": "大地母親",
+      "description": "慈愛的大地女神，孕育萬物的溫柔力量",
+      "personality": "慈愛、包容、養育",
+      "color": "#DEB887",
+      "element": "土",
+      "yin_yang": "陰"
+    },
+    "庚": {
+      "title": "鋼鐵騎士",
+      "description": "堅硬如鋼的戰士，擁有銳利的攻擊力",
+      "personality": "堅毅、鋒利、正義",
+      "color": "#C0C0C0",
+      "element": "金",
+      "yin_yang": "陽"
+    },
+    "辛": {
+      "title": "珠寶商人",
+      "description": "精緻優雅的金屬工藝師，追求完美與美感",
+      "personality": "精緻、優雅、追求美",
+      "color": "#FFD700",
+      "element": "金",
+      "yin_yang": "陰"
+    },
+    "壬": {
+      "title": "江河船長",
+      "description": "奔騰不息的水流領袖，智慧如海洋般深邃",
+      "personality": "流動、智慧、變化",
+      "color": "#4169E1",
+      "element": "水",
+      "yin_yang": "陽"
+    },
+    "癸": {
+      "title": "甘露天使",
+      "description": "溫柔如甘露的水靈，滋潤萬物的純淨力量",
+      "personality": "純淨、滋潤、細膩",
+      "color": "#87CEEB",
+      "element": "水",
+      "yin_yang": "陰"
+    }
+  },
+  "zhi_roles": {
+    "子": {
+      "title": "夜行刺客",
+      "description": "隱藏在夜色中的水系刺客，行動迅速而神秘",
+      "personality": "機敏、隱秘、果斷",
+      "color": "#191970",
+      "element": "水",
+      "time_period": "23:00-01:00",
+      "season": "冬季"
+    },
+    "丑": {
+      "title": "忠犬守衛",
+      "description": "忠誠可靠的土系守衛，默默守護重要事物",
+      "personality": "忠誠、可靠、耐心",
+      "color": "#8B4513",
+      "element": "土",
+      "time_period": "01:00-03:00",
+      "season": "冬季"
+    },
+    "寅": {
+      "title": "森林獵人",
+      "description": "勇猛的木系獵人，在森林中展現王者風範",
+      "personality": "勇猛、直率、威嚴",
+      "color": "#228B22",
+      "element": "木",
+      "time_period": "03:00-05:00",
+      "season": "春季"
+    },
+    "卯": {
+      "title": "春兔使者",
+      "description": "靈巧的木系使者，帶來春天的生機與希望",
+      "personality": "靈巧、溫和、有活力",
+      "color": "#32CD32",
+      "element": "木",
+      "time_period": "05:00-07:00",
+      "season": "春季"
+    },
+    "辰": {
+      "title": "龍族法師",
+      "description": "神秘的土系龍族，掌控變化的神奇力量",
+      "personality": "神秘、變化、威嚴",
+      "color": "#DAA520",
+      "element": "土",
+      "time_period": "07:00-09:00",
+      "season": "春季"
+    },
+    "巳": {
+      "title": "火蛇術士",
+      "description": "智慧的火系術士，擁有深邃的洞察力",
+      "personality": "智慧、深邃、變通",
+      "color": "#DC143C",
+      "element": "火",
+      "time_period": "09:00-11:00",
+      "season": "夏季"
+    },
+    "午": {
+      "title": "烈馬騎兵",
+      "description": "熱情的火系騎兵，奔馳如烈火般激情",
+      "personality": "熱情、奔放、積極",
+      "color": "#FF0000",
+      "element": "火",
+      "time_period": "11:00-13:00",
+      "season": "夏季"
+    },
+    "未": {
+      "title": "溫羊牧者",
+      "description": "溫和的土系牧者，以溫柔守護群體",
+      "personality": "溫和、包容、犧牲",
+      "color": "#F4A460",
+      "element": "土",
+      "time_period": "13:00-15:00",
+      "season": "夏季"
+    },
+    "申": {
+      "title": "靈猴戰士",
+      "description": "機靈的金系戰士，動作敏捷且富有創意",
+      "personality": "機靈、活潑、創新",
+      "color": "#FFD700",
+      "element": "金",
+      "time_period": "15:00-17:00",
+      "season": "秋季"
+    },
+    "酉": {
+      "title": "金雞衛士",
+      "description": "精準的金系衛士，時刻保持警覺與秩序",
+      "personality": "精準、警覺、有序",
+      "color": "#FFA500",
+      "element": "金",
+      "time_period": "17:00-19:00",
+      "season": "秋季"
+    },
+    "戌": {
+      "title": "戰犬統領",
+      "description": "忠誠的土系統領，守護家園的勇敢戰士",
+      "personality": "忠誠、勇敢、守護",
+      "color": "#CD853F",
+      "element": "土",
+      "time_period": "19:00-21:00",
+      "season": "秋季"
+    },
+    "亥": {
+      "title": "海豚智者",
+      "description": "智慧的水系智者，擁有深邃的理解力",
+      "personality": "智慧、純真、理解",
+      "color": "#4682B4",
+      "element": "水",
+      "time_period": "21:00-23:00",
+      "season": "冬季"
+    }
+  }
+}

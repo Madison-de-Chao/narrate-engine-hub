@@ -100,11 +100,11 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-4xl font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent mb-3">
+      <div className="text-center mb-8 p-6 rounded-xl bg-gradient-to-br from-orange-950 via-orange-900/80 to-slate-900 border-2 border-orange-500/40">
+        <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-300 via-amber-300 to-yellow-300 bg-clip-text text-transparent mb-3">
           四時軍團詳細故事
         </h2>
-        <p className="text-muted-foreground">每個軍團的完整命盤解釋</p>
+        <p className="text-orange-200/70">每個軍團的完整命盤解釋</p>
       </div>
 
       <div className="grid grid-cols-1 gap-8">

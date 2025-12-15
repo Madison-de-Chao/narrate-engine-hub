@@ -209,8 +209,8 @@ export const TenGodsAnalysis = ({ baziResult }: TenGodsAnalysisProps) => {
   ];
 
   return (
-    <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20 relative overflow-hidden">
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 opacity-50" />
+    <Card className="p-6 border-2 border-blue-500/40 bg-gradient-to-br from-blue-950 via-blue-900/80 to-slate-900 relative overflow-hidden">
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-500/10 via-transparent to-indigo-500/10 opacity-50" />
       
       <div className="relative z-10 space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-2">

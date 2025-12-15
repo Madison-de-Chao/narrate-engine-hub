@@ -38,40 +38,57 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
     50 + (jiShen * 8) - (xiongSha * 5) + (yinyang.yang > 40 && yinyang.yang < 60 ? 10 : 0)
   ));
 
+  // 根據日干獲取職業方向（與 PersonalityAnalysis 統一）
+  const getDayStemCareer = (stem: string): string => {
+    const careers: Record<string, string> = {
+      '甲': '管理、法律、公職',
+      '乙': '藝術設計、服務、教育',
+      '丙': '演藝傳媒、銷售、創意',
+      '丁': '研究、文字創作、心理',
+      '戊': '房地產、建築、金融',
+      '己': '服務業、農業、行政',
+      '庚': '軍警法律、金融、科技',
+      '辛': '珠寶設計、精品、財務',
+      '壬': '貿易物流、旅遊、策劃',
+      '癸': '研究學術、心理、藝術'
+    };
+    return careers[stem] || '多元發展';
+  };
+
   return (
-    <Card className="relative overflow-hidden border-2 border-primary/30 bg-gradient-to-br from-card via-card to-primary/5">
+    <Card className="relative overflow-hidden border-2 border-indigo-500/40 bg-gradient-to-br from-indigo-950 via-indigo-900/80 to-slate-900">
       {/* 裝飾性背景 */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-radial from-primary/10 to-transparent rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-radial from-secondary/10 to-transparent rounded-full blur-3xl" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-radial from-indigo-500/20 to-transparent rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-radial from-violet-500/20 to-transparent rounded-full blur-3xl" />
       
       <CardHeader className="relative pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-300 via-violet-300 to-purple-300 bg-clip-text text-transparent">
               命盤總覽
             </CardTitle>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-indigo-200/70 mt-1">
               {name} · {gender === 'male' ? '男' : '女'} · 日主 {pillars.day.stem}
             </p>
           </div>
           <div className="text-right">
-            <div className="text-5xl font-bold text-primary">{fortuneIndex}</div>
-            <p className="text-xs text-muted-foreground">綜合指數</p>
+            <div className="text-5xl font-bold text-indigo-300">{fortuneIndex}</div>
+            <p className="text-xs text-indigo-200/60">綜合指數</p>
           </div>
         </div>
       </CardHeader>
       
       <CardContent className="relative space-y-6">
         {/* 核心四柱展示 */}
-        <div className="grid grid-cols-4 gap-2 p-4 bg-muted/30 rounded-xl">
+        <div className="grid grid-cols-4 gap-2 p-4 bg-black/30 rounded-xl border border-indigo-500/20">
           {(['year', 'month', 'day', 'hour'] as const).map((pillar, idx) => {
             const labels = ['年柱', '月柱', '日柱', '時柱'];
             return (
               <div key={pillar} className="text-center">
-                <p className="text-xs text-muted-foreground mb-1">{labels[idx]}</p>
+                <p className="text-xs text-indigo-300/60 mb-1">{labels[idx]}</p>
                 <div className="text-2xl font-bold">
-                  <span className="text-primary">{pillars[pillar].stem}</span>
-                  <span className="text-secondary">{pillars[pillar].branch}</span>
+                  <span className="text-indigo-300">{pillars[pillar].stem}</span>
+                  <span className="text-violet-300">{pillars[pillar].branch}</span>
                 </div>
               </div>
             );
@@ -81,64 +98,64 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
         {/* 關鍵指標卡片 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {/* 日主強弱 */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-rose-900/50 to-rose-950/50 border border-rose-500/30">
             <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-4 h-4 text-primary" />
-              <span className="text-xs text-muted-foreground">日主強弱</span>
+              <Shield className="w-4 h-4 text-rose-400" />
+              <span className="text-xs text-rose-200/70">日主強弱</span>
             </div>
-            <p className="text-xl font-bold text-primary">{strengthLevel}</p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xl font-bold text-rose-300">{strengthLevel}</p>
+            <p className="text-xs text-rose-200/60 mt-1">
               {dayMasterElement === 'wood' ? '木' : dayMasterElement === 'fire' ? '火' : 
                dayMasterElement === 'earth' ? '土' : dayMasterElement === 'metal' ? '金' : '水'}命
             </p>
           </div>
 
           {/* 陰陽平衡 */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-secondary/20 to-secondary/5 border border-secondary/30">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-900/50 to-cyan-950/50 border border-cyan-500/30">
             <div className="flex items-center gap-2 mb-2">
-              <Star className="w-4 h-4 text-secondary" />
-              <span className="text-xs text-muted-foreground">陰陽平衡</span>
+              <Star className="w-4 h-4 text-cyan-400" />
+              <span className="text-xs text-cyan-200/70">陰陽平衡</span>
             </div>
             <div className="flex items-center gap-2">
-              <p className="text-xl font-bold text-secondary">
+              <p className="text-xl font-bold text-cyan-300">
                 {Math.abs(yinyang.yang - yinyang.yin) < 20 ? '平衡' : 
                  yinyang.yang > yinyang.yin ? '偏陽' : '偏陰'}
               </p>
               {Math.abs(yinyang.yang - yinyang.yin) < 20 ? 
-                <Minus className="w-4 h-4 text-green-500" /> :
+                <Minus className="w-4 h-4 text-green-400" /> :
                 yinyang.yang > yinyang.yin ? 
-                <ArrowUpRight className="w-4 h-4 text-orange-500" /> :
-                <ArrowDownRight className="w-4 h-4 text-blue-500" />
+                <ArrowUpRight className="w-4 h-4 text-orange-400" /> :
+                <ArrowDownRight className="w-4 h-4 text-blue-400" />
               }
             </div>
-            <p className="text-xs text-muted-foreground mt-1">{yinyang.yang}% / {yinyang.yin}%</p>
+            <p className="text-xs text-cyan-200/60 mt-1">{yinyang.yang}% / {yinyang.yin}%</p>
           </div>
 
           {/* 五行特點 */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/30">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-amber-900/50 to-amber-950/50 border border-amber-500/30">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-accent" />
-              <span className="text-xs text-muted-foreground">五行特點</span>
+              <TrendingUp className="w-4 h-4 text-amber-400" />
+              <span className="text-xs text-amber-200/70">五行特點</span>
             </div>
-            <p className="text-sm font-bold text-accent">
+            <p className="text-sm font-bold text-amber-300">
               {elementNames[maxElement.name]}旺 · {elementNames[minElement.name]}弱
             </p>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-amber-200/60 mt-1">
               喜用：{getPreferredElement(dayMasterElement, strengthLevel)}
             </p>
           </div>
 
           {/* 神煞統計 */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-900/50 to-emerald-950/50 border border-emerald-500/30">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-emerald-500" />
-              <span className="text-xs text-muted-foreground">神煞統計</span>
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs text-emerald-200/70">神煞統計</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-lg font-bold text-emerald-500">{jiShen} 吉</span>
-              <span className="text-lg font-bold text-rose-500">{xiongSha} 凶</span>
+              <span className="text-lg font-bold text-emerald-400">{jiShen} 吉</span>
+              <span className="text-lg font-bold text-rose-400">{xiongSha} 凶</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">共 {shensha.length} 個神煞</p>
+            <p className="text-xs text-emerald-200/60 mt-1">共 {shensha.length} 個神煞</p>
           </div>
         </div>
 
@@ -148,7 +165,7 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
           <QuickInsight 
             icon={<Briefcase className="w-4 h-4" />}
             title="事業方向"
-            content={getCareerSuggestion(maxElement.name, strengthLevel)}
+            content={getDayStemCareer(pillars.day.stem)}
             color="primary"
           />
           <QuickInsight 
@@ -179,18 +196,18 @@ const QuickInsight = ({
   color: 'primary' | 'secondary' | 'accent' 
 }) => {
   const colorClasses = {
-    primary: 'border-primary/30 text-primary',
-    secondary: 'border-secondary/30 text-secondary',
-    accent: 'border-accent/30 text-accent'
+    primary: 'border-violet-500/30 text-violet-300 bg-violet-900/30',
+    secondary: 'border-pink-500/30 text-pink-300 bg-pink-900/30',
+    accent: 'border-sky-500/30 text-sky-300 bg-sky-900/30'
   };
   
   return (
-    <div className={`p-3 rounded-lg border ${colorClasses[color]} bg-card/50`}>
+    <div className={`p-3 rounded-lg border ${colorClasses[color]}`}>
       <div className="flex items-center gap-2 mb-1">
         {icon}
         <span className="text-xs font-medium">{title}</span>
       </div>
-      <p className="text-sm text-foreground">{content}</p>
+      <p className="text-sm text-stone-200">{content}</p>
     </div>
   );
 };
@@ -238,17 +255,6 @@ function getPreferredElement(dayElement: string, strength: string): string {
     };
     return supportingElements[dayElement] || '平衡';
   }
-}
-
-function getCareerSuggestion(strongElement: string, strength: string): string {
-  const suggestions: Record<string, string> = {
-    'wood': '教育、出版、設計創意',
-    'fire': '媒體、演藝、公關行銷',
-    'earth': '房地產、農業、管理',
-    'metal': '金融、法律、科技製造',
-    'water': '物流、旅遊、貿易商業'
-  };
-  return suggestions[strongElement] || '多元發展';
 }
 
 function getRelationshipTrait(dayStem: string): string {

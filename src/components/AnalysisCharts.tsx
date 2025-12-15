@@ -178,9 +178,9 @@ export const AnalysisCharts = ({ baziResult }: AnalysisChartsProps) => {
   const influence = generateInfluenceAnalysis(wuxing, dayStem, yinyang);
 
   return (
-    <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20 card-glow">
-      <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-        <Sparkles className="w-6 h-6 text-primary" />
+    <Card className="p-6 border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-950 via-emerald-900/80 to-slate-900">
+      <h2 className="text-2xl font-bold text-emerald-100 mb-6 flex items-center gap-2">
+        <Sparkles className="w-6 h-6 text-emerald-400" />
         五行詳細分析
       </h2>
 

@@ -15,7 +15,7 @@ import { TenGodsAnalysis } from "@/components/TenGodsAnalysis";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen } from "lucide-react";
-import { generatePDF } from "@/lib/pdfGenerator";
+import { generatePDF, type CoverPageData } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
 import { useGuestMode } from "@/hooks/useGuestMode";
@@ -314,7 +314,26 @@ const Index = () => {
     setIsDownloading(true);
     try {
       const fileName = `${baziResult.name}_八字命盤報告_${new Date().toLocaleDateString("zh-TW").replace(/\//g, "")}.pdf`;
-      await generatePDF("bazi-report-content", fileName);
+      
+      // 準備封面資料
+      const birthDateStr = baziResult.birthDate instanceof Date 
+        ? baziResult.birthDate.toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric" })
+        : String(baziResult.birthDate);
+      
+      const coverData: CoverPageData = {
+        name: baziResult.name,
+        birthDate: birthDateStr,
+        birthTime: baziResult.birthDate instanceof Date 
+          ? baziResult.birthDate.toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })
+          : "",
+        gender: baziResult.gender,
+        yearPillar: baziResult.pillars.year,
+        monthPillar: baziResult.pillars.month,
+        dayPillar: baziResult.pillars.day,
+        hourPillar: baziResult.pillars.hour,
+      };
+      
+      await generatePDF("bazi-report-content", fileName, coverData);
       toast.success("報告下載成功！");
     } catch (error) {
       console.error("下載報告失敗:", error);

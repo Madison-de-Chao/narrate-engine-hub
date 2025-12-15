@@ -244,6 +244,31 @@ export class ShenshaRuleEngine {
               targetBranches = Array.isArray(condValue) ? condValue : [condValue];
             }
           }
+        } else if (rule.anchorType === 'specific') {
+          // 魁罡等特定日柱組合判斷
+          const dayPillar = `${input.dayStem}${input.dayBranch}`;
+          anchorBasis = `日柱 ${dayPillar}`;
+          if (Array.isArray(rule.conditions) && rule.conditions.includes(dayPillar)) {
+            // 直接匹配成功，返回結果
+            return {
+              id: rule.id,
+              name: rule.name,
+              category: rule.category,
+              rarity: rule.rarity,
+              priority: rule.priority,
+              effect: rule.effect,
+              modernMeaning: rule.modernMeaning,
+              buff: rule.buff,
+              debuff: rule.debuff,
+              evidence: {
+                anchorBasis,
+                anchorValue: dayPillar,
+                matchedBranch: input.dayBranch,
+                matchedPillar: '日柱',
+                whyMatched: `日柱 ${dayPillar} 為特定組合（${(rule.conditions as string[]).join('、')}之一）`
+              }
+            };
+          }
         }
         break;
 

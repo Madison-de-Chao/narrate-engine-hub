@@ -697,14 +697,31 @@ serve(async (req) => {
     const lichunYear = birth.getUTCFullYear();
     const lichun = new Date(Date.UTC(lichunYear, 1, 4, 5, 30)); // 保留變數以維持兼容，不再用於計算
 
+    // 初始化計算日誌
+    const calculationLogs = {
+      year_log: [] as string[],
+      month_log: [] as string[],
+      day_log: [] as string[],
+      hour_log: [] as string[],
+      solar_terms_log: [] as string[],
+      five_elements_log: [] as string[]
+    };
+
     // 计算四柱
     console.log('Birth UTC:', birthUtc.toISOString(), 'tzOffset:', tzOffset);
     const yearPillar = calculateYearPillarAccurate(birthUtc, tzOffset, solarTermsYears);
+    calculationLogs.year_log.push(`年柱計算: ${birthLocal.getUTCFullYear()}年 → ${yearPillar.stem}${yearPillar.branch}`);
     console.log('Year Pillar:', yearPillar);
+    
     const monthPillar = calculateMonthPillarAccurate(yearPillar.stem, birthUtc, tzOffset, solarTermsYears);
+    calculationLogs.month_log.push(`月柱計算: 五虎遁 年干${yearPillar.stem} + 月支${monthPillar.branch} → ${monthPillar.stem}${monthPillar.branch}`);
     console.log('Month Pillar:', monthPillar);
+    
     const dayPillar = calculateDayPillar(birthLocal);
+    calculationLogs.day_log.push(`日柱計算: 基準日1985/09/22甲子 → ${dayPillar.stem}${dayPillar.branch}`);
+    
     const hourPillar = calculateHourPillar(dayPillar.stem, hour);
+    calculationLogs.hour_log.push(`時柱計算: 五鼠遁 日干${dayPillar.stem} + ${hour}時 → ${hourPillar.stem}${hourPillar.branch}`);
 
     const pillars = {
       year: yearPillar,
@@ -808,7 +825,8 @@ serve(async (req) => {
           wuxingScores,
           yinyangRatio,
           tenGods,
-          shensha
+          shensha,
+          calculationLogs
         },
         isGuest: !user
       }),

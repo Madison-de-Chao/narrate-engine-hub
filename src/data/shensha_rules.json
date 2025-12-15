@@ -200,21 +200,36 @@
       "anchor": "dayStem",
       "conditions": {
         "甲": ["卯"],
-        "乙": ["辰"],
+        "乙": ["寅"],
         "丙": ["午"],
-        "丁": ["未"],
+        "丁": ["巳"],
         "戊": ["午"],
-        "己": ["未"],
+        "己": ["巳"],
         "庚": ["酉"],
-        "辛": ["戌"],
+        "辛": ["申"],
         "壬": ["子"],
-        "癸": ["丑"]
+        "癸": ["亥"]
       },
       "matchTarget": "anyBranch",
       "effect": "刑傷破敗，意外災難，性格剛烈",
       "modernMeaning": "容易發生意外，性格急躁，需要控制情緒",
       "buff": "剛毅果敢",
       "debuff": "衝動易傷"
+    },
+    {
+      "id": "kuigang",
+      "name": "魁罡",
+      "category": "特殊",
+      "rarity": "SSR",
+      "priority": 98,
+      "anchor": "dayPillar",
+      "anchorType": "specific",
+      "conditions": ["庚辰", "庚戌", "壬辰", "戊戌"],
+      "matchTarget": "dayPillar",
+      "effect": "聰明剛毅，具有領導才能和威嚴，但需防剛愎自用",
+      "modernMeaning": "領導力強，決斷果敢，但人際需要柔和",
+      "buff": "帝王之氣",
+      "debuff": "孤高易傷"
     },
     {
       "id": "jiesha",

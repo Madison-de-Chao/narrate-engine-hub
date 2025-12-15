@@ -1,0 +1,30 @@
+{
+  "name": "天羅地網",
+  "enabled": true,
+  "priority": 5,
+  "category": "凶煞",
+  "rarity": "R",
+  "effect": "命帶天羅地網，行事多阻礙",
+  "modernMeaning": "做事易遇阻礙，需耐心等待時機",
+  "buff": "隱忍蓄力",
+  "debuff": "處處受限",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "軍團版-辰戌為天羅地網",
+      "combo": [
+        {
+          "anchor": "anyBranch",
+          "targets": ["yearBranch", "monthBranch", "dayBranch", "hourBranch"],
+          "values": ["辰"]
+        },
+        {
+          "anchor": "anyBranch",
+          "targets": ["yearBranch", "monthBranch", "dayBranch", "hourBranch"],
+          "values": ["戌"]
+        }
+      ],
+      "notes": "四柱中同時見辰和戌"
+    }
+  ]
+}

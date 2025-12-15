@@ -1,0 +1,40 @@
+{
+  "name": "文華蓋世",
+  "enabled": true,
+  "priority": 7,
+  "category": "吉神",
+  "rarity": "SR",
+  "effect": "文昌與華蓋同現，才華橫溢",
+  "modernMeaning": "學術天賦極高，適合研究、寫作、藝術領域",
+  "buff": "才思泉湧",
+  "debuff": "孤芳自賞",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "軍團版-日干見文昌+年支見華蓋",
+      "combo": [
+        {
+          "anchor": "dayStem",
+          "table": {
+            "甲": ["巳"],
+            "乙": ["午"],
+            "丙": ["申"],
+            "丁": ["酉"],
+            "戊": ["申"],
+            "己": ["酉"],
+            "庚": ["亥"],
+            "辛": ["子"],
+            "壬": ["寅"],
+            "癸": ["卯"]
+          }
+        },
+        {
+          "anchor": "anyContains",
+          "targets": ["yearBranch", "monthBranch", "dayBranch", "hourBranch"],
+          "minMatch": 1
+        }
+      ],
+      "notes": "日干取文昌位見於四柱"
+    }
+  ]
+}

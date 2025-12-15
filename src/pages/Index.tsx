@@ -10,7 +10,8 @@ import { ReportSummary } from "@/components/ReportSummary";
 import { ReportNavigation } from "@/components/ReportNavigation";
 import { ShenshaStats } from "@/components/ShenshaStats";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, LogOut, UserRound, Sparkles } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen } from "lucide-react";
 import { generatePDF } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
@@ -85,6 +86,7 @@ const Index = () => {
   const [isCalculating, setIsCalculating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [activeSection, setActiveSection] = useState('summary');
+  const [shenshaRuleset, setShenshaRuleset] = useState<'trad' | 'legion'>('trad');
 
   // Section refs for scrolling
   const sectionRefs = {
@@ -226,7 +228,7 @@ const Index = () => {
         const fourSeasonsTeam = getFourSeasonsTeam(data.calculation.pillars);
         
         // 使用模組化神煞引擎計算神煞（含完整證據鏈）
-        const shenshaEngine = new ModularShenshaEngine('trad');
+        const shenshaEngine = new ModularShenshaEngine(shenshaRuleset);
         const shenshaMatches = shenshaEngine.calculate({
           dayStem: data.calculation.pillars.day.stem,
           yearBranch: data.calculation.pillars.year.branch,
@@ -374,7 +376,34 @@ const Index = () => {
         )}
         
         {/* 區域1：資料輸入區 */}
-        <section className="animate-fade-in">
+        <section className="animate-fade-in space-y-4">
+          {/* 神煞規則集切換 */}
+          <div className="flex items-center justify-end gap-3">
+            <span className="text-sm text-muted-foreground">神煞規則集：</span>
+            <ToggleGroup
+              type="single"
+              value={shenshaRuleset}
+              onValueChange={(value) => value && setShenshaRuleset(value as 'trad' | 'legion')}
+              className="bg-muted/50 rounded-lg p-1"
+            >
+              <ToggleGroupItem
+                value="trad"
+                aria-label="傳統版"
+                className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground px-4"
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                傳統版 (20)
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="legion"
+                aria-label="軍團版"
+                className="data-[state=on]:bg-accent data-[state=on]:text-accent-foreground px-4"
+              >
+                <Swords className="h-4 w-4 mr-2" />
+                軍團版 (34)
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
           <BaziInputForm onCalculate={handleCalculate} isCalculating={isCalculating} userId={user?.id} />
         </section>
 

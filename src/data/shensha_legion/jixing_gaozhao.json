@@ -1,0 +1,42 @@
+{
+  "name": "吉星高照",
+  "enabled": true,
+  "priority": 8,
+  "category": "吉神",
+  "rarity": "SSR",
+  "effect": "天德月德同現，吉慶滿門",
+  "modernMeaning": "福澤深厚，逢凶化吉，一生多有好運",
+  "buff": "天地護佑",
+  "debuff": "安逸懈怠",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "軍團版-月支同時見天德月德",
+      "combo": [
+        {
+          "anchor": "monthBranch",
+          "table": {
+            "寅": ["丁"],
+            "卯": ["申"],
+            "辰": ["壬"],
+            "巳": ["辛"],
+            "午": ["甲"],
+            "未": ["癸"],
+            "申": ["丁"],
+            "酉": ["寅"],
+            "戌": ["丙"],
+            "亥": ["乙"],
+            "子": ["巳"],
+            "丑": ["庚"]
+          }
+        },
+        {
+          "anchor": "anyContains",
+          "targets": ["yearStem", "dayStem", "hourStem"],
+          "minMatch": 1
+        }
+      ],
+      "notes": "月支對應天德干，且四柱天干中見到"
+    }
+  ]
+}

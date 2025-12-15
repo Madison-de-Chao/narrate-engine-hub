@@ -1,0 +1,40 @@
+{
+  "name": "雙貴人",
+  "enabled": true,
+  "priority": 9,
+  "category": "吉神",
+  "rarity": "SSR",
+  "effect": "天乙貴人與太極貴人同現，貴人運極強",
+  "modernMeaning": "人脈資源極佳，遇困難必有貴人相助",
+  "buff": "雙重庇護",
+  "debuff": "過度依賴",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "軍團版-日干同時查兩貴人表",
+      "combo": [
+        {
+          "anchor": "dayStem",
+          "table": {
+            "甲": ["丑", "未"],
+            "乙": ["子", "申"],
+            "丙": ["亥", "酉"],
+            "丁": ["亥", "酉"],
+            "戊": ["丑", "未"],
+            "己": ["子", "申"],
+            "庚": ["丑", "未"],
+            "辛": ["寅", "午"],
+            "壬": ["卯", "巳"],
+            "癸": ["卯", "巳"]
+          }
+        },
+        {
+          "anchor": "multiMatch",
+          "targets": ["yearBranch", "monthBranch", "dayBranch", "hourBranch"],
+          "minMatch": 2
+        }
+      ],
+      "notes": "日干取天乙貴人位，四柱中至少兩柱見到貴人位"
+    }
+  ]
+}

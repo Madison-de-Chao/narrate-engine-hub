@@ -1,0 +1,42 @@
+{
+  "name": "孤寡雙煞",
+  "enabled": true,
+  "priority": 6,
+  "category": "凶煞",
+  "rarity": "SR",
+  "effect": "孤辰寡宿同現，感情孤獨，晚婚之象",
+  "modernMeaning": "獨立性強，但感情運較弱，需主動爭取",
+  "buff": "獨立自主",
+  "debuff": "形單影隻",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "軍團版-年支見孤辰+寡宿",
+      "combo": [
+        {
+          "anchor": "yearBranch",
+          "table": {
+            "子": ["寅", "戌"],
+            "丑": ["寅", "戌"],
+            "寅": ["巳", "丑"],
+            "卯": ["巳", "丑"],
+            "辰": ["巳", "丑"],
+            "巳": ["申", "辰"],
+            "午": ["申", "辰"],
+            "未": ["申", "辰"],
+            "申": ["亥", "未"],
+            "酉": ["亥", "未"],
+            "戌": ["亥", "未"],
+            "亥": ["寅", "戌"]
+          }
+        },
+        {
+          "anchor": "multiMatch",
+          "targets": ["monthBranch", "dayBranch", "hourBranch"],
+          "minMatch": 2
+        }
+      ],
+      "notes": "年支查孤辰寡宿位，且其他柱至少見兩個"
+    }
+  ]
+}

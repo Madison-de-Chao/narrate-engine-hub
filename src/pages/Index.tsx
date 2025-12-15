@@ -9,6 +9,8 @@ import { CalculationLogs } from "@/components/CalculationLogs";
 import { ReportSummary } from "@/components/ReportSummary";
 import { ReportNavigation } from "@/components/ReportNavigation";
 import { ShenshaStats } from "@/components/ShenshaStats";
+import { NayinAnalysis } from "@/components/NayinAnalysis";
+import { PersonalityAnalysis } from "@/components/PersonalityAnalysis";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen } from "lucide-react";
@@ -92,6 +94,8 @@ const Index = () => {
   const sectionRefs = {
     summary: useRef<HTMLDivElement>(null),
     bazi: useRef<HTMLDivElement>(null),
+    shensha: useRef<HTMLDivElement>(null),
+    personality: useRef<HTMLDivElement>(null),
     legion: useRef<HTMLDivElement>(null),
     analysis: useRef<HTMLDivElement>(null),
     logs: useRef<HTMLDivElement>(null),
@@ -446,17 +450,27 @@ const Index = () => {
                 <TraditionalBaziDisplay baziResult={baziResult} />
               </section>
 
+              {/* 神煞統計分析區 */}
+              {baziResult.shensha && baziResult.shensha.length > 0 && (
+                <section ref={sectionRefs.shensha} className="animate-fade-in scroll-mt-36">
+                  <ShenshaStats shenshaList={baziResult.shensha.filter((s): s is ShenshaMatch => typeof s === 'object' && 'evidence' in s)} />
+                </section>
+              )}
+
+              {/* 性格深度分析區 */}
+              <section ref={sectionRefs.personality} className="animate-fade-in scroll-mt-36">
+                <PersonalityAnalysis baziResult={baziResult} />
+              </section>
+
+              {/* 納音五行分析區 */}
+              <section className="animate-fade-in scroll-mt-36">
+                <NayinAnalysis nayin={baziResult.nayin} />
+              </section>
+
               {/* 四時軍團分析區 */}
               <section ref={sectionRefs.legion} className="animate-fade-in scroll-mt-36">
                 <LegionCards baziResult={baziResult} />
               </section>
-
-              {/* 神煞統計分析區 */}
-              {baziResult.shensha && baziResult.shensha.length > 0 && (
-                <section className="animate-fade-in scroll-mt-36">
-                  <ShenshaStats shenshaList={baziResult.shensha.filter((s): s is ShenshaMatch => typeof s === 'object' && 'evidence' in s)} />
-                </section>
-              )}
 
               {/* 詳細分析區 */}
               <section ref={sectionRefs.analysis} className="animate-fade-in scroll-mt-36">

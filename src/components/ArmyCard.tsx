@@ -25,12 +25,16 @@ interface ArmyCardProps {
   character: string;
   role: CommanderRole | AdvisorRole;
   legionColor: string;
+  characterColor?: string;
 }
 
-export const ArmyCard = ({ type, character, role, legionColor }: ArmyCardProps) => {
+export const ArmyCard = ({ type, character, role, legionColor, characterColor }: ArmyCardProps) => {
   const isCommander = type === 'commander';
   const commanderRole = role as CommanderRole;
   const advisorRole = role as AdvisorRole;
+
+  // 使用角色專屬顏色或預設
+  const accentColor = characterColor || (isCommander ? '#8B5CF6' : '#22C55E');
 
   return (
     <div className={`
@@ -40,22 +44,30 @@ export const ArmyCard = ({ type, character, role, legionColor }: ArmyCardProps) 
       transition-all duration-500
       hover:shadow-xl hover:border-primary/30
       group
-    `}>
+    `}
+    style={{
+      boxShadow: `inset 0 0 60px ${accentColor}15`
+    }}
+    >
       {/* 背景裝飾 */}
       <div className={`absolute inset-0 opacity-10 ${legionColor}`} />
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-radial from-primary/20 to-transparent rounded-full blur-2xl" />
+      <div 
+        className="absolute top-0 right-0 w-32 h-32 rounded-full blur-2xl" 
+        style={{ background: `radial-gradient(circle, ${accentColor}30 0%, transparent 70%)` }}
+      />
       
       {/* 卡片頂部標籤 */}
-      <div className={`
-        px-4 py-2 
-        ${isCommander ? 'bg-gradient-to-r from-primary/30 to-primary/10' : 'bg-gradient-to-r from-secondary/30 to-secondary/10'}
-        border-b border-border/30
-      `}>
+      <div 
+        className="px-4 py-2 border-b border-border/30"
+        style={{ 
+          background: `linear-gradient(to right, ${accentColor}30, ${accentColor}10)` 
+        }}
+      >
         <div className="flex items-center gap-2">
           {isCommander ? (
-            <Crown className="w-5 h-5 text-primary" />
+            <Crown className="w-5 h-5" style={{ color: accentColor }} />
           ) : (
-            <Shield className="w-5 h-5 text-secondary" />
+            <Shield className="w-5 h-5" style={{ color: accentColor }} />
           )}
           <span className="text-sm font-medium">
             {isCommander ? '天干 · 指揮官' : '地支 · 軍師'}
@@ -68,11 +80,18 @@ export const ArmyCard = ({ type, character, role, legionColor }: ArmyCardProps) 
         {/* 角色名稱 */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <span className="text-5xl font-bold bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <span 
+              className="text-5xl font-bold"
+              style={{ 
+                background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}
+            >
               {character}
             </span>
             <div>
-              <p className={`text-lg font-bold ${isCommander ? 'text-primary' : 'text-secondary'}`}>
+              <p className="text-lg font-bold" style={{ color: accentColor }}>
                 {isCommander ? commanderRole.role : advisorRole.role}
               </p>
             </div>

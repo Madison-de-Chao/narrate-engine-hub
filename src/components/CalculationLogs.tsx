@@ -93,7 +93,7 @@ export function CalculationLogs({ logs, className = "" }: CalculationLogsProps) 
   }
 
   return (
-    <Card className={`bg-card/50 backdrop-blur-sm border-border/50 ${className}`}>
+    <Card className={`border-2 border-slate-500/40 bg-gradient-to-br from-slate-950 via-slate-900/80 to-zinc-900 ${className}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">

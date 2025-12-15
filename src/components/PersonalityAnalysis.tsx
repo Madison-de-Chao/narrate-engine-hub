@@ -190,20 +190,20 @@ export const PersonalityAnalysis = ({ baziResult }: PersonalityAnalysisProps) =>
     : '陰陽平衡，個性圓融、適應力強';
 
   return (
-    <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20 relative overflow-hidden">
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-violet-500/5 via-transparent to-cyan-500/5 opacity-50" />
+    <Card className="p-6 border-2 border-teal-500/40 bg-gradient-to-br from-teal-950 via-teal-900/80 to-slate-900 relative overflow-hidden">
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-teal-500/10 via-transparent to-emerald-500/10 opacity-50" />
       
       <div className="relative z-10 space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Brain className="w-5 h-5 text-violet-400" />
+          <h3 className="text-xl font-bold text-teal-100 flex items-center gap-2">
+            <Brain className="w-5 h-5 text-teal-400" />
             性格深度分析
           </h3>
           <div className="flex gap-2">
-            <Badge variant="outline" className="text-primary">
+            <Badge variant="outline" className="text-teal-300 border-teal-400/50">
               {traits.element}
             </Badge>
-            <Badge variant="secondary">
+            <Badge className="bg-teal-900/50 text-teal-200 border border-teal-500/30">
               {traits.nature}
             </Badge>
           </div>
@@ -211,37 +211,37 @@ export const PersonalityAnalysis = ({ baziResult }: PersonalityAnalysisProps) =>
 
         {/* 核心性格 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 border border-violet-500/30">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-violet-900/50 to-violet-950/50 border border-violet-500/30">
             <div className="flex items-center gap-2 mb-3">
               <Target className="w-4 h-4 text-violet-400" />
-              <span className="font-semibold text-foreground">核心特質</span>
+              <span className="font-semibold text-violet-200">核心特質</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {traits.personality.map((trait, idx) => (
-                <Badge key={idx} variant="outline" className="text-violet-400 border-violet-400/30">
+                <Badge key={idx} variant="outline" className="text-violet-300 border-violet-400/40">
                   {trait}
                 </Badge>
               ))}
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/30">
+          <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-900/50 to-cyan-950/50 border border-cyan-500/30">
             <div className="flex items-center gap-2 mb-3">
               <Scale className="w-4 h-4 text-cyan-400" />
-              <span className="font-semibold text-foreground">陰陽屬性</span>
+              <span className="font-semibold text-cyan-200">陰陽屬性</span>
             </div>
-            <p className="text-sm text-muted-foreground">{yinyangTrait}</p>
+            <p className="text-sm text-stone-300">{yinyangTrait}</p>
           </div>
         </div>
 
         {/* 優勢與劣勢 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+          <div className="p-4 rounded-xl bg-emerald-900/40 border border-emerald-500/30">
             <div className="flex items-center gap-2 mb-3">
               <Zap className="w-4 h-4 text-emerald-400" />
-              <span className="font-semibold text-emerald-400">優勢特質</span>
+              <span className="font-semibold text-emerald-300">優勢特質</span>
             </div>
-            <ul className="text-sm text-muted-foreground space-y-1">
+            <ul className="text-sm text-stone-300 space-y-1">
               {traits.strengths.map((s, idx) => (
                 <li key={idx} className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -251,12 +251,12 @@ export const PersonalityAnalysis = ({ baziResult }: PersonalityAnalysisProps) =>
             </ul>
           </div>
 
-          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30">
+          <div className="p-4 rounded-xl bg-rose-900/40 border border-rose-500/30">
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle className="w-4 h-4 text-rose-400" />
-              <span className="font-semibold text-rose-400">需注意</span>
+              <span className="font-semibold text-rose-300">需注意</span>
             </div>
-            <ul className="text-sm text-muted-foreground space-y-1">
+            <ul className="text-sm text-stone-300 space-y-1">
               {traits.weaknesses.map((w, idx) => (
                 <li key={idx} className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
@@ -269,55 +269,55 @@ export const PersonalityAnalysis = ({ baziResult }: PersonalityAnalysisProps) =>
 
         {/* 事業與感情 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
+          <div className="p-4 rounded-xl bg-amber-900/40 border border-amber-500/30">
             <div className="flex items-center gap-2 mb-3">
               <Briefcase className="w-4 h-4 text-amber-400" />
-              <span className="font-semibold text-foreground">適合領域</span>
+              <span className="font-semibold text-amber-300">適合領域</span>
             </div>
             <div className="flex flex-wrap gap-2">
               {traits.career.map((c, idx) => (
-                <Badge key={idx} variant="secondary" className="text-xs">
+                <Badge key={idx} className="text-xs bg-amber-900/50 text-amber-200 border border-amber-500/30">
                   {c}
                 </Badge>
               ))}
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
+          <div className="p-4 rounded-xl bg-pink-900/40 border border-pink-500/30">
             <div className="flex items-center gap-2 mb-3">
               <Heart className="w-4 h-4 text-pink-400" />
-              <span className="font-semibold text-foreground">感情模式</span>
+              <span className="font-semibold text-pink-300">感情模式</span>
             </div>
-            <p className="text-sm text-muted-foreground">{traits.relationship}</p>
+            <p className="text-sm text-stone-300">{traits.relationship}</p>
           </div>
         </div>
 
         {/* 發展建議 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl bg-primary/10 border border-primary/30">
+          <div className="p-4 rounded-xl bg-sky-900/40 border border-sky-500/30">
             <div className="flex items-center gap-2 mb-3">
-              <Lightbulb className="w-4 h-4 text-primary" />
-              <span className="font-semibold text-primary">發展建議</span>
+              <Lightbulb className="w-4 h-4 text-sky-400" />
+              <span className="font-semibold text-sky-300">發展建議</span>
             </div>
-            <ul className="text-sm text-muted-foreground space-y-1">
+            <ul className="text-sm text-stone-300 space-y-1">
               {suggestions.develop.map((d, idx) => (
                 <li key={idx} className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5" />
                   {d}
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="p-4 rounded-xl bg-accent/10 border border-accent/30">
+          <div className="p-4 rounded-xl bg-orange-900/40 border border-orange-500/30">
             <div className="flex items-center gap-2 mb-3">
-              <Compass className="w-4 h-4 text-accent" />
-              <span className="font-semibold text-accent">健康提醒</span>
+              <Compass className="w-4 h-4 text-orange-400" />
+              <span className="font-semibold text-orange-300">健康提醒</span>
             </div>
-            <ul className="text-sm text-muted-foreground space-y-1">
+            <ul className="text-sm text-stone-300 space-y-1">
               {suggestions.caution.map((c, idx) => (
                 <li key={idx} className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent mt-1.5" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400 mt-1.5" />
                   {c}
                 </li>
               ))}

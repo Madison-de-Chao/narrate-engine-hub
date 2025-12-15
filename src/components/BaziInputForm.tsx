@@ -4,9 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Loader2, History } from "lucide-react";
+import { CalendarIcon, Loader2, History, User, ChevronDown } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const GUEST_STORAGE_KEY = 'bazi_guest_form_data';
 
 // 時辰選項（子時到亥時）
 const HOUR_OPTIONS = [
@@ -31,6 +39,17 @@ const BRANCH_TO_HOUR: Record<string, string> = {
   '申': '15', '酉': '17', '戌': '19', '亥': '21'
 };
 
+interface HistoryRecord {
+  id: string;
+  name: string;
+  birth_date: string;
+  birth_time: string;
+  gender: string;
+  location: string | null;
+  hour_branch: string;
+  created_at: string;
+}
+
 interface BaziInputFormProps {
   onCalculate: (formData: Record<string, unknown>) => void;
   isCalculating: boolean;
@@ -47,52 +66,94 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
     gender: "",
     location: "",
   });
-  const [hasHistory, setHasHistory] = useState(false);
+  const [historyRecords, setHistoryRecords] = useState<HistoryRecord[]>([]);
+  const [dataSource, setDataSource] = useState<'none' | 'history' | 'guest'>('none');
 
-  // 自動載入上次計算記錄
+  // 從 localStorage 載入訪客資料
+  const loadGuestData = () => {
+    try {
+      const saved = localStorage.getItem(GUEST_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setFormData(parsed);
+        setDataSource('guest');
+        return true;
+      }
+    } catch (err) {
+      console.error('載入訪客資料失敗:', err);
+    }
+    return false;
+  };
+
+  // 儲存訪客資料到 localStorage
+  const saveGuestData = (data: typeof formData) => {
+    try {
+      localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(data));
+    } catch (err) {
+      console.error('儲存訪客資料失敗:', err);
+    }
+  };
+
+  // 載入會員歷史記錄
   useEffect(() => {
-    const loadLastCalculation = async () => {
-      if (!userId) return;
+    const loadHistory = async () => {
+      if (!userId) {
+        // 訪客模式：從 localStorage 載入
+        loadGuestData();
+        return;
+      }
 
       try {
         const { data, error } = await supabase
           .from('bazi_calculations')
-          .select('name, birth_date, birth_time, gender, location, hour_branch')
+          .select('id, name, birth_date, birth_time, gender, location, hour_branch, created_at')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
+          .limit(10);
 
-        if (error || !data) return;
-
-        // 解析日期
-        const birthDate = new Date(data.birth_date);
-        // 從 birth_time 或 hour_branch 取得小時
-        let hour = '';
-        if (data.birth_time) {
-          const timeParts = data.birth_time.split(':');
-          hour = timeParts[0];
-        } else if (data.hour_branch) {
-          hour = BRANCH_TO_HOUR[data.hour_branch] || '';
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          setHistoryRecords(data);
+          // 自動載入最新記錄
+          applyHistoryRecord(data[0]);
         }
-
-        setFormData({
-          name: data.name || '',
-          year: birthDate.getFullYear().toString(),
-          month: (birthDate.getMonth() + 1).toString(),
-          day: birthDate.getDate().toString(),
-          hour: hour,
-          gender: data.gender || '',
-          location: data.location || '',
-        });
-        setHasHistory(true);
       } catch (err) {
         console.error('載入歷史記錄失敗:', err);
       }
     };
 
-    loadLastCalculation();
+    loadHistory();
   }, [userId]);
+
+  // 應用歷史記錄到表單
+  const applyHistoryRecord = (record: HistoryRecord) => {
+    const birthDate = new Date(record.birth_date);
+    let hour = '';
+    if (record.birth_time) {
+      const timeParts = record.birth_time.split(':');
+      hour = timeParts[0];
+    } else if (record.hour_branch) {
+      hour = BRANCH_TO_HOUR[record.hour_branch] || '';
+    }
+
+    setFormData({
+      name: record.name || '',
+      year: birthDate.getFullYear().toString(),
+      month: (birthDate.getMonth() + 1).toString(),
+      day: birthDate.getDate().toString(),
+      hour: hour,
+      gender: record.gender || '',
+      location: record.location || '',
+    });
+    setDataSource('history');
+  };
+
+  // 格式化日期顯示
+  const formatHistoryDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +161,11 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
     // 驗證表單
     if (!formData.name || !formData.year || !formData.month || !formData.day || !formData.hour || !formData.gender) {
       return;
+    }
+
+    // 訪客模式：儲存到 localStorage
+    if (!userId) {
+      saveGuestData(formData);
     }
 
     // 使用UTC創建日期，然後傳入中國時區偏移（+8小時 = 480分鐘）
@@ -133,12 +199,52 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
             <CalendarIcon className="w-6 h-6 text-primary" />
             <h2 className="text-2xl font-bold text-foreground">資料輸入區</h2>
           </div>
-          {hasHistory && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <History className="w-3.5 h-3.5" />
-              <span>已載入上次記錄</span>
-            </div>
-          )}
+          
+          <div className="flex items-center gap-2">
+            {/* 歷史記錄下拉選單（會員專用） */}
+            {userId && historyRecords.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <History className="w-4 h-4" />
+                    <span className="hidden sm:inline">歷史記錄</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  {historyRecords.map((record) => (
+                    <DropdownMenuItem
+                      key={record.id}
+                      onClick={() => applyHistoryRecord(record)}
+                      className="flex flex-col items-start gap-0.5 cursor-pointer"
+                    >
+                      <span className="font-medium">{record.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatHistoryDate(record.birth_date)} · {record.gender === 'male' ? '男' : '女'}
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            
+            {/* 資料來源提示 */}
+            {dataSource !== 'none' && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
+                {dataSource === 'history' ? (
+                  <>
+                    <History className="w-3.5 h-3.5" />
+                    <span>已載入歷史</span>
+                  </>
+                ) : (
+                  <>
+                    <User className="w-3.5 h-3.5" />
+                    <span>已載入上次</span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">

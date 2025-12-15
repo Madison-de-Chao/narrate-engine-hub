@@ -298,8 +298,8 @@ function calculateYearPillarAccurate(
 
 // 简单的月柱计算（不基于节气的近似算法，仅作后备）
 function calculateMonthPillarSimple(yearStem: string, month: number): { stem: string, branch: string } {
-  // 月份对应地支（近似，不考虑节气）：寅=正月(2月)，卯=二月(3月)，...
-  const branchIndex = month % 12; // 1月→丑(1), 2月→寅(2), 3月→卯(3)...
+  // 月份对应地支（近似，不考虑节气）：1月(小寒/大寒)→丑，2月→寅，3月→卯 ... 12月→子
+  const branchIndex = month % 12; // 保守近似，用于缺少节气数据时的后备计算
   
   // 五虎遁月
   const stemStartMap: { [key: string]: number } = {
@@ -579,6 +579,7 @@ serve(async (req) => {
     const hour = parseInt(hourStr);
     const minute = parseInt(minuteStr) || 0;
     const tzOffset = timezoneOffsetMinutes || 480; // 默認UTC+8
+    // birthTime 為當地時間，需扣除時區換算為 UTC 毫秒值
     const birthUtc = new Date(Date.UTC(
       birth.getUTCFullYear(),
       birth.getUTCMonth(),

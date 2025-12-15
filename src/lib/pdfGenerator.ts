@@ -7,6 +7,12 @@ export const generatePDF = async (elementId: string, fileName: string) => {
     throw new Error("找不到要下載的元素");
   }
 
+  const cleanupClone = () => {
+    document.querySelectorAll(".html2canvas-container").forEach((container) => {
+      (container as HTMLElement).remove();
+    });
+  };
+
   try {
     // 使用 html2canvas 將 HTML 轉換為 canvas
     const canvas = await html2canvas(element, {
@@ -14,6 +20,8 @@ export const generatePDF = async (elementId: string, fileName: string) => {
       useCORS: true,
       logging: false,
       backgroundColor: "#ffffff",
+      // 避免 html2canvas 嘗試移除已被清掉的容器而觸發 NotFoundError
+      removeContainer: false,
     });
 
     // 計算 PDF 尺寸
@@ -43,5 +51,7 @@ export const generatePDF = async (elementId: string, fileName: string) => {
   } catch (error) {
     console.error("生成 PDF 時發生錯誤:", error);
     throw error;
+  } finally {
+    cleanupClone();
   }
 };

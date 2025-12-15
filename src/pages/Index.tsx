@@ -11,6 +11,7 @@ import { ReportNavigation } from "@/components/ReportNavigation";
 import { ShenshaStats } from "@/components/ShenshaStats";
 import { NayinAnalysis } from "@/components/NayinAnalysis";
 import { PersonalityAnalysis } from "@/components/PersonalityAnalysis";
+import { TenGodsAnalysis } from "@/components/TenGodsAnalysis";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen } from "lucide-react";
@@ -94,6 +95,7 @@ const Index = () => {
   const sectionRefs = {
     summary: useRef<HTMLDivElement>(null),
     bazi: useRef<HTMLDivElement>(null),
+    tenGods: useRef<HTMLDivElement>(null),
     shensha: useRef<HTMLDivElement>(null),
     personality: useRef<HTMLDivElement>(null),
     legion: useRef<HTMLDivElement>(null),
@@ -448,6 +450,11 @@ const Index = () => {
               {/* 傳統八字排盤區 */}
               <section ref={sectionRefs.bazi} className="animate-fade-in scroll-mt-36">
                 <TraditionalBaziDisplay baziResult={baziResult} />
+              </section>
+
+              {/* 十神關係分析區 */}
+              <section ref={sectionRefs.tenGods} className="animate-fade-in scroll-mt-36">
+                <TenGodsAnalysis baziResult={baziResult} />
               </section>
 
               {/* 神煞統計分析區 */}

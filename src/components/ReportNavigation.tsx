@@ -9,7 +9,8 @@ import {
   FileText,
   ChevronDown,
   Sparkles,
-  User
+  User,
+  Crown
 } from "lucide-react";
 
 interface ReportNavigationProps {
@@ -20,6 +21,7 @@ interface ReportNavigationProps {
 const sections = [
   { id: 'summary', label: '總覽', icon: LayoutDashboard },
   { id: 'bazi', label: '八字排盤', icon: Scroll },
+  { id: 'tenGods', label: '十神分析', icon: Crown },
   { id: 'shensha', label: '神煞分析', icon: Sparkles },
   { id: 'personality', label: '性格分析', icon: User },
   { id: 'legion', label: '四時軍團', icon: Shield },

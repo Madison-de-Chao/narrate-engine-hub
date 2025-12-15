@@ -7,36 +7,36 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// 天干地支数据
+// 天干地支資料
 const TIANGAN = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
 const DIZHI = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
 
-// 纳音五行表
+// 納音五行表（繁體中文）
 const NAYIN: { [key: string]: string } = {
   "甲子": "海中金", "乙丑": "海中金",
-  "丙寅": "炉中火", "丁卯": "炉中火",
+  "丙寅": "爐中火", "丁卯": "爐中火",
   "戊辰": "大林木", "己巳": "大林木",
   "庚午": "路旁土", "辛未": "路旁土",
-  "壬申": "剑锋金", "癸酉": "剑锋金",
-  "甲戌": "山头火", "乙亥": "山头火",
-  "丙子": "涧下水", "丁丑": "涧下水",
-  "戊寅": "城头土", "己卯": "城头土",
-  "庚辰": "白蜡金", "辛巳": "白蜡金",
-  "壬午": "杨柳木", "癸未": "杨柳木",
+  "壬申": "劍鋒金", "癸酉": "劍鋒金",
+  "甲戌": "山頭火", "乙亥": "山頭火",
+  "丙子": "澗下水", "丁丑": "澗下水",
+  "戊寅": "城頭土", "己卯": "城頭土",
+  "庚辰": "白蠟金", "辛巳": "白蠟金",
+  "壬午": "楊柳木", "癸未": "楊柳木",
   "甲申": "泉中水", "乙酉": "泉中水",
   "丙戌": "屋上土", "丁亥": "屋上土",
-  "戊子": "霹雳火", "己丑": "霹雳火",
+  "戊子": "霹靂火", "己丑": "霹靂火",
   "庚寅": "松柏木", "辛卯": "松柏木",
-  "壬辰": "长流水", "癸巳": "长流水",
-  "甲午": "砂中金", "乙未": "砂中金",
+  "壬辰": "長流水", "癸巳": "長流水",
+  "甲午": "沙中金", "乙未": "沙中金",
   "丙申": "山下火", "丁酉": "山下火",
   "戊戌": "平地木", "己亥": "平地木",
   "庚子": "壁上土", "辛丑": "壁上土",
   "壬寅": "金箔金", "癸卯": "金箔金",
-  "甲辰": "佛灯火", "乙巳": "佛灯火",
+  "甲辰": "覆燈火", "乙巳": "覆燈火",
   "丙午": "天河水", "丁未": "天河水",
-  "戊申": "大驿土", "己酉": "大驿土",
-  "庚戌": "钗钏金", "辛亥": "钗钏金",
+  "戊申": "大驛土", "己酉": "大驛土",
+  "庚戌": "釵釧金", "辛亥": "釵釧金",
   "壬子": "桑柘木", "癸丑": "桑柘木",
   "甲寅": "大溪水", "乙卯": "大溪水",
   "丙辰": "沙中土", "丁巳": "沙中土",
@@ -45,7 +45,7 @@ const NAYIN: { [key: string]: string } = {
   "壬戌": "大海水", "癸亥": "大海水"
 };
 
-// 五行映射
+// 五行對應
 const WUXING_MAP: { [key: string]: string } = {
   "甲": "木", "乙": "木",
   "丙": "火", "丁": "火",
@@ -59,7 +59,7 @@ const WUXING_MAP: { [key: string]: string } = {
   "子": "水", "亥": "水"
 };
 
-// 计算年柱
+// 計算年柱
 function calculateYearPillar(year: number, lichunDate: Date, birthDate: Date): { stem: string, branch: string } {
   let adjustedYear = year;
   if (birthDate < lichunDate) {
@@ -75,7 +75,7 @@ function calculateYearPillar(year: number, lichunDate: Date, birthDate: Date): {
   };
 }
 
-// 计算月柱（基于節氣的精確算法）
+// 計算月柱（基於節氣的精確算法）
 // 使用 24 節氣中的「節」作為月份分界：
 // 立春→寅、驚蟄→卯、清明→辰、立夏→巳、芒種→午、小暑→未、立秋→申、白露→酉、寒露→戌、立冬→亥、大雪→子、小寒→丑
 // 並配合五虎遁月推算月干
@@ -383,11 +383,11 @@ function calculateYearPillarAccurate(
   };
 }
 
-// 简单的月柱计算（不基于节气的近似算法，仅作后备）
+// 簡單的月柱計算（不基於節氣的近似算法，僅作後備）
 function calculateMonthPillarSimple(yearStem: string, month: number): { stem: string, branch: string } {
-  // 月份对应地支（近似，不考虑节气）：1月(小寒/大寒)→丑，2月→寅，3月→卯 ... 12月→子
+  // 月份對應地支（近似，不考慮節氣）：1月(小寒/大寒)→丑，2月→寅，3月→卯 ... 12月→子
   const branchIndexMap = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0]; // 陣列第0項對應1月的地支索引（丑=1）
-  const branchIndex = branchIndexMap[month - 1]; // 保守近似，用于缺少节气数据时的后备计算
+  const branchIndex = branchIndexMap[month - 1]; // 保守近似，用於缺少節氣資料時的後備計算
   
   // 五虎遁月
   const stemStartMap: { [key: string]: number } = {
@@ -412,7 +412,7 @@ function calculateMonthPillarAccurate(
 ): { stem: string; branch: string } {
   const branchIndex = getMonthBranchIndexBySolarTerms(birthUtc, tzMinutes, solarTermsYears);
   if (branchIndex == null) {
-    // 回退：若無資料，使用简化算法
+    // 回退：若無資料，使用簡化算法
     const localMonth = toLocal(birthUtc, tzMinutes).getUTCMonth() + 1;
     return calculateMonthPillarSimple(yearStem, localMonth);
   }
@@ -433,8 +433,8 @@ function calculateMonthPillarAccurate(
 }
 
 
-// 计算日柱（基准日算法）
-// 基准：1985-09-22 = 甲子日 (60甲子索引0)
+// 計算日柱（基準日算法）
+// 基準：1985-09-22 = 甲子日 (60甲子索引0)
 function calculateDayPillar(birthLocal: Date): { stem: string, branch: string } {
   // 使用本地日期的 00:00 來計算天數差
   const baseDate = new Date(Date.UTC(1985, 8, 22)); // 1985-09-22 00:00 UTC
@@ -460,14 +460,14 @@ function calculateDayPillar(birthLocal: Date): { stem: string, branch: string } 
   };
 }
 
-// 计算时柱（五鼠遁时）
+// 計算時柱（五鼠遁時）
 function calculateHourPillar(dayStem: string, hour: number): { stem: string, branch: string } {
   const stemStartMap: { [key: string]: number } = {
-    "甲": 0, "己": 0,  // 甲子开始
-    "乙": 2, "庚": 2,  // 丙子开始
-    "丙": 4, "辛": 4,  // 戊子开始
-    "丁": 6, "壬": 6,  // 庚子开始
-    "戊": 8, "癸": 8   // 壬子开始
+    "甲": 0, "己": 0,  // 甲子開始
+    "乙": 2, "庚": 2,  // 丙子開始
+    "丙": 4, "辛": 4,  // 戊子開始
+    "丁": 6, "壬": 6,  // 庚子開始
+    "戊": 8, "癸": 8   // 壬子開始
   };
   
   // 使用本地時刻的時支換算（0點為子初）
@@ -481,20 +481,20 @@ function calculateHourPillar(dayStem: string, hour: number): { stem: string, bra
   };
 }
 
-// 计算五行分数
+// 計算五行分數
 function calculateWuxingScores(pillars: any): any {
   const scores: any = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
   const weightMap: any = {
     "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water"
   };
   
-  // 天干权重更高
+  // 天干權重較高
   [pillars.year.stem, pillars.month.stem, pillars.day.stem, pillars.hour.stem].forEach(gan => {
     const element = weightMap[WUXING_MAP[gan]];
     if (element) scores[element] += 1.5;
   });
   
-  // 地支权重较低
+  // 地支權重較低
   [pillars.year.branch, pillars.month.branch, pillars.day.branch, pillars.hour.branch].forEach(zhi => {
     const element = weightMap[WUXING_MAP[zhi]];
     if (element) scores[element] += 1.0;
@@ -503,7 +503,7 @@ function calculateWuxingScores(pillars: any): any {
   return scores;
 }
 
-// 计算阴阳比例
+// 計算陰陽比例
 function calculateYinYangRatio(pillars: any): any {
   let yin = 0;
   let yang = 0;
@@ -523,13 +523,13 @@ function calculateYinYangRatio(pillars: any): any {
   };
 }
 
-// 五行生克关系
+// 五行生剋關係
 const ELEMENT_RELATIONS = {
   生: { '木': '火', '火': '土', '土': '金', '金': '水', '水': '木' },
   克: { '木': '土', '土': '水', '水': '火', '火': '金', '金': '木' }
 };
 
-// 计算天干十神
+// 計算天干十神
 function calculateTenGodForStem(dayStem: string, targetStem: string): string {
   if (dayStem === targetStem) return '比肩';
   
@@ -557,7 +557,7 @@ function calculateTenGodForStem(dayStem: string, targetStem: string): string {
   return '未知';
 }
 
-// 计算地支十神
+// 計算地支十神
 function calculateTenGodForBranch(dayStem: string, branch: string): string {
   const dayElement = WUXING_MAP[dayStem];
   const branchElement = WUXING_MAP[branch];
@@ -583,7 +583,7 @@ function calculateTenGodForBranch(dayStem: string, branch: string): string {
   return '未知';
 }
 
-// 简化版神煞计算
+// 簡化版神煞計算
 function calculateShenshaSimple(
   dayStem: string,
   yearBranch: string,
@@ -594,7 +594,7 @@ function calculateShenshaSimple(
   const shensha: string[] = [];
   const allBranches = [yearBranch, monthBranch, dayBranch, hourBranch];
   
-  // 天乙贵人查法（简化版）
+  // 天乙貴人查法（簡化版）
   const tianYiMap: { [key: string]: string[] } = {
     "甲": ["丑", "未"], "戊": ["丑", "未"],
     "乙": ["子", "申"], "己": ["子", "申"],
@@ -669,12 +669,12 @@ serve(async (req) => {
       throw new Error('Missing required fields');
     }
 
-    // 解析出生日期和时间 - 使用UTC创建，传入时区偏移
+    // 解析出生日期和時間 - 使用UTC建立，傳入時區偏移
     const birth = new Date(birthDate);
     const [hourStr, minuteStr] = birthTime.split(':');
     const hour = parseInt(hourStr);
     const minute = parseInt(minuteStr) || 0;
-    const tzOffset = timezoneOffsetMinutes || 480; // 默認UTC+8
+    const tzOffset = timezoneOffsetMinutes || 480; // 預設UTC+8
     // birthTime 為當地時間：以 helper 轉成 UTC 時刻供後續計算
     const birthUtc = createUtcFromLocalParts(birth, hour, minute, tzOffset);
     const birthLocal = toLocal(birthUtc, tzOffset);
@@ -707,7 +707,7 @@ serve(async (req) => {
       five_elements_log: [] as string[]
     };
 
-    // 计算四柱
+    // 計算四柱
     console.log('Birth UTC:', birthUtc.toISOString(), 'tzOffset:', tzOffset);
     const yearPillar = calculateYearPillarAccurate(birthUtc, tzOffset, solarTermsYears);
     calculationLogs.year_log.push(`年柱計算: ${birthLocal.getUTCFullYear()}年 → ${yearPillar.stem}${yearPillar.branch}`);
@@ -730,7 +730,7 @@ serve(async (req) => {
       hour: hourPillar
     };
 
-    // 计算纳音
+    // 計算納音
     const nayin = {
       year: NAYIN[yearPillar.stem + yearPillar.branch] || "未知",
       month: NAYIN[monthPillar.stem + monthPillar.branch] || "未知",
@@ -738,11 +738,11 @@ serve(async (req) => {
       hour: NAYIN[hourPillar.stem + hourPillar.branch] || "未知"
     };
 
-    // 计算五行分数和阴阳比例
+    // 計算五行分數和陰陽比例
     const wuxingScores = calculateWuxingScores(pillars);
     const yinyangRatio = calculateYinYangRatio(pillars);
     
-    // 计算十神
+    // 計算十神
     const tenGods = {
       year: {
         stem: calculateTenGodForStem(dayPillar.stem, yearPillar.stem),
@@ -762,7 +762,7 @@ serve(async (req) => {
       }
     };
     
-    // 计算神煞
+    // 計算神煞
     const shensha = calculateShenshaSimple(
       dayPillar.stem,
       yearPillar.branch,

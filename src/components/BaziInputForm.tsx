@@ -99,11 +99,11 @@ export const BaziInputForm = ({ onCalculate, isCalculating }: BaziInputFormProps
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem id="gender-male" value="male" />
-                <Label htmlFor="gender-male" className="text-foreground">男</Label>
+                <Label htmlFor="gender-male" className="text-foreground cursor-pointer">男</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem id="gender-female" value="female" />
-                <Label htmlFor="gender-female" className="text-foreground">女</Label>
+                <Label htmlFor="gender-female" className="text-foreground cursor-pointer">女</Label>
               </div>
             </RadioGroup>
           </div>

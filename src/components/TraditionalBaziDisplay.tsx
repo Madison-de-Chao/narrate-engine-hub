@@ -18,6 +18,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { WuxingRelationshipDiagram } from "./WuxingRelationshipDiagram";
 
 interface TraditionalBaziDisplayProps {
   baziResult: BaziResult;
@@ -372,6 +373,9 @@ export const TraditionalBaziDisplay = ({ baziResult }: TraditionalBaziDisplayPro
               })}
             </div>
           </div>
+
+          {/* 五行生剋關係圖 */}
+          <WuxingRelationshipDiagram pillars={pillars} />
 
           {/* 神煞區 */}
           <div className="relative p-4 rounded-lg bg-gradient-to-b from-purple-950/80 to-purple-900/60 border border-purple-500/30">

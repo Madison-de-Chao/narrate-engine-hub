@@ -494,6 +494,7 @@ const Index = () => {
                 gender={baziResult.gender}
                 pillars={baziResult.pillars}
                 nayin={baziResult.nayin}
+                legionStories={baziResult.legionStories}
               />
             </section>
 

@@ -239,45 +239,6 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
           </div>
           
           <div className="flex items-center gap-2">
-            {/* 歷史記錄下拉選單（會員專用） */}
-            {userId && historyRecords.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1.5">
-                    <History className="w-4 h-4" />
-                    <span className="hidden sm:inline">歷史記錄</span>
-                    <ChevronDown className="w-3 h-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  {historyRecords.map((record) => (
-                    <div key={record.id} className="flex items-center group">
-                      <DropdownMenuItem
-                        onClick={() => applyHistoryRecord(record)}
-                        className="flex-1 flex flex-col items-start gap-0.5 cursor-pointer"
-                      >
-                        <span className="font-medium">{record.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatHistoryDate(record.birth_date)} · {record.gender === 'male' ? '男' : '女'}
-                        </span>
-                      </DropdownMenuItem>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/10 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteTarget(record);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-            
             {/* 資料來源提示 */}
             {dataSource !== 'none' && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
@@ -296,6 +257,95 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
             )}
           </div>
         </div>
+
+        {/* 登入測算紀錄區塊（會員專用） */}
+        {userId && historyRecords.length > 0 && (
+          <div className="mb-6 p-4 bg-gradient-to-br from-primary/10 to-accent/5 rounded-xl border border-primary/20">
+            <div className="flex items-center gap-2 mb-3">
+              <History className="w-5 h-5 text-primary" />
+              <h3 className="font-bold text-lg text-foreground">登入測算紀錄</h3>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                共 {historyRecords.length} 筆
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {historyRecords.slice(0, 6).map((record, index) => (
+                <div
+                  key={record.id}
+                  className={`group relative p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+                    dataSource === 'history' && formData.name === record.name
+                      ? 'bg-primary/20 border-primary/50 shadow-[0_0_10px_hsl(var(--primary)/0.3)]'
+                      : 'bg-card/60 border-border/50 hover:border-primary/30 hover:bg-card/80'
+                  }`}
+                  onClick={() => applyHistoryRecord(record)}
+                >
+                  {index === 0 && (
+                    <span className="absolute -top-2 -right-2 text-xs bg-accent text-accent-foreground px-2 py-0.5 rounded-full font-medium">
+                      最新
+                    </span>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{record.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatHistoryDate(record.birth_date)} · {record.gender === 'male' ? '乾造' : '坤造'}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/10 transition-opacity shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTarget(record);
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {historyRecords.length > 6 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-full mt-3 text-muted-foreground hover:text-foreground">
+                    查看更多 ({historyRecords.length - 6} 筆)
+                    <ChevronDown className="w-4 h-4 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-64">
+                  {historyRecords.slice(6).map((record) => (
+                    <div key={record.id} className="flex items-center group">
+                      <DropdownMenuItem
+                        onClick={() => applyHistoryRecord(record)}
+                        className="flex-1 flex flex-col items-start gap-0.5 cursor-pointer"
+                      >
+                        <span className="font-medium">{record.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatHistoryDate(record.birth_date)} · {record.gender === 'male' ? '乾造' : '坤造'}
+                        </span>
+                      </DropdownMenuItem>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/10 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteTarget(record);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

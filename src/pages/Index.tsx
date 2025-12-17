@@ -513,6 +513,13 @@ const Index = () => {
                 <TraditionalBaziDisplay baziResult={baziResult} />
               </section>
 
+              {/* 四時軍團故事區（兵法為重）*/}
+              <section ref={sectionRefs.legion} className="animate-fade-in scroll-mt-36">
+                <LegionCards baziResult={baziResult} />
+              </section>
+
+              {/* ===== 詳細分析區開始 ===== */}
+              
               {/* 十神關係分析區 */}
               <section ref={sectionRefs.tenGods} className="animate-fade-in scroll-mt-36">
                 <TenGodsAnalysis baziResult={baziResult} />
@@ -535,12 +542,7 @@ const Index = () => {
                 <NayinAnalysis nayin={baziResult.nayin} />
               </section>
 
-              {/* 四時軍團分析區 */}
-              <section ref={sectionRefs.legion} className="animate-fade-in scroll-mt-36">
-                <LegionCards baziResult={baziResult} />
-              </section>
-
-              {/* 詳細分析區 */}
+              {/* 五行陰陽分析區 */}
               <section ref={sectionRefs.analysis} className="animate-fade-in scroll-mt-36">
                 <AnalysisCharts baziResult={baziResult} />
               </section>

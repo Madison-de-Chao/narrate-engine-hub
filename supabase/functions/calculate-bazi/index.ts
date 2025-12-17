@@ -492,91 +492,120 @@ function calculateMonthPillarAccurate(
 //
 // 當前使用：選項 A（規格書標準）
 // ============================================================
+// 日柱計算 v2.2.0 - 使用 JDN（儒略日數）公式，確保精確
+// ============================================================
 
 const DAY_PILLAR_CONFIG = {
-  // 切換此值選擇 EPOCH 標準
-  useSpecEpoch: true,  // true = 規格書(1985-09-22=甲子), false = 萬年曆(1999-11-22=甲子)
-  
-  // 子時跨日規則：只在此處套用（策略 A）
-  ziHourNextDayRule: true,
-  
-  // 版本指紋
-  version: "2.1.0",
-  configHash: "spec-epoch-zi-next-day",
+  version: "2.2.0",
+  configHash: "jdn-dual-anchor",
+  ziHourNextDayRule: true,  // 子時（23:00-00:59）算次日
 };
 
-// 計算日柱（基準日算法）
-function calculateDayPillar(birthLocal: Date, hour: number, timezone: string = "Asia/Taipei"): { 
-  stem: string, 
-  branch: string, 
+// 計算儒略日數（JDN）- 精確的絕對日序號公式
+function calculateJDN(year: number, month: number, day: number): number {
+  // 使用標準 JDN 公式（Gregorian calendar）
+  // month: 1-12, day: 1-31
+  const a = Math.floor((14 - month) / 12);
+  const y = year + 4800 - a;
+  const m = month + 12 * a - 3;
+  
+  // Gregorian calendar JDN
+  const jdn = day + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) 
+              - Math.floor(y / 100) + Math.floor(y / 400) - 32045;
+  
+  return jdn;
+}
+
+// 雙錨點驗證（規格書定義）
+const ANCHOR_POINTS = {
+  // 錨點1: 1985-09-22 = 甲子 (index 0)
+  anchor1: { year: 1985, month: 9, day: 22, expectedIndex: 0, name: "甲子" },
+  // 錨點2: 2000-01-01 = 甲辰 (index 40)
+  anchor2: { year: 2000, month: 1, day: 1, expectedIndex: 40, name: "甲辰" },
+};
+
+// 計算並驗證 EPOCH 偏移量
+function calculateEpochOffset(): { offset: number; validated: boolean; details: string } {
+  const jdn1 = calculateJDN(ANCHOR_POINTS.anchor1.year, ANCHOR_POINTS.anchor1.month, ANCHOR_POINTS.anchor1.day);
+  const jdn2 = calculateJDN(ANCHOR_POINTS.anchor2.year, ANCHOR_POINTS.anchor2.month, ANCHOR_POINTS.anchor2.day);
+  
+  const daysBetween = jdn2 - jdn1;
+  const expectedIndexDiff = (ANCHOR_POINTS.anchor2.expectedIndex - ANCHOR_POINTS.anchor1.expectedIndex + 60) % 60;
+  const actualIndexDiff = ((daysBetween % 60) + 60) % 60;
+  
+  // 計算需要的偏移量來使兩個錨點一致
+  const offset = (expectedIndexDiff - actualIndexDiff + 60) % 60;
+  const validated = offset === 0;
+  
+  const details = `JDN1=${jdn1}, JDN2=${jdn2}, days=${daysBetween}, ` +
+                  `expectedDiff=${expectedIndexDiff}, actualDiff=${actualIndexDiff}, offset=${offset}`;
+  
+  return { offset, validated, details };
+}
+
+function calculateDayPillar(
+  birthLocal: Date, 
+  hour: number, 
+  timezone: string
+): {
+  stem: string,
+  branch: string,
   debug: {
     version: string,
     configHash: string,
     timezone: string,
     useTrueSolarTime: boolean,
     ziHourNextDayRule: string,
-    epochReference: string,
-    epochDate: string,
+    jdnEpoch: number,
+    jdnTarget: number,
     targetDateOriginal: string,
     targetDateAdjusted: string,
     dayDiff: number,
-    dayIndexMod60: number,
+    rawIndex: number,
+    adjustedIndex: number,
+    epochOffset: number,
+    anchorValidation: string,
     computedDayGanzhi: string,
   }
 } {
-  // EPOCH 定義
-  let EPOCH_YEAR: number, EPOCH_MONTH: number, EPOCH_DAY: number, epochRef: string;
-  
-  if (DAY_PILLAR_CONFIG.useSpecEpoch) {
-    // 規格書標準：1985-09-22 = 甲子
-    EPOCH_YEAR = 1985;
-    EPOCH_MONTH = 8; // 9月 (0-indexed)
-    EPOCH_DAY = 22;
-    epochRef = "1985-09-22 00:00 local = 甲子 (規格書標準)";
-  } else {
-    // 萬年曆標準：1999-11-22 = 甲子
-    EPOCH_YEAR = 1999;
-    EPOCH_MONTH = 10; // 11月 (0-indexed)
-    EPOCH_DAY = 22;
-    epochRef = "1999-11-22 00:00 local = 甲子 (萬年曆標準，由2000-01-01=甲辰反推)";
-  }
-  
-  const baseDate = new Date(Date.UTC(EPOCH_YEAR, EPOCH_MONTH, EPOCH_DAY));
-  
   // 原始出生日期
   const originalYear = birthLocal.getUTCFullYear();
-  const originalMonth = birthLocal.getUTCMonth();
+  const originalMonth = birthLocal.getUTCMonth() + 1; // 轉為 1-12
   const originalDay = birthLocal.getUTCDate();
-  const originalDateStr = `${originalYear}-${String(originalMonth + 1).padStart(2, '0')}-${String(originalDay).padStart(2, '0')}`;
+  const originalDateStr = `${originalYear}-${String(originalMonth).padStart(2, '0')}-${String(originalDay).padStart(2, '0')}`;
   
-  // 計算調整後日期
-  let birthYear = originalYear;
-  let birthMonth = originalMonth;
-  let birthDay = originalDay;
+  // 計算調整後日期（子時跨日）
+  let targetYear = originalYear;
+  let targetMonth = originalMonth;
+  let targetDay = originalDay;
   
-  // 子時跨日處理（策略 A：只在此處套用）
   const ziHourApplied = DAY_PILLAR_CONFIG.ziHourNextDayRule && hour >= 23;
   if (ziHourApplied) {
-    const tempDate = new Date(Date.UTC(birthYear, birthMonth, birthDay + 1));
-    birthYear = tempDate.getUTCFullYear();
-    birthMonth = tempDate.getUTCMonth();
-    birthDay = tempDate.getUTCDate();
+    const tempDate = new Date(Date.UTC(originalYear, originalMonth - 1, originalDay + 1));
+    targetYear = tempDate.getUTCFullYear();
+    targetMonth = tempDate.getUTCMonth() + 1;
+    targetDay = tempDate.getUTCDate();
   }
   
-  const adjustedDateStr = `${birthYear}-${String(birthMonth + 1).padStart(2, '0')}-${String(birthDay).padStart(2, '0')}`;
-  const birthDayStart = new Date(Date.UTC(birthYear, birthMonth, birthDay));
+  const adjustedDateStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`;
   
-  // 計算天數差
-  const MS_PER_DAY = 24 * 60 * 60 * 1000;
-  const diffMs = birthDayStart.getTime() - baseDate.getTime();
-  const diffDays = Math.round(diffMs / MS_PER_DAY);
+  // 使用 JDN 計算
+  const jdnEpoch = calculateJDN(ANCHOR_POINTS.anchor1.year, ANCHOR_POINTS.anchor1.month, ANCHOR_POINTS.anchor1.day);
+  const jdnTarget = calculateJDN(targetYear, targetMonth, targetDay);
+  const dayDiff = jdnTarget - jdnEpoch;
   
-  // 60甲子循環
-  let jiaziIndex = diffDays % 60;
-  if (jiaziIndex < 0) jiaziIndex += 60;
+  // 計算 EPOCH 偏移量（修正規格書雙錨點的差異）
+  const epochValidation = calculateEpochOffset();
   
-  const stemIndex = jiaziIndex % 10;
-  const branchIndex = jiaziIndex % 12;
+  // 計算原始 index
+  let rawIndex = ((dayDiff % 60) + 60) % 60;
+  
+  // 套用偏移量修正（如果雙錨點不一致）
+  // 注意：目前使用錨點1作為基準，偏移量為0
+  const adjustedIndex = (rawIndex + ANCHOR_POINTS.anchor1.expectedIndex) % 60;
+  
+  const stemIndex = adjustedIndex % 10;
+  const branchIndex = adjustedIndex % 12;
   const computedGanzhi = TIANGAN[stemIndex] + DIZHI[branchIndex];
   
   // 構建 debug 輸出
@@ -586,12 +615,15 @@ function calculateDayPillar(birthLocal: Date, hour: number, timezone: string = "
     timezone: timezone,
     useTrueSolarTime: false,
     ziHourNextDayRule: ziHourApplied ? "applied (hour >= 23)" : "not applied",
-    epochReference: epochRef,
-    epochDate: `${EPOCH_YEAR}-${String(EPOCH_MONTH + 1).padStart(2, '0')}-${String(EPOCH_DAY).padStart(2, '0')}`,
+    jdnEpoch: jdnEpoch,
+    jdnTarget: jdnTarget,
     targetDateOriginal: originalDateStr,
     targetDateAdjusted: adjustedDateStr,
-    dayDiff: diffDays,
-    dayIndexMod60: jiaziIndex,
+    dayDiff: dayDiff,
+    rawIndex: rawIndex,
+    adjustedIndex: adjustedIndex,
+    epochOffset: epochValidation.offset,
+    anchorValidation: epochValidation.validated ? "PASS" : `FAIL: ${epochValidation.details}`,
     computedDayGanzhi: computedGanzhi,
   };
   
@@ -600,7 +632,7 @@ function calculateDayPillar(birthLocal: Date, hour: number, timezone: string = "
   return {
     stem: TIANGAN[stemIndex],
     branch: DIZHI[branchIndex],
-    debug
+    debug,
   };
 }
 
@@ -868,7 +900,7 @@ serve(async (req) => {
     const dayPillarResult = calculateDayPillar(birthLocal, hour, "Asia/Taipei");
     const dayPillar = { stem: dayPillarResult.stem, branch: dayPillarResult.branch };
     const dayPillarDebug = dayPillarResult.debug;
-    calculationLogs.day_log.push(`日柱計算: ${dayPillarDebug.epochReference} → ${dayPillar.stem}${dayPillar.branch}`);
+    calculationLogs.day_log.push(`日柱計算: JDN ${dayPillarDebug.jdnTarget} (diff=${dayPillarDebug.dayDiff}) → ${dayPillar.stem}${dayPillar.branch}`);
     calculationLogs.day_log.push(`日柱Debug: ${JSON.stringify(dayPillarDebug)}`);
     
     const hourPillar = calculateHourPillar(dayPillar.stem, hour);

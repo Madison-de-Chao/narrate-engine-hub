@@ -524,6 +524,22 @@ function calculateJDN(year: number, month: number, day: number): number {
 // K = (anchorIndex - JDN(anchorDate) mod 60 + 60) mod 60
 // ============================================================
 
+// 生成 60 甲子表（用於驗證 index → 干支 映射）
+function generateGanzhiTable(): string[] {
+  const table: string[] = [];
+  for (let i = 0; i < 60; i++) {
+    const stem = TIANGAN[i % 10];
+    const branch = DIZHI[i % 12];
+    table.push(stem + branch);
+  }
+  return table;
+}
+
+const GANZHI_60 = generateGanzhiTable();
+
+// 輸出 60 甲子表前 12 項用於驗證（只在啟動時輸出一次）
+console.log("[60甲子表驗證] GANZHI[0..11]:", GANZHI_60.slice(0, 12).map((gz, i) => `${i}=${gz}`).join(", "));
+
 const CALIBRATION = {
   // 權威錨點（選擇 2000-01-01 因為現代日期、查證容易）
   anchor: { year: 2000, month: 1, day: 1, expectedIndex: 40, name: "甲辰" },
@@ -566,11 +582,40 @@ const CALIBRATION = {
       expected: this.referenceAnchor.expectedIndex,
       computedName
     };
+  },
+  
+  // 驗證特定日期的詳細 JDN 數據
+  debugDateJDN(year: number, month: number, day: number): {
+    date: string;
+    jdn: number;
+    rawMod60: number;
+    cycleIndex: number;
+    ganzhi: string;
+  } {
+    const jdn = calculateJDN(year, month, day);
+    const rawMod60 = ((jdn % 60) + 60) % 60;
+    const K = this.calculateK();
+    const cycleIndex = ((jdn + K) % 60 + 60) % 60;
+    return {
+      date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      jdn,
+      rawMod60,
+      cycleIndex,
+      ganzhi: GANZHI_60[cycleIndex]
+    };
   }
 };
 
 // 預先計算 K 常數（避免重複計算）
 const CALIBRATION_K = CALIBRATION.calculateK();
+
+// 輸出校準常數和關鍵日期的 JDN 詳細信息
+console.log("[校準常數] K =", CALIBRATION_K);
+console.log("[JDN驗證] 2000-01-01:", JSON.stringify(CALIBRATION.debugDateJDN(2000, 1, 1)));
+console.log("[JDN驗證] 1985-09-22:", JSON.stringify(CALIBRATION.debugDateJDN(1985, 9, 22)));
+console.log("[JDN驗證] 1985-10-06:", JSON.stringify(CALIBRATION.debugDateJDN(1985, 10, 6)));
+console.log("[JDN驗證] 1990-09-27:", JSON.stringify(CALIBRATION.debugDateJDN(1990, 9, 27)));
+console.log("[JDN驗證] 1984-02-04:", JSON.stringify(CALIBRATION.debugDateJDN(1984, 2, 4)));
 
 function calculateDayPillar(
   birthLocal: Date, 

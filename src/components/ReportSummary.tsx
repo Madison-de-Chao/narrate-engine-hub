@@ -60,6 +60,13 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
   const jiShen = shensha.filter(s => isJiShen(s)).length;
   const xiongSha = shensha.filter(s => isXiongSha(s)).length;
 
+  // 陰陽對應
+  const YINYANG_MAP: Record<string, string> = {
+    '甲': '陽', '乙': '陰', '丙': '陽', '丁': '陰',
+    '戊': '陽', '己': '陰', '庚': '陽', '辛': '陰',
+    '壬': '陽', '癸': '陰'
+  };
+
   // 計算整體運勢指數 (簡化算法)
   const fortuneIndex = Math.min(100, Math.max(0, 
     50 + (jiShen * 8) - (xiongSha * 5) + (yinyang.yang > 40 && yinyang.yang < 60 ? 10 : 0)
@@ -83,24 +90,30 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
   };
 
   return (
-    <Card className="relative overflow-hidden border-2 border-indigo-500/40 bg-gradient-to-br from-indigo-950 via-indigo-900/80 to-slate-900">
+    <Card className="relative overflow-hidden border-2 border-indigo-500/40 bg-gradient-to-br from-indigo-950 via-indigo-900/80 to-slate-900 card-professional">
       {/* 裝飾性背景 */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-radial from-indigo-500/20 to-transparent rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-radial from-violet-500/20 to-transparent rounded-full blur-3xl" />
       
+      {/* 四角裝飾 */}
+      <div className="absolute top-3 left-3 w-8 h-8 border-l-2 border-t-2 border-indigo-500/50" />
+      <div className="absolute top-3 right-3 w-8 h-8 border-r-2 border-t-2 border-indigo-500/50" />
+      <div className="absolute bottom-3 left-3 w-8 h-8 border-l-2 border-b-2 border-indigo-500/50" />
+      <div className="absolute bottom-3 right-3 w-8 h-8 border-r-2 border-b-2 border-indigo-500/50" />
+      
       <CardHeader className="relative pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-300 via-violet-300 to-purple-300 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl font-bold font-serif bg-gradient-to-r from-indigo-300 via-violet-300 to-purple-300 bg-clip-text text-transparent tracking-wider">
               命盤總覽
             </CardTitle>
-            <p className="text-indigo-200/70 mt-1">
-              {name} · {gender === 'male' ? '男' : '女'} · 日主 {pillars.day.stem}
+            <p className="text-indigo-200/70 mt-1 font-serif">
+              {name} · {gender === 'male' ? '乾造' : '坤造'} · 日主 {pillars.day.stem}（{elementNames[dayMasterElement]}{YINYANG_MAP[pillars.day.stem]}）
             </p>
           </div>
           <div className="text-right">
-            <div className="text-5xl font-bold text-indigo-300">{fortuneIndex}</div>
-            <p className="text-xs text-indigo-200/60">綜合指數</p>
+            <div className="text-5xl font-bold text-indigo-300 font-serif animate-pulse-glow">{fortuneIndex}</div>
+            <p className="text-xs text-indigo-200/60">綜合運勢指數</p>
           </div>
         </div>
       </CardHeader>
@@ -261,18 +274,30 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
             </div>
           </div>
 
-          {/* 實用建議 */}
-          <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/20">
-            <h4 className="text-sm font-bold text-indigo-300 mb-2">開運建議</h4>
-            <div className="grid md:grid-cols-2 gap-3 text-sm text-indigo-200/80">
-              <div>
-                <p className="font-medium text-emerald-400 mb-1">✓ 適合方向</p>
-                <p>{yongShenAnalysis.advice.favorable}</p>
+          {/* 實用建議 + 古籍引用 */}
+          <div className="mt-4 space-y-3">
+            <div className="p-4 rounded-lg bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/20">
+              <h4 className="text-sm font-bold text-indigo-300 mb-2 font-serif">開運建議</h4>
+              <div className="grid md:grid-cols-2 gap-3 text-sm text-indigo-200/80">
+                <div>
+                  <p className="font-medium text-emerald-400 mb-1">✓ 適合方向</p>
+                  <p>{yongShenAnalysis.advice.favorable}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-rose-400 mb-1">✗ 宜避開</p>
+                  <p>{yongShenAnalysis.advice.unfavorable}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-rose-400 mb-1">✗ 宜避開</p>
-                <p>{yongShenAnalysis.advice.unfavorable}</p>
-              </div>
+            </div>
+            
+            {/* 古籍引用 */}
+            <div className="quote-classical text-sm text-indigo-200/70">
+              <p className="mb-1">
+                《滴天髓》云：「{strengthLevel === '身強' ? '旺者宜洩，強者宜制' : strengthLevel === '身弱' ? '衰者宜扶，弱者宜生' : '中和純粹，無處不宜'}」
+              </p>
+              <p className="text-xs text-indigo-300/50">
+                ——命理格局以日主強弱為綱，用神喜忌為目
+              </p>
             </div>
           </div>
         </div>

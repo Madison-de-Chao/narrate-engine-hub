@@ -24,10 +24,16 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
     wood: '木', fire: '火', earth: '土', metal: '金', water: '水'
   };
 
-  // 日主強弱判斷
+  // 日主強弱判斷（根據傳統八字理論）
   const dayMasterElement = getDayMasterElement(pillars.day.stem);
   const dayMasterStrength = wuxing[dayMasterElement as keyof typeof wuxing] / totalWuxing;
-  const strengthLevel = dayMasterStrength > 0.25 ? '身強' : dayMasterStrength < 0.15 ? '身弱' : '中和';
+  // 計算印比（生扶日主）和官殺財（剋洩日主）的比例
+  const supportElements = getSupportElements(dayMasterElement);
+  const drainElements = getDrainElements(dayMasterElement);
+  const supportScore = supportElements.reduce((sum, el) => sum + (wuxing[el as keyof typeof wuxing] || 0), 0);
+  const drainScore = drainElements.reduce((sum, el) => sum + (wuxing[el as keyof typeof wuxing] || 0), 0);
+  const strengthRatio = supportScore / (supportScore + drainScore + 0.1);
+  const strengthLevel = strengthRatio > 0.55 ? '身強' : strengthRatio < 0.45 ? '身弱' : '中和';
   
   // 統計吉凶神煞
   const jiShen = shensha.filter(s => isJiShen(s)).length;
@@ -105,8 +111,7 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
             </div>
             <p className="text-xl font-bold text-rose-300">{strengthLevel}</p>
             <p className="text-xs text-rose-200/60 mt-1">
-              {dayMasterElement === 'wood' ? '木' : dayMasterElement === 'fire' ? '火' : 
-               dayMasterElement === 'earth' ? '土' : dayMasterElement === 'metal' ? '金' : '水'}命
+              {elementNames[dayMasterElement]}命 · {getStrengthDescription(strengthLevel)}
             </p>
           </div>
 
@@ -222,6 +227,40 @@ function getDayMasterElement(stem: string): string {
     '壬': 'water', '癸': 'water'
   };
   return stemElements[stem] || 'earth';
+}
+
+// 獲取生扶日主的五行（印比）
+function getSupportElements(dayElement: string): string[] {
+  const supportMap: Record<string, string[]> = {
+    'wood': ['water', 'wood'],  // 水生木，木比肩
+    'fire': ['wood', 'fire'],   // 木生火，火比肩
+    'earth': ['fire', 'earth'], // 火生土，土比肩
+    'metal': ['earth', 'metal'], // 土生金，金比肩
+    'water': ['metal', 'water']  // 金生水，水比肩
+  };
+  return supportMap[dayElement] || [];
+}
+
+// 獲取剋洩日主的五行（官殺財食傷）
+function getDrainElements(dayElement: string): string[] {
+  const drainMap: Record<string, string[]> = {
+    'wood': ['metal', 'fire', 'earth'], // 金剋木，木生火（洩），木剋土（耗）
+    'fire': ['water', 'earth', 'metal'], // 水剋火，火生土（洩），火剋金（耗）
+    'earth': ['wood', 'metal', 'water'], // 木剋土，土生金（洩），土剋水（耗）
+    'metal': ['fire', 'water', 'wood'],  // 火剋金，金生水（洩），金剋木（耗）
+    'water': ['earth', 'wood', 'fire']   // 土剋水，水生木（洩），水剋火（耗）
+  };
+  return drainMap[dayElement] || [];
+}
+
+// 獲取身強身弱的詳細描述
+function getStrengthDescription(strength: string): string {
+  const descriptions: Record<string, string> = {
+    '身強': '宜洩耗制衡',
+    '身弱': '宜生扶輔助',
+    '中和': '五行平衡'
+  };
+  return descriptions[strength] || '待定';
 }
 
 function isJiShen(sha: string | { category?: string; name?: string }): boolean {

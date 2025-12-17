@@ -1,0 +1,20 @@
+{
+  "name": "十惡大敗",
+  "enabled": true,
+  "priority": 90,
+  "category": "特殊",
+  "rarity": "SSR",
+  "effect": "倉庫空虛，財運不濟，諸事不順",
+  "modernMeaning": "財運較差，需要謹慎理財",
+  "buff": null,
+  "debuff": "財庫空虛",
+  "rules": [
+    {
+      "anchor": "dayPillar",
+      "rule_ref": "傳統對照-十惡大敗日",
+      "anchorType": "specific",
+      "table": ["甲辰", "乙巳", "丙申", "丁亥", "戊戌", "己丑", "庚辰", "辛巳", "壬申", "癸亥"],
+      "notes": "十惡大敗日：甲辰、乙巳、丙申、丁亥、戊戌、己丑、庚辰、辛巳、壬申、癸亥"
+    }
+  ]
+}

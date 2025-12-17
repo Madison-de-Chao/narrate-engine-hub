@@ -1,0 +1,25 @@
+{
+  "name": "伏吟",
+  "enabled": true,
+  "priority": 88,
+  "category": "特殊",
+  "rarity": "R",
+  "effect": "重複之象，停滯不前，悲哀之兆",
+  "modernMeaning": "事情容易反覆，進展緩慢",
+  "buff": null,
+  "debuff": "重複停滯",
+  "rules": [
+    {
+      "anchor": "combo",
+      "rule_ref": "傳統對照-干支重複為伏吟",
+      "combo": [
+        {
+          "anchor": "yearBranch",
+          "target": "any",
+          "any": true
+        }
+      ],
+      "notes": "命局中有相同干支重複出現（年月日時中任兩柱地支相同），為伏吟"
+    }
+  ]
+}

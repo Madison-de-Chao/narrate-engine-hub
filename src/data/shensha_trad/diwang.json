@@ -1,0 +1,19 @@
+{
+  "name": "地網",
+  "enabled": true,
+  "priority": 81,
+  "category": "特殊",
+  "rarity": "SR",
+  "effect": "陷入困境，進退維谷，難以施展",
+  "modernMeaning": "容易陷入僵局，需要尋找突破口",
+  "buff": null,
+  "debuff": "地網之陷",
+  "rules": [
+    {
+      "anchor": "dayBranch",
+      "rule_ref": "傳統對照-丑未為地網",
+      "table": ["丑", "未"],
+      "notes": "丑未為地網，水命人尤忌"
+    }
+  ]
+}

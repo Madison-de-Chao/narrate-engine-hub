@@ -1,0 +1,19 @@
+{
+  "name": "天羅",
+  "enabled": true,
+  "priority": 80,
+  "category": "特殊",
+  "rarity": "SR",
+  "effect": "困頓受阻，事業波折，謀事不遂",
+  "modernMeaning": "做事容易受阻，需要耐心等待時機",
+  "buff": null,
+  "debuff": "天羅之困",
+  "rules": [
+    {
+      "anchor": "dayBranch",
+      "rule_ref": "傳統對照-辰戌為天羅",
+      "table": ["辰", "戌"],
+      "notes": "辰戌為天羅，火命人尤忌"
+    }
+  ]
+}

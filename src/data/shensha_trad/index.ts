@@ -23,6 +23,35 @@ import jiangxing from './jiangxing.json';
 import kongwang from './kongwang.json';
 import kuigang from './kuigang.json';
 import xianchi from './xianchi.json';
+// 新增吉神
+import xuetang from './xuetang.json';
+import jinyu from './jinyu.json';
+import fuxingGuiren from './fuxing_guiren.json';
+import tianchu from './tianchu.json';
+import tianguanGuiren from './tianguan_guiren.json';
+import tiandeHe from './tiande_he.json';
+import yuedeHe from './yuede_he.json';
+import santai from './santai.json';
+import bazuo from './bazuo.json';
+// 新增凶煞
+import baihu from './baihu.json';
+import tiangou from './tiangou.json';
+import pima from './pima.json';
+import sangmen from './sangmen.json';
+import liuxia from './liuxia.json';
+import guanfu from './guanfu.json';
+import tianxing from './tianxing.json';
+import bingfu from './bingfu.json';
+import wugui from './wugui.json';
+// 新增桃花/特殊
+import muyuTaohua from './muyu_taohua.json';
+import tianluo from './tianluo.json';
+import diwang from './diwang.json';
+import yinyangChacuo from './yinyang_chacuo.json';
+import fuyin from './fuyin.json';
+import fanyin from './fanyin.json';
+import shieDabai from './shie_dabai.json';
+import sifei from './sifei.json';
 
 import type { ShenshaRuleDefinition } from '../shenshaTypes';
 
@@ -47,7 +76,36 @@ export const tradRules: ShenshaRuleDefinition[] = [
   jiangxing,
   kongwang,
   kuigang,
-  xianchi
+  xianchi,
+  // 新增吉神
+  xuetang,
+  jinyu,
+  fuxingGuiren,
+  tianchu,
+  tianguanGuiren,
+  tiandeHe,
+  yuedeHe,
+  santai,
+  bazuo,
+  // 新增凶煞
+  baihu,
+  tiangou,
+  pima,
+  sangmen,
+  liuxia,
+  guanfu,
+  tianxing,
+  bingfu,
+  wugui,
+  // 新增桃花/特殊
+  muyuTaohua,
+  tianluo,
+  diwang,
+  yinyangChacuo,
+  fuyin,
+  fanyin,
+  shieDabai,
+  sifei
 ] as ShenshaRuleDefinition[];
 
 // 按名稱索引

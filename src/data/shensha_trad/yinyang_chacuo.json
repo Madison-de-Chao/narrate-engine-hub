@@ -1,0 +1,20 @@
+{
+  "name": "陰陽差錯",
+  "enabled": true,
+  "priority": 85,
+  "category": "特殊",
+  "rarity": "SR",
+  "effect": "婚姻不順，感情波折，聚少離多",
+  "modernMeaning": "感情路上較多波折，需要特別經營",
+  "buff": null,
+  "debuff": "婚姻不順",
+  "rules": [
+    {
+      "anchor": "dayPillar",
+      "rule_ref": "傳統對照-特定干支組合為陰陽差錯",
+      "anchorType": "specific",
+      "table": ["丙子", "丙午", "丁丑", "丁未", "戊寅", "戊申", "辛卯", "辛酉", "壬辰", "壬戌", "癸巳", "癸亥"],
+      "notes": "特定干支組合：丙子、丙午、丁丑、丁未、戊寅、戊申、辛卯、辛酉、壬辰、壬戌、癸巳、癸亥"
+    }
+  ]
+}

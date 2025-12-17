@@ -1,0 +1,20 @@
+{
+  "name": "四廢",
+  "enabled": true,
+  "priority": 82,
+  "category": "特殊",
+  "rarity": "R",
+  "effect": "氣數已盡，力量衰敗，難以作為",
+  "modernMeaning": "做事需要借助外力，獨力難成",
+  "buff": null,
+  "debuff": "力量衰敗",
+  "rules": [
+    {
+      "anchor": "dayPillar",
+      "rule_ref": "傳統對照-四廢日",
+      "anchorType": "specific",
+      "table": ["庚申", "辛酉", "壬子", "癸亥", "甲寅", "乙卯", "丙午", "丁巳"],
+      "notes": "春庚辛、夏壬癸、秋甲乙、冬丙丁為四廢"
+    }
+  ]
+}

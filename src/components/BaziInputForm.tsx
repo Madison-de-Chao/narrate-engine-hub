@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Loader2, History, User, ChevronDown, Trash2 } from "lucide-react";
+import { CalendarIcon, Loader2, History, User, ChevronDown, Trash2, Sparkles, RefreshCw } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -78,9 +78,11 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
     location: "",
   });
   const [historyRecords, setHistoryRecords] = useState<HistoryRecord[]>([]);
-  const [dataSource, setDataSource] = useState<'none' | 'history' | 'guest'>('none');
+  const [dataSource, setDataSource] = useState<'none' | 'history' | 'guest' | 'demo'>('none');
   const [deleteTarget, setDeleteTarget] = useState<HistoryRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showGuestSyncPrompt, setShowGuestSyncPrompt] = useState(false);
+  const [pendingGuestData, setPendingGuestData] = useState<typeof formData | null>(null);
 
   // 從 localStorage 載入訪客資料
   const loadGuestData = () => {
@@ -90,12 +92,12 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
         const parsed = JSON.parse(saved);
         setFormData(parsed);
         setDataSource('guest');
-        return true;
+        return parsed;
       }
     } catch (err) {
       console.error('載入訪客資料失敗:', err);
     }
-    return false;
+    return null;
   };
 
   // 儲存訪客資料到 localStorage
@@ -107,7 +109,28 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
     }
   };
 
-  // 載入會員歷史記錄
+  // 清除訪客資料
+  const clearGuestData = () => {
+    localStorage.removeItem(GUEST_STORAGE_KEY);
+  };
+
+  // 載入示範資料（僅本機測試用）
+  const loadDemoData = () => {
+    const demoData = {
+      name: "示範用戶",
+      year: "1990",
+      month: "6",
+      day: "15",
+      hour: "9",
+      gender: "male",
+      location: "台北市",
+    };
+    setFormData(demoData);
+    setDataSource('demo');
+    toast.success("已載入示範資料，可直接點擊「生成命盤」測試");
+  };
+
+  // 載入會員歷史記錄 + 訪客資料同步提示
   useEffect(() => {
     const loadHistory = async () => {
       if (!userId) {
@@ -115,6 +138,15 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
         loadGuestData();
         return;
       }
+
+      // 會員模式：先檢查是否有訪客暫存資料需要同步
+      const guestData = (() => {
+        try {
+          const saved = localStorage.getItem(GUEST_STORAGE_KEY);
+          if (saved) return JSON.parse(saved);
+        } catch { /* ignore */ }
+        return null;
+      })();
 
       try {
         const { data, error } = await supabase
@@ -125,19 +157,49 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
           .limit(10);
 
         if (error) throw error;
-        
+
         if (data && data.length > 0) {
           setHistoryRecords(data);
           // 自動載入最新記錄
           applyHistoryRecord(data[0]);
+        } else if (guestData && guestData.name) {
+          // 無歷史紀錄但有訪客資料 → 提示同步
+          setPendingGuestData(guestData);
+          setShowGuestSyncPrompt(true);
+          setFormData(guestData);
+          setDataSource('guest');
         }
       } catch (err) {
         console.error('載入歷史記錄失敗:', err);
+        // 若載入失敗但有訪客資料，仍然載入
+        if (guestData && guestData.name) {
+          setFormData(guestData);
+          setDataSource('guest');
+        }
       }
     };
 
     loadHistory();
   }, [userId]);
+
+  // 同步訪客資料到會員帳號（直接填入表單，下次計算時會存入資料庫）
+  const handleSyncGuestData = () => {
+    if (pendingGuestData) {
+      setFormData(pendingGuestData);
+      setDataSource('guest');
+      clearGuestData();
+      setShowGuestSyncPrompt(false);
+      toast.success("已載入訪客暫存資料，計算後將自動存入帳號");
+    }
+  };
+
+  // 忽略訪客資料
+  const handleIgnoreGuestData = () => {
+    clearGuestData();
+    setShowGuestSyncPrompt(false);
+    setPendingGuestData(null);
+    toast.info("已忽略訪客資料");
+  };
 
   // 應用歷史記錄到表單
   const applyHistoryRecord = (record: HistoryRecord) => {
@@ -247,6 +309,11 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                     <History className="w-3.5 h-3.5" />
                     <span>已載入歷史</span>
                   </>
+                ) : dataSource === 'demo' ? (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>示範資料</span>
+                  </>
                 ) : (
                   <>
                     <User className="w-3.5 h-3.5" />
@@ -257,6 +324,53 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
             )}
           </div>
         </div>
+
+        {/* 訪客資料同步提示（登入後偵測到訪客暫存） */}
+        {showGuestSyncPrompt && pendingGuestData && (
+          <div className="mb-6 p-4 bg-gradient-to-br from-accent/20 to-accent/5 rounded-xl border border-accent/40">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-accent/20 rounded-full">
+                <RefreshCw className="w-5 h-5 text-accent" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-bold text-foreground mb-1">發現訪客暫存資料</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  偵測到您之前以訪客身份輸入的資料（{pendingGuestData.name}），是否要同步到帳號？
+                </p>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={handleSyncGuestData} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                    同步資料
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handleIgnoreGuestData}>
+                    忽略
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 空狀態提示（會員無歷史紀錄時） */}
+        {userId && historyRecords.length === 0 && !showGuestSyncPrompt && (
+          <div className="mb-6 p-5 bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl border border-border/50 text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-muted/50 rounded-full mb-3">
+              <History className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <h4 className="font-bold text-foreground mb-1">尚無測算紀錄</h4>
+            <p className="text-sm text-muted-foreground mb-4">
+              完成第一次測算後，紀錄將自動保存於此
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={loadDemoData}
+              className="gap-1.5"
+            >
+              <Sparkles className="w-4 h-4" />
+              載入示範資料測試
+            </Button>
+          </div>
+        )}
 
         {/* 登入測算紀錄區塊（會員專用） */}
         {userId && historyRecords.length > 0 && (

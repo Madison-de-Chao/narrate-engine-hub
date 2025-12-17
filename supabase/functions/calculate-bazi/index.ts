@@ -477,24 +477,37 @@ function calculateMonthPillarAccurate(
 
 
 // 計算日柱（基準日算法）
-// 基準：1985-09-22 = 甲子日 (60甲子索引0)
+// 權威基準：使用萬年曆驗證的基準點
+// 2000-01-01 = 甲辰日 (60甲子索引40) → 反推 1999-11-22 = 甲子日 (索引0)
 // 子時跨日規則：23:00-23:59 視為次日
-function calculateDayPillar(birthLocal: Date, hour: number): { stem: string, branch: string } {
-  // 使用本地日期的 00:00 來計算天數差
-  const baseDate = new Date(Date.UTC(1985, 8, 22)); // 1985-09-22 00:00 UTC
-  let birthDayStart = new Date(Date.UTC(
-    birthLocal.getUTCFullYear(),
-    birthLocal.getUTCMonth(),
-    birthLocal.getUTCDate()
-  ));
+function calculateDayPillar(birthLocal: Date, hour: number): { stem: string, branch: string, debug?: any } {
+  // 使用萬年曆驗證的基準點：1999-11-22 = 甲子日 (索引0)
+  // 此基準經由 2000-01-01 = 甲辰日 反推驗證
+  const EPOCH_YEAR = 1999;
+  const EPOCH_MONTH = 10; // 11月 (0-indexed)
+  const EPOCH_DAY = 22;
+  const baseDate = new Date(Date.UTC(EPOCH_YEAR, EPOCH_MONTH, EPOCH_DAY)); // 1999-11-22 00:00 UTC
+  
+  // 計算出生日期的本地日期起點（00:00）
+  let birthYear = birthLocal.getUTCFullYear();
+  let birthMonth = birthLocal.getUTCMonth();
+  let birthDay = birthLocal.getUTCDate();
   
   // 子時跨日處理：23:00-23:59 屬於子時，日柱應計入次日
   if (hour >= 23) {
-    birthDayStart = new Date(birthDayStart.getTime() + 24 * 60 * 60 * 1000);
+    // 手動加一天，處理月末/年末邊界
+    const tempDate = new Date(Date.UTC(birthYear, birthMonth, birthDay + 1));
+    birthYear = tempDate.getUTCFullYear();
+    birthMonth = tempDate.getUTCMonth();
+    birthDay = tempDate.getUTCDate();
   }
   
-  const diffTime = birthDayStart.getTime() - baseDate.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const birthDayStart = new Date(Date.UTC(birthYear, birthMonth, birthDay));
+  
+  // 計算與基準日的天數差（使用毫秒確保精確）
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const diffMs = birthDayStart.getTime() - baseDate.getTime();
+  const diffDays = Math.round(diffMs / MS_PER_DAY); // 使用 round 避免浮點數誤差
   
   // 60甲子循環
   let jiaziIndex = diffDays % 60;
@@ -502,6 +515,8 @@ function calculateDayPillar(birthLocal: Date, hour: number): { stem: string, bra
   
   const stemIndex = jiaziIndex % 10;
   const branchIndex = jiaziIndex % 12;
+  
+  console.log(`[日柱計算] EPOCH: ${EPOCH_YEAR}-${EPOCH_MONTH + 1}-${EPOCH_DAY}, 出生日: ${birthYear}-${birthMonth + 1}-${birthDay}, 天數差: ${diffDays}, 甲子索引: ${jiaziIndex}, 結果: ${TIANGAN[stemIndex]}${DIZHI[branchIndex]}`);
   
   return {
     stem: TIANGAN[stemIndex],

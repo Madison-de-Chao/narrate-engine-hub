@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/table";
 import { calculateBazi } from "@/lib/baziCalculator";
 import { cn } from "@/lib/utils";
+import { BaziTestRunner } from "@/components/BaziTestRunner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type PillarKey = "year" | "month" | "day" | "hour";
 
@@ -283,36 +285,49 @@ export default function BaziTest() {
             <p className="text-muted-foreground">驗證計算準確性與邊界處理</p>
           </CardHeader>
           <CardContent>
-            <Button onClick={runTests} disabled={isRunning} size="lg" className="w-full">
-              {isRunning ? "測試中..." : "運行所有測試"}
-            </Button>
+            <Tabs defaultValue="api" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="api">API 邊界測試（推薦）</TabsTrigger>
+                <TabsTrigger value="local">本地計算測試</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="api">
+                <BaziTestRunner />
+              </TabsContent>
+              
+              <TabsContent value="local">
+                <Button onClick={runTests} disabled={isRunning} size="lg" className="w-full mb-4">
+                  {isRunning ? "測試中..." : "運行本地測試"}
+                </Button>
 
-            {results.length > 0 && (
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                <Card className="border-primary/20 bg-primary/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base text-muted-foreground">標準測試</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-primary">
-                      {standardPassed} / {standardTests.length}
-                    </div>
-                    <p className="text-xs text-muted-foreground">系統必過樣本</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-amber-200 bg-amber-50/40 dark:bg-amber-500/10">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base text-muted-foreground">邊界測試</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-amber-500">
-                      {boundaryPassed} / {boundaryTests.length}
-                    </div>
-                    <p className="text-xs text-muted-foreground">規則守門測試</p>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+                {results.length > 0 && (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Card className="border-primary/20 bg-primary/5">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base text-muted-foreground">標準測試</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-primary">
+                          {standardPassed} / {standardTests.length}
+                        </div>
+                        <p className="text-xs text-muted-foreground">系統必過樣本</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-amber-200 bg-amber-50/40 dark:bg-amber-500/10">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base text-muted-foreground">邊界測試</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-amber-500">
+                          {boundaryPassed} / {boundaryTests.length}
+                        </div>
+                        <p className="text-xs text-muted-foreground">規則守門測試</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 

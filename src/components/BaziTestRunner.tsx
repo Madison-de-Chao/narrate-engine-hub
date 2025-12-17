@@ -108,8 +108,8 @@ const testCases: TestCase[] = [
   },
   {
     id: "1990-01-05-0600",
-    name: "1990年1月5日 06:00（小寒邊界）",
-    description: "小寒當天，丑月開始",
+    name: "1990年1月5日 06:00（小寒前）",
+    description: "小寒當天但時間在小寒前（22:33），仍為子月",
     input: {
       birthDate: "1990-01-05",
       birthTime: "06:00",
@@ -118,7 +118,7 @@ const testCases: TestCase[] = [
     },
     expected: {
       yearPillar: { stem: "己", branch: "巳" },
-      monthPillar: { stem: "丁", branch: "丑" },
+      monthPillar: { stem: "丙", branch: "子" },
       dayPillar: { stem: "癸", branch: "丑" },
       hourPillar: { stem: "乙", branch: "卯" }
     }

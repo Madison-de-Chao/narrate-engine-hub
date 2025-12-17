@@ -12,6 +12,7 @@ import { ShenshaStats } from "@/components/ShenshaStats";
 import { NayinAnalysis } from "@/components/NayinAnalysis";
 import { PersonalityAnalysis } from "@/components/PersonalityAnalysis";
 import { TenGodsAnalysis } from "@/components/TenGodsAnalysis";
+import { ProfessionalReportHeader } from "@/components/ProfessionalReportHeader";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen } from "lucide-react";
@@ -490,6 +491,18 @@ const Index = () => {
 
             {/* 報告內容區 - 用於 PDF 生成 */}
             <div id="bazi-report-content" className="space-y-8">
+              {/* 專業報告頭部 */}
+              <section className="animate-fade-in">
+                <ProfessionalReportHeader 
+                  name={baziResult.name}
+                  gender={baziResult.gender}
+                  birthDate={baziResult.birthDate instanceof Date 
+                    ? baziResult.birthDate.toLocaleDateString("zh-TW") 
+                    : String(baziResult.birthDate)}
+                  dayMaster={baziResult.pillars.day.stem}
+                />
+              </section>
+
               {/* 命盤總覽 */}
               <section ref={sectionRefs.summary} className="animate-fade-in scroll-mt-36">
                 <ReportSummary baziResult={baziResult} />

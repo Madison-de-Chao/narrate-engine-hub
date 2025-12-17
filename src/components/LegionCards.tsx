@@ -4,35 +4,85 @@ import { BaziResult } from "@/pages/Index";
 import { Swords, Users, Heart, Sparkles, Crown, Shield, Star, Zap, BookOpen, TrendingUp, Target } from "lucide-react";
 import tenGodsData from "@/data/ten_gods.json";
 import { storyMaterialsManager } from "@/lib/storyMaterials";
-import { shenshaEngine, type ShenshaMatch } from "@/lib/shenshaRuleEngine";
+import { ModularShenshaEngine, type RulesetType } from "@/lib/shenshaRuleEngine";
+import type { ShenshaMatch } from "@/data/shenshaTypes";
 import { ArmyCard } from "./ArmyCard";
 import { ShenshaCardList } from "./ShenshaCard";
 
 interface LegionCardsProps {
   baziResult: BaziResult;
+  shenshaRuleset?: RulesetType;
 }
 
-// 孫子兵法箴言 - 對應四個軍團的兵法智慧
-const sunTzuQuotes = {
+// 經典兵法語錄集 - 孫子兵法、三十六計、吳子兵法
+const militaryWisdom = {
   year: {
-    quote: "知彼知己，百戰不殆；不知彼而知己，一勝一負；不知彼，不知己，每戰必殆。",
-    source: "《孫子兵法・謀攻篇》",
-    interpretation: "了解自己的根源，才能在人生戰場上立於不敗之地。"
+    primary: {
+      quote: "知彼知己，百戰不殆；不知彼而知己，一勝一負；不知彼，不知己，每戰必殆。",
+      source: "《孫子兵法・謀攻篇》",
+      interpretation: "了解自己的根源，才能在人生戰場上立於不敗之地。"
+    },
+    secondary: {
+      quote: "瞞天過海：備周則意怠，常見則不疑。",
+      source: "《三十六計・第一計》",
+      interpretation: "祖輩傳承的智慧往往隱藏於日常，需細心體會方能領悟。"
+    },
+    tertiary: {
+      quote: "凡兵戰之場，立屍之地，必死則生，幸生則死。",
+      source: "《吳子兵法・治兵篇》",
+      interpretation: "唯有直面挑戰，方能從家族根基中汲取力量。"
+    }
   },
   month: {
-    quote: "上兵伐謀，其次伐交，其次伐兵，其下攻城。",
-    source: "《孫子兵法・謀攻篇》",
-    interpretation: "善用人際關係與智謀，是成就事業的最高境界。"
+    primary: {
+      quote: "上兵伐謀，其次伐交，其次伐兵，其下攻城。",
+      source: "《孫子兵法・謀攻篇》",
+      interpretation: "善用人際關係與智謀，是成就事業的最高境界。"
+    },
+    secondary: {
+      quote: "借刀殺人：敵已明，友未定，引友殺敵，不自出力。",
+      source: "《三十六計・第三計》",
+      interpretation: "借助他人之力成就己事，是人際謀略的精髓。"
+    },
+    tertiary: {
+      quote: "不和於國，不可以出軍；不和於軍，不可以出陣。",
+      source: "《吳子兵法・圖國篇》",
+      interpretation: "團結人心、和諧關係，是事業成功的根本。"
+    }
   },
   day: {
-    quote: "故善戰者，立於不敗之地，而不失敵之敗也。",
-    source: "《孫子兵法・軍形篇》",
-    interpretation: "堅守本心、穩固自我，是一切勝利的根基。"
+    primary: {
+      quote: "故善戰者，立於不敗之地，而不失敵之敗也。",
+      source: "《孫子兵法・軍形篇》",
+      interpretation: "堅守本心、穩固自我，是一切勝利的根基。"
+    },
+    secondary: {
+      quote: "以逸待勞：困敵之勢，不以戰；損剛益柔。",
+      source: "《三十六計・第四計》",
+      interpretation: "養精蓄銳、蓄勢待發，以不變應萬變。"
+    },
+    tertiary: {
+      quote: "進有重賞，退有重刑，行之以信。",
+      source: "《吳子兵法・治兵篇》",
+      interpretation: "對自己賞罰分明、言出必行，是建立自信的不二法門。"
+    }
   },
   hour: {
-    quote: "故兵無常勢，水無常形；能因敵變化而取勝者，謂之神。",
-    source: "《孫子兵法・虛實篇》",
-    interpretation: "順應變化、靈活應對，方能開創無限可能的未來。"
+    primary: {
+      quote: "故兵無常勢，水無常形；能因敵變化而取勝者，謂之神。",
+      source: "《孫子兵法・虛實篇》",
+      interpretation: "順應變化、靈活應對，方能開創無限可能的未來。"
+    },
+    secondary: {
+      quote: "無中生有：誑也，非誑也，實其所誑也。",
+      source: "《三十六計・第七計》",
+      interpretation: "創造機會、開拓可能，未來由自己書寫。"
+    },
+    tertiary: {
+      quote: "用兵之害，猶豫最大；三軍之災，生於狐疑。",
+      source: "《吳子兵法・治兵篇》",
+      interpretation: "面對未來當機立斷，猶豫不決是最大的敵人。"
+    }
   }
 };
 
@@ -107,10 +157,11 @@ const dizhiRoles: { [key: string]: { role: string; symbol: string; character: st
   亥: { role: "智豬先知", symbol: "冬水潛藏，蓄勢待發", character: "福德圓滿，寬厚仁慈", hiddenStems: "壬水、甲木 → 智慧與生長", weakness: "過於理想化，逃避現實", buff: "福德智慧", debuff: "逃避散漫" },
 };
 
-export const LegionCards = ({ baziResult }: LegionCardsProps) => {
+export const LegionCards = ({ baziResult, shenshaRuleset = 'trad' }: LegionCardsProps) => {
   const { pillars, nayin, tenGods } = baziResult;
 
-  // 使用新的規則引擎計算帶證據鏈的神煞
+  // 使用模組化規則引擎計算帶證據鏈的神煞（與傳統排盤同步規則集）
+  const shenshaEngine = new ModularShenshaEngine(shenshaRuleset);
   const shenshaMatches = shenshaEngine.calculate({
     dayStem: pillars.day.stem,
     yearBranch: pillars.year.branch,
@@ -219,21 +270,58 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                     )}
                   </div>
                   
-                  {/* 孫子兵法箴言總結 */}
+                  {/* 經典兵法語錄總結 - 孫子兵法、三十六計、吳子兵法 */}
                   {baziResult.legionStories?.[pillarName] && (
-                    <div className="mt-6 pt-5 border-t-2 border-amber-500/30">
+                    <div className="mt-6 pt-5 border-t-2 border-amber-500/30 space-y-4">
+                      {/* 孫子兵法 - 主要 */}
                       <div className="p-4 bg-gradient-to-br from-amber-950/60 to-stone-900/60 rounded-lg border border-amber-600/40">
                         <div className="flex items-start gap-3">
                           <div className="text-3xl">⚔️</div>
                           <div className="flex-1 space-y-2">
                             <p className="text-amber-200 font-serif text-lg leading-relaxed font-medium">
-                              「{sunTzuQuotes[pillarName].quote}」
+                              「{militaryWisdom[pillarName].primary.quote}」
                             </p>
                             <p className="text-amber-400/80 text-sm font-medium">
-                              —— {sunTzuQuotes[pillarName].source}
+                              —— {militaryWisdom[pillarName].primary.source}
                             </p>
                             <p className="text-amber-100/70 text-sm mt-2 pt-2 border-t border-amber-700/30">
-                              📜 {sunTzuQuotes[pillarName].interpretation}
+                              📜 {militaryWisdom[pillarName].primary.interpretation}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 三十六計 */}
+                      <div className="p-4 bg-gradient-to-br from-red-950/50 to-stone-900/50 rounded-lg border border-red-600/30">
+                        <div className="flex items-start gap-3">
+                          <div className="text-2xl">🎯</div>
+                          <div className="flex-1 space-y-2">
+                            <p className="text-red-200 font-serif text-base leading-relaxed font-medium">
+                              「{militaryWisdom[pillarName].secondary.quote}」
+                            </p>
+                            <p className="text-red-400/80 text-sm font-medium">
+                              —— {militaryWisdom[pillarName].secondary.source}
+                            </p>
+                            <p className="text-red-100/70 text-sm mt-2 pt-2 border-t border-red-700/30">
+                              📖 {militaryWisdom[pillarName].secondary.interpretation}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 吳子兵法 */}
+                      <div className="p-4 bg-gradient-to-br from-blue-950/50 to-stone-900/50 rounded-lg border border-blue-600/30">
+                        <div className="flex items-start gap-3">
+                          <div className="text-2xl">🛡️</div>
+                          <div className="flex-1 space-y-2">
+                            <p className="text-blue-200 font-serif text-base leading-relaxed font-medium">
+                              「{militaryWisdom[pillarName].tertiary.quote}」
+                            </p>
+                            <p className="text-blue-400/80 text-sm font-medium">
+                              —— {militaryWisdom[pillarName].tertiary.source}
+                            </p>
+                            <p className="text-blue-100/70 text-sm mt-2 pt-2 border-t border-blue-700/30">
+                              📜 {militaryWisdom[pillarName].tertiary.interpretation}
                             </p>
                           </div>
                         </div>

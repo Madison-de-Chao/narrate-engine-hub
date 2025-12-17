@@ -12,6 +12,30 @@ interface LegionCardsProps {
   baziResult: BaziResult;
 }
 
+// 孫子兵法箴言 - 對應四個軍團的兵法智慧
+const sunTzuQuotes = {
+  year: {
+    quote: "知彼知己，百戰不殆；不知彼而知己，一勝一負；不知彼，不知己，每戰必殆。",
+    source: "《孫子兵法・謀攻篇》",
+    interpretation: "了解自己的根源，才能在人生戰場上立於不敗之地。"
+  },
+  month: {
+    quote: "上兵伐謀，其次伐交，其次伐兵，其下攻城。",
+    source: "《孫子兵法・謀攻篇》",
+    interpretation: "善用人際關係與智謀，是成就事業的最高境界。"
+  },
+  day: {
+    quote: "故善戰者，立於不敗之地，而不失敵之敗也。",
+    source: "《孫子兵法・軍形篇》",
+    interpretation: "堅守本心、穩固自我，是一切勝利的根基。"
+  },
+  hour: {
+    quote: "故兵無常勢，水無常形；能因敵變化而取勝者，謂之神。",
+    source: "《孫子兵法・虛實篇》",
+    interpretation: "順應變化、靈活應對，方能開創無限可能的未來。"
+  }
+};
+
 const legionConfig = {
   year: {
     name: "祖源軍團",
@@ -194,6 +218,29 @@ export const LegionCards = ({ baziResult }: LegionCardsProps) => {
                       </div>
                     )}
                   </div>
+                  
+                  {/* 孫子兵法箴言總結 */}
+                  {baziResult.legionStories?.[pillarName] && (
+                    <div className="mt-6 pt-5 border-t-2 border-amber-500/30">
+                      <div className="p-4 bg-gradient-to-br from-amber-950/60 to-stone-900/60 rounded-lg border border-amber-600/40">
+                        <div className="flex items-start gap-3">
+                          <div className="text-3xl">⚔️</div>
+                          <div className="flex-1 space-y-2">
+                            <p className="text-amber-200 font-serif text-lg leading-relaxed font-medium">
+                              「{sunTzuQuotes[pillarName].quote}」
+                            </p>
+                            <p className="text-amber-400/80 text-sm font-medium">
+                              —— {sunTzuQuotes[pillarName].source}
+                            </p>
+                            <p className="text-amber-100/70 text-sm mt-2 pt-2 border-t border-amber-700/30">
+                              📜 {sunTzuQuotes[pillarName].interpretation}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {baziResult.legionStories?.[pillarName] && (
                     <div className="mt-4 pt-4 border-t border-border/30">
                       <p className="text-xs text-muted-foreground italic">

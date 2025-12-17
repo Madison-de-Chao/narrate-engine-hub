@@ -515,7 +515,7 @@ const Index = () => {
 
               {/* 四時軍團故事區（兵法為重）*/}
               <section ref={sectionRefs.legion} className="animate-fade-in scroll-mt-36">
-                <LegionCards baziResult={baziResult} />
+                <LegionCards baziResult={baziResult} shenshaRuleset={shenshaRuleset} />
               </section>
 
               {/* ===== 詳細分析區開始 ===== */}

@@ -286,15 +286,46 @@ export const generatePDF = async (elementId: string, fileName: string, coverData
     `;
     document.head.appendChild(style);
 
+    // 確保所有圖片都已載入
+    const images = element.querySelectorAll('img');
+    await Promise.all(
+      Array.from(images).map(
+        (img) =>
+          new Promise((resolve) => {
+            if (img.complete) {
+              resolve(true);
+            } else {
+              img.onload = () => resolve(true);
+              img.onerror = () => resolve(false);
+            }
+          })
+      )
+    );
+
     // 使用 html2canvas 將 HTML 轉換為 canvas
     const canvas = await html2canvas(element, {
-      scale: 2.5,
+      scale: 2,
       useCORS: true,
       logging: false,
       backgroundColor: "#0a0a0f",
-      removeContainer: false,
+      removeContainer: true,
       allowTaint: true,
-      imageTimeout: 15000,
+      imageTimeout: 30000,
+      onclone: (clonedDoc) => {
+        // 移除可能導致問題的動畫元素
+        const clonedElement = clonedDoc.getElementById(elementId);
+        if (clonedElement) {
+          clonedElement.querySelectorAll('.animate-pulse, .animate-spin').forEach((el) => {
+            (el as HTMLElement).style.animation = 'none';
+          });
+          // 確保所有元素都有明確的寬高
+          clonedElement.querySelectorAll('canvas').forEach((canvasEl) => {
+            if ((canvasEl as HTMLCanvasElement).width === 0 || (canvasEl as HTMLCanvasElement).height === 0) {
+              (canvasEl as HTMLElement).style.display = 'none';
+            }
+          });
+        }
+      }
     });
 
     // 移除臨時樣式
@@ -413,25 +444,36 @@ export const generatePDF = async (elementId: string, fileName: string, coverData
       pdf.setLineWidth(0.3);
       pdf.line(margin, pdfHeight - footerHeight + 2, pdfWidth - margin, pdfHeight - footerHeight + 2);
       
-      pdf.setFontSize(7);
+      pdf.setFontSize(6);
       pdf.setTextColor(120, 120, 120);
       
       // 左側日期
-      pdf.text(`製表日期：${dateStr} ${timeStr}`, margin, pdfHeight - 10);
+      pdf.text(`製表日期：${dateStr} ${timeStr}`, margin, pdfHeight - 12);
       
-      // 中間哲學語句
+      // 版權宣告
       pdf.setTextColor(100, 100, 100);
       pdf.text(
-        "命理展示的是一條「相對好走但不一定是你要走的路」",
+        "© 2025 虹靈御所 HongLing YuSuo｜超烜創意 Chaoxuan Creative",
         pdfWidth / 2,
-        pdfHeight - 10,
+        pdfHeight - 12,
+        { align: "center" }
+      );
+      
+      // 哲學語句
+      pdf.setFontSize(5);
+      pdf.setTextColor(80, 80, 80);
+      pdf.text(
+        "本報告僅供參考，命理展示的是一條「相對好走但不一定是你要走的路」，選擇權在於你",
+        pdfWidth / 2,
+        pdfHeight - 7,
         { align: "center" }
       );
       
       // 右側頁碼（內容頁從第2頁開始，封面是第1頁）
+      pdf.setFontSize(6);
       pdf.setTextColor(140, 140, 140);
       const currentPage = hasCover ? page + 2 : page + 1;
-      pdf.text(`第 ${currentPage} 頁 / 共 ${totalPages} 頁`, pdfWidth - margin, pdfHeight - 10, { align: "right" });
+      pdf.text(`第 ${currentPage} 頁 / 共 ${totalPages} 頁`, pdfWidth - margin, pdfHeight - 12, { align: "right" });
     }
 
     // 下載 PDF

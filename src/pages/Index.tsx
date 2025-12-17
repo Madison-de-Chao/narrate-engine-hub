@@ -13,6 +13,7 @@ import { NayinAnalysis } from "@/components/NayinAnalysis";
 import { PersonalityAnalysis } from "@/components/PersonalityAnalysis";
 import { TenGodsAnalysis } from "@/components/TenGodsAnalysis";
 import { ProfessionalReportHeader } from "@/components/ProfessionalReportHeader";
+import { ShareImageDialog } from "@/components/ShareImageDialog";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen } from "lucide-react";
@@ -468,8 +469,8 @@ const Index = () => {
             {/* 報告導航 */}
             <ReportNavigation activeSection={activeSection} onSectionChange={scrollToSection} />
 
-            {/* 下載按鈕 */}
-            <section className="animate-fade-in flex justify-center gap-4">
+            {/* 下載與分享按鈕 */}
+            <section className="animate-fade-in flex flex-wrap justify-center gap-4">
               <Button
                 onClick={handleDownloadReport}
                 disabled={isDownloading}
@@ -487,6 +488,13 @@ const Index = () => {
                   </>
                 )}
               </Button>
+              
+              <ShareImageDialog 
+                name={baziResult.name}
+                gender={baziResult.gender}
+                pillars={baziResult.pillars}
+                nayin={baziResult.nayin}
+              />
             </section>
 
             {/* 報告內容區 - 用於 PDF 生成 */}
@@ -559,8 +567,8 @@ const Index = () => {
       </main>
 
       {/* 底部 */}
-      <footer className="border-t border-border/50 mt-16 py-8">
-        <div className="container mx-auto px-4">
+      <footer className="border-t border-border/50 mt-16 py-8 bg-stone-950/50">
+        <div className="container mx-auto px-4 space-y-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <img 
               src={logoHonglingyusuo}
@@ -575,6 +583,16 @@ const Index = () => {
               alt="超烜創意" 
               className="h-12 object-contain"
             />
+          </div>
+          
+          {/* 版權宣告 */}
+          <div className="pt-4 border-t border-border/30 text-center space-y-2">
+            <p className="text-xs text-muted-foreground">
+              © 2025 虹靈御所 HongLing YuSuo｜超烜創意 Chaoxuan Creative. All Rights Reserved.
+            </p>
+            <p className="text-xs text-muted-foreground/60">
+              本系統僅供參考，命理展示的是一條「相對好走但不一定是你要走的路」，選擇權在於你。
+            </p>
           </div>
         </div>
       </footer>

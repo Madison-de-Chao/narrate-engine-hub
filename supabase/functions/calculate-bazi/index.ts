@@ -242,6 +242,44 @@ const HKO_KEY_SOLAR_TERMS: Record<string, Record<string, string>> = {
   "2030": { "小寒": "2030-01-05", "立春": "2030-02-04", "驚蟄": "2030-03-05", "清明": "2030-04-05", "立夏": "2030-05-05", "芒種": "2030-06-06", "小暑": "2030-07-07", "立秋": "2030-08-07", "白露": "2030-09-08", "寒露": "2030-10-08", "立冬": "2030-11-07", "大雪": "2030-12-07" }
 };
 
+// 精確節氣時間（UTC格式，用於邊界精確判斷）
+// 來源：香港天文台實測資料
+const PRECISE_SOLAR_TERMS: Record<string, Record<string, string>> = {
+  "1984": {
+    "立春": "1984-02-04T14:20:00Z", "驚蟄": "1984-03-05T16:59:00Z", "清明": "1984-04-04T22:45:00Z",
+    "立夏": "1984-05-05T14:19:00Z", "芒種": "1984-06-05T18:21:00Z", "小暑": "1984-07-07T05:26:00Z",
+    "立秋": "1984-08-07T09:09:00Z", "白露": "1984-09-07T16:15:00Z", "寒露": "1984-10-08T05:55:00Z",
+    "立冬": "1984-11-07T13:17:00Z", "大雪": "1984-12-07T06:24:00Z", "小寒": "1985-01-05T16:51:00Z"
+  },
+  "1985": {
+    "立春": "1985-02-03T21:30:00Z", "驚蟄": "1985-03-05T22:46:00Z", "清明": "1985-04-05T04:32:00Z",
+    "立夏": "1985-05-05T20:04:00Z", "芒種": "1985-06-06T00:07:00Z", "小暑": "1985-07-07T11:09:00Z",
+    "立秋": "1985-08-07T14:54:00Z", "白露": "1985-09-07T22:00:00Z", "寒露": "1985-10-08T11:35:00Z",
+    "立冬": "1985-11-07T19:00:00Z", "大雪": "1985-12-07T12:11:00Z", "小寒": "1986-01-05T22:39:00Z"
+  },
+  "1989": {
+    "大雪": "1989-12-07T03:20:57Z", "小寒": "1990-01-05T14:33:16Z"
+  },
+  "1990": {
+    "立春": "1990-02-04T02:14:01Z", "驚蟄": "1990-03-05T20:19:19Z", "清明": "1990-04-05T01:12:56Z",
+    "立夏": "1990-05-05T18:35:26Z", "芒種": "1990-06-05T22:46:17Z", "小暑": "1990-07-07T09:00:28Z",
+    "立秋": "1990-08-07T18:45:33Z", "白露": "1990-09-07T21:37:29Z", "寒露": "1990-10-08T13:13:48Z",
+    "立冬": "1990-11-07T16:23:29Z", "大雪": "1990-12-07T09:14:10Z", "小寒": "1991-01-05T20:28:08Z"
+  },
+  "1994": {
+    "立春": "1994-02-04T03:31:00Z", "驚蟄": "1994-03-06T01:38:00Z", "清明": "1994-04-05T08:11:00Z",
+    "立夏": "1994-05-06T01:36:00Z", "芒種": "1994-06-06T06:26:00Z", "小暑": "1994-07-07T17:25:00Z",
+    "立秋": "1994-08-07T20:23:00Z", "白露": "1994-09-08T03:35:00Z", "寒露": "1994-10-08T23:25:00Z",
+    "立冬": "1994-11-07T06:36:00Z", "大雪": "1994-12-07T00:07:00Z", "小寒": "1995-01-06T10:09:00Z"
+  },
+  "2000": {
+    "立春": "2000-02-04T12:40:24Z", "驚蟄": "2000-03-05T06:43:43Z", "清明": "2000-04-04T13:31:58Z",
+    "立夏": "2000-05-05T06:44:02Z", "芒種": "2000-06-05T10:58:38Z", "小暑": "2000-07-06T21:02:48Z",
+    "立秋": "2000-08-07T06:48:39Z", "白露": "2000-09-07T09:27:07Z", "寒露": "2000-10-08T01:28:42Z",
+    "立冬": "2000-11-07T04:59:35Z", "大雪": "2000-12-06T22:24:36Z", "小寒": "2001-01-05T10:15:40Z"
+  }
+};
+
 // 將 HKO 簡化格式轉換為系統所需的完整格式
 function convertHkoToSolarTermsData(): { years: Record<string, SolarTermsYearData> } {
   const result: { years: Record<string, SolarTermsYearData> } = { years: {} };
@@ -249,9 +287,14 @@ function convertHkoToSolarTermsData(): { years: Record<string, SolarTermsYearDat
   for (const [year, terms] of Object.entries(HKO_KEY_SOLAR_TERMS)) {
     result.years[year] = {};
     for (const [termName, dateStr] of Object.entries(terms)) {
-      // 將日期轉換為 UTC 時間（假設節氣時間為當地時間的 00:00，轉換為 UTC-8 即減去8小時）
-      // 但為了簡化，我們直接使用日期的開始時間
-      result.years[year][termName] = { date: `${dateStr}T00:00:00Z` };
+      // 優先使用精確時間（若存在）
+      const preciseTime = PRECISE_SOLAR_TERMS[year]?.[termName];
+      if (preciseTime) {
+        result.years[year][termName] = { date: preciseTime };
+      } else {
+        // 回退：使用日期的開始時間 (00:00 UTC)
+        result.years[year][termName] = { date: `${dateStr}T00:00:00Z` };
+      }
     }
   }
   
@@ -435,14 +478,20 @@ function calculateMonthPillarAccurate(
 
 // 計算日柱（基準日算法）
 // 基準：1985-09-22 = 甲子日 (60甲子索引0)
-function calculateDayPillar(birthLocal: Date): { stem: string, branch: string } {
+// 子時跨日規則：23:00-23:59 視為次日
+function calculateDayPillar(birthLocal: Date, hour: number): { stem: string, branch: string } {
   // 使用本地日期的 00:00 來計算天數差
   const baseDate = new Date(Date.UTC(1985, 8, 22)); // 1985-09-22 00:00 UTC
-  const birthDayStart = new Date(Date.UTC(
+  let birthDayStart = new Date(Date.UTC(
     birthLocal.getUTCFullYear(),
     birthLocal.getUTCMonth(),
     birthLocal.getUTCDate()
   ));
+  
+  // 子時跨日處理：23:00-23:59 屬於子時，日柱應計入次日
+  if (hour >= 23) {
+    birthDayStart = new Date(birthDayStart.getTime() + 24 * 60 * 60 * 1000);
+  }
   
   const diffTime = birthDayStart.getTime() - baseDate.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -721,8 +770,8 @@ serve(async (req) => {
     calculationLogs.month_log.push(`月柱計算: 五虎遁 年干${yearPillar.stem} + 月支${monthPillar.branch} → ${monthPillar.stem}${monthPillar.branch}`);
     console.log('Month Pillar:', monthPillar);
     
-    const dayPillar = calculateDayPillar(birthLocal);
-    calculationLogs.day_log.push(`日柱計算: 基準日1985/09/22甲子 → ${dayPillar.stem}${dayPillar.branch}`);
+    const dayPillar = calculateDayPillar(birthLocal, hour);
+    calculationLogs.day_log.push(`日柱計算: 基準日1985/09/22甲子${hour >= 23 ? '（子時跨日+1）' : ''} → ${dayPillar.stem}${dayPillar.branch}`);
     
     const hourPillar = calculateHourPillar(dayPillar.stem, hour);
     calculationLogs.hour_log.push(`時柱計算: 五鼠遁 日干${dayPillar.stem} + ${hour}時 → ${hourPillar.stem}${hourPillar.branch}`);

@@ -3,12 +3,34 @@ import { Badge } from "@/components/ui/badge";
 import { BaziResult } from "@/pages/Index";
 import { 
   Star, Shield, TrendingUp, Heart, Briefcase,
-  Sparkles, ArrowUpRight, ArrowDownRight, Minus
+  Sparkles, ArrowUpRight, ArrowDownRight, Minus,
+  ThumbsUp, ThumbsDown, Zap, Droplets, Flame, Mountain, Trees
 } from "lucide-react";
 
 interface ReportSummaryProps {
   baziResult: BaziResult;
 }
+
+// 五行圖標映射
+const elementIcons: Record<string, React.ReactNode> = {
+  wood: <Trees className="w-4 h-4" />,
+  fire: <Flame className="w-4 h-4" />,
+  earth: <Mountain className="w-4 h-4" />,
+  metal: <Zap className="w-4 h-4" />,
+  water: <Droplets className="w-4 h-4" />
+};
+
+const elementNames: Record<string, string> = {
+  wood: '木', fire: '火', earth: '土', metal: '金', water: '水'
+};
+
+const elementColors: Record<string, string> = {
+  wood: 'text-green-400 bg-green-900/50 border-green-500/30',
+  fire: 'text-red-400 bg-red-900/50 border-red-500/30',
+  earth: 'text-yellow-400 bg-yellow-900/50 border-yellow-500/30',
+  metal: 'text-slate-300 bg-slate-800/50 border-slate-500/30',
+  water: 'text-blue-400 bg-blue-900/50 border-blue-500/30'
+};
 
 export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
   const { pillars, wuxing, yinyang, shensha, name, gender } = baziResult;
@@ -20,10 +42,6 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
   const minElement = Object.entries(wuxing).reduce((min, [key, val]) => 
     val < min.value ? { name: key, value: val } : min, { name: '', value: Infinity });
 
-  const elementNames: Record<string, string> = {
-    wood: '木', fire: '火', earth: '土', metal: '金', water: '水'
-  };
-
   // 日主強弱判斷（根據傳統八字理論）
   const dayMasterElement = getDayMasterElement(pillars.day.stem);
   const dayMasterStrength = wuxing[dayMasterElement as keyof typeof wuxing] / totalWuxing;
@@ -34,6 +52,9 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
   const drainScore = drainElements.reduce((sum, el) => sum + (wuxing[el as keyof typeof wuxing] || 0), 0);
   const strengthRatio = supportScore / (supportScore + drainScore + 0.1);
   const strengthLevel = strengthRatio > 0.55 ? '身強' : strengthRatio < 0.45 ? '身弱' : '中和';
+  
+  // 用神喜忌分析
+  const yongShenAnalysis = getYongShenAnalysis(dayMasterElement, strengthLevel, wuxing);
   
   // 統計吉凶神煞
   const jiShen = shensha.filter(s => isJiShen(s)).length;
@@ -146,7 +167,7 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
               {elementNames[maxElement.name]}旺 · {elementNames[minElement.name]}弱
             </p>
             <p className="text-xs text-amber-200/60 mt-1">
-              喜用：{getPreferredElement(dayMasterElement, strengthLevel)}
+              喜用：{yongShenAnalysis.xiYong.map(e => elementNames[e]).join('')}
             </p>
           </div>
 
@@ -164,6 +185,97 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
           </div>
         </div>
 
+        {/* 用神喜忌詳細分析 */}
+        <div className="p-5 rounded-xl bg-gradient-to-br from-purple-950/60 to-indigo-950/60 border border-purple-500/30">
+          <h3 className="text-lg font-bold text-purple-300 mb-4 flex items-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            用神喜忌分析
+          </h3>
+          
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
+            {/* 喜用神 */}
+            <div className="p-4 rounded-lg bg-emerald-950/50 border border-emerald-500/30">
+              <div className="flex items-center gap-2 mb-3">
+                <ThumbsUp className="w-5 h-5 text-emerald-400" />
+                <span className="font-bold text-emerald-300">喜用神</span>
+                <Badge variant="outline" className="text-xs border-emerald-500/50 text-emerald-300">
+                  有利五行
+                </Badge>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {yongShenAnalysis.xiYong.map(element => (
+                  <div key={element} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${elementColors[element]}`}>
+                    {elementIcons[element]}
+                    <span className="font-medium">{elementNames[element]}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-emerald-200/80">{yongShenAnalysis.xiYongReason}</p>
+            </div>
+
+            {/* 忌神 */}
+            <div className="p-4 rounded-lg bg-rose-950/50 border border-rose-500/30">
+              <div className="flex items-center gap-2 mb-3">
+                <ThumbsDown className="w-5 h-5 text-rose-400" />
+                <span className="font-bold text-rose-300">忌神</span>
+                <Badge variant="outline" className="text-xs border-rose-500/50 text-rose-300">
+                  不利五行
+                </Badge>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {yongShenAnalysis.jiShen.map(element => (
+                  <div key={element} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border ${elementColors[element]}`}>
+                    {elementIcons[element]}
+                    <span className="font-medium">{elementNames[element]}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-rose-200/80">{yongShenAnalysis.jiShenReason}</p>
+            </div>
+          </div>
+
+          {/* 十神對照 */}
+          <div className="p-4 rounded-lg bg-black/30 border border-purple-500/20">
+            <h4 className="text-sm font-bold text-purple-300 mb-3">十神喜忌對照</h4>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+              {yongShenAnalysis.tenGodAnalysis.map((item, idx) => (
+                <div key={idx} className={`p-2 rounded-lg text-center ${
+                  item.type === 'xi' ? 'bg-emerald-900/40 border border-emerald-500/30' : 
+                  item.type === 'ji' ? 'bg-rose-900/40 border border-rose-500/30' :
+                  'bg-slate-800/40 border border-slate-500/30'
+                }`}>
+                  <p className="text-xs text-stone-400 mb-1">{item.element}</p>
+                  <p className={`text-sm font-bold ${
+                    item.type === 'xi' ? 'text-emerald-300' : 
+                    item.type === 'ji' ? 'text-rose-300' : 'text-slate-300'
+                  }`}>{item.name}</p>
+                  <Badge variant="outline" className={`text-xs mt-1 ${
+                    item.type === 'xi' ? 'border-emerald-500/50 text-emerald-400' : 
+                    item.type === 'ji' ? 'border-rose-500/50 text-rose-400' :
+                    'border-slate-500/50 text-slate-400'
+                  }`}>
+                    {item.type === 'xi' ? '喜' : item.type === 'ji' ? '忌' : '中'}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 實用建議 */}
+          <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/20">
+            <h4 className="text-sm font-bold text-indigo-300 mb-2">開運建議</h4>
+            <div className="grid md:grid-cols-2 gap-3 text-sm text-indigo-200/80">
+              <div>
+                <p className="font-medium text-emerald-400 mb-1">✓ 適合方向</p>
+                <p>{yongShenAnalysis.advice.favorable}</p>
+              </div>
+              <div>
+                <p className="font-medium text-rose-400 mb-1">✗ 宜避開</p>
+                <p>{yongShenAnalysis.advice.unfavorable}</p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* 速覽提示 */}
         <div className="grid md:grid-cols-3 gap-3">
@@ -216,6 +328,120 @@ const QuickInsight = ({
     </div>
   );
 };
+
+// 用神喜忌分析結果類型
+interface YongShenAnalysis {
+  xiYong: string[];
+  jiShen: string[];
+  xiYongReason: string;
+  jiShenReason: string;
+  tenGodAnalysis: { name: string; element: string; type: 'xi' | 'ji' | 'zhong' }[];
+  advice: { favorable: string; unfavorable: string };
+}
+
+// 根據日主強弱計算用神喜忌
+function getYongShenAnalysis(dayElement: string, strength: string, wuxing: Record<string, number>): YongShenAnalysis {
+  // 五行生剋關係
+  const generating: Record<string, string> = { wood: 'fire', fire: 'earth', earth: 'metal', metal: 'water', water: 'wood' };
+  const controlling: Record<string, string> = { wood: 'earth', fire: 'metal', earth: 'water', metal: 'wood', water: 'fire' };
+  const generatedBy: Record<string, string> = { wood: 'water', fire: 'wood', earth: 'fire', metal: 'earth', water: 'metal' };
+  const controlledBy: Record<string, string> = { wood: 'metal', fire: 'water', earth: 'wood', metal: 'fire', water: 'earth' };
+
+  // 十神對應
+  const tenGodMap: Record<string, { name: string; element: string }[]> = {
+    wood: [
+      { name: '比肩/劫財', element: 'wood' },
+      { name: '食神/傷官', element: 'fire' },
+      { name: '偏財/正財', element: 'earth' },
+      { name: '七殺/正官', element: 'metal' },
+      { name: '偏印/正印', element: 'water' }
+    ],
+    fire: [
+      { name: '比肩/劫財', element: 'fire' },
+      { name: '食神/傷官', element: 'earth' },
+      { name: '偏財/正財', element: 'metal' },
+      { name: '七殺/正官', element: 'water' },
+      { name: '偏印/正印', element: 'wood' }
+    ],
+    earth: [
+      { name: '比肩/劫財', element: 'earth' },
+      { name: '食神/傷官', element: 'metal' },
+      { name: '偏財/正財', element: 'water' },
+      { name: '七殺/正官', element: 'wood' },
+      { name: '偏印/正印', element: 'fire' }
+    ],
+    metal: [
+      { name: '比肩/劫財', element: 'metal' },
+      { name: '食神/傷官', element: 'water' },
+      { name: '偏財/正財', element: 'wood' },
+      { name: '七殺/正官', element: 'fire' },
+      { name: '偏印/正印', element: 'earth' }
+    ],
+    water: [
+      { name: '比肩/劫財', element: 'water' },
+      { name: '食神/傷官', element: 'wood' },
+      { name: '偏財/正財', element: 'fire' },
+      { name: '七殺/正官', element: 'earth' },
+      { name: '偏印/正印', element: 'metal' }
+    ]
+  };
+
+  let xiYong: string[] = [];
+  let jiShen: string[] = [];
+  let xiYongReason = '';
+  let jiShenReason = '';
+  let advice = { favorable: '', unfavorable: '' };
+
+  const printElement = generatedBy[dayElement]; // 印星五行
+  const sameElement = dayElement; // 比劫五行
+  const foodElement = generating[dayElement]; // 食傷五行
+  const wealthElement = controlling[dayElement]; // 財星五行
+  const officialElement = controlledBy[dayElement]; // 官殺五行
+
+  if (strength === '身強') {
+    // 身強：喜食傷、財星、官殺（洩耗制衡）
+    xiYong = [foodElement, wealthElement, officialElement];
+    jiShen = [printElement, sameElement];
+    xiYongReason = `日主${elementNames[dayElement]}氣勢強旺，需要洩耗之氣來平衡。食傷（${elementNames[foodElement]}）洩秀、財星（${elementNames[wealthElement]}）耗身、官殺（${elementNames[officialElement]}）制身，皆為喜用。`;
+    jiShenReason = `印星（${elementNames[printElement]}）生身、比劫（${elementNames[sameElement]}）助身，會使日主更強，反為忌神。`;
+    advice = {
+      favorable: `從事與${elementNames[foodElement]}（創作表達）、${elementNames[wealthElement]}（財務投資）、${elementNames[officialElement]}（管理規範）相關的行業或活動`,
+      unfavorable: `過度依賴長輩資源（${elementNames[printElement]}）或與同輩競爭（${elementNames[sameElement]}）`
+    };
+  } else if (strength === '身弱') {
+    // 身弱：喜印星、比劫（生扶輔助）
+    xiYong = [printElement, sameElement];
+    jiShen = [foodElement, wealthElement, officialElement];
+    xiYongReason = `日主${elementNames[dayElement]}氣勢較弱，需要生扶之力來增強。印星（${elementNames[printElement]}）生身、比劫（${elementNames[sameElement]}）助身，皆為喜用。`;
+    jiShenReason = `食傷（${elementNames[foodElement]}）洩氣、財星（${elementNames[wealthElement]}）耗身、官殺（${elementNames[officialElement]}）剋身，會使日主更弱，為忌神。`;
+    advice = {
+      favorable: `多親近長輩貴人（${elementNames[printElement]}）、與志同道合者合作（${elementNames[sameElement]}），從事穩健保守的事業`,
+      unfavorable: `過度追求財富（${elementNames[wealthElement]}）或承擔過大壓力責任（${elementNames[officialElement]}）`
+    };
+  } else {
+    // 中和：根據五行偏向微調
+    const totalWuxing = Object.values(wuxing).reduce((sum, val) => sum + val, 0);
+    const weakest = Object.entries(wuxing).reduce((min, [k, v]) => v < min.value ? { name: k, value: v } : min, { name: '', value: Infinity });
+    
+    xiYong = [weakest.name];
+    jiShen = [];
+    xiYongReason = `日主${elementNames[dayElement]}五行中和，整體平衡。可適當補充較弱的${elementNames[weakest.name]}五行，維持均衡發展。`;
+    jiShenReason = `中和格局無明顯忌神，但宜避免任何五行過於極端。`;
+    advice = {
+      favorable: `保持生活各方面的平衡，適度補充${elementNames[weakest.name]}元素`,
+      unfavorable: `避免極端行為或過度偏執某一方向`
+    };
+  }
+
+  // 生成十神分析
+  const tenGodAnalysis = tenGodMap[dayElement].map(item => ({
+    ...item,
+    type: xiYong.includes(item.element) ? 'xi' as const : 
+          jiShen.includes(item.element) ? 'ji' as const : 'zhong' as const
+  }));
+
+  return { xiYong, jiShen, xiYongReason, jiShenReason, tenGodAnalysis, advice };
+}
 
 // 輔助函數
 function getDayMasterElement(stem: string): string {
@@ -279,21 +505,6 @@ function isXiongSha(sha: string | { category?: string; name?: string }): boolean
   }
   const xiongList = ['羊刃', '劫煞', '災煞', '孤辰', '寡宿', '亡神', '白虎', '天狗', '咸池'];
   return xiongList.includes(sha as string);
-}
-
-function getPreferredElement(dayElement: string, strength: string): string {
-  // 簡化的喜用神判斷
-  if (strength === '身強') {
-    const weakeningElements: Record<string, string> = {
-      'wood': '金水', 'fire': '水土', 'earth': '木金', 'metal': '火水', 'water': '土木'
-    };
-    return weakeningElements[dayElement] || '平衡';
-  } else {
-    const supportingElements: Record<string, string> = {
-      'wood': '水木', 'fire': '木火', 'earth': '火土', 'metal': '土金', 'water': '金水'
-    };
-    return supportingElements[dayElement] || '平衡';
-  }
 }
 
 function getRelationshipTrait(dayStem: string): string {

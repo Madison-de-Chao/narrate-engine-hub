@@ -495,7 +495,7 @@ function calculateMonthPillarAccurate(
 
 const DAY_PILLAR_CONFIG = {
   // 切換此值選擇 EPOCH 標準
-  useSpecEpoch: false,  // true = 規格書(1985-09-22=甲子), false = 萬年曆(1999-11-22=甲子)
+  useSpecEpoch: true,  // true = 規格書(1985-09-22=甲子), false = 萬年曆(1999-11-22=甲子)
   
   // 子時跨日規則：只在此處套用（策略 A）
   ziHourNextDayRule: true,

@@ -36,84 +36,190 @@ interface TestResult {
   errors: string[];
 }
 
-// 邊界測試案例
-const testCases: TestCase[] = [
+// 標準測試案例（系統必過樣本）
+const standardTestCases: TestCase[] = [
   {
-    id: "1994-10-31-0130",
-    name: "1994年10月31日 01:30（回歸測試）",
-    description: "寒露後，戌月，丁丑時",
+    id: "standard-1985-10-06",
+    name: "1985年10月6日 19:30（標準樣本1）",
+    description: "規格書指定對照盤，寒露後酉月",
+    input: {
+      birthDate: "1985-10-06",
+      birthTime: "19:30",
+      name: "標準測試1",
+      gender: "male"
+    },
+    expected: {
+      yearPillar: { stem: "乙", branch: "丑" },
+      monthPillar: { stem: "乙", branch: "酉" },
+      dayPillar: { stem: "戊", branch: "寅" },
+      hourPillar: { stem: "壬", branch: "戌" }
+    }
+  },
+  {
+    id: "standard-2000-01-01",
+    name: "2000年1月1日 12:00（標準樣本2）",
+    description: "規格書指定對照盤，千禧年元旦",
+    input: {
+      birthDate: "2000-01-01",
+      birthTime: "12:00",
+      name: "標準測試2",
+      gender: "female"
+    },
+    expected: {
+      yearPillar: { stem: "己", branch: "卯" },
+      monthPillar: { stem: "丁", branch: "丑" },
+      dayPillar: { stem: "甲", branch: "辰" },
+      hourPillar: { stem: "庚", branch: "午" }
+    }
+  },
+  {
+    id: "standard-1990-09-27",
+    name: "1990年9月27日 08:32（標準樣本3）",
+    description: "規格書指定對照盤，白露後酉月",
+    input: {
+      birthDate: "1990-09-27",
+      birthTime: "08:32",
+      name: "標準測試3",
+      gender: "male"
+    },
+    expected: {
+      yearPillar: { stem: "庚", branch: "午" },
+      monthPillar: { stem: "乙", branch: "酉" },
+      dayPillar: { stem: "乙", branch: "未" },
+      hourPillar: { stem: "庚", branch: "辰" }
+    }
+  }
+];
+
+// 邊界測試案例
+const boundaryTestCases: TestCase[] = [
+  {
+    id: "boundary-lichun-1984",
+    name: "1984年2月4日 23:00（立春後年柱換年）",
+    description: "立春後，年柱切到新年甲子年",
+    input: {
+      birthDate: "1984-02-04",
+      birthTime: "23:00",
+      name: "年柱邊界測試",
+      gender: "male"
+    },
+    expected: {
+      yearPillar: { stem: "甲", branch: "子" },
+      monthPillar: { stem: "丙", branch: "寅" },
+      dayPillar: { stem: "癸", branch: "丑" },
+      hourPillar: { stem: "癸", branch: "子" }
+    }
+  },
+  {
+    id: "boundary-zi-hour-A",
+    name: "1994年10月31日 23:10（子時跨日A）",
+    description: "23:10為子時，日柱視為次日",
     input: {
       birthDate: "1994-10-31",
-      birthTime: "01:30",
-      name: "測試案例1",
+      birthTime: "23:10",
+      name: "子時跨日A",
       gender: "male"
     },
     expected: {
       yearPillar: { stem: "甲", branch: "戌" },
       monthPillar: { stem: "甲", branch: "戌" },
-      dayPillar: { stem: "庚", branch: "寅" },
-      hourPillar: { stem: "丁", branch: "丑" }
+      dayPillar: { stem: "辛", branch: "卯" },
+      hourPillar: { stem: "戊", branch: "子" }
     }
   },
   {
-    id: "1994-02-03-1200",
-    name: "1994年2月3日 12:00（立春前一天）",
-    description: "癸酉年丑月，立春前應屬前一年",
+    id: "boundary-zi-hour-B",
+    name: "1994年11月1日 00:40（子時跨日B）",
+    description: "00:40仍為子時，日柱為當日",
     input: {
-      birthDate: "1994-02-03",
-      birthTime: "12:00",
-      name: "測試案例2",
+      birthDate: "1994-11-01",
+      birthTime: "00:40",
+      name: "子時跨日B",
       gender: "female"
     },
     expected: {
-      yearPillar: { stem: "癸", branch: "酉" },
-      monthPillar: { stem: "乙", branch: "丑" },
-      dayPillar: { stem: "丙", branch: "辰" },
-      hourPillar: { stem: "甲", branch: "午" }
+      yearPillar: { stem: "甲", branch: "戌" },
+      monthPillar: { stem: "甲", branch: "戌" },
+      dayPillar: { stem: "辛", branch: "卯" },
+      hourPillar: { stem: "戊", branch: "子" }
     }
   },
   {
-    id: "1994-02-04-1200",
-    name: "1994年2月4日 12:00（立春當天）",
-    description: "甲戌年寅月，立春後進入新年",
+    id: "boundary-hour-xu",
+    name: "1990年5月15日 19:30（戌時邊界）",
+    description: "19:30應為戌時（19:00-20:59），非亥時",
     input: {
-      birthDate: "1994-02-04",
-      birthTime: "12:00",
-      name: "測試案例3",
+      birthDate: "1990-05-15",
+      birthTime: "19:30",
+      name: "戌時測試",
+      gender: "male"
+    },
+    expected: {
+      yearPillar: { stem: "庚", branch: "午" },
+      monthPillar: { stem: "辛", branch: "巳" },
+      dayPillar: { stem: "壬", branch: "寅" },
+      hourPillar: { stem: "庚", branch: "戌" }
+    }
+  },
+  {
+    id: "boundary-hour-hai",
+    name: "1990年5月15日 21:10（亥時邊界）",
+    description: "21:10應為亥時（21:00-22:59）",
+    input: {
+      birthDate: "1990-05-15",
+      birthTime: "21:10",
+      name: "亥時測試",
+      gender: "female"
+    },
+    expected: {
+      yearPillar: { stem: "庚", branch: "午" },
+      monthPillar: { stem: "辛", branch: "巳" },
+      dayPillar: { stem: "壬", branch: "寅" },
+      hourPillar: { stem: "辛", branch: "亥" }
+    }
+  },
+  {
+    id: "boundary-hanlu-before",
+    name: "1994年10月8日 06:00（寒露前）",
+    description: "寒露當日但在寒露時刻前（23:25 UTC），仍為酉月",
+    input: {
+      birthDate: "1994-10-08",
+      birthTime: "06:00",
+      name: "寒露前測試",
       gender: "male"
     },
     expected: {
       yearPillar: { stem: "甲", branch: "戌" },
-      monthPillar: { stem: "丙", branch: "寅" },
-      dayPillar: { stem: "丁", branch: "巳" },
-      hourPillar: { stem: "丙", branch: "午" }
+      monthPillar: { stem: "癸", branch: "酉" },
+      dayPillar: { stem: "丁", branch: "亥" },
+      hourPillar: { stem: "癸", branch: "卯" }
     }
   },
   {
-    id: "2000-02-04-2000",
-    name: "2000年2月4日 20:00（千禧年立春）",
-    description: "庚辰年，立春後驗證",
+    id: "boundary-hanlu-after",
+    name: "1994年10月9日 10:00（寒露後）",
+    description: "寒露後，戌月開始",
     input: {
-      birthDate: "2000-02-04",
-      birthTime: "20:00",
-      name: "測試案例4",
-      gender: "male"
+      birthDate: "1994-10-09",
+      birthTime: "10:00",
+      name: "寒露後測試",
+      gender: "female"
     },
     expected: {
-      yearPillar: { stem: "庚", branch: "辰" },
-      monthPillar: { stem: "戊", branch: "寅" },
-      dayPillar: { stem: "甲", branch: "午" },
-      hourPillar: { stem: "甲", branch: "戌" }
+      yearPillar: { stem: "甲", branch: "戌" },
+      monthPillar: { stem: "甲", branch: "戌" },
+      dayPillar: { stem: "戊", branch: "子" },
+      hourPillar: { stem: "丁", branch: "巳" }
     }
   },
   {
-    id: "1990-01-05-0600",
+    id: "boundary-xiaohan-before",
     name: "1990年1月5日 06:00（小寒前）",
-    description: "小寒當天但時間在小寒前（22:33），仍為子月",
+    description: "小寒當日但在小寒前（22:33 local），仍為子月",
     input: {
       birthDate: "1990-01-05",
       birthTime: "06:00",
-      name: "測試案例5",
+      name: "小寒前測試",
       gender: "female"
     },
     expected: {
@@ -124,57 +230,26 @@ const testCases: TestCase[] = [
     }
   },
   {
-    id: "1985-09-22-1200",
-    name: "1985年9月22日 12:00（日柱基準日）",
-    description: "甲子日柱基準日驗證",
+    id: "boundary-xiaohan-after",
+    name: "1990年1月5日 23:00（小寒後）",
+    description: "小寒後（22:33 local），丑月開始",
     input: {
-      birthDate: "1985-09-22",
-      birthTime: "12:00",
-      name: "測試案例6",
+      birthDate: "1990-01-05",
+      birthTime: "23:00",
+      name: "小寒後測試",
       gender: "male"
     },
     expected: {
-      yearPillar: { stem: "乙", branch: "丑" },
-      monthPillar: { stem: "乙", branch: "酉" },
-      dayPillar: { stem: "甲", branch: "子" },
-      hourPillar: { stem: "庚", branch: "午" }
-    }
-  },
-  {
-    id: "1987-02-04-0000",
-    name: "1987年2月4日 00:00（立春日子時）",
-    description: "立春日午夜子時邊界測試",
-    input: {
-      birthDate: "1987-02-04",
-      birthTime: "00:30",
-      name: "測試案例7",
-      gender: "male"
-    },
-    expected: {
-      yearPillar: { stem: "丁", branch: "卯" },
-      monthPillar: { stem: "壬", branch: "寅" },
-      dayPillar: { stem: "庚", branch: "寅" },
-      hourPillar: { stem: "丙", branch: "子" }
-    }
-  },
-  {
-    id: "1994-10-08-1000",
-    name: "1994年10月8日 10:00（寒露當天）",
-    description: "寒露節氣當天，戌月開始",
-    input: {
-      birthDate: "1994-10-08",
-      birthTime: "10:00",
-      name: "測試案例8",
-      gender: "female"
-    },
-    expected: {
-      yearPillar: { stem: "甲", branch: "戌" },
-      monthPillar: { stem: "甲", branch: "戌" },
-      dayPillar: { stem: "丁", branch: "亥" },
-      hourPillar: { stem: "乙", branch: "巳" }
+      yearPillar: { stem: "己", branch: "巳" },
+      monthPillar: { stem: "丁", branch: "丑" },
+      dayPillar: { stem: "甲", branch: "寅" },
+      hourPillar: { stem: "甲", branch: "子" }
     }
   }
 ];
+
+// 合併所有測試案例
+const testCases: TestCase[] = [...standardTestCases, ...boundaryTestCases];
 
 export const BaziTestRunner = () => {
   const [isRunning, setIsRunning] = useState(false);

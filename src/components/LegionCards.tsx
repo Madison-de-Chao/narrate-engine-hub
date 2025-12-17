@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BaziResult } from "@/pages/Index";
-import { Swords, Users, Heart, Sparkles, Crown, Shield, Star, Zap, BookOpen, TrendingUp, Target } from "lucide-react";
+import { Swords, Users, Heart, Sparkles, Crown, Shield, Star, Zap, BookOpen, TrendingUp, Target, ThumbsUp, ThumbsDown } from "lucide-react";
 import tenGodsData from "@/data/ten_gods.json";
 import { storyMaterialsManager } from "@/lib/storyMaterials";
 import { ModularShenshaEngine, type RulesetType } from "@/lib/shenshaRuleEngine";
@@ -12,6 +12,82 @@ import { ShenshaCardList } from "./ShenshaCard";
 interface LegionCardsProps {
   baziResult: BaziResult;
   shenshaRuleset?: RulesetType;
+}
+
+// 天干對應五行
+const STEM_TO_ELEMENT: Record<string, string> = {
+  '甲': '木', '乙': '木',
+  '丙': '火', '丁': '火',
+  '戊': '土', '己': '土',
+  '庚': '金', '辛': '金',
+  '壬': '水', '癸': '水'
+};
+
+// 五行名稱對照
+const ELEMENT_NAMES: Record<string, string> = {
+  '木': '木', '火': '火', '土': '土', '金': '金', '水': '水'
+};
+
+// 五行生剋關係
+const GENERATES: Record<string, string> = { '木': '火', '火': '土', '土': '金', '金': '水', '水': '木' };
+const GENERATED_BY: Record<string, string> = { '木': '水', '火': '木', '土': '火', '金': '土', '水': '金' };
+const CONTROLS: Record<string, string> = { '木': '土', '火': '金', '土': '水', '金': '木', '水': '火' };
+const CONTROLLED_BY: Record<string, string> = { '木': '金', '火': '水', '土': '木', '金': '火', '水': '土' };
+
+// 獲取日主五行
+function getDayMasterElement(dayStem: string): string {
+  return STEM_TO_ELEMENT[dayStem] || '木';
+}
+
+// 計算身強身弱比例
+function calculateStrengthRatio(dayElement: string, wuxing: Record<string, number>): number {
+  const elementToKey: Record<string, string> = {
+    '木': 'wood', '火': 'fire', '土': 'earth', '金': 'metal', '水': 'water'
+  };
+  
+  const sameElement = dayElement;
+  const printElement = GENERATED_BY[dayElement];
+  
+  const total = Object.values(wuxing).reduce((a, b) => a + b, 0) || 1;
+  const selfScore = (wuxing[elementToKey[sameElement]] || 0) + (wuxing[elementToKey[printElement]] || 0);
+  
+  return selfScore / total;
+}
+
+// 用神資訊類型
+interface YongShenInfo {
+  xiYong: string[];
+  jiShen: string[];
+  strengthLevel: string;
+}
+
+// 簡化版用神計算
+function getSimpleYongShen(dayElement: string, strength: string): YongShenInfo {
+  const printElement = GENERATED_BY[dayElement];
+  const sameElement = dayElement;
+  const foodElement = GENERATES[dayElement];
+  const wealthElement = CONTROLS[dayElement];
+  const officialElement = CONTROLLED_BY[dayElement];
+  
+  if (strength === '身強') {
+    return {
+      xiYong: [ELEMENT_NAMES[foodElement], ELEMENT_NAMES[wealthElement], ELEMENT_NAMES[officialElement]],
+      jiShen: [ELEMENT_NAMES[printElement], ELEMENT_NAMES[sameElement]],
+      strengthLevel: strength
+    };
+  } else if (strength === '身弱') {
+    return {
+      xiYong: [ELEMENT_NAMES[printElement], ELEMENT_NAMES[sameElement]],
+      jiShen: [ELEMENT_NAMES[foodElement], ELEMENT_NAMES[wealthElement], ELEMENT_NAMES[officialElement]],
+      strengthLevel: strength
+    };
+  } else {
+    return {
+      xiYong: ['中和', '平衡'],
+      jiShen: ['過極'],
+      strengthLevel: strength
+    };
+  }
 }
 
 // 經典兵法語錄集 - 孫子兵法、三十六計、吳子兵法
@@ -157,8 +233,16 @@ const dizhiRoles: { [key: string]: { role: string; symbol: string; character: st
   亥: { role: "智豬先知", symbol: "冬水潛藏，蓄勢待發", character: "福德圓滿，寬厚仁慈", hiddenStems: "壬水、甲木 → 智慧與生長", weakness: "過於理想化，逃避現實", buff: "福德智慧", debuff: "逃避散漫" },
 };
 
+// 柱名對應的 matched_pillar 值映射
+const pillarToMatchedPillarMap: Record<string, string[]> = {
+  year: ['年支', '年干'],
+  month: ['月支', '月干'],
+  day: ['日支', '日干'],
+  hour: ['時支', '時干']
+};
+
 export const LegionCards = ({ baziResult, shenshaRuleset = 'trad' }: LegionCardsProps) => {
-  const { pillars, nayin, tenGods } = baziResult;
+  const { pillars, nayin, tenGods, wuxing } = baziResult;
 
   // 使用模組化規則引擎計算帶證據鏈的神煞（與傳統排盤同步規則集）
   const shenshaEngine = new ModularShenshaEngine(shenshaRuleset);
@@ -172,6 +256,21 @@ export const LegionCards = ({ baziResult, shenshaRuleset = 'trad' }: LegionCards
     monthStem: pillars.month.stem,
     hourStem: pillars.hour.stem
   });
+
+  // 按柱分組神煞
+  const getShenshaByPillar = (pillarName: 'year' | 'month' | 'day' | 'hour'): ShenshaMatch[] => {
+    const matchedPillarValues = pillarToMatchedPillarMap[pillarName];
+    return shenshaMatches.filter((shensha) => {
+      const matchedPillar = shensha.evidence?.matched_pillar;
+      return matchedPillar && matchedPillarValues.includes(matchedPillar);
+    });
+  };
+
+  // 用神分析（簡化版本）
+  const dayMasterElement = getDayMasterElement(pillars.day.stem);
+  const strengthRatio = wuxing ? calculateStrengthRatio(dayMasterElement, wuxing) : 0.5;
+  const strengthLevel = strengthRatio > 0.55 ? '身強' : strengthRatio < 0.45 ? '身弱' : '中和';
+  const yongShenInfo = getSimpleYongShen(dayMasterElement, strengthLevel);
 
   return (
     <div className="space-y-6">
@@ -191,6 +290,9 @@ export const LegionCards = ({ baziResult, shenshaRuleset = 'trad' }: LegionCards
           
           const commanderRole = tianganRoles[stem];
           const advisorRole = dizhiRoles[branch];
+          
+          // 獲取該柱專屬的神煞
+          const pillarShensha = getShenshaByPillar(pillarName);
 
           return (
             <Card key={pillarName} className={`relative overflow-hidden group transition-all duration-500 ${legion.borderGlow}`}>
@@ -428,16 +530,52 @@ export const LegionCards = ({ baziResult, shenshaRuleset = 'trad' }: LegionCards
                   </div>
                 </div>
 
-                {/* 神煞加持效應 - 使用新的 ShenshaCardList 組件 */}
+                {/* 用神喜忌資訊 */}
+                <div className="p-5 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 rounded-xl border-2 border-indigo-500/30">
+                  <h5 className="font-bold text-xl mb-4 flex items-center gap-2 text-indigo-400">
+                    <Target className="w-6 h-6" />
+                    用神喜忌（{yongShenInfo.strengthLevel}）
+                  </h5>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <ThumbsUp className="w-4 h-4 text-emerald-400" />
+                        <span className="font-semibold text-emerald-300">喜用神</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {yongShenInfo.xiYong.map((element, idx) => (
+                          <Badge key={idx} variant="outline" className="border-emerald-500/50 text-emerald-300 bg-emerald-950/50">
+                            {element}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-rose-950/40 border border-rose-500/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <ThumbsDown className="w-4 h-4 text-rose-400" />
+                        <span className="font-semibold text-rose-300">忌神</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {yongShenInfo.jiShen.map((element, idx) => (
+                          <Badge key={idx} variant="outline" className="border-rose-500/50 text-rose-300 bg-rose-950/50">
+                            {element}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 神煞加持效應 - 按柱過濾 */}
                 <div className="p-5 bg-gradient-to-br from-purple-500/10 to-purple-500/5 rounded-xl border-2 border-purple-500/30">
                   <h5 className="font-bold text-xl mb-4 flex items-center gap-2 text-purple-600 dark:text-purple-400">
                     <Sparkles className="w-6 h-6" />
-                    神煞加持效應
+                    神煞加持效應（{pillarName === 'year' ? '年柱' : pillarName === 'month' ? '月柱' : pillarName === 'day' ? '日柱' : '時柱'}）
                   </h5>
-                  {shenshaMatches.length > 0 ? (
+                  {pillarShensha.length > 0 ? (
                     <ShenshaCardList 
-                      shenshaList={shenshaMatches} 
-                      maxDisplay={4}
+                      shenshaList={pillarShensha} 
+                      maxDisplay={6}
                       showEvidence={true}
                     />
                   ) : (

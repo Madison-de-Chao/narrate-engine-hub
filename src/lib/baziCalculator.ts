@@ -1,6 +1,7 @@
 // 🌈 八字精准计算引擎 - 基于香港天文台資料
 // 參考 lookup-calculator.ts 專業計算邏輯改進
 import keySolarTermsData from "@/data/key_solar_terms_database.json";
+import preciseSolarTermsData from "@/data/solar_terms.json";
 import fiveTigersData from "@/data/five_tigers.json";
 import fiveRatsData from "@/data/five_rats.json";
 import ganZhiData from "@/data/gan_zhi.json";
@@ -29,7 +30,7 @@ const SOLAR_TERM_BRANCH_ORDER: Array<{ term: string; branchIndex: number }> = [
 
 const MONTH_COMMAND_MULTIPLIER = 1.5;
 
-// 香港天文台關鍵節氣資料類型
+// 香港天文台關鍵節氣資料類型（僅日期）
 interface HkoTermData {
   month: number;
   day: number;
@@ -53,7 +54,24 @@ interface HkoSolarTermsData {
   };
 }
 
+// 精確節氣資料類型（含時間）
+interface PreciseTermData {
+  date: string;
+  longitude: number;
+}
+
+interface PreciseYearData {
+  [termName: string]: PreciseTermData;
+}
+
+interface PreciseSolarTermsData {
+  years: {
+    [year: string]: PreciseYearData;
+  };
+}
+
 const hkoData = keySolarTermsData as HkoSolarTermsData;
+const preciseData = preciseSolarTermsData as PreciseSolarTermsData;
 
 export interface HiddenStemEntry {
   stem: string;
@@ -169,9 +187,17 @@ function buildLocalDateUtc(
 }
 
 /**
- * 获取节气时刻（使用 HKO 資料）
+ * 获取节气时刻（優先使用精確時間資料）
  */
 function getSolarTermUtc(year: number, termName: string): Date | null {
+  // 優先檢查精確時間資料（含時分秒）
+  const preciseYearData = preciseData.years?.[year.toString()];
+  if (preciseYearData && preciseYearData[termName]) {
+    const preciseDate = parseSolarTermDate(preciseYearData[termName].date);
+    if (preciseDate) return preciseDate;
+  }
+  
+  // 退回到 HKO 資料（僅日期，預設為當日 00:00 UTC）
   const yearData = hkoData.key_solar_terms[year.toString()];
   if (!yearData || !yearData[termName]) return null;
   return parseSolarTermDate(yearData[termName].date) ?? null;

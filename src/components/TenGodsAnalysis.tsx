@@ -3,10 +3,17 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Crown, Users, Palette, Coins, Shield, BookOpen,
-  Heart, Briefcase, Home, Lightbulb, AlertTriangle
+  Heart, Briefcase, Home, Lightbulb, AlertTriangle,
+  Sparkles, Target, Quote, GraduationCap
 } from "lucide-react";
 import { BaziResult } from "@/pages/Index";
 import tenGodsData from "@/data/ten_gods.json";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface TenGodsAnalysisProps {
   baziResult: BaziResult;
@@ -22,18 +29,18 @@ const TEN_GODS_CATEGORIES = {
 };
 
 // 十神顏色配置
-const TEN_GODS_COLORS: Record<string, { color: string; bgColor: string }> = {
-  '比肩': { color: 'text-cyan-400', bgColor: 'from-cyan-500/20 to-cyan-500/5' },
-  '劫財': { color: 'text-cyan-300', bgColor: 'from-cyan-400/20 to-cyan-400/5' },
-  '食神': { color: 'text-green-400', bgColor: 'from-green-500/20 to-green-500/5' },
-  '傷官': { color: 'text-emerald-400', bgColor: 'from-emerald-500/20 to-emerald-500/5' },
-  '正財': { color: 'text-amber-400', bgColor: 'from-amber-500/20 to-amber-500/5' },
-  '偏財': { color: 'text-yellow-400', bgColor: 'from-yellow-500/20 to-yellow-500/5' },
-  '正官': { color: 'text-blue-400', bgColor: 'from-blue-500/20 to-blue-500/5' },
-  '七殺': { color: 'text-indigo-400', bgColor: 'from-indigo-500/20 to-indigo-500/5' },
-  '正印': { color: 'text-violet-400', bgColor: 'from-violet-500/20 to-violet-500/5' },
-  '偏印': { color: 'text-purple-400', bgColor: 'from-purple-500/20 to-purple-500/5' },
-  '日元': { color: 'text-primary', bgColor: 'from-primary/20 to-primary/5' },
+const TEN_GODS_COLORS: Record<string, { color: string; bgColor: string; borderColor: string }> = {
+  '比肩': { color: 'text-cyan-400', bgColor: 'from-cyan-500/20 to-cyan-500/5', borderColor: 'border-cyan-500/40' },
+  '劫財': { color: 'text-cyan-300', bgColor: 'from-cyan-400/20 to-cyan-400/5', borderColor: 'border-cyan-400/40' },
+  '食神': { color: 'text-green-400', bgColor: 'from-green-500/20 to-green-500/5', borderColor: 'border-green-500/40' },
+  '傷官': { color: 'text-emerald-400', bgColor: 'from-emerald-500/20 to-emerald-500/5', borderColor: 'border-emerald-400/40' },
+  '正財': { color: 'text-amber-400', bgColor: 'from-amber-500/20 to-amber-500/5', borderColor: 'border-amber-500/40' },
+  '偏財': { color: 'text-yellow-400', bgColor: 'from-yellow-500/20 to-yellow-500/5', borderColor: 'border-yellow-400/40' },
+  '正官': { color: 'text-blue-400', bgColor: 'from-blue-500/20 to-blue-500/5', borderColor: 'border-blue-500/40' },
+  '七殺': { color: 'text-indigo-400', bgColor: 'from-indigo-500/20 to-indigo-500/5', borderColor: 'border-indigo-500/40' },
+  '正印': { color: 'text-violet-400', bgColor: 'from-violet-500/20 to-violet-500/5', borderColor: 'border-violet-500/40' },
+  '偏印': { color: 'text-purple-400', bgColor: 'from-purple-500/20 to-purple-500/5', borderColor: 'border-purple-400/40' },
+  '日元': { color: 'text-primary', bgColor: 'from-primary/20 to-primary/5', borderColor: 'border-primary/40' },
 };
 
 // 柱位解讀
@@ -176,7 +183,6 @@ const LIFE_AREA_INFLUENCE: Record<string, {
     health: '注意精神健康，避免鑽牛角尖',
   },
 };
-
 export const TenGodsAnalysis = ({ baziResult }: TenGodsAnalysisProps) => {
   const { tenGods, pillars } = baziResult;
   
@@ -230,12 +236,127 @@ export const TenGodsAnalysis = ({ baziResult }: TenGodsAnalysisProps) => {
           </div>
         </div>
 
-        <Tabs defaultValue="pillars" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+        <Tabs defaultValue="personality" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 bg-muted/50">
+            <TabsTrigger value="personality">性格詳解</TabsTrigger>
             <TabsTrigger value="pillars">四柱十神</TabsTrigger>
             <TabsTrigger value="life">人生領域</TabsTrigger>
             <TabsTrigger value="statistics">統計分析</TabsTrigger>
           </TabsList>
+
+          {/* 性格詳解 - 新增標籤頁 */}
+          <TabsContent value="personality" className="space-y-4 mt-6">
+            <Accordion type="single" collapsible className="space-y-2">
+              {Object.entries(tenGodsCounts)
+                .filter(([_, count]) => count > 0)
+                .sort((a, b) => b[1] - a[1])
+                .map(([god, count]) => {
+                  const godInfo = tenGodsData.tenGodsRules[god as keyof typeof tenGodsData.tenGodsRules];
+                  const colors = TEN_GODS_COLORS[god];
+                  
+                  if (!godInfo) return null;
+                  
+                  return (
+                    <AccordionItem 
+                      key={god} 
+                      value={god}
+                      className={`rounded-xl border ${colors?.borderColor || 'border-border/30'} bg-gradient-to-br ${colors?.bgColor || 'from-muted/30 to-muted/10'} overflow-hidden`}
+                    >
+                      <AccordionTrigger className="px-4 py-3 hover:no-underline">
+                        <div className="flex items-center gap-3 w-full">
+                          <Badge className={`${colors?.color || 'text-foreground'} bg-transparent border-current text-sm px-3`}>
+                            {god}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">× {count}</span>
+                          <span className="text-sm text-foreground ml-2">{godInfo.象徵}</span>
+                          <div className="flex-1" />
+                          <span className="text-xs text-muted-foreground mr-2">{godInfo.description}</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-4">
+                        <div className="space-y-4">
+                          {/* 性格描述 */}
+                          <div className="flex items-start gap-2">
+                            <Users className="w-4 h-4 text-blue-400 mt-1 flex-shrink-0" />
+                            <div>
+                              <p className="text-xs font-medium text-foreground mb-1">性格特質</p>
+                              <p className="text-sm text-muted-foreground">{godInfo.性格}</p>
+                            </div>
+                          </div>
+
+                          {/* 正面負面 */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="rounded-lg p-3 bg-emerald-500/10 border border-emerald-500/20">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Sparkles className="w-4 h-4 text-emerald-400" />
+                                <span className="text-xs font-medium text-emerald-400">正面特質</span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{godInfo.正面}</p>
+                            </div>
+                            <div className="rounded-lg p-3 bg-rose-500/10 border border-rose-500/20">
+                              <div className="flex items-center gap-2 mb-2">
+                                <AlertTriangle className="w-4 h-4 text-rose-400" />
+                                <span className="text-xs font-medium text-rose-400">負面特質</span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{godInfo.負面}</p>
+                            </div>
+                          </div>
+
+                          {/* 人生課題 */}
+                          <div className="flex items-start gap-2">
+                            <Target className="w-4 h-4 text-amber-400 mt-1 flex-shrink-0" />
+                            <div>
+                              <p className="text-xs font-medium text-foreground mb-1">人生課題</p>
+                              <p className="text-sm text-muted-foreground">{godInfo.人生課題}</p>
+                            </div>
+                          </div>
+
+                          {/* 古籍觀點 */}
+                          <div className="rounded-lg p-3 bg-indigo-500/10 border border-indigo-500/20">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Quote className="w-4 h-4 text-indigo-400" />
+                              <span className="text-xs font-medium text-indigo-400">古籍觀點</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground italic">{godInfo.古籍觀點}</p>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+            </Accordion>
+
+            {/* 十神分類概述 */}
+            <Card className="p-4 bg-muted/30 border-border/30">
+              <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                <GraduationCap className="w-4 h-4 text-violet-400" />
+                十神與人生課題
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                {Object.entries(tenGodsData.tenGodsCategories || {}).map(([category, info]: [string, any]) => {
+                  const count = categoryCounts[category] || 0;
+                  const isHighlight = count > 0;
+                  
+                  return (
+                    <div 
+                      key={category}
+                      className={`rounded-lg p-3 text-center ${
+                        isHighlight 
+                          ? 'bg-primary/10 border border-primary/30' 
+                          : 'bg-muted/20 border border-border/20'
+                      }`}
+                    >
+                      <p className={`font-semibold text-sm ${isHighlight ? 'text-primary' : 'text-muted-foreground'}`}>
+                        {category}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">{info.theme}</p>
+                      <p className="text-[10px] text-muted-foreground/70 mt-2">{info.lifeLesson}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          </TabsContent>
 
           {/* 四柱十神 */}
           <TabsContent value="pillars" className="space-y-4 mt-6">

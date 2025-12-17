@@ -476,38 +476,100 @@ function calculateMonthPillarAccurate(
 }
 
 
+// ============================================================
+// 日柱計算配置（EPOCH 選擇）
+// ============================================================
+// 
+// 【重要】兩個 EPOCH 標準存在 14 天差異，必須二選一：
+//
+// 選項 A - 規格書標準：1985-09-22 = 甲子
+//   → 1985-10-06 = 戊寅 ✓
+//   → 2000-01-01 = 戊午 ✗（萬年曆為甲辰）
+//
+// 選項 B - 萬年曆標準：1999-11-22 = 甲子（由 2000-01-01 = 甲辰 反推）
+//   → 2000-01-01 = 甲辰 ✓
+//   → 1985-10-06 = 甲子 ✗（規格書為戊寅）
+//
+// 當前使用：選項 A（規格書標準）
+// ============================================================
+
+const DAY_PILLAR_CONFIG = {
+  // 切換此值選擇 EPOCH 標準
+  useSpecEpoch: true,  // true = 規格書(1985-09-22=甲子), false = 萬年曆(1999-11-22=甲子)
+  
+  // 子時跨日規則：只在此處套用（策略 A）
+  ziHourNextDayRule: true,
+  
+  // 版本指紋
+  version: "2.1.0",
+  configHash: "spec-epoch-zi-next-day",
+};
+
 // 計算日柱（基準日算法）
-// 權威基準：使用萬年曆驗證的基準點
-// 2000-01-01 = 甲辰日 (60甲子索引40) → 反推 1999-11-22 = 甲子日 (索引0)
-// 子時跨日規則：23:00-23:59 視為次日
-function calculateDayPillar(birthLocal: Date, hour: number): { stem: string, branch: string, debug?: any } {
-  // 使用萬年曆驗證的基準點：1999-11-22 = 甲子日 (索引0)
-  // 此基準經由 2000-01-01 = 甲辰日 反推驗證
-  const EPOCH_YEAR = 1999;
-  const EPOCH_MONTH = 10; // 11月 (0-indexed)
-  const EPOCH_DAY = 22;
-  const baseDate = new Date(Date.UTC(EPOCH_YEAR, EPOCH_MONTH, EPOCH_DAY)); // 1999-11-22 00:00 UTC
+function calculateDayPillar(birthLocal: Date, hour: number, timezone: string = "Asia/Taipei"): { 
+  stem: string, 
+  branch: string, 
+  debug: {
+    version: string,
+    configHash: string,
+    timezone: string,
+    useTrueSolarTime: boolean,
+    ziHourNextDayRule: string,
+    epochReference: string,
+    epochDate: string,
+    targetDateOriginal: string,
+    targetDateAdjusted: string,
+    dayDiff: number,
+    dayIndexMod60: number,
+    computedDayGanzhi: string,
+  }
+} {
+  // EPOCH 定義
+  let EPOCH_YEAR: number, EPOCH_MONTH: number, EPOCH_DAY: number, epochRef: string;
   
-  // 計算出生日期的本地日期起點（00:00）
-  let birthYear = birthLocal.getUTCFullYear();
-  let birthMonth = birthLocal.getUTCMonth();
-  let birthDay = birthLocal.getUTCDate();
+  if (DAY_PILLAR_CONFIG.useSpecEpoch) {
+    // 規格書標準：1985-09-22 = 甲子
+    EPOCH_YEAR = 1985;
+    EPOCH_MONTH = 8; // 9月 (0-indexed)
+    EPOCH_DAY = 22;
+    epochRef = "1985-09-22 00:00 local = 甲子 (規格書標準)";
+  } else {
+    // 萬年曆標準：1999-11-22 = 甲子
+    EPOCH_YEAR = 1999;
+    EPOCH_MONTH = 10; // 11月 (0-indexed)
+    EPOCH_DAY = 22;
+    epochRef = "1999-11-22 00:00 local = 甲子 (萬年曆標準，由2000-01-01=甲辰反推)";
+  }
   
-  // 子時跨日處理：23:00-23:59 屬於子時，日柱應計入次日
-  if (hour >= 23) {
-    // 手動加一天，處理月末/年末邊界
+  const baseDate = new Date(Date.UTC(EPOCH_YEAR, EPOCH_MONTH, EPOCH_DAY));
+  
+  // 原始出生日期
+  const originalYear = birthLocal.getUTCFullYear();
+  const originalMonth = birthLocal.getUTCMonth();
+  const originalDay = birthLocal.getUTCDate();
+  const originalDateStr = `${originalYear}-${String(originalMonth + 1).padStart(2, '0')}-${String(originalDay).padStart(2, '0')}`;
+  
+  // 計算調整後日期
+  let birthYear = originalYear;
+  let birthMonth = originalMonth;
+  let birthDay = originalDay;
+  
+  // 子時跨日處理（策略 A：只在此處套用）
+  const ziHourApplied = DAY_PILLAR_CONFIG.ziHourNextDayRule && hour >= 23;
+  if (ziHourApplied) {
     const tempDate = new Date(Date.UTC(birthYear, birthMonth, birthDay + 1));
     birthYear = tempDate.getUTCFullYear();
     birthMonth = tempDate.getUTCMonth();
     birthDay = tempDate.getUTCDate();
   }
   
+  const adjustedDateStr = `${birthYear}-${String(birthMonth + 1).padStart(2, '0')}-${String(birthDay).padStart(2, '0')}`;
   const birthDayStart = new Date(Date.UTC(birthYear, birthMonth, birthDay));
   
-  // 計算與基準日的天數差（使用毫秒確保精確）
+  // 計算天數差
   const MS_PER_DAY = 24 * 60 * 60 * 1000;
   const diffMs = birthDayStart.getTime() - baseDate.getTime();
-  const diffDays = Math.round(diffMs / MS_PER_DAY); // 使用 round 避免浮點數誤差
+  const diffDays = Math.round(diffMs / MS_PER_DAY);
   
   // 60甲子循環
   let jiaziIndex = diffDays % 60;
@@ -515,12 +577,30 @@ function calculateDayPillar(birthLocal: Date, hour: number): { stem: string, bra
   
   const stemIndex = jiaziIndex % 10;
   const branchIndex = jiaziIndex % 12;
+  const computedGanzhi = TIANGAN[stemIndex] + DIZHI[branchIndex];
   
-  console.log(`[日柱計算] EPOCH: ${EPOCH_YEAR}-${EPOCH_MONTH + 1}-${EPOCH_DAY}, 出生日: ${birthYear}-${birthMonth + 1}-${birthDay}, 天數差: ${diffDays}, 甲子索引: ${jiaziIndex}, 結果: ${TIANGAN[stemIndex]}${DIZHI[branchIndex]}`);
+  // 構建 debug 輸出
+  const debug = {
+    version: DAY_PILLAR_CONFIG.version,
+    configHash: DAY_PILLAR_CONFIG.configHash,
+    timezone: timezone,
+    useTrueSolarTime: false,
+    ziHourNextDayRule: ziHourApplied ? "applied (hour >= 23)" : "not applied",
+    epochReference: epochRef,
+    epochDate: `${EPOCH_YEAR}-${String(EPOCH_MONTH + 1).padStart(2, '0')}-${String(EPOCH_DAY).padStart(2, '0')}`,
+    targetDateOriginal: originalDateStr,
+    targetDateAdjusted: adjustedDateStr,
+    dayDiff: diffDays,
+    dayIndexMod60: jiaziIndex,
+    computedDayGanzhi: computedGanzhi,
+  };
+  
+  console.log(`[日柱計算] Debug:`, JSON.stringify(debug, null, 2));
   
   return {
     stem: TIANGAN[stemIndex],
-    branch: DIZHI[branchIndex]
+    branch: DIZHI[branchIndex],
+    debug
   };
 }
 
@@ -785,8 +865,11 @@ serve(async (req) => {
     calculationLogs.month_log.push(`月柱計算: 五虎遁 年干${yearPillar.stem} + 月支${monthPillar.branch} → ${monthPillar.stem}${monthPillar.branch}`);
     console.log('Month Pillar:', monthPillar);
     
-    const dayPillar = calculateDayPillar(birthLocal, hour);
-    calculationLogs.day_log.push(`日柱計算: 基準日1985/09/22甲子${hour >= 23 ? '（子時跨日+1）' : ''} → ${dayPillar.stem}${dayPillar.branch}`);
+    const dayPillarResult = calculateDayPillar(birthLocal, hour, "Asia/Taipei");
+    const dayPillar = { stem: dayPillarResult.stem, branch: dayPillarResult.branch };
+    const dayPillarDebug = dayPillarResult.debug;
+    calculationLogs.day_log.push(`日柱計算: ${dayPillarDebug.epochReference} → ${dayPillar.stem}${dayPillar.branch}`);
+    calculationLogs.day_log.push(`日柱Debug: ${JSON.stringify(dayPillarDebug)}`);
     
     const hourPillar = calculateHourPillar(dayPillar.stem, hour);
     calculationLogs.hour_log.push(`時柱計算: 五鼠遁 日干${dayPillar.stem} + ${hour}時 → ${hourPillar.stem}${hourPillar.branch}`);
@@ -894,7 +977,8 @@ serve(async (req) => {
           yinyangRatio,
           tenGods,
           shensha,
-          calculationLogs
+          calculationLogs,
+          dayPillarDebug  // 新增：日柱計算詳細 debug 資訊
         },
         isGuest: !user
       }),

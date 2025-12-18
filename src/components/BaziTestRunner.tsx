@@ -82,6 +82,37 @@ interface TestResult {
 
 // 標準測試案例（系統必過樣本）- 含 Level B 衍生層預期值
 const standardTestCases: TestCase[] = [
+  // Jasper 案例（來自 PDF 報告驗證）
+  {
+    id: "jasper-pdf-verified",
+    name: "Jasper 1994年10月31日 02:00（PDF 報告驗證）",
+    description: "來自實際 PDF 報告的驗證案例，丑時出生",
+    input: {
+      birthDate: "1994-10-31",
+      birthTime: "02:00",
+      name: "Jasper",
+      gender: "male"
+    },
+    expected: {
+      yearPillar: { stem: "甲", branch: "戌" },
+      monthPillar: { stem: "甲", branch: "戌" },
+      dayPillar: { stem: "庚", branch: "寅" },
+      hourPillar: { stem: "丁", branch: "丑" }
+    },
+    expectedDerived: {
+      nayin: {
+        year: "山頭火",
+        month: "山頭火",
+        day: "松柏木",
+        hour: "澗下水"
+      },
+      tenGods: {
+        year: { stem: "偏財", branch: "偏印" },
+        month: { stem: "偏財", branch: "偏印" },
+        hour: { stem: "正官", branch: "正印" }
+      }
+    }
+  },
   {
     id: "standard-1985-10-06",
     name: "1985年10月6日 19:30（標準樣本1）",
@@ -106,9 +137,9 @@ const standardTestCases: TestCase[] = [
         hour: "大海水"
       },
       tenGods: {
-        year: { stem: "正官", branch: "偏印" },
-        month: { stem: "正官", branch: "正財" },
-        hour: { stem: "偏財", branch: "偏財" }
+        year: { stem: "正官", branch: "劫財" },
+        month: { stem: "正官", branch: "傷官" },
+        hour: { stem: "偏財", branch: "比肩" }
       }
     }
   },
@@ -137,7 +168,7 @@ const standardTestCases: TestCase[] = [
       },
       tenGods: {
         year: { stem: "劫財", branch: "正官" },
-        month: { stem: "偏印", branch: "正財" },
+        month: { stem: "偏印", branch: "偏財" },
         hour: { stem: "比肩", branch: "偏印" }
       }
     }
@@ -166,9 +197,9 @@ const standardTestCases: TestCase[] = [
         hour: "白蠟金"
       },
       tenGods: {
-        year: { stem: "正財", branch: "傷官" },
-        month: { stem: "比肩", branch: "偏財" },
-        hour: { stem: "正財", branch: "正財" }
+        year: { stem: "正官", branch: "傷官" },
+        month: { stem: "比肩", branch: "七殺" },
+        hour: { stem: "正官", branch: "正財" }
       }
     }
   }

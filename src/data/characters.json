@@ -92,7 +92,7 @@
       "season": "冬季"
     },
     "丑": {
-      "title": "忠犬守衛",
+      "title": "封藏守衛",
       "description": "忠誠可靠的土系守衛，默默守護重要事物",
       "personality": "忠誠、可靠、耐心",
       "color": "#8B4513",
@@ -101,7 +101,7 @@
       "season": "冬季"
     },
     "寅": {
-      "title": "森林獵人",
+      "title": "雷虎獵人",
       "description": "勇猛的木系獵人，在森林中展現王者風範",
       "personality": "勇猛、直率、威嚴",
       "color": "#228B22",
@@ -110,7 +110,7 @@
       "season": "春季"
     },
     "卯": {
-      "title": "春兔使者",
+      "title": "玉兔使者",
       "description": "靈巧的木系使者，帶來春天的生機與希望",
       "personality": "靈巧、溫和、有活力",
       "color": "#32CD32",
@@ -119,7 +119,7 @@
       "season": "春季"
     },
     "辰": {
-      "title": "龍族法師",
+      "title": "泥雲龍法師",
       "description": "神秘的土系龍族，掌控變化的神奇力量",
       "personality": "神秘、變化、威嚴",
       "color": "#DAA520",
@@ -128,7 +128,7 @@
       "season": "春季"
     },
     "巳": {
-      "title": "火蛇術士",
+      "title": "蛇焰術士",
       "description": "智慧的火系術士，擁有深邃的洞察力",
       "personality": "智慧、深邃、變通",
       "color": "#DC143C",
@@ -137,7 +137,7 @@
       "season": "夏季"
     },
     "午": {
-      "title": "烈馬騎兵",
+      "title": "日鬃騎兵",
       "description": "熱情的火系騎兵，奔馳如烈火般激情",
       "personality": "熱情、奔放、積極",
       "color": "#FF0000",
@@ -146,7 +146,7 @@
       "season": "夏季"
     },
     "未": {
-      "title": "溫羊牧者",
+      "title": "牧角調和者",
       "description": "溫和的土系牧者，以溫柔守護群體",
       "personality": "溫和、包容、犧牲",
       "color": "#F4A460",
@@ -155,7 +155,7 @@
       "season": "夏季"
     },
     "申": {
-      "title": "靈猴戰士",
+      "title": "金杖靈猴戰士",
       "description": "機靈的金系戰士，動作敏捷且富有創意",
       "personality": "機靈、活潑、創新",
       "color": "#FFD700",
@@ -164,7 +164,7 @@
       "season": "秋季"
     },
     "酉": {
-      "title": "金雞衛士",
+      "title": "鳳羽判衡者",
       "description": "精準的金系衛士，時刻保持警覺與秩序",
       "personality": "精準、警覺、有序",
       "color": "#FFA500",
@@ -173,7 +173,7 @@
       "season": "秋季"
     },
     "戌": {
-      "title": "戰犬統領",
+      "title": "烽火戰犬統領",
       "description": "忠誠的土系統領，守護家園的勇敢戰士",
       "personality": "忠誠、勇敢、守護",
       "color": "#CD853F",
@@ -182,7 +182,7 @@
       "season": "秋季"
     },
     "亥": {
-      "title": "海豚智者",
+      "title": "潮典海豚智者",
       "description": "智慧的水系智者，擁有深邃的理解力",
       "personality": "智慧、純真、理解",
       "color": "#4682B4",

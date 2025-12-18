@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Crown, Shield, Swords, Sparkles } from "lucide-react";
 import { getCommanderAvatar } from "@/assets/commanders";
+import { getAdvisorAvatar } from "@/assets/advisors";
 
 interface CommanderRole {
   role: string;
@@ -34,8 +35,10 @@ export const ArmyCard = ({ type, character, role, legionColor, characterColor }:
   const commanderRole = role as CommanderRole;
   const advisorRole = role as AdvisorRole;
   
-  // 取得指揮官頭像
-  const avatarSrc = isCommander ? getCommanderAvatar(character) : undefined;
+  // 取得角色頭像
+  const avatarSrc = isCommander 
+    ? getCommanderAvatar(character) 
+    : getAdvisorAvatar(character);
 
   // 使用角色專屬顏色或預設
   const accentColor = characterColor || (isCommander ? '#8B5CF6' : '#22C55E');
@@ -84,15 +87,15 @@ export const ArmyCard = ({ type, character, role, legionColor, characterColor }:
         {/* 角色頭像與名稱 */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            {/* 頭像或天干字 */}
-            {isCommander && avatarSrc ? (
+            {/* 頭像 */}
+            {avatarSrc ? (
               <div 
                 className="w-16 h-16 rounded-lg overflow-hidden border-2 shadow-lg"
                 style={{ borderColor: `${accentColor}60` }}
               >
                 <img 
                   src={avatarSrc} 
-                  alt={`${character} 指揮官`}
+                  alt={`${character} ${isCommander ? '指揮官' : '軍師'}`}
                   className="w-full h-full object-cover"
                 />
               </div>

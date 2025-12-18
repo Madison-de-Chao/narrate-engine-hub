@@ -365,7 +365,7 @@ const Index = () => {
       };
       
       await generatePDF("bazi-report-content", fileName, coverData);
-      toast.success("報告下載成功！");
+      toast.success(`報告下載成功！檔案已儲存至您的「下載」資料夾：${fileName}`);
     } catch (error) {
       console.error("下載報告失敗:", error);
       toast.error("下載報告失敗，請稍後再試");

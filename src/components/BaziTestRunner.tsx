@@ -58,7 +58,7 @@ const standardTestCases: TestCase[] = [
   {
     id: "standard-2000-01-01",
     name: "2000年1月1日 12:00（標準樣本2）",
-    description: "規格書指定對照盤，千禧年元旦",
+    description: "經外部萬年曆確認，千禧年元旦",
     input: {
       birthDate: "2000-01-01",
       birthTime: "12:00",
@@ -67,9 +67,9 @@ const standardTestCases: TestCase[] = [
     },
     expected: {
       yearPillar: { stem: "己", branch: "卯" },
-      monthPillar: { stem: "丁", branch: "丑" },
-      dayPillar: { stem: "甲", branch: "辰" },
-      hourPillar: { stem: "庚", branch: "午" }
+      monthPillar: { stem: "丙", branch: "子" },
+      dayPillar: { stem: "戊", branch: "午" },
+      hourPillar: { stem: "戊", branch: "午" }
     }
   },
   {
@@ -96,7 +96,7 @@ const boundaryTestCases: TestCase[] = [
   {
     id: "boundary-lichun-1984",
     name: "1984年2月4日 23:00（立春後年柱換年）",
-    description: "立春後，年柱切到新年甲子年",
+    description: "立春後，年柱切到新年甲子年，子時跨日",
     input: {
       birthDate: "1984-02-04",
       birthTime: "23:00",
@@ -106,8 +106,8 @@ const boundaryTestCases: TestCase[] = [
     expected: {
       yearPillar: { stem: "甲", branch: "子" },
       monthPillar: { stem: "丙", branch: "寅" },
-      dayPillar: { stem: "癸", branch: "丑" },
-      hourPillar: { stem: "癸", branch: "子" }
+      dayPillar: { stem: "己", branch: "巳" },
+      hourPillar: { stem: "甲", branch: "子" }
     }
   },
   {
@@ -157,8 +157,8 @@ const boundaryTestCases: TestCase[] = [
     expected: {
       yearPillar: { stem: "庚", branch: "午" },
       monthPillar: { stem: "辛", branch: "巳" },
-      dayPillar: { stem: "壬", branch: "寅" },
-      hourPillar: { stem: "庚", branch: "戌" }
+      dayPillar: { stem: "庚", branch: "辰" },
+      hourPillar: { stem: "丙", branch: "戌" }
     }
   },
   {
@@ -174,8 +174,8 @@ const boundaryTestCases: TestCase[] = [
     expected: {
       yearPillar: { stem: "庚", branch: "午" },
       monthPillar: { stem: "辛", branch: "巳" },
-      dayPillar: { stem: "壬", branch: "寅" },
-      hourPillar: { stem: "辛", branch: "亥" }
+      dayPillar: { stem: "庚", branch: "辰" },
+      hourPillar: { stem: "丁", branch: "亥" }
     }
   },
   {
@@ -191,7 +191,7 @@ const boundaryTestCases: TestCase[] = [
     expected: {
       yearPillar: { stem: "甲", branch: "戌" },
       monthPillar: { stem: "癸", branch: "酉" },
-      dayPillar: { stem: "丁", branch: "亥" },
+      dayPillar: { stem: "丁", branch: "卯" },
       hourPillar: { stem: "癸", branch: "卯" }
     }
   },
@@ -208,7 +208,7 @@ const boundaryTestCases: TestCase[] = [
     expected: {
       yearPillar: { stem: "甲", branch: "戌" },
       monthPillar: { stem: "甲", branch: "戌" },
-      dayPillar: { stem: "戊", branch: "子" },
+      dayPillar: { stem: "戊", branch: "辰" },
       hourPillar: { stem: "丁", branch: "巳" }
     }
   },
@@ -225,14 +225,14 @@ const boundaryTestCases: TestCase[] = [
     expected: {
       yearPillar: { stem: "己", branch: "巳" },
       monthPillar: { stem: "丙", branch: "子" },
-      dayPillar: { stem: "癸", branch: "丑" },
-      hourPillar: { stem: "乙", branch: "卯" }
+      dayPillar: { stem: "庚", branch: "午" },
+      hourPillar: { stem: "己", branch: "卯" }
     }
   },
   {
     id: "boundary-xiaohan-after",
     name: "1990年1月5日 23:00（小寒後）",
-    description: "小寒後（22:33 local），丑月開始",
+    description: "小寒後（22:33 local），丑月開始，子時跨日",
     input: {
       birthDate: "1990-01-05",
       birthTime: "23:00",
@@ -242,8 +242,8 @@ const boundaryTestCases: TestCase[] = [
     expected: {
       yearPillar: { stem: "己", branch: "巳" },
       monthPillar: { stem: "丁", branch: "丑" },
-      dayPillar: { stem: "甲", branch: "寅" },
-      hourPillar: { stem: "甲", branch: "子" }
+      dayPillar: { stem: "辛", branch: "未" },
+      hourPillar: { stem: "戊", branch: "子" }
     }
   }
 ];

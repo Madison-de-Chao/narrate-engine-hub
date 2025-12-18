@@ -596,7 +596,7 @@ export const BaziTestRunner = () => {
         }
       });
       
-      const debugInfo = data?.debug;
+      const debugInfo = data?.calculation?.dayPillarDebug;
       if (debugInfo) {
         const calibrationK = debugInfo.calibrationK;
         const configHash = debugInfo.configHash;

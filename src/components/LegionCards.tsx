@@ -1,17 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BaziResult } from "@/pages/Index";
-import { Swords, Users, Heart, Sparkles, Crown, Shield, Star, Zap, BookOpen, TrendingUp, Target, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Swords, Users, Heart, Sparkles, Crown, Shield, Star, Zap, BookOpen, TrendingUp, Target, ThumbsUp, ThumbsDown, Lock } from "lucide-react";
 import tenGodsData from "@/data/ten_gods.json";
 import { storyMaterialsManager } from "@/lib/storyMaterials";
 import { ModularShenshaEngine, type RulesetType } from "@/lib/shenshaRuleEngine";
 import type { ShenshaMatch } from "@/data/shenshaTypes";
 import { ArmyCard } from "./ArmyCard";
 import { ShenshaCardList } from "./ShenshaCard";
+import { truncateStoryForFree } from "@/hooks/usePremiumStatus";
+import { Button } from "./ui/button";
 
 interface LegionCardsProps {
   baziResult: BaziResult;
   shenshaRuleset?: RulesetType;
+  isPremium?: boolean;
+  onUpgrade?: () => void;
 }
 
 // 天干對應五行
@@ -241,7 +245,7 @@ const pillarToMatchedPillarMap: Record<string, string[]> = {
   hour: ['時支', '時干']
 };
 
-export const LegionCards = ({ baziResult, shenshaRuleset = 'trad' }: LegionCardsProps) => {
+export const LegionCards = ({ baziResult, shenshaRuleset = 'trad', isPremium = false, onUpgrade }: LegionCardsProps) => {
   const { pillars, nayin, tenGods, wuxing } = baziResult;
 
   // 使用模組化規則引擎計算帶證據鏈的神煞（與傳統排盤同步規則集）
@@ -362,9 +366,32 @@ export const LegionCards = ({ baziResult, shenshaRuleset = 'trad' }: LegionCards
                   <h4 className="font-bold text-xl mb-3 flex items-center gap-2">
                     <Sparkles className="w-6 h-6 text-accent" />
                     軍團傳說
+                    {!isPremium && baziResult.legionStories?.[pillarName] && (
+                      <Badge variant="outline" className="ml-2 border-amber-500/50 text-amber-400 text-xs">
+                        <Lock className="w-3 h-3 mr-1" />
+                        預覽版
+                      </Badge>
+                    )}
                   </h4>
                   <div className="text-base leading-relaxed text-foreground whitespace-pre-wrap">
-                    {baziResult.legionStories?.[pillarName] || (
+                    {baziResult.legionStories?.[pillarName] ? (
+                      isPremium ? (
+                        baziResult.legionStories[pillarName]
+                      ) : (
+                        <div className="space-y-3">
+                          <p>{truncateStoryForFree(baziResult.legionStories[pillarName], 80)}</p>
+                          <Button
+                            onClick={onUpgrade}
+                            variant="outline"
+                            size="sm"
+                            className="border-amber-500/50 text-amber-400 hover:bg-amber-500/20"
+                          >
+                            <Crown className="w-4 h-4 mr-2" />
+                            升級解鎖完整故事
+                          </Button>
+                        </div>
+                      )
+                    ) : (
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <div className="animate-pulse">✨</div>
                         <span>正在生成專屬軍團傳說故事...</span>

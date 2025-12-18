@@ -14,13 +14,15 @@ import { PersonalityAnalysis } from "@/components/PersonalityAnalysis";
 import { TenGodsAnalysis } from "@/components/TenGodsAnalysis";
 import { ProfessionalReportHeader } from "@/components/ProfessionalReportHeader";
 import { ShareImageDialog } from "@/components/ShareImageDialog";
+import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen } from "lucide-react";
+import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown } from "lucide-react";
 import { generatePDF, type CoverPageData } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
 import { useGuestMode } from "@/hooks/useGuestMode";
+import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import logoSishi from "@/assets/logo-sishi.png";
 import logoHonglingyusuo from "@/assets/logo-honglingyusuo.png";
@@ -92,6 +94,14 @@ const Index = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [activeSection, setActiveSection] = useState('summary');
   const [shenshaRuleset, setShenshaRuleset] = useState<'trad' | 'legion'>('trad');
+  const { isPremium } = usePremiumStatus(user?.id);
+
+  // 升級處理函數
+  const handleUpgrade = () => {
+    toast.info("付費功能開發中，敬請期待！");
+    // 未來可以跳轉到付費頁面
+    // navigate("/upgrade");
+  };
 
   // Section refs for scrolling
   const sectionRefs = {
@@ -524,36 +534,46 @@ const Index = () => {
 
               {/* 四時軍團故事區（兵法為重）*/}
               <section ref={sectionRefs.legion} className="animate-fade-in scroll-mt-36">
-                <LegionCards baziResult={baziResult} shenshaRuleset={shenshaRuleset} />
+                <LegionCards baziResult={baziResult} shenshaRuleset={shenshaRuleset} isPremium={isPremium} onUpgrade={handleUpgrade} />
               </section>
 
-              {/* ===== 詳細分析區開始 ===== */}
+              {/* ===== 詳細分析區開始（收費內容）===== */}
               
               {/* 十神關係分析區 */}
               <section ref={sectionRefs.tenGods} className="animate-fade-in scroll-mt-36">
-                <TenGodsAnalysis baziResult={baziResult} />
+                <PremiumGate isPremium={isPremium} title="十神深度分析" description="升級收費版解鎖完整十神關係解讀" onUpgrade={handleUpgrade}>
+                  <TenGodsAnalysis baziResult={baziResult} />
+                </PremiumGate>
               </section>
 
               {/* 神煞統計分析區 */}
               {baziResult.shensha && baziResult.shensha.length > 0 && (
                 <section ref={sectionRefs.shensha} className="animate-fade-in scroll-mt-36">
-                  <ShenshaStats shenshaList={baziResult.shensha.filter((s): s is ShenshaMatch => typeof s === 'object' && 'evidence' in s)} />
+                  <PremiumGate isPremium={isPremium} title="神煞統計分析" description="升級收費版查看完整神煞統計與解讀" onUpgrade={handleUpgrade}>
+                    <ShenshaStats shenshaList={baziResult.shensha.filter((s): s is ShenshaMatch => typeof s === 'object' && 'evidence' in s)} />
+                  </PremiumGate>
                 </section>
               )}
 
               {/* 性格深度分析區 */}
               <section ref={sectionRefs.personality} className="animate-fade-in scroll-mt-36">
-                <PersonalityAnalysis baziResult={baziResult} />
+                <PremiumGate isPremium={isPremium} title="性格深度剖析" description="升級收費版獲取完整性格分析報告" onUpgrade={handleUpgrade}>
+                  <PersonalityAnalysis baziResult={baziResult} />
+                </PremiumGate>
               </section>
 
               {/* 納音五行分析區 */}
               <section className="animate-fade-in scroll-mt-36">
-                <NayinAnalysis nayin={baziResult.nayin} />
+                <PremiumGate isPremium={isPremium} title="納音五行詳解" description="升級收費版了解納音深層含義" onUpgrade={handleUpgrade}>
+                  <NayinAnalysis nayin={baziResult.nayin} />
+                </PremiumGate>
               </section>
 
               {/* 五行陰陽分析區 */}
               <section ref={sectionRefs.analysis} className="animate-fade-in scroll-mt-36">
-                <AnalysisCharts baziResult={baziResult} />
+                <PremiumGate isPremium={isPremium} title="五行陰陽圖表" description="升級收費版查看完整五行平衡分析" onUpgrade={handleUpgrade}>
+                  <AnalysisCharts baziResult={baziResult} />
+                </PremiumGate>
               </section>
 
               {/* 計算日誌區 */}

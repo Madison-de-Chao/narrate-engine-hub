@@ -497,8 +497,8 @@ function calculateMonthPillarAccurate(
 // ============================================================
 
 const DAY_PILLAR_CONFIG = {
-  version: "2.3.0",
-  configHash: "jdn-calibration-2000",
+  version: "2.4.2",
+  configHash: "jdn-calibration-1985-k49",
   ziHourNextDayRule: true,  // 子時（23:00-00:59）算次日
 };
 
@@ -660,7 +660,8 @@ function calculateDayPillar(
   let targetMonth = originalMonth;
   let targetDay = originalDay;
   
-  const ziHourApplied = DAY_PILLAR_CONFIG.ziHourNextDayRule && hour >= 23;
+  // 子時（23:00-00:59）跨日規則：23:xx 和 00:xx 都視為次日
+  const ziHourApplied = DAY_PILLAR_CONFIG.ziHourNextDayRule && (hour === 23 || hour === 0);
   if (ziHourApplied) {
     const tempDate = new Date(Date.UTC(originalYear, originalMonth - 1, originalDay + 1));
     targetYear = tempDate.getUTCFullYear();
@@ -689,7 +690,7 @@ function calculateDayPillar(
     configHash: DAY_PILLAR_CONFIG.configHash,
     timezone: timezone,
     useTrueSolarTime: false,
-    ziHourNextDayRule: ziHourApplied ? "applied (hour >= 23)" : "not applied",
+    ziHourNextDayRule: ziHourApplied ? `applied (hour=${hour}, 子時跨日)` : "not applied",
     calibrationK: CALIBRATION_K,
     anchorVerification: anchorVerify.passed ? "PASS" : `FAIL: ${anchorVerify.details}`,
     regressionCheck: regressionCheck.allPassed 

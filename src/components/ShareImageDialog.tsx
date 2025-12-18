@@ -114,9 +114,9 @@ export const ShareImageDialog = ({ name, gender, pillars, nayin, legionStories }
     toast.success("已開啟 Facebook 分享");
   };
 
-  const truncateStory = (story: string | undefined, maxLength: number = 80) => {
+  const getStoryText = (story: string | undefined) => {
     if (!story) return "故事生成中...";
-    return story.length > maxLength ? story.slice(0, maxLength) + "..." : story;
+    return story;
   };
 
   return (
@@ -187,7 +187,7 @@ export const ShareImageDialog = ({ name, gender, pillars, nayin, legionStories }
                 ))}
               </div>
 
-              {/* 軍團故事（非簡易版時顯示） */}
+              {/* 軍團故事（非簡易版時顯示完整故事） */}
               {selectedLegion !== 'simple' && legionStories && (
                 <div className={`p-3 rounded-lg bg-gradient-to-br from-stone-800/60 to-stone-900/60 border border-amber-500/20 mb-3`}>
                   <div className="flex items-center gap-2 mb-2">
@@ -196,8 +196,8 @@ export const ShareImageDialog = ({ name, gender, pillars, nayin, legionStories }
                       {legionConfig[selectedLegion].name}
                     </span>
                   </div>
-                  <p className="text-xs text-amber-100/80 leading-relaxed">
-                    {truncateStory(legionStories[selectedLegion], 120)}
+                  <p className="text-xs text-amber-100/80 leading-relaxed whitespace-pre-wrap">
+                    {getStoryText(legionStories[selectedLegion])}
                   </p>
                 </div>
               )}

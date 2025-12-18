@@ -9,7 +9,7 @@
       "yin_yang": "陽"
     },
     "乙": {
-      "title": "花草軍師",
+      "title": "花蔓軍師",
       "description": "溫柔而富有智慧的植物智者，善於策略與協調",
       "personality": "柔順、智慧、協調",
       "color": "#90EE90",
@@ -25,7 +25,7 @@
       "yin_yang": "陽"
     },
     "丁": {
-      "title": "燭光法師",
+      "title": "誓燈法師",
       "description": "溫暖的火焰魔法師，散發穩定而持久的光芒",
       "personality": "溫和、持續、深邃",
       "color": "#FF6347",
@@ -49,7 +49,7 @@
       "yin_yang": "陰"
     },
     "庚": {
-      "title": "鋼鐵騎士",
+      "title": "天鍛騎士",
       "description": "堅硬如鋼的戰士，擁有銳利的攻擊力",
       "personality": "堅毅、鋒利、正義",
       "color": "#C0C0C0",
@@ -57,7 +57,7 @@
       "yin_yang": "陽"
     },
     "辛": {
-      "title": "珠寶商人",
+      "title": "靈晶鑑定師",
       "description": "精緻優雅的金屬工藝師，追求完美與美感",
       "personality": "精緻、優雅、追求美",
       "color": "#FFD700",
@@ -65,7 +65,7 @@
       "yin_yang": "陰"
     },
     "壬": {
-      "title": "江河船長",
+      "title": "龍河船長",
       "description": "奔騰不息的水流領袖，智慧如海洋般深邃",
       "personality": "流動、智慧、變化",
       "color": "#4169E1",

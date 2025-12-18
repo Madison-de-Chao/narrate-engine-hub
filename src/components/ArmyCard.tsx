@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Crown, Shield, Swords, Sparkles } from "lucide-react";
+import { getCommanderAvatar } from "@/assets/commanders";
 
 interface CommanderRole {
   role: string;
@@ -32,6 +33,9 @@ export const ArmyCard = ({ type, character, role, legionColor, characterColor }:
   const isCommander = type === 'commander';
   const commanderRole = role as CommanderRole;
   const advisorRole = role as AdvisorRole;
+  
+  // 取得指揮官頭像
+  const avatarSrc = isCommander ? getCommanderAvatar(character) : undefined;
 
   // 使用角色專屬顏色或預設
   const accentColor = characterColor || (isCommander ? '#8B5CF6' : '#22C55E');
@@ -77,21 +81,38 @@ export const ArmyCard = ({ type, character, role, legionColor, characterColor }:
 
       {/* 主要內容 */}
       <div className="p-5 relative z-10">
-        {/* 角色名稱 */}
+        {/* 角色頭像與名稱 */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <span 
-              className="text-5xl font-bold"
-              style={{ 
-                background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
-              }}
-            >
-              {character}
-            </span>
+            {/* 頭像或天干字 */}
+            {isCommander && avatarSrc ? (
+              <div 
+                className="w-16 h-16 rounded-lg overflow-hidden border-2 shadow-lg"
+                style={{ borderColor: `${accentColor}60` }}
+              >
+                <img 
+                  src={avatarSrc} 
+                  alt={`${character} 指揮官`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <span 
+                className="text-5xl font-bold"
+                style={{ 
+                  background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}
+              >
+                {character}
+              </span>
+            )}
             <div>
-              <p className="text-lg font-bold" style={{ color: accentColor }}>
+              <p className="text-2xl font-bold" style={{ color: accentColor }}>
+                {character}
+              </p>
+              <p className="text-sm font-medium text-muted-foreground">
                 {isCommander ? commanderRole.role : advisorRole.role}
               </p>
             </div>

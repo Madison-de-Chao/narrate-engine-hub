@@ -17,12 +17,12 @@ import { ShareImageDialog } from "@/components/ShareImageDialog";
 import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown } from "lucide-react";
+import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, BadgeCheck } from "lucide-react";
 import { generatePDF, type CoverPageData } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
 import { useGuestMode } from "@/hooks/useGuestMode";
-import { usePremiumStatus } from "@/hooks/usePremiumStatus";
+import { usePremiumStatus, PLAN_NAMES } from "@/hooks/usePremiumStatus";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import logoSishi from "@/assets/logo-sishi.png";
 import logoHonglingyusuo from "@/assets/logo-honglingyusuo.png";
@@ -94,13 +94,12 @@ const Index = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [activeSection, setActiveSection] = useState('summary');
   const [shenshaRuleset, setShenshaRuleset] = useState<'trad' | 'legion'>('trad');
-  const { isPremium } = usePremiumStatus(user?.id);
+  const { isPremium, tier, loading: premiumLoading } = usePremiumStatus(user?.id);
 
   // 升級處理函數
   const handleUpgrade = () => {
-    toast.info("付費功能開發中，敬請期待！");
-    // 未來可以跳轉到付費頁面
-    // navigate("/upgrade");
+    // 跳轉到訂閱頁面
+    navigate("/subscribe");
   };
 
   // Section refs for scrolling
@@ -401,6 +400,25 @@ const Index = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {/* 訂閱狀態顯示 */}
+              {user && !premiumLoading && (
+                isPremium ? (
+                  <div className="flex items-center gap-2 text-sm bg-gradient-to-r from-amber-500/20 to-amber-600/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/30">
+                    <Crown className="h-4 w-4" />
+                    <span>{PLAN_NAMES[tier]}</span>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleUpgrade}
+                    variant="outline"
+                    size="sm"
+                    className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
+                  >
+                    <Crown className="mr-2 h-4 w-4" />
+                    升級會員
+                  </Button>
+                )
+              )}
               {isGuest && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-md">
                   <UserRound className="h-4 w-4" />

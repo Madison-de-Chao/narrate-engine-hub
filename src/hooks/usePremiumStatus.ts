@@ -3,33 +3,56 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface PremiumStatus {
   isPremium: boolean;
-  tier: 'free' | 'premium';
+  tier: 'free' | 'monthly' | 'yearly' | 'lifetime';
   loading: boolean;
+  expiresAt: Date | null;
 }
 
 export const usePremiumStatus = (userId?: string): PremiumStatus => {
   const [isPremium, setIsPremium] = useState(false);
+  const [tier, setTier] = useState<'free' | 'monthly' | 'yearly' | 'lifetime'>('free');
+  const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkPremiumStatus = async () => {
       if (!userId) {
         setIsPremium(false);
+        setTier('free');
+        setExpiresAt(null);
         setLoading(false);
         return;
       }
 
       try {
-        // 目前先使用 localStorage 儲存（未來可改用資料庫）
-        const storedStatus = localStorage.getItem(`premium_${userId}`);
-        if (storedStatus === 'true') {
-          setIsPremium(true);
+        // 從資料庫查詢訂閱狀態
+        const { data, error } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          // PGRST116 = 找不到記錄，這是正常的
+          console.error('檢查付費狀態失敗:', error);
+        }
+
+        if (data) {
+          const isActive = data.status === 'active';
+          const notExpired = !data.expires_at || new Date(data.expires_at) > new Date();
+          
+          setIsPremium(isActive && notExpired);
+          setTier(data.plan as 'free' | 'monthly' | 'yearly' | 'lifetime');
+          setExpiresAt(data.expires_at ? new Date(data.expires_at) : null);
         } else {
           setIsPremium(false);
+          setTier('free');
+          setExpiresAt(null);
         }
       } catch (error) {
         console.error('檢查付費狀態失敗:', error);
         setIsPremium(false);
+        setTier('free');
       } finally {
         setLoading(false);
       }
@@ -40,8 +63,9 @@ export const usePremiumStatus = (userId?: string): PremiumStatus => {
 
   return {
     isPremium,
-    tier: isPremium ? 'premium' : 'free',
-    loading
+    tier,
+    loading,
+    expiresAt
   };
 };
 
@@ -71,4 +95,12 @@ export type SectionId = typeof FREE_SECTIONS[number] | typeof PREMIUM_SECTIONS[n
 
 export const isSectionFree = (sectionId: string): boolean => {
   return (FREE_SECTIONS as readonly string[]).includes(sectionId);
+};
+
+// 訂閱方案名稱對照
+export const PLAN_NAMES: Record<string, string> = {
+  free: '免費版',
+  monthly: '月訂閱',
+  yearly: '年訂閱',
+  lifetime: '終身版'
 };

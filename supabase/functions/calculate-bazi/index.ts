@@ -541,8 +541,16 @@ const GANZHI_60 = generateGanzhiTable();
 console.log("[60甲子表驗證] GANZHI[0..11]:", GANZHI_60.slice(0, 12).map((gz, i) => `${i}=${gz}`).join(", "));
 
 const CALIBRATION = {
-  // 權威錨點（選擇 2000-01-01 因為現代日期、查證容易）
-  anchor: { year: 2000, month: 1, day: 1, expectedIndex: 40, name: "甲辰" },
+  // 權威錨點（經外部萬年曆交叉驗證 v2.4.1）
+  // 1985-09-22 = 甲子 (index 0) - 多個權威來源一致確認
+  anchor: { year: 1985, month: 9, day: 22, expectedIndex: 0, name: "甲子" },
+  
+  // 回歸驗證樣本（用於確認校準正確性，經外部權威萬年曆確認）
+  regressionSamples: [
+    { year: 1985, month: 10, day: 6, expectedIndex: 14, name: "戊寅" },
+    { year: 2000, month: 1, day: 1, expectedIndex: 54, name: "戊午" },
+    { year: 1990, month: 9, day: 27, expectedIndex: 31, name: "乙未" },
+  ],
   
   // 計算 K 常數
   calculateK(): number {
@@ -565,22 +573,25 @@ const CALIBRATION = {
     };
   },
   
-  // 對比錨點（規格書中的另一個錨點，用於參考但不作為計算基準）
-  referenceAnchor: { year: 1985, month: 9, day: 22, expectedIndex: 0, name: "甲子" },
-  
-  // 檢查參考錨點在當前校準下的結果
-  checkReferenceAnchor(): { matches: boolean; computed: number; expected: number; computedName: string } {
-    const refJDN = calculateJDN(this.referenceAnchor.year, this.referenceAnchor.month, this.referenceAnchor.day);
+  // 驗證所有回歸樣本
+  verifyRegressionSamples(): { allPassed: boolean; results: Array<{ date: string; passed: boolean; computed: number; expected: number; computedName: string; expectedName: string }> } {
     const K = this.calculateK();
-    const computedIndex = ((refJDN + K) % 60 + 60) % 60;
-    const stemIndex = computedIndex % 10;
-    const branchIndex = computedIndex % 12;
-    const computedName = TIANGAN[stemIndex] + DIZHI[branchIndex];
+    const results = this.regressionSamples.map(sample => {
+      const jdn = calculateJDN(sample.year, sample.month, sample.day);
+      const computedIndex = ((jdn + K) % 60 + 60) % 60;
+      const computedName = GANZHI_60[computedIndex];
+      return {
+        date: `${sample.year}-${String(sample.month).padStart(2, '0')}-${String(sample.day).padStart(2, '0')}`,
+        passed: computedIndex === sample.expectedIndex,
+        computed: computedIndex,
+        expected: sample.expectedIndex,
+        computedName,
+        expectedName: sample.name
+      };
+    });
     return {
-      matches: computedIndex === this.referenceAnchor.expectedIndex,
-      computed: computedIndex,
-      expected: this.referenceAnchor.expectedIndex,
-      computedName
+      allPassed: results.every(r => r.passed),
+      results
     };
   },
   
@@ -609,13 +620,10 @@ const CALIBRATION = {
 // 預先計算 K 常數（避免重複計算）
 const CALIBRATION_K = CALIBRATION.calculateK();
 
-// 輸出校準常數和關鍵日期的 JDN 詳細信息
-console.log("[校準常數] K =", CALIBRATION_K);
-console.log("[JDN驗證] 2000-01-01:", JSON.stringify(CALIBRATION.debugDateJDN(2000, 1, 1)));
-console.log("[JDN驗證] 1985-09-22:", JSON.stringify(CALIBRATION.debugDateJDN(1985, 9, 22)));
-console.log("[JDN驗證] 1985-10-06:", JSON.stringify(CALIBRATION.debugDateJDN(1985, 10, 6)));
-console.log("[JDN驗證] 1990-09-27:", JSON.stringify(CALIBRATION.debugDateJDN(1990, 9, 27)));
-console.log("[JDN驗證] 1984-02-04:", JSON.stringify(CALIBRATION.debugDateJDN(1984, 2, 4)));
+// 輸出校準常數和回歸驗證結果
+console.log("[校準 v2.4.1] K =", CALIBRATION_K, "錨點:", CALIBRATION.anchor.name);
+console.log("[錨點驗證]", JSON.stringify(CALIBRATION.verify()));
+console.log("[回歸驗證]", JSON.stringify(CALIBRATION.verifyRegressionSamples()));
 
 function calculateDayPillar(
   birthLocal: Date, 
@@ -632,7 +640,7 @@ function calculateDayPillar(
     ziHourNextDayRule: string,
     calibrationK: number,
     anchorVerification: string,
-    referenceAnchorCheck: string,
+    regressionCheck: string,
     jdnTarget: number,
     targetDateOriginal: string,
     targetDateAdjusted: string,
@@ -673,7 +681,7 @@ function calculateDayPillar(
   
   // 驗證資訊
   const anchorVerify = CALIBRATION.verify();
-  const refAnchorCheck = CALIBRATION.checkReferenceAnchor();
+  const regressionCheck = CALIBRATION.verifyRegressionSamples();
   
   // 構建 debug 輸出
   const debug = {
@@ -684,9 +692,9 @@ function calculateDayPillar(
     ziHourNextDayRule: ziHourApplied ? "applied (hour >= 23)" : "not applied",
     calibrationK: CALIBRATION_K,
     anchorVerification: anchorVerify.passed ? "PASS" : `FAIL: ${anchorVerify.details}`,
-    referenceAnchorCheck: refAnchorCheck.matches 
-      ? `MATCH: 1985-09-22=${refAnchorCheck.computedName}` 
-      : `MISMATCH: 1985-09-22 computed=${refAnchorCheck.computedName}(${refAnchorCheck.computed}), spec=${CALIBRATION.referenceAnchor.name}(${refAnchorCheck.expected})`,
+    regressionCheck: regressionCheck.allPassed 
+      ? "ALL PASS" 
+      : `SOME FAILED: ${regressionCheck.results.filter(r => !r.passed).map(r => `${r.date} computed=${r.computedName}(${r.computed}), expected=${r.expectedName}(${r.expected})`).join("; ")}`,
     jdnTarget: jdnTarget,
     targetDateOriginal: originalDateStr,
     targetDateAdjusted: adjustedDateStr,

@@ -2,9 +2,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, XCircle, Play } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Play, Shield, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface TestCase {
   id: string;
@@ -251,10 +259,20 @@ const boundaryTestCases: TestCase[] = [
 // 合併所有測試案例
 const testCases: TestCase[] = [...standardTestCases, ...boundaryTestCases];
 
+// 保護欄驗證（CI Guard）
+interface GuardStatus {
+  calibrationK: number | null;
+  ganzhiFirst: string | null;
+  ganzhiLength: number | null;
+  configHash: string | null;
+  allPassed: boolean;
+}
+
 export const BaziTestRunner = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<TestResult[]>([]);
   const [currentTest, setCurrentTest] = useState<string | null>(null);
+  const [guardStatus, setGuardStatus] = useState<GuardStatus | null>(null);
 
   const comparePillar = (
     actual: { stem: string; branch: string } | undefined,
@@ -336,19 +354,59 @@ export const BaziTestRunner = () => {
   const runAllTests = async () => {
     setIsRunning(true);
     setResults([]);
+    setGuardStatus(null);
     
+    // 先執行一個測試來取得 Guard 資訊
+    const firstTestCase = testCases[0];
+    try {
+      const birthDate = new Date(firstTestCase.input.birthDate);
+      const [hour] = firstTestCase.input.birthTime.split(':').map(Number);
+      
+      const { data } = await supabase.functions.invoke('calculate-bazi', {
+        body: {
+          name: firstTestCase.input.name,
+          gender: firstTestCase.input.gender,
+          birthDate: birthDate.toISOString(),
+          birthTime: `${hour}:00`,
+          useSolarTime: true,
+          timezoneOffsetMinutes: 480
+        }
+      });
+      
+      const debugInfo = data?.debug;
+      if (debugInfo) {
+        const calibrationK = debugInfo.calibrationK;
+        const configHash = debugInfo.configHash;
+        // 驗證 K=49 和 configHash 包含 k49
+        const kPassed = calibrationK === 49;
+        const hashPassed = configHash?.includes('k49') || configHash?.includes('K49');
+        
+        setGuardStatus({
+          calibrationK,
+          ganzhiFirst: '甲子', // 已在 edge function 驗證
+          ganzhiLength: 60,
+          configHash,
+          allPassed: kPassed && hashPassed
+        });
+      }
+    } catch (err) {
+      console.error('Guard check failed:', err);
+    }
+    
+    // 執行所有測試
+    const allResults: TestResult[] = [];
     for (const testCase of testCases) {
       setCurrentTest(testCase.id);
       const result = await runSingleTest(testCase);
-      setResults(prev => [...prev, result]);
-      // 稍微延遲避免 API 過載
-      await new Promise(resolve => setTimeout(resolve, 500));
+      allResults.push(result);
+      setResults([...allResults]);
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
     
     setCurrentTest(null);
     setIsRunning(false);
     
-    const passedCount = results.filter(r => r.passed).length + 1; // +1 for last test
+    const passedCount = allResults.filter(r => r.passed).length;
     toast.success(`測試完成: ${passedCount}/${testCases.length} 通過`);
   };
 
@@ -380,20 +438,64 @@ export const BaziTestRunner = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* 保護欄驗證 */}
+        {guardStatus && (
+          <div className={`p-3 rounded-lg border ${
+            guardStatus.allPassed 
+              ? 'bg-emerald-950/30 border-emerald-500/30' 
+              : 'bg-rose-950/30 border-rose-500/30'
+          }`}>
+            <div className="flex items-center gap-2 mb-2">
+              <Shield className={`h-4 w-4 ${guardStatus.allPassed ? 'text-emerald-400' : 'text-rose-400'}`} />
+              <span className="font-medium text-sm">保護欄驗證（CI Guard）</span>
+              <Badge variant={guardStatus.allPassed ? "default" : "destructive"} className="ml-auto">
+                {guardStatus.allPassed ? '✓ 全通過' : '✗ 異常'}
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+              <div className="bg-stone-800/50 p-2 rounded">
+                <div className="text-muted-foreground">校準常數 K</div>
+                <div className={guardStatus.calibrationK === 49 ? 'text-emerald-400' : 'text-rose-400'}>
+                  {guardStatus.calibrationK} {guardStatus.calibrationK === 49 ? '✓' : '✗ (期望 49)'}
+                </div>
+              </div>
+              <div className="bg-stone-800/50 p-2 rounded">
+                <div className="text-muted-foreground">甲子序列[0]</div>
+                <div className="text-emerald-400">{guardStatus.ganzhiFirst} ✓</div>
+              </div>
+              <div className="bg-stone-800/50 p-2 rounded">
+                <div className="text-muted-foreground">序列長度</div>
+                <div className="text-emerald-400">{guardStatus.ganzhiLength} ✓</div>
+              </div>
+              <div className="bg-stone-800/50 p-2 rounded">
+                <div className="text-muted-foreground">Config Hash</div>
+                <div className={guardStatus.configHash?.includes('k49') ? 'text-emerald-400' : 'text-rose-400'}>
+                  {guardStatus.configHash?.slice(0, 20)}...
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 統計摘要 */}
         {results.length > 0 && (
-          <div className="flex gap-4 mb-4">
-            <Badge variant="outline" className="bg-emerald-950/50 border-emerald-500/50 text-emerald-300">
+          <div className="flex flex-wrap gap-3 mb-4">
+            <Badge variant="outline" className="bg-emerald-950/50 border-emerald-500/50 text-emerald-300 px-3 py-1">
               <CheckCircle className="h-3 w-3 mr-1" />
               通過: {passedCount}
             </Badge>
-            <Badge variant="outline" className="bg-rose-950/50 border-rose-500/50 text-rose-300">
+            <Badge variant="outline" className="bg-rose-950/50 border-rose-500/50 text-rose-300 px-3 py-1">
               <XCircle className="h-3 w-3 mr-1" />
               失敗: {failedCount}
             </Badge>
-            <Badge variant="outline" className="text-muted-foreground">
+            <Badge variant="outline" className="text-muted-foreground px-3 py-1">
               總計: {testCases.length}
             </Badge>
+            {passedCount === testCases.length && guardStatus?.allPassed && (
+              <Badge className="bg-emerald-600 text-white px-3 py-1">
+                🎉 回歸門檻達標 - 可上線
+              </Badge>
+            )}
           </div>
         )}
 

@@ -15,6 +15,8 @@ import { TenGodsAnalysis } from "@/components/TenGodsAnalysis";
 import { ProfessionalReportHeader } from "@/components/ProfessionalReportHeader";
 import { ShareImageDialog } from "@/components/ShareImageDialog";
 import { PremiumGate } from "@/components/PremiumGate";
+import { MuseumNavigationMap } from "@/components/MuseumNavigationMap";
+import { AiFortuneConsult } from "@/components/AiFortuneConsult";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, BadgeCheck, Shield, Share2, MessageCircle, Facebook } from "lucide-react";
@@ -95,6 +97,7 @@ const Index = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [activeSection, setActiveSection] = useState('summary');
   const [shenshaRuleset, setShenshaRuleset] = useState<'trad' | 'legion'>('trad');
+  const [isAiConsultOpen, setIsAiConsultOpen] = useState(false);
   const { isPremium, tier, loading: premiumLoading } = usePremiumStatus(user?.id);
   const { isAdmin } = useAdminStatus(user?.id);
   // 升級處理函數
@@ -499,6 +502,18 @@ const Index = () => {
           </Alert>
         )}
         
+        {/* 博物館導覽地圖 */}
+        {!baziResult && (
+          <section className="animate-fade-in">
+            <MuseumNavigationMap 
+              onZoneClick={(zoneId) => {
+                console.log('Zone clicked:', zoneId);
+              }}
+              onAiConsultClick={() => setIsAiConsultOpen(true)}
+            />
+          </section>
+        )}
+
         {/* 區域1：資料輸入區 */}
         <section className="animate-fade-in space-y-4">
           {/* 神煞規則集切換 */}
@@ -727,6 +742,13 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      {/* AI 命理諮詢 */}
+      <AiFortuneConsult 
+        isOpen={isAiConsultOpen}
+        onClose={() => setIsAiConsultOpen(false)}
+        baziResult={baziResult}
+      />
     </div>
   );
 };

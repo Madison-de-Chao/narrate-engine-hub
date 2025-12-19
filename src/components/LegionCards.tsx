@@ -94,7 +94,7 @@ function getSimpleYongShen(dayElement: string, strength: string): YongShenInfo {
   }
 }
 
-// 經典兵法語錄集 - 孫子兵法、三十六計、吳子兵法
+// 經典兵法語錄集 - 孫子兵法、三十六計
 const militaryWisdom = {
   year: {
     primary: {
@@ -106,11 +106,6 @@ const militaryWisdom = {
       quote: "瞞天過海：備周則意怠，常見則不疑。",
       source: "《三十六計・第一計》",
       interpretation: "祖輩傳承的智慧往往隱藏於日常，需細心體會方能領悟。"
-    },
-    tertiary: {
-      quote: "凡兵戰之場，立屍之地，必死則生，幸生則死。",
-      source: "《吳子兵法・治兵篇》",
-      interpretation: "唯有直面挑戰，方能從家族根基中汲取力量。"
     }
   },
   month: {
@@ -123,11 +118,6 @@ const militaryWisdom = {
       quote: "借刀殺人：敵已明，友未定，引友殺敵，不自出力。",
       source: "《三十六計・第三計》",
       interpretation: "借助他人之力成就己事，是人際謀略的精髓。"
-    },
-    tertiary: {
-      quote: "不和於國，不可以出軍；不和於軍，不可以出陣。",
-      source: "《吳子兵法・圖國篇》",
-      interpretation: "團結人心、和諧關係，是事業成功的根本。"
     }
   },
   day: {
@@ -140,11 +130,6 @@ const militaryWisdom = {
       quote: "以逸待勞：困敵之勢，不以戰；損剛益柔。",
       source: "《三十六計・第四計》",
       interpretation: "養精蓄銳、蓄勢待發，以不變應萬變。"
-    },
-    tertiary: {
-      quote: "進有重賞，退有重刑，行之以信。",
-      source: "《吳子兵法・治兵篇》",
-      interpretation: "對自己賞罰分明、言出必行，是建立自信的不二法門。"
     }
   },
   hour: {
@@ -157,11 +142,6 @@ const militaryWisdom = {
       quote: "無中生有：誑也，非誑也，實其所誑也。",
       source: "《三十六計・第七計》",
       interpretation: "創造機會、開拓可能，未來由自己書寫。"
-    },
-    tertiary: {
-      quote: "用兵之害，猶豫最大；三軍之災，生於狐疑。",
-      source: "《吳子兵法・治兵篇》",
-      interpretation: "面對未來當機立斷，猶豫不決是最大的敵人。"
     }
   }
 };
@@ -438,23 +418,6 @@ export const LegionCards = ({ baziResult, shenshaRuleset = 'trad', isPremium = f
                         </div>
                       </div>
 
-                      {/* 吳子兵法 */}
-                      <div className="p-4 bg-gradient-to-br from-blue-950/50 to-stone-900/50 rounded-lg border border-blue-600/30">
-                        <div className="flex items-start gap-3">
-                          <div className="text-2xl">🛡️</div>
-                          <div className="flex-1 space-y-2">
-                            <p className="text-blue-200 font-serif text-base leading-relaxed font-medium">
-                              「{militaryWisdom[pillarName].tertiary.quote}」
-                            </p>
-                            <p className="text-blue-400/80 text-sm font-medium">
-                              —— {militaryWisdom[pillarName].tertiary.source}
-                            </p>
-                            <p className="text-blue-100/70 text-sm mt-2 pt-2 border-t border-blue-700/30">
-                              📜 {militaryWisdom[pillarName].tertiary.interpretation}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   )}
 

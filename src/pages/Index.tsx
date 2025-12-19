@@ -17,8 +17,8 @@ import { ShareImageDialog } from "@/components/ShareImageDialog";
 import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, BadgeCheck, Shield } from "lucide-react";
-import { generatePDF, type CoverPageData } from "@/lib/pdfGenerator";
+import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, BadgeCheck, Shield, Share2, MessageCircle, Facebook } from "lucide-react";
+import { generatePDF, type CoverPageData, type ReportData } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
 import { useGuestMode } from "@/hooks/useGuestMode";
@@ -374,8 +374,22 @@ const Index = () => {
         hourPillar: baziResult.pillars.hour,
       };
       
-      await generatePDF("bazi-report-content", fileName, coverData);
-      toast.success(`報告下載成功！檔案已儲存至您的「下載」資料夾：${fileName}`);
+      // 準備報告資料
+      const reportData: ReportData = {
+        name: baziResult.name,
+        gender: baziResult.gender,
+        birthDate: birthDateStr,
+        pillars: baziResult.pillars,
+        nayin: baziResult.nayin,
+        tenGods: baziResult.tenGods,
+        hiddenStems: baziResult.hiddenStems,
+        wuxing: baziResult.wuxing,
+        yinyang: baziResult.yinyang,
+        legionStories: baziResult.legionStories,
+      };
+      
+      await generatePDF("bazi-report-content", fileName, coverData, reportData);
+      toast.success(`報告下載成功！`);
     } catch (error) {
       console.error("下載報告失敗:", error);
       toast.error("下載報告失敗，請稍後再試");
@@ -511,32 +525,83 @@ const Index = () => {
             <ReportNavigation activeSection={activeSection} onSectionChange={scrollToSection} />
 
             {/* 下載與分享按鈕 */}
-            <section className="animate-fade-in flex flex-wrap justify-center gap-4">
-              <Button
-                onClick={handleDownloadReport}
-                disabled={isDownloading}
-                className="bg-gradient-to-r from-primary via-accent to-secondary hover:opacity-90 text-primary-foreground font-bold text-lg px-8 py-6 shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.7)] transition-all"
-              >
-                {isDownloading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    正在生成報告...
-                  </>
-                ) : (
-                  <>
-                    <Download className="mr-2 h-5 w-5" />
-                    下載完整報告
-                  </>
-                )}
-              </Button>
+            <section className="animate-fade-in space-y-4">
+              <div className="flex flex-wrap justify-center gap-4">
+                <Button
+                  onClick={handleDownloadReport}
+                  disabled={isDownloading}
+                  className="bg-gradient-to-r from-primary via-accent to-secondary hover:opacity-90 text-primary-foreground font-bold text-lg px-8 py-6 shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.7)] transition-all"
+                >
+                  {isDownloading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      正在生成報告...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-5 w-5" />
+                      下載完整報告
+                    </>
+                  )}
+                </Button>
+                
+                <ShareImageDialog 
+                  name={baziResult.name}
+                  gender={baziResult.gender}
+                  pillars={baziResult.pillars}
+                  nayin={baziResult.nayin}
+                  legionStories={baziResult.legionStories}
+                />
+              </div>
               
-              <ShareImageDialog 
-                name={baziResult.name}
-                gender={baziResult.gender}
-                pillars={baziResult.pillars}
-                nayin={baziResult.nayin}
-                legionStories={baziResult.legionStories}
-              />
+              {/* 快速社群分享 */}
+              <div className="flex flex-wrap justify-center gap-3">
+                <span className="text-sm text-muted-foreground self-center">快速分享：</span>
+                <Button 
+                  onClick={() => {
+                    const text = `✨ ${baziResult.name}的八字命盤 ✨\n\n四柱：${baziResult.pillars.year.stem}${baziResult.pillars.year.branch} ${baziResult.pillars.month.stem}${baziResult.pillars.month.branch} ${baziResult.pillars.day.stem}${baziResult.pillars.day.branch} ${baziResult.pillars.hour.stem}${baziResult.pillars.hour.branch}\n\n🔮 虹靈御所 - 八字人生兵法\n你不是棋子，而是指揮官`;
+                    const lineUrl = `https://social-plugins.line.me/lineit/share?text=${encodeURIComponent(text)}`;
+                    window.open(lineUrl, '_blank', 'width=600,height=600');
+                    toast.success("已開啟 LINE 分享");
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 bg-[#00B900]/10 border-[#00B900]/50 text-[#00B900] hover:bg-[#00B900]/20"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  LINE
+                </Button>
+                <Button 
+                  onClick={() => {
+                    const text = `✨ ${baziResult.name}的八字命盤 ✨\n\n四柱：${baziResult.pillars.year.stem}${baziResult.pillars.year.branch} ${baziResult.pillars.month.stem}${baziResult.pillars.month.branch} ${baziResult.pillars.day.stem}${baziResult.pillars.day.branch} ${baziResult.pillars.hour.stem}${baziResult.pillars.hour.branch}\n\n🔮 虹靈御所 - 八字人生兵法\n你不是棋子，而是指揮官`;
+                    const fbUrl = `https://www.facebook.com/sharer/sharer.php?quote=${encodeURIComponent(text)}`;
+                    window.open(fbUrl, '_blank', 'width=600,height=600');
+                    toast.success("已開啟 Facebook 分享");
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 bg-[#1877F2]/10 border-[#1877F2]/50 text-[#1877F2] hover:bg-[#1877F2]/20"
+                >
+                  <Facebook className="h-4 w-4" />
+                  Facebook
+                </Button>
+                <Button 
+                  onClick={() => {
+                    const text = `✨ ${baziResult.name}的八字命盤 ✨\n\n四柱：${baziResult.pillars.year.stem}${baziResult.pillars.year.branch} ${baziResult.pillars.month.stem}${baziResult.pillars.month.branch} ${baziResult.pillars.day.stem}${baziResult.pillars.day.branch} ${baziResult.pillars.hour.stem}${baziResult.pillars.hour.branch}\n\n🔮 虹靈御所 - 八字人生兵法`;
+                    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+                    window.open(twitterUrl, '_blank', 'width=600,height=600');
+                    toast.success("已開啟 X (Twitter) 分享");
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-foreground/30 hover:bg-foreground/10"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                  X
+                </Button>
+              </div>
             </section>
 
             {/* 報告內容區 - 用於 PDF 生成 */}

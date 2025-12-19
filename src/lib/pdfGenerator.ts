@@ -114,6 +114,16 @@ export interface CoverPageData {
 }
 
 // 報告資料介面
+// 神煞資料介面
+export interface ShenshaItem {
+  name: string;
+  position?: string;
+  category?: string;
+  effect?: string;
+  modernMeaning?: string;
+  rarity?: string;
+}
+
 export interface ReportData {
   name: string;
   gender: string;
@@ -159,6 +169,7 @@ export interface ReportData {
     day?: string;
     hour?: string;
   };
+  shensha?: ShenshaItem[];
 }
 
 // 繪製封面頁
@@ -546,6 +557,120 @@ const drawLegionStoryPage = (pdf: jsPDF, legionType: string, story: string, pill
   });
 };
 
+// 繪製神煞分析頁
+const drawShenshaPage = (pdf: jsPDF, shensha: ShenshaItem[], pageIndex: number) => {
+  const pdfWidth = 210;
+  const centerX = pdfWidth / 2;
+  const margin = 18;
+  let y = 32;
+  
+  // 背景
+  pdf.setFillColor(15, 15, 20);
+  pdf.rect(0, 0, pdfWidth, 297, 'F');
+  drawTraditionalBorder(pdf, pdfWidth, 297);
+  
+  // 頁面標題
+  pdf.setFontSize(14);
+  pdf.setTextColor(200, 170, 100);
+  const titleText = pageIndex === 0 ? "神煞分析" : `神煞分析（續 ${pageIndex + 1}）`;
+  pdf.text(titleText, centerX, y, { align: "center" });
+  y += 8;
+  
+  // 副標題
+  pdf.setFontSize(8);
+  pdf.setTextColor(140, 130, 100);
+  pdf.text("命盤中的特殊星曜與其解讀", centerX, y, { align: "center" });
+  y += 12;
+  
+  // 分類顏色配置
+  const categoryColors: Record<string, [number, number, number]> = {
+    "吉神": [100, 200, 100],
+    "貴人": [200, 180, 100],
+    "桃花": [255, 150, 180],
+    "凶煞": [200, 100, 100],
+    "特殊": [150, 150, 200],
+  };
+  
+  // 稀有度配置
+  const rarityConfig: Record<string, { text: string; color: [number, number, number] }> = {
+    "SSR": { text: "極稀有", color: [255, 200, 50] },
+    "SR": { text: "稀有", color: [200, 150, 255] },
+    "R": { text: "普通", color: [150, 200, 255] },
+  };
+  
+  // 每個神煞的卡片
+  const cardHeight = 32;
+  const cardWidth = pdfWidth - margin * 2;
+  const maxItemsPerPage = 7;
+  
+  shensha.forEach((item, index) => {
+    if (index >= maxItemsPerPage) return;
+    
+    const cardY = y + index * (cardHeight + 4);
+    
+    // 卡片背景
+    pdf.setFillColor(25, 25, 35);
+    pdf.setDrawColor(100, 80, 60);
+    pdf.setLineWidth(0.3);
+    pdf.rect(margin, cardY, cardWidth, cardHeight, 'FD');
+    
+    // 左側分類色條
+    const category = item.category || "特殊";
+    const categoryColor = categoryColors[category] || categoryColors["特殊"];
+    pdf.setFillColor(...categoryColor);
+    pdf.rect(margin, cardY, 3, cardHeight, 'F');
+    
+    // 神煞名稱
+    pdf.setFontSize(12);
+    pdf.setTextColor(220, 200, 140);
+    pdf.text(item.name, margin + 8, cardY + 10);
+    
+    // 稀有度標籤
+    if (item.rarity && rarityConfig[item.rarity]) {
+      const rarity = rarityConfig[item.rarity];
+      pdf.setFontSize(7);
+      pdf.setTextColor(...rarity.color);
+      pdf.text(`[${rarity.text}]`, margin + 8 + pdf.getTextWidth(item.name) + 4, cardY + 10);
+    }
+    
+    // 分類標籤
+    pdf.setFontSize(7);
+    pdf.setTextColor(...categoryColor);
+    pdf.text(category, margin + cardWidth - 20, cardY + 10, { align: "right" });
+    
+    // 落宮位置
+    if (item.position) {
+      pdf.setFontSize(8);
+      pdf.setTextColor(160, 140, 100);
+      pdf.text(`落於：${item.position}`, margin + 8, cardY + 18);
+    }
+    
+    // 效果說明
+    if (item.effect) {
+      pdf.setFontSize(8);
+      pdf.setTextColor(150, 145, 135);
+      const effectText = pdf.splitTextToSize(`效果：${item.effect}`, cardWidth - 20);
+      effectText.slice(0, 2).forEach((line: string, lineIdx: number) => {
+        pdf.text(line, margin + 8, cardY + (item.position ? 25 : 18) + lineIdx * 5);
+      });
+    }
+    
+    // 現代解讀（如果有空間）
+    if (item.modernMeaning && !item.position) {
+      pdf.setFontSize(7);
+      pdf.setTextColor(120, 115, 105);
+      const modernText = pdf.splitTextToSize(`現代解讀：${item.modernMeaning}`, cardWidth - 20);
+      pdf.text(modernText[0] || '', margin + 8, cardY + 28);
+    }
+  });
+  
+  // 頁面底部說明
+  y = 265;
+  pdf.setFontSize(7);
+  pdf.setTextColor(100, 100, 100);
+  pdf.text("神煞解讀僅供參考，命運掌握在自己手中", centerX, y, { align: "center" });
+};
+
 // 主要導出函數
 export const generatePDF = async (_elementId: string, fileName: string, coverData?: CoverPageData, reportData?: ReportData) => {
   const pdfWidth = 210;
@@ -574,6 +699,10 @@ export const generatePDF = async (_elementId: string, fileName: string, coverDat
   let totalPages = 1; // 封面
   if (reportData) {
     totalPages += 1; // 四柱詳解頁
+    // 神煞分析頁
+    if (reportData.shensha && reportData.shensha.length > 0) {
+      totalPages += Math.ceil(reportData.shensha.length / 7);
+    }
     // 軍團故事頁
     const storyTypes = ['year', 'month', 'day', 'hour'] as const;
     storyTypes.forEach(type => {
@@ -605,6 +734,20 @@ export const generatePDF = async (_elementId: string, fileName: string, coverDat
     pageNum++;
     drawPillarsPage(pdf, reportData);
     drawHeaderFooter(pdf, pageNum, totalPages, dateStr, timeStr);
+    
+    // 神煞分析頁
+    if (reportData.shensha && reportData.shensha.length > 0) {
+      const shenshaPerPage = 7;
+      const totalShenshaPages = Math.ceil(reportData.shensha.length / shenshaPerPage);
+      
+      for (let i = 0; i < totalShenshaPages; i++) {
+        pdf.addPage();
+        pageNum++;
+        const pageItems = reportData.shensha.slice(i * shenshaPerPage, (i + 1) * shenshaPerPage);
+        drawShenshaPage(pdf, pageItems, i);
+        drawHeaderFooter(pdf, pageNum, totalPages, dateStr, timeStr);
+      }
+    }
     
     // 軍團故事頁
     const storyTypes = ['year', 'month', 'day', 'hour'] as const;

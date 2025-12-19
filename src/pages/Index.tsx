@@ -375,6 +375,18 @@ const Index = () => {
       };
       
       // 準備報告資料
+      // 轉換神煞資料為 PDF 格式
+      const shenshaForPdf = baziResult.shensha
+        .filter((s): s is ShenshaMatch => typeof s !== 'string' && 'name' in s)
+        .map((s) => ({
+          name: s.name,
+          position: s.evidence?.matched_pillar || '',
+          category: s.category,
+          effect: s.effect,
+          modernMeaning: s.modernMeaning,
+          rarity: s.rarity,
+        }));
+
       const reportData: ReportData = {
         name: baziResult.name,
         gender: baziResult.gender,
@@ -386,6 +398,7 @@ const Index = () => {
         wuxing: baziResult.wuxing,
         yinyang: baziResult.yinyang,
         legionStories: baziResult.legionStories,
+        shensha: shenshaForPdf,
       };
       
       await generatePDF("bazi-report-content", fileName, coverData, reportData);
@@ -551,6 +564,7 @@ const Index = () => {
                   pillars={baziResult.pillars}
                   nayin={baziResult.nayin}
                   legionStories={baziResult.legionStories}
+                  wuxing={baziResult.wuxing}
                 />
               </div>
               

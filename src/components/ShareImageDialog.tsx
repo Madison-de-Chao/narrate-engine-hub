@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Share2, Download, Loader2, Copy, Check, MessageCircle, Facebook } from "lucide-react";
+import { Share2, Download, Loader2, Copy, Check, MessageCircle, Facebook, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
 import logoHonglingyusuo from "@/assets/logo-honglingyusuo.png";
@@ -29,17 +29,33 @@ interface ShareImageDialogProps {
     day?: string;
     hour?: string;
   };
+  wuxing?: {
+    wood: number;
+    fire: number;
+    earth: number;
+    metal: number;
+    water: number;
+  };
 }
 
 // 軍團配置
 const legionConfig = {
-  year: { name: "祖源軍團", icon: "👑", color: "text-amber-400" },
-  month: { name: "關係軍團", icon: "🤝", color: "text-emerald-400" },
-  day: { name: "核心軍團", icon: "⭐", color: "text-purple-400" },
-  hour: { name: "未來軍團", icon: "🚀", color: "text-orange-400" },
+  year: { name: "祖源軍團", icon: "👑", color: "text-amber-400", bgGradient: "from-amber-900/40 to-amber-950/60" },
+  month: { name: "關係軍團", icon: "🤝", color: "text-emerald-400", bgGradient: "from-emerald-900/40 to-emerald-950/60" },
+  day: { name: "核心軍團", icon: "⭐", color: "text-purple-400", bgGradient: "from-purple-900/40 to-purple-950/60" },
+  hour: { name: "未來軍團", icon: "🚀", color: "text-orange-400", bgGradient: "from-orange-900/40 to-orange-950/60" },
 };
 
-export const ShareImageDialog = ({ name, gender, pillars, nayin, legionStories }: ShareImageDialogProps) => {
+// 五行配置
+const wuxingConfig = {
+  wood: { name: "木", color: "#4ade80", bgColor: "rgba(74, 222, 128, 0.2)" },
+  fire: { name: "火", color: "#f87171", bgColor: "rgba(248, 113, 113, 0.2)" },
+  earth: { name: "土", color: "#fbbf24", bgColor: "rgba(251, 191, 36, 0.2)" },
+  metal: { name: "金", color: "#e5e5e5", bgColor: "rgba(229, 229, 229, 0.2)" },
+  water: { name: "水", color: "#60a5fa", bgColor: "rgba(96, 165, 250, 0.2)" },
+};
+
+export const ShareImageDialog = ({ name, gender, pillars, nayin, legionStories, wuxing }: ShareImageDialogProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -54,7 +70,7 @@ export const ShareImageDialog = ({ name, gender, pillars, nayin, legionStories }
     setIsGenerating(true);
     try {
       const canvas = await html2canvas(cardRef.current, {
-        scale: 2,
+        scale: 3,
         useCORS: true,
         backgroundColor: "#0a0a0f",
         logging: false,
@@ -119,6 +135,9 @@ export const ShareImageDialog = ({ name, gender, pillars, nayin, legionStories }
     return story;
   };
 
+  // 計算五行總數
+  const wuxingTotal = wuxing ? Object.values(wuxing).reduce((a, b) => a + b, 0) : 0;
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -148,64 +167,157 @@ export const ShareImageDialog = ({ name, gender, pillars, nayin, legionStories }
               </TabsList>
             </Tabs>
 
-            {/* 預覽卡片 */}
+            {/* 預覽卡片 - 增強設計 */}
             <div 
               ref={cardRef} 
-              className="p-5 rounded-xl bg-gradient-to-br from-stone-950 via-stone-900 to-stone-950 border-2 border-amber-500/30"
-              style={{ width: '420px', margin: '0 auto' }}
+              className="relative overflow-hidden rounded-xl"
+              style={{ width: '460px', margin: '0 auto' }}
             >
-              {/* Logo */}
-              <div className="flex justify-center mb-3">
-                <img src={logoHonglingyusuo} alt="虹靈御所" className="h-8 object-contain" />
-              </div>
+              {/* 背景層 */}
+              <div className="absolute inset-0 bg-gradient-to-br from-stone-950 via-stone-900 to-stone-950" />
               
-              {/* 標題 */}
-              <div className="text-center mb-3">
-                <h3 className="text-lg font-bold text-amber-300">八字人生兵法</h3>
-                <p className="text-xs text-amber-200/60">四時軍團戰略命理系統</p>
-              </div>
+              {/* 裝飾性光暈 */}
+              <div className="absolute top-0 left-1/4 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl" />
               
-              {/* 命主資訊 */}
-              <div className="text-center mb-3 py-2 border-y border-amber-500/20">
-                <p className="text-xs text-amber-200/50 mb-0.5">{genderText}</p>
-                <p className="text-xl font-bold text-amber-100">{name}</p>
-              </div>
+              {/* 邊框裝飾 */}
+              <div className="absolute inset-0 border-2 border-amber-500/30 rounded-xl" />
+              <div className="absolute inset-1 border border-amber-500/20 rounded-lg" />
               
-              {/* 四柱 */}
-              <div className="grid grid-cols-4 gap-1.5 mb-3">
-                {(['year', 'month', 'day', 'hour'] as const).map((pillar) => (
-                  <div key={pillar} className={`text-center ${selectedLegion === pillar ? 'ring-2 ring-amber-400 rounded-lg' : ''}`}>
-                    <p className="text-xs text-amber-200/50 mb-0.5">
-                      {pillar === 'year' ? '年柱' : pillar === 'month' ? '月柱' : pillar === 'day' ? '日柱' : '時柱'}
-                    </p>
-                    <div className="bg-stone-800/50 rounded-lg p-1.5 border border-amber-500/20">
-                      <p className="text-base font-bold text-amber-200">{pillars[pillar].stem}</p>
-                      <p className="text-base font-bold text-amber-300">{pillars[pillar].branch}</p>
-                    </div>
-                    <p className="text-xs text-amber-200/40 mt-0.5">{nayin[pillar]}</p>
+              {/* 角落裝飾 */}
+              <div className="absolute top-2 left-2 w-6 h-6 border-l-2 border-t-2 border-amber-400/50" />
+              <div className="absolute top-2 right-2 w-6 h-6 border-r-2 border-t-2 border-amber-400/50" />
+              <div className="absolute bottom-2 left-2 w-6 h-6 border-l-2 border-b-2 border-amber-400/50" />
+              <div className="absolute bottom-2 right-2 w-6 h-6 border-r-2 border-b-2 border-amber-400/50" />
+              
+              {/* 內容區 */}
+              <div className="relative p-6">
+                {/* Logo 與標題 */}
+                <div className="flex flex-col items-center mb-4">
+                  <img src={logoHonglingyusuo} alt="虹靈御所" className="h-10 object-contain mb-2" />
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-amber-400" />
+                    <h3 className="text-lg font-bold bg-gradient-to-r from-amber-200 via-amber-300 to-amber-200 bg-clip-text text-transparent">
+                      八字人生兵法
+                    </h3>
+                    <Sparkles className="h-4 w-4 text-amber-400" />
                   </div>
-                ))}
-              </div>
-
-              {/* 軍團故事（非簡易版時顯示完整故事） */}
-              {selectedLegion !== 'simple' && legionStories && (
-                <div className={`p-3 rounded-lg bg-gradient-to-br from-stone-800/60 to-stone-900/60 border border-amber-500/20 mb-3`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg">{legionConfig[selectedLegion].icon}</span>
-                    <span className={`font-bold ${legionConfig[selectedLegion].color}`}>
-                      {legionConfig[selectedLegion].name}
-                    </span>
-                  </div>
-                  <p className="text-xs text-amber-100/80 leading-relaxed whitespace-pre-wrap">
-                    {getStoryText(legionStories[selectedLegion])}
-                  </p>
+                  <p className="text-xs text-amber-200/60 tracking-widest">四時軍團戰略命理系統</p>
                 </div>
-              )}
-              
-              {/* 底部標語 */}
-              <div className="text-center pt-2 border-t border-amber-500/20">
-                <p className="text-xs text-amber-200/50">你不是棋子，而是指揮官</p>
-                <p className="text-xs text-amber-200/30 mt-0.5">© 虹靈御所｜超烜創意</p>
+                
+                {/* 命主資訊 - 裝飾性設計 */}
+                <div className="relative text-center mb-4 py-3">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent" />
+                  <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+                  <div className="absolute bottom-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
+                  <p className="text-xs text-amber-200/50 mb-1 tracking-wider">{genderText}</p>
+                  <p className="text-2xl font-bold text-amber-100 tracking-wider">{name}</p>
+                </div>
+                
+                {/* 四柱 - 精緻卡片設計 */}
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  {(['year', 'month', 'day', 'hour'] as const).map((pillar) => {
+                    const isSelected = selectedLegion === pillar;
+                    const config = legionConfig[pillar];
+                    return (
+                      <div 
+                        key={pillar} 
+                        className={`relative text-center transition-all duration-300 ${
+                          isSelected ? 'scale-105' : ''
+                        }`}
+                      >
+                        {/* 選中光暈 */}
+                        {isSelected && (
+                          <div className="absolute -inset-1 bg-gradient-to-b from-amber-400/20 to-transparent rounded-xl blur-sm" />
+                        )}
+                        
+                        <div className={`relative bg-gradient-to-b ${
+                          isSelected ? config.bgGradient : 'from-stone-800/60 to-stone-900/60'
+                        } rounded-xl p-2.5 border ${
+                          isSelected ? 'border-amber-400/50' : 'border-amber-500/20'
+                        }`}>
+                          {/* 柱位標籤 */}
+                          <div className="flex items-center justify-center gap-1 mb-1">
+                            <span className="text-xs">{config.icon}</span>
+                            <p className={`text-xs ${isSelected ? config.color : 'text-amber-200/50'}`}>
+                              {pillar === 'year' ? '年柱' : pillar === 'month' ? '月柱' : pillar === 'day' ? '日柱' : '時柱'}
+                            </p>
+                          </div>
+                          
+                          {/* 天干地支 */}
+                          <div className="bg-stone-900/50 rounded-lg py-2 px-1 mb-1 border border-amber-500/10">
+                            <p className="text-xl font-bold text-amber-200">{pillars[pillar].stem}</p>
+                            <div className="w-6 h-px bg-amber-500/30 mx-auto my-1" />
+                            <p className="text-xl font-bold text-amber-300">{pillars[pillar].branch}</p>
+                          </div>
+                          
+                          {/* 納音 */}
+                          <p className="text-xs text-amber-200/50 truncate">{nayin[pillar]}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 五行分布 - 簡易版顯示 */}
+                {selectedLegion === 'simple' && wuxing && wuxingTotal > 0 && (
+                  <div className="mb-4 p-3 bg-stone-800/40 rounded-lg border border-amber-500/20">
+                    <p className="text-xs text-amber-200/60 text-center mb-2">五行分布</p>
+                    <div className="flex justify-center gap-3">
+                      {(Object.keys(wuxingConfig) as Array<keyof typeof wuxingConfig>).map((key) => {
+                        const config = wuxingConfig[key];
+                        const value = wuxing[key];
+                        const percentage = Math.round((value / wuxingTotal) * 100);
+                        return (
+                          <div key={key} className="text-center">
+                            <div 
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-1"
+                              style={{ 
+                                backgroundColor: config.bgColor,
+                                color: config.color,
+                                border: `1px solid ${config.color}40`
+                              }}
+                            >
+                              {config.name}
+                            </div>
+                            <p className="text-xs text-amber-200/60">{percentage}%</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 軍團故事（非簡易版時顯示完整故事） */}
+                {selectedLegion !== 'simple' && legionStories && (
+                  <div className={`relative p-4 rounded-xl bg-gradient-to-br ${legionConfig[selectedLegion].bgGradient} border border-amber-500/20 mb-4 overflow-hidden`}>
+                    {/* 背景裝飾 */}
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-white/5 rounded-full blur-2xl" />
+                    
+                    <div className="relative">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-2xl">{legionConfig[selectedLegion].icon}</span>
+                        <span className={`font-bold text-lg ${legionConfig[selectedLegion].color}`}>
+                          {legionConfig[selectedLegion].name}
+                        </span>
+                      </div>
+                      <p className="text-sm text-amber-100/85 leading-relaxed whitespace-pre-wrap">
+                        {getStoryText(legionStories[selectedLegion])}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* 底部品牌區 */}
+                <div className="relative text-center pt-3">
+                  <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
+                  <p className="text-sm text-amber-200/70 font-medium mb-1">「你不是棋子，而是指揮官」</p>
+                  <div className="flex items-center justify-center gap-2 text-xs text-amber-200/40">
+                    <span>© 虹靈御所</span>
+                    <span>•</span>
+                    <span>超烜創意</span>
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -214,7 +326,7 @@ export const ShareImageDialog = ({ name, gender, pillars, nayin, legionStories }
               <Button 
                 onClick={generateImage} 
                 disabled={isGenerating}
-                className="gap-2"
+                className="gap-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600"
               >
                 {isGenerating ? (
                   <>
@@ -223,7 +335,7 @@ export const ShareImageDialog = ({ name, gender, pillars, nayin, legionStories }
                   </>
                 ) : (
                   <>
-                    <Share2 className="h-4 w-4" />
+                    <Sparkles className="h-4 w-4" />
                     生成圖片
                   </>
                 )}

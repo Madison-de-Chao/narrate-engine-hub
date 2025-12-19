@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
+import { WuxingCycleDiagram } from '@/components/WuxingCycleDiagram';
 
 interface ZoneContent {
   id: string;
@@ -28,6 +29,7 @@ interface ZoneContent {
     content: string;
   }[];
   relatedZones: string[];
+  hasInteractiveDiagram?: boolean;
 }
 
 const ZONE_CONTENTS: Record<string, ZoneContent> = {
@@ -145,7 +147,8 @@ const ZONE_CONTENTS: Record<string, ZoneContent> = {
         content: '命盤中五行的強弱分布影響人的性格與運勢。五行平衡者性情穩定，某行過旺或過弱則可能產生偏頗。可透過後天調整來達到平衡。'
       }
     ],
-    relatedZones: ['bazi', 'nayin', 'personality']
+    relatedZones: ['bazi', 'nayin', 'personality'],
+    hasInteractiveDiagram: true
   },
   nayin: {
     id: 'nayin',
@@ -356,6 +359,18 @@ const ZoneGuide: React.FC = () => {
           }`}>
             {zone.overview}
           </p>
+
+          {/* 五行互動圖表 */}
+          {zone.hasInteractiveDiagram && zone.id === 'wuxing' && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="mt-6"
+            >
+              <WuxingCycleDiagram />
+            </motion.div>
+          )}
         </motion.div>
 
         {/* 詳細章節 */}

@@ -1,4 +1,3 @@
-import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 // 傳統中國風格邊框繪製
@@ -114,13 +113,61 @@ export interface CoverPageData {
   hourPillar: { stem: string; branch: string };
 }
 
+// 報告資料介面
+export interface ReportData {
+  name: string;
+  gender: string;
+  birthDate: string;
+  pillars: {
+    year: { stem: string; branch: string };
+    month: { stem: string; branch: string };
+    day: { stem: string; branch: string };
+    hour: { stem: string; branch: string };
+  };
+  nayin: {
+    year: string;
+    month: string;
+    day: string;
+    hour: string;
+  };
+  tenGods?: {
+    year: { stem: string; branch: string };
+    month: { stem: string; branch: string };
+    day: { stem: string; branch: string };
+    hour: { stem: string; branch: string };
+  };
+  hiddenStems?: {
+    year: string[];
+    month: string[];
+    day: string[];
+    hour: string[];
+  };
+  wuxing?: {
+    wood: number;
+    fire: number;
+    earth: number;
+    metal: number;
+    water: number;
+  };
+  yinyang?: {
+    yin: number;
+    yang: number;
+  };
+  legionStories?: {
+    year?: string;
+    month?: string;
+    day?: string;
+    hour?: string;
+  };
+}
+
 // 繪製封面頁
 const drawCoverPage = (pdf: jsPDF, data: CoverPageData) => {
   const pdfWidth = 210;
   const pdfHeight = 297;
   
   // 深色背景
-  pdf.setFillColor(10, 10, 15);
+  pdf.setFillColor(15, 15, 20);
   pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
   
   // 傳統邊框
@@ -247,265 +294,336 @@ const drawCoverPage = (pdf: jsPDF, data: CoverPageData) => {
   pdf.text("選擇權在於你", centerX, pdfHeight - 18, { align: "center" });
 };
 
-// 繪製頁面標題裝飾線
-const drawTitleDecoration = (pdf: jsPDF, x: number, y: number, width: number) => {
+// 繪製頁眉頁腳
+const drawHeaderFooter = (pdf: jsPDF, pageNum: number, totalPages: number, dateStr: string, timeStr: string) => {
+  const pdfWidth = 210;
+  const pdfHeight = 297;
+  const margin = 15;
+  
+  // 頁眉
+  pdf.setFontSize(11);
+  pdf.setTextColor(200, 170, 100);
+  pdf.text("虹靈御所八字人生兵法", pdfWidth / 2, 14, { align: "center" });
+  
+  pdf.setFontSize(7);
+  pdf.setTextColor(140, 140, 140);
+  pdf.text("四時軍團戰略命理系統", pdfWidth / 2, 19, { align: "center" });
+  
+  // 頁眉裝飾線
   pdf.setDrawColor(160, 130, 80);
   pdf.setLineWidth(0.5);
+  pdf.line(margin, 22, pdfWidth - margin, 22);
   
-  // 左側裝飾
-  pdf.line(x, y, x + 30, y);
-  pdf.circle(x + 33, y, 1.5, 'S');
+  // 印章
+  if (pageNum === 1) {
+    drawSeal(pdf, pdfWidth - 28, 16, "御所");
+  }
   
-  // 右側裝飾
-  pdf.line(x + width - 30, y, x + width, y);
-  pdf.circle(x + width - 33, y, 1.5, 'S');
+  // 頁腳分隔線
+  pdf.setDrawColor(100, 80, 50);
+  pdf.setLineWidth(0.3);
+  pdf.line(margin, pdfHeight - 16, pdfWidth - margin, pdfHeight - 16);
+  
+  // 頁腳內容
+  pdf.setFontSize(6);
+  pdf.setTextColor(120, 120, 120);
+  pdf.text(`製表日期：${dateStr} ${timeStr}`, margin, pdfHeight - 11);
+  
+  pdf.setTextColor(100, 100, 100);
+  pdf.text("© 2025 虹靈御所｜超烜創意", pdfWidth / 2, pdfHeight - 11, { align: "center" });
+  
+  pdf.setTextColor(140, 140, 140);
+  pdf.text(`第 ${pageNum} 頁 / 共 ${totalPages} 頁`, pdfWidth - margin, pdfHeight - 11, { align: "right" });
+  
+  // 哲學語句
+  pdf.setFontSize(5);
+  pdf.setTextColor(80, 80, 80);
+  pdf.text("本報告僅供參考，命理展示的是一條「相對好走但不一定是你要走的路」，選擇權在於你", pdfWidth / 2, pdfHeight - 6, { align: "center" });
 };
 
-export const generatePDF = async (elementId: string, fileName: string, coverData?: CoverPageData) => {
-  const element = document.getElementById(elementId);
-  if (!element) {
-    throw new Error("找不到要下載的元素");
-  }
-
-  const cleanupClone = () => {
-    document.querySelectorAll(".html2canvas-container").forEach((container) => {
-      (container as HTMLElement).remove();
-    });
-  };
-
-  try {
-    // 為 PDF 添加專用樣式
-    const style = document.createElement('style');
-    style.textContent = `
-      @media print {
-        * {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-      }
-    `;
-    document.head.appendChild(style);
-
-    // 確保所有圖片都已載入
-    const images = element.querySelectorAll('img');
-    await Promise.all(
-      Array.from(images).map(
-        (img) =>
-          new Promise((resolve) => {
-            if (img.complete) {
-              resolve(true);
-            } else {
-              img.onload = () => resolve(true);
-              img.onerror = () => resolve(false);
-            }
-          })
-      )
-    );
-
-    // 使用 html2canvas 將 HTML 轉換為 canvas
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: "#0a0a0f",
-      removeContainer: true,
-      allowTaint: true,
-      imageTimeout: 30000,
-      ignoreElements: (el) => {
-        // 忽略可能導致問題的 SVG 和 recharts 圖表
-        if (el.tagName === 'svg' || el.classList?.contains('recharts-wrapper')) {
-          return true;
-        }
-        // 忽略零尺寸的 canvas
-        if (el.tagName === 'CANVAS') {
-          const canvasEl = el as HTMLCanvasElement;
-          if (canvasEl.width === 0 || canvasEl.height === 0) {
-            return true;
-          }
-        }
-        return false;
-      },
-      onclone: (clonedDoc) => {
-        // 移除可能導致問題的動畫元素
-        const clonedElement = clonedDoc.getElementById(elementId);
-        if (clonedElement) {
-          clonedElement.querySelectorAll('.animate-pulse, .animate-spin').forEach((el) => {
-            (el as HTMLElement).style.animation = 'none';
-          });
-          // 移除 recharts 圖表容器（避免 createPattern 錯誤）
-          clonedElement.querySelectorAll('.recharts-wrapper, .recharts-surface').forEach((el) => {
-            (el as HTMLElement).style.display = 'none';
-          });
-          // 移除所有 SVG 元素中可能有問題的背景
-          clonedElement.querySelectorAll('svg').forEach((svg) => {
-            svg.querySelectorAll('pattern, defs').forEach((el) => {
-              el.remove();
-            });
-          });
-          // 確保所有元素都有明確的寬高
-          clonedElement.querySelectorAll('canvas').forEach((canvasEl) => {
-            if ((canvasEl as HTMLCanvasElement).width === 0 || (canvasEl as HTMLCanvasElement).height === 0) {
-              (canvasEl as HTMLElement).style.display = 'none';
-            }
-          });
-        }
-      }
-    });
-
-    // 移除臨時樣式
-    document.head.removeChild(style);
-
-    // A4 尺寸
-    const pdfWidth = 210;
-    const pdfHeight = 297;
-    const margin = 15;
-    const headerHeight = 25;
-    const footerHeight = 18;
-    const contentWidth = pdfWidth - (margin * 2);
+// 繪製四柱詳解頁
+const drawPillarsPage = (pdf: jsPDF, data: ReportData) => {
+  const pdfWidth = 210;
+  const centerX = pdfWidth / 2;
+  const margin = 18;
+  let y = 32;
+  
+  // 背景
+  pdf.setFillColor(15, 15, 20);
+  pdf.rect(0, 0, pdfWidth, 297, 'F');
+  drawTraditionalBorder(pdf, pdfWidth, 297);
+  
+  // 區域標題
+  pdf.setFontSize(14);
+  pdf.setTextColor(200, 170, 100);
+  pdf.text("四柱命盤詳解", centerX, y, { align: "center" });
+  y += 15;
+  
+  // 四柱卡片
+  const pillarLabels = ["年柱 (祖源軍團)", "月柱 (關係軍團)", "日柱 (核心軍團)", "時柱 (未來軍團)"];
+  const pillarKeys = ['year', 'month', 'day', 'hour'] as const;
+  const cardWidth = 80;
+  const cardHeight = 55;
+  
+  pillarKeys.forEach((key, index) => {
+    const pillar = data.pillars[key];
+    const nayin = data.nayin[key];
+    const tenGod = data.tenGods?.[key];
+    const hiddenStems = data.hiddenStems?.[key] || [];
     
-    // 計算內容尺寸
-    const imgWidth = contentWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const row = Math.floor(index / 2);
+    const col = index % 2;
+    const cardX = margin + col * (cardWidth + 10);
+    const cardY = y + row * (cardHeight + 10);
     
-    // 創建 PDF
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4"
-    });
-
-    // 獲取當前日期時間
-    const now = new Date();
-    const dateStr = now.toLocaleDateString("zh-TW", {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    });
-    const timeStr = now.toLocaleTimeString("zh-TW", {
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-
-    // 計算總頁數（加1是因為有封面頁）
-    const pageContentHeight = pdfHeight - headerHeight - footerHeight;
-    const totalContentPages = Math.ceil(imgHeight / pageContentHeight);
-    const hasCover = !!coverData;
-    const totalPages = totalContentPages + (hasCover ? 1 : 0);
+    // 卡片背景
+    pdf.setFillColor(25, 25, 35);
+    pdf.setDrawColor(140, 110, 70);
+    pdf.setLineWidth(0.5);
+    pdf.rect(cardX, cardY, cardWidth, cardHeight, 'FD');
     
-    // 如果有封面資料，先繪製封面
-    if (coverData) {
-      drawCoverPage(pdf, coverData);
+    // 柱名稱
+    pdf.setFontSize(9);
+    pdf.setTextColor(180, 150, 90);
+    pdf.text(pillarLabels[index], cardX + cardWidth / 2, cardY + 8, { align: "center" });
+    
+    // 天干地支
+    pdf.setFontSize(18);
+    pdf.setTextColor(220, 200, 140);
+    pdf.text(`${pillar.stem}${pillar.branch}`, cardX + cardWidth / 2, cardY + 25, { align: "center" });
+    
+    // 納音
+    pdf.setFontSize(8);
+    pdf.setTextColor(160, 140, 100);
+    pdf.text(`納音：${nayin}`, cardX + cardWidth / 2, cardY + 35, { align: "center" });
+    
+    // 十神
+    if (tenGod) {
+      pdf.setFontSize(7);
+      pdf.setTextColor(140, 120, 90);
+      pdf.text(`十神：${tenGod.stem} / ${tenGod.branch}`, cardX + cardWidth / 2, cardY + 43, { align: "center" });
     }
     
-    // 添加主圖片
-    const imgData = canvas.toDataURL("image/png", 1.0);
+    // 藏干
+    if (hiddenStems.length > 0) {
+      pdf.setFontSize(6);
+      pdf.setTextColor(120, 100, 80);
+      pdf.text(`藏干：${hiddenStems.join('、')}`, cardX + cardWidth / 2, cardY + 50, { align: "center" });
+    }
+  });
+  
+  y += cardHeight * 2 + 30;
+  
+  // 五行分析
+  if (data.wuxing) {
+    pdf.setFontSize(12);
+    pdf.setTextColor(200, 170, 100);
+    pdf.text("五行分布", margin, y, { align: "left" });
+    y += 10;
     
-    for (let page = 0; page < totalContentPages; page++) {
-      // 封面後的每一頁都需要新增頁面
-      pdf.addPage();
+    const elements = [
+      { name: '木', value: data.wuxing.wood, color: [100, 180, 100] as [number, number, number] },
+      { name: '火', value: data.wuxing.fire, color: [200, 100, 100] as [number, number, number] },
+      { name: '土', value: data.wuxing.earth, color: [180, 150, 100] as [number, number, number] },
+      { name: '金', value: data.wuxing.metal, color: [200, 200, 180] as [number, number, number] },
+      { name: '水', value: data.wuxing.water, color: [100, 150, 200] as [number, number, number] },
+    ];
+    
+    const total = Object.values(data.wuxing).reduce((a, b) => a + b, 0);
+    const barMaxWidth = 100;
+    
+    elements.forEach((el, idx) => {
+      const barY = y + idx * 12;
+      const barWidth = total > 0 ? (el.value / total) * barMaxWidth : 0;
       
-      // 深色背景
-      pdf.setFillColor(10, 10, 15);
-      pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
+      // 標籤
+      pdf.setFontSize(9);
+      pdf.setTextColor(180, 170, 150);
+      pdf.text(el.name, margin, barY + 4, { align: "left" });
       
-      // 添加傳統邊框
-      drawTraditionalBorder(pdf, pdfWidth, pdfHeight);
+      // 進度條背景
+      pdf.setFillColor(40, 40, 50);
+      pdf.rect(margin + 15, barY, barMaxWidth, 8, 'F');
       
-      // 頁眉
-      pdf.setFontSize(12);
-      pdf.setTextColor(200, 170, 100); // 金色標題
-      pdf.text("虹靈御所八字人生兵法", pdfWidth / 2, 14, { align: "center" });
+      // 進度條
+      pdf.setFillColor(...el.color);
+      pdf.rect(margin + 15, barY, barWidth, 8, 'F');
       
+      // 數值
       pdf.setFontSize(8);
-      pdf.setTextColor(140, 140, 140);
-      pdf.text("軍團戰略命理系統", pdfWidth / 2, 19, { align: "center" });
-      
-      // 標題裝飾線
-      drawTitleDecoration(pdf, margin, 22, contentWidth);
-      
-      // 添加印章 (僅首頁)
-      if (page === 0) {
-        drawSeal(pdf, pdfWidth - 28, 16, "御所");
-      }
-      
-      // 計算當前頁的圖片裁切
-      const sourceY = page * pageContentHeight * (canvas.width / imgWidth);
-      const sourceHeight = Math.min(
-        pageContentHeight * (canvas.width / imgWidth),
-        canvas.height - sourceY
-      );
-      
-      // 創建裁切後的 canvas
-      const pageCanvas = document.createElement('canvas');
-      pageCanvas.width = canvas.width;
-      pageCanvas.height = sourceHeight;
-      
-      const ctx = pageCanvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(
-          canvas,
-          0, sourceY, canvas.width, sourceHeight,
-          0, 0, canvas.width, sourceHeight
-        );
-        
-        const pageImgData = pageCanvas.toDataURL("image/png", 1.0);
-        const pageImgHeight = (sourceHeight * imgWidth) / canvas.width;
-        
-        pdf.addImage(
-          pageImgData,
-          "PNG",
-          margin,
-          headerHeight,
-          imgWidth,
-          pageImgHeight,
-          undefined,
-          'FAST'
-        );
-      }
-      
-      // 頁尾
-      pdf.setDrawColor(100, 80, 50);
-      pdf.setLineWidth(0.3);
-      pdf.line(margin, pdfHeight - footerHeight + 2, pdfWidth - margin, pdfHeight - footerHeight + 2);
-      
-      pdf.setFontSize(6);
-      pdf.setTextColor(120, 120, 120);
-      
-      // 左側日期
-      pdf.text(`製表日期：${dateStr} ${timeStr}`, margin, pdfHeight - 12);
-      
-      // 版權宣告
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(
-        "© 2025 虹靈御所 HongLing YuSuo｜超烜創意 Chaoxuan Creative",
-        pdfWidth / 2,
-        pdfHeight - 12,
-        { align: "center" }
-      );
-      
-      // 哲學語句
-      pdf.setFontSize(5);
-      pdf.setTextColor(80, 80, 80);
-      pdf.text(
-        "本報告僅供參考，命理展示的是一條「相對好走但不一定是你要走的路」，選擇權在於你",
-        pdfWidth / 2,
-        pdfHeight - 7,
-        { align: "center" }
-      );
-      
-      // 右側頁碼（內容頁從第2頁開始，封面是第1頁）
-      pdf.setFontSize(6);
-      pdf.setTextColor(140, 140, 140);
-      const currentPage = hasCover ? page + 2 : page + 1;
-      pdf.text(`第 ${currentPage} 頁 / 共 ${totalPages} 頁`, pdfWidth - margin, pdfHeight - 12, { align: "right" });
-    }
-
-    // 下載 PDF
-    pdf.save(fileName);
-  } catch (error) {
-    console.error("生成 PDF 時發生錯誤:", error);
-    throw error;
-  } finally {
-    cleanupClone();
+      pdf.setTextColor(160, 160, 160);
+      pdf.text(`${el.value}`, margin + 120, barY + 5, { align: "left" });
+    });
+    
+    y += 70;
   }
+  
+  // 陰陽比例
+  if (data.yinyang) {
+    pdf.setFontSize(12);
+    pdf.setTextColor(200, 170, 100);
+    pdf.text("陰陽比例", margin, y, { align: "left" });
+    y += 10;
+    
+    const total = data.yinyang.yin + data.yinyang.yang;
+    const yangWidth = total > 0 ? (data.yinyang.yang / total) * 100 : 50;
+    const yinWidth = 100 - yangWidth;
+    
+    // 陽
+    pdf.setFillColor(200, 180, 100);
+    pdf.rect(margin, y, yangWidth, 12, 'F');
+    
+    // 陰
+    pdf.setFillColor(100, 100, 150);
+    pdf.rect(margin + yangWidth, y, yinWidth, 12, 'F');
+    
+    // 標籤
+    pdf.setFontSize(8);
+    pdf.setTextColor(50, 50, 50);
+    pdf.text(`陽 ${data.yinyang.yang}`, margin + 5, y + 8, { align: "left" });
+    pdf.setTextColor(220, 220, 220);
+    pdf.text(`陰 ${data.yinyang.yin}`, margin + 95, y + 8, { align: "right" });
+  }
+};
+
+// 繪製軍團故事頁
+const drawLegionStoryPage = (pdf: jsPDF, legionType: string, story: string, pillar: { stem: string; branch: string }, nayin: string) => {
+  const pdfWidth = 210;
+  const centerX = pdfWidth / 2;
+  const margin = 18;
+  let y = 32;
+  
+  // 背景
+  pdf.setFillColor(15, 15, 20);
+  pdf.rect(0, 0, pdfWidth, 297, 'F');
+  drawTraditionalBorder(pdf, pdfWidth, 297);
+  
+  // 軍團配置
+  const legionConfig: Record<string, { name: string; icon: string; color: [number, number, number] }> = {
+    year: { name: "祖源軍團", icon: "👑", color: [234, 179, 8] },
+    month: { name: "關係軍團", icon: "🤝", color: [16, 185, 129] },
+    day: { name: "核心軍團", icon: "⭐", color: [168, 85, 247] },
+    hour: { name: "未來軍團", icon: "🚀", color: [249, 115, 22] },
+  };
+  
+  const config = legionConfig[legionType] || legionConfig.year;
+  
+  // 軍團標題
+  pdf.setFontSize(16);
+  pdf.setTextColor(...config.color);
+  pdf.text(`${config.icon} ${config.name}`, centerX, y, { align: "center" });
+  y += 12;
+  
+  // 柱位資訊
+  pdf.setFontSize(12);
+  pdf.setTextColor(200, 180, 140);
+  pdf.text(`${pillar.stem}${pillar.branch} · ${nayin}`, centerX, y, { align: "center" });
+  y += 15;
+  
+  // 分隔線
+  pdf.setDrawColor(140, 110, 70);
+  pdf.setLineWidth(0.5);
+  pdf.line(margin + 20, y, pdfWidth - margin - 20, y);
+  y += 12;
+  
+  // 故事內容
+  pdf.setFontSize(10);
+  pdf.setTextColor(180, 175, 165);
+  
+  // 文字自動換行
+  const maxWidth = pdfWidth - margin * 2 - 10;
+  const lineHeight = 6;
+  const paragraphs = story.split('\n').filter(p => p.trim());
+  
+  paragraphs.forEach(paragraph => {
+    const lines = pdf.splitTextToSize(paragraph, maxWidth);
+    lines.forEach((line: string) => {
+      if (y > 270) return; // 防止超出頁面
+      pdf.text(line, margin + 5, y);
+      y += lineHeight;
+    });
+    y += 4; // 段落間距
+  });
+};
+
+// 主要導出函數
+export const generatePDF = async (_elementId: string, fileName: string, coverData?: CoverPageData, reportData?: ReportData) => {
+  const pdfWidth = 210;
+  const pdfHeight = 297;
+  
+  // 創建 PDF
+  const pdf = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4"
+  });
+
+  // 獲取當前日期時間
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("zh-TW", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+  const timeStr = now.toLocaleTimeString("zh-TW", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+
+  // 計算總頁數
+  let totalPages = 1; // 封面
+  if (reportData) {
+    totalPages += 1; // 四柱詳解頁
+    // 軍團故事頁
+    const storyTypes = ['year', 'month', 'day', 'hour'] as const;
+    storyTypes.forEach(type => {
+      if (reportData.legionStories?.[type]) {
+        totalPages += 1;
+      }
+    });
+  }
+  
+  // 繪製封面
+  if (coverData) {
+    drawCoverPage(pdf, coverData);
+  } else {
+    // 簡單封面
+    pdf.setFillColor(15, 15, 20);
+    pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
+    drawTraditionalBorder(pdf, pdfWidth, pdfHeight);
+    pdf.setFontSize(24);
+    pdf.setTextColor(200, 170, 100);
+    pdf.text("八字人生兵法", pdfWidth / 2, pdfHeight / 2, { align: "center" });
+  }
+  
+  // 繪製報告內容頁
+  if (reportData) {
+    let pageNum = 1;
+    
+    // 四柱詳解頁
+    pdf.addPage();
+    pageNum++;
+    drawPillarsPage(pdf, reportData);
+    drawHeaderFooter(pdf, pageNum, totalPages, dateStr, timeStr);
+    
+    // 軍團故事頁
+    const storyTypes = ['year', 'month', 'day', 'hour'] as const;
+    storyTypes.forEach(type => {
+      const story = reportData.legionStories?.[type];
+      if (story) {
+        pdf.addPage();
+        pageNum++;
+        drawLegionStoryPage(pdf, type, story, reportData.pillars[type], reportData.nayin[type]);
+        drawHeaderFooter(pdf, pageNum, totalPages, dateStr, timeStr);
+      }
+    });
+  }
+
+  // 下載 PDF
+  pdf.save(fileName);
+};
+
+// 保持向後兼容的簡化版本
+export const generateSimplePDF = async (elementId: string, fileName: string, coverData?: CoverPageData) => {
+  await generatePDF(elementId, fileName, coverData);
 };

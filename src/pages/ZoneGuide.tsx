@@ -16,6 +16,8 @@ import {
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { WuxingCycleDiagram } from '@/components/WuxingCycleDiagram';
+import { TenGodsDiagram } from '@/components/TenGodsDiagram';
+import { ShenShaDiagram } from '@/components/ShenShaDiagram';
 
 interface ZoneContent {
   id: string;
@@ -93,7 +95,8 @@ const ZONE_CONTENTS: Record<string, ZoneContent> = {
         content: '正印主學問、母親、貴人；偏印代表偏門學問、獨立思考。印星旺者智慧高，受長輩庇護，但過旺可能過度依賴。'
       }
     ],
-    relatedZones: ['bazi', 'personality', 'fortune']
+    relatedZones: ['bazi', 'personality', 'fortune'],
+    hasInteractiveDiagram: true
   },
   shensha: {
     id: 'shensha',
@@ -120,7 +123,8 @@ const ZONE_CONTENTS: Record<string, ZoneContent> = {
         content: '多個神煞同時出現會產生特殊效應，如「貴人遇華蓋」主高雅獨特，「驛馬遇羊刃」主奔波辛苦。組合解讀需要豐富經驗。'
       }
     ],
-    relatedZones: ['bazi', 'legion', 'fortune']
+    relatedZones: ['bazi', 'legion', 'fortune'],
+    hasInteractiveDiagram: true
   },
   wuxing: {
     id: 'wuxing',
@@ -360,15 +364,17 @@ const ZoneGuide: React.FC = () => {
             {zone.overview}
           </p>
 
-          {/* 五行互動圖表 */}
-          {zone.hasInteractiveDiagram && zone.id === 'wuxing' && (
+          {/* 互動圖表區域 */}
+          {zone.hasInteractiveDiagram && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
               className="mt-6"
             >
-              <WuxingCycleDiagram />
+              {zone.id === 'wuxing' && <WuxingCycleDiagram />}
+              {zone.id === 'tenGods' && <TenGodsDiagram />}
+              {zone.id === 'shensha' && <ShenShaDiagram />}
             </motion.div>
           )}
         </motion.div>

@@ -1,105 +1,5 @@
 import jsPDF from "jspdf";
-
-// 傳統中國風格邊框繪製
-const drawTraditionalBorder = (pdf: jsPDF, width: number, height: number) => {
-  // 外框 - 雙線邊框
-  pdf.setDrawColor(180, 140, 80); // 金色
-  pdf.setLineWidth(1.5);
-  pdf.rect(6, 6, width - 12, height - 12);
-  
-  pdf.setLineWidth(0.5);
-  pdf.rect(8, 8, width - 16, height - 16);
-  
-  // 四角裝飾 - 傳統雲紋
-  const cornerSize = 15;
-  pdf.setDrawColor(160, 120, 60);
-  pdf.setLineWidth(0.8);
-  
-  // 左上角
-  drawCornerDecoration(pdf, 10, 10, cornerSize, 'tl');
-  // 右上角
-  drawCornerDecoration(pdf, width - 10, 10, cornerSize, 'tr');
-  // 左下角
-  drawCornerDecoration(pdf, 10, height - 10, cornerSize, 'bl');
-  // 右下角
-  drawCornerDecoration(pdf, width - 10, height - 10, cornerSize, 'br');
-};
-
-// 繪製角落裝飾
-const drawCornerDecoration = (pdf: jsPDF, x: number, y: number, size: number, position: 'tl' | 'tr' | 'bl' | 'br') => {
-  const lines: [number, number, number, number][] = [];
-  
-  switch (position) {
-    case 'tl':
-      lines.push([x, y + size, x, y], [x, y, x + size, y]);
-      lines.push([x + 3, y + size - 3, x + 3, y + 3], [x + 3, y + 3, x + size - 3, y + 3]);
-      break;
-    case 'tr':
-      lines.push([x - size, y, x, y], [x, y, x, y + size]);
-      lines.push([x - size + 3, y + 3, x - 3, y + 3], [x - 3, y + 3, x - 3, y + size - 3]);
-      break;
-    case 'bl':
-      lines.push([x, y - size, x, y], [x, y, x + size, y]);
-      lines.push([x + 3, y - size + 3, x + 3, y - 3], [x + 3, y - 3, x + size - 3, y - 3]);
-      break;
-    case 'br':
-      lines.push([x - size, y, x, y], [x, y, x, y - size]);
-      lines.push([x - size + 3, y - 3, x - 3, y - 3], [x - 3, y - 3, x - 3, y - size + 3]);
-      break;
-  }
-  
-  lines.forEach(([x1, y1, x2, y2]) => {
-    pdf.line(x1, y1, x2, y2);
-  });
-};
-
-// 繪製傳統印章
-const drawSeal = (pdf: jsPDF, x: number, y: number, text: string, size: number = 18) => {
-  const sealSize = size;
-  
-  // 印章外框
-  pdf.setDrawColor(180, 50, 50);
-  pdf.setLineWidth(size > 30 ? 2 : 1.2);
-  pdf.rect(x - sealSize / 2, y - sealSize / 2, sealSize, sealSize);
-  
-  // 印章內框
-  pdf.setLineWidth(size > 30 ? 0.8 : 0.4);
-  pdf.rect(x - sealSize / 2 + 3, y - sealSize / 2 + 3, sealSize - 6, sealSize - 6);
-  
-  // 印章文字
-  pdf.setTextColor(180, 50, 50);
-  pdf.setFontSize(size > 30 ? size / 2.5 : 8);
-  pdf.text(text, x, y + (size > 30 ? size / 6 : 3), { align: "center" });
-};
-
-// 繪製大型封面印章
-const drawLargeSeal = (pdf: jsPDF, x: number, y: number, text: string) => {
-  const sealSize = 50;
-  
-  // 外框
-  pdf.setDrawColor(180, 50, 50);
-  pdf.setLineWidth(2.5);
-  pdf.rect(x - sealSize / 2, y - sealSize / 2, sealSize, sealSize);
-  
-  // 內框
-  pdf.setLineWidth(1);
-  pdf.rect(x - sealSize / 2 + 4, y - sealSize / 2 + 4, sealSize - 8, sealSize - 8);
-  
-  // 裝飾線
-  pdf.setLineWidth(0.5);
-  pdf.rect(x - sealSize / 2 + 6, y - sealSize / 2 + 6, sealSize - 12, sealSize - 12);
-  
-  // 印章文字 - 兩行顯示
-  pdf.setTextColor(180, 50, 50);
-  pdf.setFontSize(14);
-  if (text.length <= 2) {
-    pdf.text(text, x, y + 5, { align: "center" });
-  } else {
-    const half = Math.ceil(text.length / 2);
-    pdf.text(text.slice(0, half), x, y - 2, { align: "center" });
-    pdf.text(text.slice(half), x, y + 10, { align: "center" });
-  }
-};
+import html2canvas from "html2canvas";
 
 // 封面資料介面
 export interface CoverPageData {
@@ -113,7 +13,6 @@ export interface CoverPageData {
   hourPillar: { stem: string; branch: string };
 }
 
-// 報告資料介面
 // 神煞資料介面
 export interface ShenshaItem {
   name: string;
@@ -172,516 +71,20 @@ export interface ReportData {
   shensha?: ShenshaItem[];
 }
 
-// 繪製封面頁
-const drawCoverPage = (pdf: jsPDF, data: CoverPageData) => {
-  const pdfWidth = 210;
-  const pdfHeight = 297;
-  
-  // 深色背景
-  pdf.setFillColor(15, 15, 20);
-  pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
-  
-  // 傳統邊框
-  drawTraditionalBorder(pdf, pdfWidth, pdfHeight);
-  
-  // 額外裝飾邊框
-  pdf.setDrawColor(140, 110, 60);
-  pdf.setLineWidth(0.3);
-  pdf.rect(12, 12, pdfWidth - 24, pdfHeight - 24);
-  
-  // 頂部裝飾圖案
-  pdf.setDrawColor(180, 140, 80);
-  pdf.setLineWidth(0.8);
-  const centerX = pdfWidth / 2;
-  
-  // 上方祥雲紋飾
-  for (let i = 0; i < 3; i++) {
-    const offset = (i - 1) * 25;
-    pdf.circle(centerX + offset, 35, 3, 'S');
-    pdf.circle(centerX + offset - 4, 33, 2, 'S');
-    pdf.circle(centerX + offset + 4, 33, 2, 'S');
-  }
-  
-  // 主標題區
-  pdf.setFontSize(28);
-  pdf.setTextColor(200, 170, 100);
-  pdf.text("虹靈御所", centerX, 60, { align: "center" });
-  
-  pdf.setFontSize(16);
-  pdf.setTextColor(160, 140, 90);
-  pdf.text("八字人生兵法命盤", centerX, 72, { align: "center" });
-  
-  // 標題下裝飾線
-  pdf.setDrawColor(180, 140, 80);
-  pdf.setLineWidth(0.5);
-  pdf.line(centerX - 60, 80, centerX + 60, 80);
-  pdf.circle(centerX - 62, 80, 1.5, 'S');
-  pdf.circle(centerX + 62, 80, 1.5, 'S');
-  
-  // 命主姓名區
-  pdf.setFontSize(10);
-  pdf.setTextColor(140, 130, 100);
-  pdf.text("命主", centerX, 100, { align: "center" });
-  
-  pdf.setFontSize(32);
-  pdf.setTextColor(220, 200, 140);
-  pdf.text(data.name, centerX, 118, { align: "center" });
-  
-  // 性別標示
-  pdf.setFontSize(10);
-  pdf.setTextColor(120, 120, 120);
-  const genderText = data.gender === 'male' ? '乾造（男）' : '坤造（女）';
-  pdf.text(genderText, centerX, 128, { align: "center" });
-  
-  // 生辰資訊區
-  pdf.setDrawColor(100, 80, 50);
-  pdf.setLineWidth(0.3);
-  pdf.line(centerX - 50, 140, centerX + 50, 140);
-  
-  pdf.setFontSize(9);
-  pdf.setTextColor(140, 140, 140);
-  pdf.text("出生時間", centerX, 150, { align: "center" });
-  
-  pdf.setFontSize(12);
-  pdf.setTextColor(180, 170, 140);
-  pdf.text(`${data.birthDate}  ${data.birthTime}`, centerX, 162, { align: "center" });
-  
-  // 四柱八字區
-  pdf.setDrawColor(160, 130, 80);
-  pdf.setLineWidth(0.5);
-  pdf.line(centerX - 70, 178, centerX + 70, 178);
-  
-  pdf.setFontSize(10);
-  pdf.setTextColor(140, 130, 100);
-  pdf.text("四柱八字", centerX, 188, { align: "center" });
-  
-  // 繪製四柱
-  const pillarLabels = ["年柱", "月柱", "日柱", "時柱"];
-  const pillars = [data.yearPillar, data.monthPillar, data.dayPillar, data.hourPillar];
-  const pillarStartX = centerX - 52;
-  const pillarSpacing = 35;
-  
-  pillars.forEach((pillar, index) => {
-    const x = pillarStartX + index * pillarSpacing;
-    
-    // 柱標籤
-    pdf.setFontSize(8);
-    pdf.setTextColor(100, 100, 100);
-    pdf.text(pillarLabels[index], x, 198, { align: "center" });
-    
-    // 柱框
-    pdf.setDrawColor(140, 110, 70);
-    pdf.setLineWidth(0.5);
-    pdf.rect(x - 12, 202, 24, 40);
-    
-    // 天干
-    pdf.setFontSize(16);
-    pdf.setTextColor(200, 180, 120);
-    pdf.text(pillar.stem, x, 218, { align: "center" });
-    
-    // 分隔線
-    pdf.setDrawColor(100, 80, 50);
-    pdf.setLineWidth(0.3);
-    pdf.line(x - 10, 222, x + 10, 222);
-    
-    // 地支
-    pdf.setFontSize(16);
-    pdf.setTextColor(180, 160, 100);
-    pdf.text(pillar.branch, x, 238, { align: "center" });
-  });
-  
-  // 大型印章
-  drawLargeSeal(pdf, pdfWidth - 45, pdfHeight - 70, "御所");
-  
-  // 底部裝飾線
-  pdf.setDrawColor(140, 110, 60);
-  pdf.setLineWidth(0.5);
-  pdf.line(20, pdfHeight - 35, pdfWidth - 20, pdfHeight - 35);
-  
-  // 底部說明文字
-  pdf.setFontSize(8);
-  pdf.setTextColor(100, 100, 100);
-  pdf.text("命理展示的是一條「相對好走但不一定是你要走的路」", centerX, pdfHeight - 25, { align: "center" });
-  pdf.text("選擇權在於你", centerX, pdfHeight - 18, { align: "center" });
-};
-
-// 繪製頁眉頁腳
-const drawHeaderFooter = (pdf: jsPDF, pageNum: number, totalPages: number, dateStr: string, timeStr: string) => {
-  const pdfWidth = 210;
-  const pdfHeight = 297;
-  const margin = 15;
-  
-  // 頁眉
-  pdf.setFontSize(11);
-  pdf.setTextColor(200, 170, 100);
-  pdf.text("虹靈御所八字人生兵法", pdfWidth / 2, 14, { align: "center" });
-  
-  pdf.setFontSize(7);
-  pdf.setTextColor(140, 140, 140);
-  pdf.text("四時軍團戰略命理系統", pdfWidth / 2, 19, { align: "center" });
-  
-  // 頁眉裝飾線
-  pdf.setDrawColor(160, 130, 80);
-  pdf.setLineWidth(0.5);
-  pdf.line(margin, 22, pdfWidth - margin, 22);
-  
-  // 印章
-  if (pageNum === 1) {
-    drawSeal(pdf, pdfWidth - 28, 16, "御所");
-  }
-  
-  // 頁腳分隔線
-  pdf.setDrawColor(100, 80, 50);
-  pdf.setLineWidth(0.3);
-  pdf.line(margin, pdfHeight - 16, pdfWidth - margin, pdfHeight - 16);
-  
-  // 頁腳內容
-  pdf.setFontSize(6);
-  pdf.setTextColor(120, 120, 120);
-  pdf.text(`製表日期：${dateStr} ${timeStr}`, margin, pdfHeight - 11);
-  
-  pdf.setTextColor(100, 100, 100);
-  pdf.text("© 2025 虹靈御所｜超烜創意", pdfWidth / 2, pdfHeight - 11, { align: "center" });
-  
-  pdf.setTextColor(140, 140, 140);
-  pdf.text(`第 ${pageNum} 頁 / 共 ${totalPages} 頁`, pdfWidth - margin, pdfHeight - 11, { align: "right" });
-  
-  // 哲學語句
-  pdf.setFontSize(5);
-  pdf.setTextColor(80, 80, 80);
-  pdf.text("本報告僅供參考，命理展示的是一條「相對好走但不一定是你要走的路」，選擇權在於你", pdfWidth / 2, pdfHeight - 6, { align: "center" });
-};
-
-// 繪製四柱詳解頁
-const drawPillarsPage = (pdf: jsPDF, data: ReportData) => {
-  const pdfWidth = 210;
-  const centerX = pdfWidth / 2;
-  const margin = 18;
-  let y = 32;
-  
-  // 背景
-  pdf.setFillColor(15, 15, 20);
-  pdf.rect(0, 0, pdfWidth, 297, 'F');
-  drawTraditionalBorder(pdf, pdfWidth, 297);
-  
-  // 區域標題
-  pdf.setFontSize(14);
-  pdf.setTextColor(200, 170, 100);
-  pdf.text("四柱命盤詳解", centerX, y, { align: "center" });
-  y += 15;
-  
-  // 四柱卡片
-  const pillarLabels = ["年柱 (祖源軍團)", "月柱 (關係軍團)", "日柱 (核心軍團)", "時柱 (未來軍團)"];
-  const pillarKeys = ['year', 'month', 'day', 'hour'] as const;
-  const cardWidth = 80;
-  const cardHeight = 55;
-  
-  pillarKeys.forEach((key, index) => {
-    const pillar = data.pillars[key];
-    const nayin = data.nayin[key];
-    const tenGod = data.tenGods?.[key];
-    const hiddenStems = data.hiddenStems?.[key] || [];
-    
-    const row = Math.floor(index / 2);
-    const col = index % 2;
-    const cardX = margin + col * (cardWidth + 10);
-    const cardY = y + row * (cardHeight + 10);
-    
-    // 卡片背景
-    pdf.setFillColor(25, 25, 35);
-    pdf.setDrawColor(140, 110, 70);
-    pdf.setLineWidth(0.5);
-    pdf.rect(cardX, cardY, cardWidth, cardHeight, 'FD');
-    
-    // 柱名稱
-    pdf.setFontSize(9);
-    pdf.setTextColor(180, 150, 90);
-    pdf.text(pillarLabels[index], cardX + cardWidth / 2, cardY + 8, { align: "center" });
-    
-    // 天干地支
-    pdf.setFontSize(18);
-    pdf.setTextColor(220, 200, 140);
-    pdf.text(`${pillar.stem}${pillar.branch}`, cardX + cardWidth / 2, cardY + 25, { align: "center" });
-    
-    // 納音
-    pdf.setFontSize(8);
-    pdf.setTextColor(160, 140, 100);
-    pdf.text(`納音：${nayin}`, cardX + cardWidth / 2, cardY + 35, { align: "center" });
-    
-    // 十神
-    if (tenGod) {
-      pdf.setFontSize(7);
-      pdf.setTextColor(140, 120, 90);
-      pdf.text(`十神：${tenGod.stem} / ${tenGod.branch}`, cardX + cardWidth / 2, cardY + 43, { align: "center" });
-    }
-    
-    // 藏干
-    if (hiddenStems.length > 0) {
-      pdf.setFontSize(6);
-      pdf.setTextColor(120, 100, 80);
-      pdf.text(`藏干：${hiddenStems.join('、')}`, cardX + cardWidth / 2, cardY + 50, { align: "center" });
-    }
-  });
-  
-  y += cardHeight * 2 + 30;
-  
-  // 五行分析
-  if (data.wuxing) {
-    pdf.setFontSize(12);
-    pdf.setTextColor(200, 170, 100);
-    pdf.text("五行分布", margin, y, { align: "left" });
-    y += 10;
-    
-    const elements = [
-      { name: '木', value: data.wuxing.wood, color: [100, 180, 100] as [number, number, number] },
-      { name: '火', value: data.wuxing.fire, color: [200, 100, 100] as [number, number, number] },
-      { name: '土', value: data.wuxing.earth, color: [180, 150, 100] as [number, number, number] },
-      { name: '金', value: data.wuxing.metal, color: [200, 200, 180] as [number, number, number] },
-      { name: '水', value: data.wuxing.water, color: [100, 150, 200] as [number, number, number] },
-    ];
-    
-    const total = Object.values(data.wuxing).reduce((a, b) => a + b, 0);
-    const barMaxWidth = 100;
-    
-    elements.forEach((el, idx) => {
-      const barY = y + idx * 12;
-      const barWidth = total > 0 ? (el.value / total) * barMaxWidth : 0;
-      
-      // 標籤
-      pdf.setFontSize(9);
-      pdf.setTextColor(180, 170, 150);
-      pdf.text(el.name, margin, barY + 4, { align: "left" });
-      
-      // 進度條背景
-      pdf.setFillColor(40, 40, 50);
-      pdf.rect(margin + 15, barY, barMaxWidth, 8, 'F');
-      
-      // 進度條
-      pdf.setFillColor(...el.color);
-      pdf.rect(margin + 15, barY, barWidth, 8, 'F');
-      
-      // 數值
-      pdf.setFontSize(8);
-      pdf.setTextColor(160, 160, 160);
-      pdf.text(`${el.value}`, margin + 120, barY + 5, { align: "left" });
-    });
-    
-    y += 70;
-  }
-  
-  // 陰陽比例
-  if (data.yinyang) {
-    pdf.setFontSize(12);
-    pdf.setTextColor(200, 170, 100);
-    pdf.text("陰陽比例", margin, y, { align: "left" });
-    y += 10;
-    
-    const total = data.yinyang.yin + data.yinyang.yang;
-    const yangWidth = total > 0 ? (data.yinyang.yang / total) * 100 : 50;
-    const yinWidth = 100 - yangWidth;
-    
-    // 陽
-    pdf.setFillColor(200, 180, 100);
-    pdf.rect(margin, y, yangWidth, 12, 'F');
-    
-    // 陰
-    pdf.setFillColor(100, 100, 150);
-    pdf.rect(margin + yangWidth, y, yinWidth, 12, 'F');
-    
-    // 標籤
-    pdf.setFontSize(8);
-    pdf.setTextColor(50, 50, 50);
-    pdf.text(`陽 ${data.yinyang.yang}`, margin + 5, y + 8, { align: "left" });
-    pdf.setTextColor(220, 220, 220);
-    pdf.text(`陰 ${data.yinyang.yin}`, margin + 95, y + 8, { align: "right" });
-  }
-};
-
-// 繪製軍團故事頁
-const drawLegionStoryPage = (pdf: jsPDF, legionType: string, story: string, pillar: { stem: string; branch: string }, nayin: string) => {
-  const pdfWidth = 210;
-  const centerX = pdfWidth / 2;
-  const margin = 18;
-  let y = 32;
-  
-  // 背景
-  pdf.setFillColor(15, 15, 20);
-  pdf.rect(0, 0, pdfWidth, 297, 'F');
-  drawTraditionalBorder(pdf, pdfWidth, 297);
-  
-  // 軍團配置
-  const legionConfig: Record<string, { name: string; icon: string; color: [number, number, number] }> = {
-    year: { name: "祖源軍團", icon: "👑", color: [234, 179, 8] },
-    month: { name: "關係軍團", icon: "🤝", color: [16, 185, 129] },
-    day: { name: "核心軍團", icon: "⭐", color: [168, 85, 247] },
-    hour: { name: "未來軍團", icon: "🚀", color: [249, 115, 22] },
-  };
-  
-  const config = legionConfig[legionType] || legionConfig.year;
-  
-  // 軍團標題
-  pdf.setFontSize(16);
-  pdf.setTextColor(...config.color);
-  pdf.text(`${config.icon} ${config.name}`, centerX, y, { align: "center" });
-  y += 12;
-  
-  // 柱位資訊
-  pdf.setFontSize(12);
-  pdf.setTextColor(200, 180, 140);
-  pdf.text(`${pillar.stem}${pillar.branch} · ${nayin}`, centerX, y, { align: "center" });
-  y += 15;
-  
-  // 分隔線
-  pdf.setDrawColor(140, 110, 70);
-  pdf.setLineWidth(0.5);
-  pdf.line(margin + 20, y, pdfWidth - margin - 20, y);
-  y += 12;
-  
-  // 故事內容
-  pdf.setFontSize(10);
-  pdf.setTextColor(180, 175, 165);
-  
-  // 文字自動換行
-  const maxWidth = pdfWidth - margin * 2 - 10;
-  const lineHeight = 6;
-  const paragraphs = story.split('\n').filter(p => p.trim());
-  
-  paragraphs.forEach(paragraph => {
-    const lines = pdf.splitTextToSize(paragraph, maxWidth);
-    lines.forEach((line: string) => {
-      if (y > 270) return; // 防止超出頁面
-      pdf.text(line, margin + 5, y);
-      y += lineHeight;
-    });
-    y += 4; // 段落間距
-  });
-};
-
-// 繪製神煞分析頁
-const drawShenshaPage = (pdf: jsPDF, shensha: ShenshaItem[], pageIndex: number) => {
-  const pdfWidth = 210;
-  const centerX = pdfWidth / 2;
-  const margin = 18;
-  let y = 32;
-  
-  // 背景
-  pdf.setFillColor(15, 15, 20);
-  pdf.rect(0, 0, pdfWidth, 297, 'F');
-  drawTraditionalBorder(pdf, pdfWidth, 297);
-  
-  // 頁面標題
-  pdf.setFontSize(14);
-  pdf.setTextColor(200, 170, 100);
-  const titleText = pageIndex === 0 ? "神煞分析" : `神煞分析（續 ${pageIndex + 1}）`;
-  pdf.text(titleText, centerX, y, { align: "center" });
-  y += 8;
-  
-  // 副標題
-  pdf.setFontSize(8);
-  pdf.setTextColor(140, 130, 100);
-  pdf.text("命盤中的特殊星曜與其解讀", centerX, y, { align: "center" });
-  y += 12;
-  
-  // 分類顏色配置
-  const categoryColors: Record<string, [number, number, number]> = {
-    "吉神": [100, 200, 100],
-    "貴人": [200, 180, 100],
-    "桃花": [255, 150, 180],
-    "凶煞": [200, 100, 100],
-    "特殊": [150, 150, 200],
-  };
-  
-  // 稀有度配置
-  const rarityConfig: Record<string, { text: string; color: [number, number, number] }> = {
-    "SSR": { text: "極稀有", color: [255, 200, 50] },
-    "SR": { text: "稀有", color: [200, 150, 255] },
-    "R": { text: "普通", color: [150, 200, 255] },
-  };
-  
-  // 每個神煞的卡片
-  const cardHeight = 32;
-  const cardWidth = pdfWidth - margin * 2;
-  const maxItemsPerPage = 7;
-  
-  shensha.forEach((item, index) => {
-    if (index >= maxItemsPerPage) return;
-    
-    const cardY = y + index * (cardHeight + 4);
-    
-    // 卡片背景
-    pdf.setFillColor(25, 25, 35);
-    pdf.setDrawColor(100, 80, 60);
-    pdf.setLineWidth(0.3);
-    pdf.rect(margin, cardY, cardWidth, cardHeight, 'FD');
-    
-    // 左側分類色條
-    const category = item.category || "特殊";
-    const categoryColor = categoryColors[category] || categoryColors["特殊"];
-    pdf.setFillColor(...categoryColor);
-    pdf.rect(margin, cardY, 3, cardHeight, 'F');
-    
-    // 神煞名稱
-    pdf.setFontSize(12);
-    pdf.setTextColor(220, 200, 140);
-    pdf.text(item.name, margin + 8, cardY + 10);
-    
-    // 稀有度標籤
-    if (item.rarity && rarityConfig[item.rarity]) {
-      const rarity = rarityConfig[item.rarity];
-      pdf.setFontSize(7);
-      pdf.setTextColor(...rarity.color);
-      pdf.text(`[${rarity.text}]`, margin + 8 + pdf.getTextWidth(item.name) + 4, cardY + 10);
-    }
-    
-    // 分類標籤
-    pdf.setFontSize(7);
-    pdf.setTextColor(...categoryColor);
-    pdf.text(category, margin + cardWidth - 20, cardY + 10, { align: "right" });
-    
-    // 落宮位置
-    if (item.position) {
-      pdf.setFontSize(8);
-      pdf.setTextColor(160, 140, 100);
-      pdf.text(`落於：${item.position}`, margin + 8, cardY + 18);
-    }
-    
-    // 效果說明
-    if (item.effect) {
-      pdf.setFontSize(8);
-      pdf.setTextColor(150, 145, 135);
-      const effectText = pdf.splitTextToSize(`效果：${item.effect}`, cardWidth - 20);
-      effectText.slice(0, 2).forEach((line: string, lineIdx: number) => {
-        pdf.text(line, margin + 8, cardY + (item.position ? 25 : 18) + lineIdx * 5);
-      });
-    }
-    
-    // 現代解讀（如果有空間）
-    if (item.modernMeaning && !item.position) {
-      pdf.setFontSize(7);
-      pdf.setTextColor(120, 115, 105);
-      const modernText = pdf.splitTextToSize(`現代解讀：${item.modernMeaning}`, cardWidth - 20);
-      pdf.text(modernText[0] || '', margin + 8, cardY + 28);
-    }
-  });
-  
-  // 頁面底部說明
-  y = 265;
-  pdf.setFontSize(7);
-  pdf.setTextColor(100, 100, 100);
-  pdf.text("神煞解讀僅供參考，命運掌握在自己手中", centerX, y, { align: "center" });
-};
-
-// 主要導出函數
-export const generatePDF = async (_elementId: string, fileName: string, coverData?: CoverPageData, reportData?: ReportData) => {
-  const pdfWidth = 210;
-  const pdfHeight = 297;
-  
-  // 創建 PDF
-  const pdf = new jsPDF({
-    orientation: "portrait",
-    unit: "mm",
-    format: "a4"
-  });
+// 創建報告 HTML 容器
+const createReportContainer = (reportData: ReportData, coverData?: CoverPageData): HTMLDivElement => {
+  const container = document.createElement('div');
+  container.style.cssText = `
+    width: 794px;
+    background: linear-gradient(135deg, #0f0f14 0%, #1a1a24 50%, #0f0f14 100%);
+    color: #e5e5e5;
+    font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    padding: 0;
+    position: absolute;
+    left: -9999px;
+    top: 0;
+  `;
+  document.body.appendChild(container);
 
   // 獲取當前日期時間
   const now = new Date();
@@ -690,80 +93,590 @@ export const generatePDF = async (_elementId: string, fileName: string, coverDat
     month: "long",
     day: "numeric"
   });
-  const timeStr = now.toLocaleTimeString("zh-TW", {
-    hour: "2-digit",
-    minute: "2-digit"
-  });
 
-  // 計算總頁數
-  let totalPages = 1; // 封面
-  if (reportData) {
-    totalPages += 1; // 四柱詳解頁
-    // 神煞分析頁
-    if (reportData.shensha && reportData.shensha.length > 0) {
-      totalPages += Math.ceil(reportData.shensha.length / 7);
-    }
-    // 軍團故事頁
-    const storyTypes = ['year', 'month', 'day', 'hour'] as const;
-    storyTypes.forEach(type => {
-      if (reportData.legionStories?.[type]) {
-        totalPages += 1;
-      }
-    });
-  }
-  
-  // 繪製封面
-  if (coverData) {
-    drawCoverPage(pdf, coverData);
-  } else {
-    // 簡單封面
-    pdf.setFillColor(15, 15, 20);
-    pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
-    drawTraditionalBorder(pdf, pdfWidth, pdfHeight);
-    pdf.setFontSize(24);
-    pdf.setTextColor(200, 170, 100);
-    pdf.text("八字人生兵法", pdfWidth / 2, pdfHeight / 2, { align: "center" });
-  }
-  
-  // 繪製報告內容頁
-  if (reportData) {
-    let pageNum = 1;
-    
-    // 四柱詳解頁
-    pdf.addPage();
-    pageNum++;
-    drawPillarsPage(pdf, reportData);
-    drawHeaderFooter(pdf, pageNum, totalPages, dateStr, timeStr);
-    
-    // 神煞分析頁
-    if (reportData.shensha && reportData.shensha.length > 0) {
-      const shenshaPerPage = 7;
-      const totalShenshaPages = Math.ceil(reportData.shensha.length / shenshaPerPage);
+  const genderText = reportData.gender === 'male' ? '乾造（男）' : '坤造（女）';
+
+  // 封面頁
+  const coverPage = `
+    <div style="
+      width: 794px;
+      min-height: 1123px;
+      background: linear-gradient(180deg, #0a0a0f 0%, #141420 50%, #0a0a0f 100%);
+      position: relative;
+      padding: 60px 50px;
+      box-sizing: border-box;
+      page-break-after: always;
+    ">
+      <!-- 邊框裝飾 -->
+      <div style="
+        position: absolute;
+        inset: 20px;
+        border: 2px solid rgba(180, 140, 80, 0.5);
+        pointer-events: none;
+      "></div>
+      <div style="
+        position: absolute;
+        inset: 25px;
+        border: 1px solid rgba(180, 140, 80, 0.3);
+        pointer-events: none;
+      "></div>
       
-      for (let i = 0; i < totalShenshaPages; i++) {
-        pdf.addPage();
-        pageNum++;
-        const pageItems = reportData.shensha.slice(i * shenshaPerPage, (i + 1) * shenshaPerPage);
-        drawShenshaPage(pdf, pageItems, i);
-        drawHeaderFooter(pdf, pageNum, totalPages, dateStr, timeStr);
-      }
-    }
+      <!-- 角落裝飾 -->
+      <div style="position: absolute; top: 25px; left: 25px; width: 30px; height: 30px; border-left: 2px solid #b48c50; border-top: 2px solid #b48c50;"></div>
+      <div style="position: absolute; top: 25px; right: 25px; width: 30px; height: 30px; border-right: 2px solid #b48c50; border-top: 2px solid #b48c50;"></div>
+      <div style="position: absolute; bottom: 25px; left: 25px; width: 30px; height: 30px; border-left: 2px solid #b48c50; border-bottom: 2px solid #b48c50;"></div>
+      <div style="position: absolute; bottom: 25px; right: 25px; width: 30px; height: 30px; border-right: 2px solid #b48c50; border-bottom: 2px solid #b48c50;"></div>
+      
+      <!-- 主標題 -->
+      <div style="text-align: center; margin-top: 80px;">
+        <h1 style="
+          font-size: 48px;
+          color: #c8aa64;
+          margin: 0 0 15px 0;
+          font-weight: bold;
+          letter-spacing: 8px;
+          text-shadow: 0 2px 10px rgba(200, 170, 100, 0.3);
+        ">虹靈御所</h1>
+        <p style="
+          font-size: 24px;
+          color: #a08c5a;
+          margin: 0;
+          letter-spacing: 4px;
+        ">八字人生兵法命盤</p>
+        <div style="
+          width: 200px;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, #b48c50, transparent);
+          margin: 30px auto;
+        "></div>
+      </div>
+      
+      <!-- 命主資訊 -->
+      <div style="text-align: center; margin-top: 60px;">
+        <p style="font-size: 16px; color: #8c8270; margin: 0 0 10px 0;">命主</p>
+        <h2 style="
+          font-size: 42px;
+          color: #dcc88c;
+          margin: 0 0 10px 0;
+          font-weight: bold;
+          letter-spacing: 6px;
+        ">${reportData.name}</h2>
+        <p style="font-size: 14px; color: #787878; margin: 0;">${genderText}</p>
+      </div>
+      
+      <!-- 生辰資訊 -->
+      <div style="text-align: center; margin-top: 40px;">
+        <div style="
+          width: 150px;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, #645032, transparent);
+          margin: 0 auto 15px;
+        "></div>
+        <p style="font-size: 12px; color: #8c8c8c; margin: 0 0 8px 0;">出生時間</p>
+        <p style="font-size: 18px; color: #b4aa8c; margin: 0;">${reportData.birthDate}</p>
+      </div>
+      
+      <!-- 四柱 -->
+      <div style="margin-top: 50px;">
+        <div style="
+          width: 200px;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, #a08050, transparent);
+          margin: 0 auto 20px;
+        "></div>
+        <p style="text-align: center; font-size: 14px; color: #8c8270; margin: 0 0 20px 0;">四柱八字</p>
+        <div style="display: flex; justify-content: center; gap: 30px;">
+          ${['year', 'month', 'day', 'hour'].map((key, idx) => {
+            const pillar = reportData.pillars[key as keyof typeof reportData.pillars];
+            const labels = ['年柱', '月柱', '日柱', '時柱'];
+            return `
+              <div style="text-align: center;">
+                <p style="font-size: 12px; color: #646464; margin: 0 0 8px 0;">${labels[idx]}</p>
+                <div style="
+                  background: rgba(30, 30, 40, 0.8);
+                  border: 1px solid rgba(140, 110, 70, 0.5);
+                  border-radius: 8px;
+                  padding: 15px 20px;
+                ">
+                  <p style="font-size: 28px; color: #c8b48c; margin: 0;">${pillar.stem}</p>
+                  <div style="width: 30px; height: 1px; background: rgba(180, 140, 80, 0.3); margin: 8px auto;"></div>
+                  <p style="font-size: 28px; color: #b4a078; margin: 0;">${pillar.branch}</p>
+                </div>
+                <p style="font-size: 11px; color: #787864; margin: 8px 0 0 0;">${reportData.nayin[key as keyof typeof reportData.nayin]}</p>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+      
+      <!-- 印章 -->
+      <div style="
+        position: absolute;
+        right: 80px;
+        bottom: 120px;
+        width: 80px;
+        height: 80px;
+        border: 3px solid #b43232;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <div style="
+          width: 66px;
+          height: 66px;
+          border: 1.5px solid #b43232;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <span style="
+            font-size: 24px;
+            color: #b43232;
+            font-weight: bold;
+            letter-spacing: 2px;
+          ">御所</span>
+        </div>
+      </div>
+      
+      <!-- 底部 -->
+      <div style="
+        position: absolute;
+        bottom: 50px;
+        left: 50px;
+        right: 50px;
+        text-align: center;
+      ">
+        <div style="
+          width: calc(100% - 40px);
+          height: 1px;
+          background: linear-gradient(90deg, transparent, #8c6e3c, transparent);
+          margin: 0 auto 15px;
+        "></div>
+        <p style="font-size: 11px; color: #646464; margin: 0 0 5px 0;">命理展示的是一條「相對好走但不一定是你要走的路」</p>
+        <p style="font-size: 11px; color: #646464; margin: 0;">選擇權在於你</p>
+        <p style="font-size: 10px; color: #505050; margin: 15px 0 0 0;">${dateStr} 製表</p>
+      </div>
+    </div>
+  `;
+
+  // 四柱詳解頁
+  const pillarLabels = {
+    year: { name: '年柱', legion: '祖源軍團', icon: '👑' },
+    month: { name: '月柱', legion: '關係軍團', icon: '🤝' },
+    day: { name: '日柱', legion: '核心軍團', icon: '⭐' },
+    hour: { name: '時柱', legion: '未來軍團', icon: '🚀' }
+  };
+
+  const pillarsPage = `
+    <div style="
+      width: 794px;
+      min-height: 1123px;
+      background: linear-gradient(180deg, #0f0f14 0%, #141420 100%);
+      position: relative;
+      padding: 40px 50px;
+      box-sizing: border-box;
+      page-break-after: always;
+    ">
+      <!-- 頁眉 -->
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="font-size: 18px; color: #c8aa64; margin: 0 0 5px 0;">虹靈御所八字人生兵法</h2>
+        <p style="font-size: 11px; color: #8c8c8c; margin: 0;">四時軍團戰略命理系統</p>
+        <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, #a08050, transparent); margin-top: 15px;"></div>
+      </div>
+      
+      <!-- 標題 -->
+      <h3 style="font-size: 20px; color: #c8aa64; text-align: center; margin: 20px 0 30px 0;">四柱命盤詳解</h3>
+      
+      <!-- 四柱卡片 -->
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
+        ${(['year', 'month', 'day', 'hour'] as const).map(key => {
+          const pillar = reportData.pillars[key];
+          const nayin = reportData.nayin[key];
+          const tenGod = reportData.tenGods?.[key];
+          const hidden = reportData.hiddenStems?.[key] || [];
+          const label = pillarLabels[key];
+          return `
+            <div style="
+              background: rgba(25, 25, 35, 0.8);
+              border: 1px solid rgba(140, 110, 70, 0.4);
+              border-radius: 10px;
+              padding: 20px;
+            ">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <span style="font-size: 20px;">${label.icon}</span>
+                <span style="font-size: 14px; color: #b4965a;">${label.name} (${label.legion})</span>
+              </div>
+              <div style="text-align: center; margin-bottom: 15px;">
+                <span style="font-size: 32px; color: #dcc88c; letter-spacing: 4px;">${pillar.stem}${pillar.branch}</span>
+              </div>
+              <div style="font-size: 12px; color: #a0967a; margin-bottom: 8px;">
+                <span style="color: #787864;">納音：</span>${nayin}
+              </div>
+              ${tenGod ? `
+                <div style="font-size: 12px; color: #a0967a; margin-bottom: 8px;">
+                  <span style="color: #787864;">十神：</span>${tenGod.stem} / ${tenGod.branch}
+                </div>
+              ` : ''}
+              ${hidden.length > 0 ? `
+                <div style="font-size: 11px; color: #787864;">
+                  <span>藏干：</span>${hidden.join('、')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+      
+      <!-- 五行分布 -->
+      ${reportData.wuxing ? `
+        <div style="margin-bottom: 30px;">
+          <h4 style="font-size: 16px; color: #c8aa64; margin: 0 0 15px 0;">五行分布</h4>
+          <div style="display: flex; gap: 20px;">
+            ${[
+              { key: 'wood', name: '木', color: '#4ade80' },
+              { key: 'fire', name: '火', color: '#f87171' },
+              { key: 'earth', name: '土', color: '#fbbf24' },
+              { key: 'metal', name: '金', color: '#e5e5e5' },
+              { key: 'water', name: '水', color: '#60a5fa' }
+            ].map(el => {
+              const total = Object.values(reportData.wuxing!).reduce((a, b) => a + b, 0);
+              const value = reportData.wuxing![el.key as keyof typeof reportData.wuxing];
+              const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+              return `
+                <div style="flex: 1; text-align: center;">
+                  <div style="
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 50%;
+                    background: ${el.color}20;
+                    border: 2px solid ${el.color}60;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 8px;
+                  ">
+                    <span style="font-size: 18px; color: ${el.color}; font-weight: bold;">${el.name}</span>
+                  </div>
+                  <p style="font-size: 14px; color: #a0a0a0; margin: 0;">${value}</p>
+                  <p style="font-size: 11px; color: #787878; margin: 4px 0 0 0;">${pct}%</p>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
+      <!-- 陰陽比例 -->
+      ${reportData.yinyang ? `
+        <div style="margin-bottom: 30px;">
+          <h4 style="font-size: 16px; color: #c8aa64; margin: 0 0 15px 0;">陰陽比例</h4>
+          <div style="
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            display: flex;
+            background: #1e1e28;
+          ">
+            <div style="
+              width: ${(reportData.yinyang.yang / (reportData.yinyang.yang + reportData.yinyang.yin)) * 100}%;
+              background: linear-gradient(90deg, #c8b464, #a08c50);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            ">
+              <span style="font-size: 12px; color: #1a1a1a; font-weight: bold;">陽 ${reportData.yinyang.yang}</span>
+            </div>
+            <div style="
+              flex: 1;
+              background: linear-gradient(90deg, #5050a0, #6464c8);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            ">
+              <span style="font-size: 12px; color: #e0e0e0; font-weight: bold;">陰 ${reportData.yinyang.yin}</span>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+      
+      <!-- 頁腳 -->
+      <div style="
+        position: absolute;
+        bottom: 30px;
+        left: 50px;
+        right: 50px;
+      ">
+        <div style="width: 100%; height: 1px; background: rgba(100, 80, 50, 0.5); margin-bottom: 10px;"></div>
+        <div style="display: flex; justify-content: space-between; font-size: 10px; color: #646464;">
+          <span>${dateStr}</span>
+          <span>© 虹靈御所｜超烜創意</span>
+          <span>第 2 頁</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // 神煞分析頁
+  const shenshaPages = reportData.shensha && reportData.shensha.length > 0 ? 
+    createShenshaPages(reportData.shensha, dateStr) : '';
+
+  // 軍團故事頁
+  const storyPages = (['year', 'month', 'day', 'hour'] as const)
+    .filter(type => reportData.legionStories?.[type])
+    .map((type, idx) => createStoryPage(
+      type,
+      reportData.legionStories![type]!,
+      reportData.pillars[type],
+      reportData.nayin[type],
+      dateStr,
+      3 + (reportData.shensha ? Math.ceil(reportData.shensha.length / 6) : 0) + idx
+    ))
+    .join('');
+
+  container.innerHTML = coverPage + pillarsPage + shenshaPages + storyPages;
+  return container;
+};
+
+// 創建神煞分析頁
+const createShenshaPages = (shensha: ShenshaItem[], dateStr: string): string => {
+  const itemsPerPage = 6;
+  const pages: string[] = [];
+  
+  const categoryColors: Record<string, string> = {
+    '吉神': '#4ade80',
+    '凶神': '#f87171',
+    '貴人': '#c084fc',
+    '桃花': '#f472b6',
+    '學堂': '#60a5fa',
+    '特殊': '#fbbf24'
+  };
+
+  const rarityConfig: Record<string, { text: string; color: string }> = {
+    'SSR': { text: '傳說', color: '#fbbf24' },
+    'SR': { text: '稀有', color: '#c084fc' },
+    'R': { text: '精良', color: '#60a5fa' },
+    'N': { text: '普通', color: '#9ca3af' }
+  };
+  
+  for (let i = 0; i < shensha.length; i += itemsPerPage) {
+    const pageItems = shensha.slice(i, i + itemsPerPage);
+    const pageNum = Math.floor(i / itemsPerPage) + 3;
     
-    // 軍團故事頁
-    const storyTypes = ['year', 'month', 'day', 'hour'] as const;
-    storyTypes.forEach(type => {
-      const story = reportData.legionStories?.[type];
-      if (story) {
-        pdf.addPage();
-        pageNum++;
-        drawLegionStoryPage(pdf, type, story, reportData.pillars[type], reportData.nayin[type]);
-        drawHeaderFooter(pdf, pageNum, totalPages, dateStr, timeStr);
-      }
-    });
+    pages.push(`
+      <div style="
+        width: 794px;
+        min-height: 1123px;
+        background: linear-gradient(180deg, #0f0f14 0%, #141420 100%);
+        position: relative;
+        padding: 40px 50px;
+        box-sizing: border-box;
+        page-break-after: always;
+      ">
+        <!-- 頁眉 -->
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h2 style="font-size: 18px; color: #c8aa64; margin: 0 0 5px 0;">虹靈御所八字人生兵法</h2>
+          <p style="font-size: 11px; color: #8c8c8c; margin: 0;">四時軍團戰略命理系統</p>
+          <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, #a08050, transparent); margin-top: 15px;"></div>
+        </div>
+        
+        <!-- 標題 -->
+        <h3 style="font-size: 20px; color: #c8aa64; text-align: center; margin: 20px 0 30px 0;">
+          神煞分析 ${i > 0 ? `(續 ${Math.floor(i / itemsPerPage) + 1})` : ''}
+        </h3>
+        
+        <!-- 神煞卡片 -->
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+          ${pageItems.map(item => {
+            const category = item.category || '特殊';
+            const catColor = categoryColors[category] || categoryColors['特殊'];
+            const rarity = item.rarity && rarityConfig[item.rarity] ? rarityConfig[item.rarity] : null;
+            return `
+              <div style="
+                background: rgba(25, 25, 35, 0.8);
+                border: 1px solid rgba(100, 80, 60, 0.4);
+                border-left: 4px solid ${catColor};
+                border-radius: 8px;
+                padding: 15px 20px;
+              ">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                  <span style="font-size: 16px; color: #dcc88c; font-weight: bold;">${item.name}</span>
+                  ${rarity ? `<span style="font-size: 10px; color: ${rarity.color}; background: ${rarity.color}20; padding: 2px 6px; border-radius: 4px;">${rarity.text}</span>` : ''}
+                  <span style="font-size: 11px; color: ${catColor}; margin-left: auto;">${category}</span>
+                </div>
+                ${item.position ? `<p style="font-size: 12px; color: #a0967a; margin: 0 0 6px 0;">落於：${item.position}</p>` : ''}
+                ${item.effect ? `<p style="font-size: 12px; color: #96918a; margin: 0 0 6px 0; line-height: 1.5;">${item.effect}</p>` : ''}
+                ${item.modernMeaning ? `<p style="font-size: 11px; color: #787872; margin: 0; line-height: 1.4;">現代解讀：${item.modernMeaning}</p>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+        
+        <!-- 頁腳 -->
+        <div style="
+          position: absolute;
+          bottom: 30px;
+          left: 50px;
+          right: 50px;
+        ">
+          <div style="width: 100%; height: 1px; background: rgba(100, 80, 50, 0.5); margin-bottom: 10px;"></div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; color: #646464;">
+            <span>${dateStr}</span>
+            <span>© 虹靈御所｜超烜創意</span>
+            <span>第 ${pageNum} 頁</span>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+  
+  return pages.join('');
+};
+
+// 創建軍團故事頁
+const createStoryPage = (
+  type: 'year' | 'month' | 'day' | 'hour',
+  story: string,
+  pillar: { stem: string; branch: string },
+  nayin: string,
+  dateStr: string,
+  pageNum: number
+): string => {
+  const legionConfig = {
+    year: { name: '祖源軍團', icon: '👑', color: '#fbbf24', bgColor: 'rgba(251, 191, 36, 0.1)' },
+    month: { name: '關係軍團', icon: '🤝', color: '#4ade80', bgColor: 'rgba(74, 222, 128, 0.1)' },
+    day: { name: '核心軍團', icon: '⭐', color: '#c084fc', bgColor: 'rgba(192, 132, 252, 0.1)' },
+    hour: { name: '未來軍團', icon: '🚀', color: '#f97316', bgColor: 'rgba(249, 115, 22, 0.1)' }
+  };
+  
+  const config = legionConfig[type];
+  
+  return `
+    <div style="
+      width: 794px;
+      min-height: 1123px;
+      background: linear-gradient(180deg, #0f0f14 0%, #141420 100%);
+      position: relative;
+      padding: 40px 50px;
+      box-sizing: border-box;
+      page-break-after: always;
+    ">
+      <!-- 頁眉 -->
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="font-size: 18px; color: #c8aa64; margin: 0 0 5px 0;">虹靈御所八字人生兵法</h2>
+        <p style="font-size: 11px; color: #8c8c8c; margin: 0;">四時軍團戰略命理系統</p>
+        <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, #a08050, transparent); margin-top: 15px;"></div>
+      </div>
+      
+      <!-- 軍團標題 -->
+      <div style="
+        text-align: center;
+        padding: 30px;
+        background: ${config.bgColor};
+        border: 1px solid ${config.color}40;
+        border-radius: 16px;
+        margin-bottom: 30px;
+      ">
+        <span style="font-size: 48px;">${config.icon}</span>
+        <h3 style="font-size: 28px; color: ${config.color}; margin: 15px 0 10px 0; font-weight: bold;">${config.name}</h3>
+        <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px;">
+          <span style="font-size: 24px; color: #c8b48c;">${pillar.stem}${pillar.branch}</span>
+          <span style="font-size: 14px; color: #a0967a; align-self: center;">${nayin}</span>
+        </div>
+      </div>
+      
+      <!-- 故事內容 -->
+      <div style="
+        background: rgba(20, 20, 30, 0.6);
+        border: 1px solid rgba(140, 110, 70, 0.3);
+        border-radius: 12px;
+        padding: 30px;
+      ">
+        <h4 style="font-size: 16px; color: #c8aa64; margin: 0 0 20px 0; display: flex; align-items: center; gap: 10px;">
+          <span style="width: 4px; height: 20px; background: ${config.color}; border-radius: 2px;"></span>
+          軍團故事
+        </h4>
+        <div style="
+          font-size: 14px;
+          color: #b4b0a0;
+          line-height: 1.8;
+          white-space: pre-wrap;
+        ">${story}</div>
+      </div>
+      
+      <!-- 頁腳 -->
+      <div style="
+        position: absolute;
+        bottom: 30px;
+        left: 50px;
+        right: 50px;
+      ">
+        <div style="width: 100%; height: 1px; background: rgba(100, 80, 50, 0.5); margin-bottom: 10px;"></div>
+        <div style="display: flex; justify-content: space-between; font-size: 10px; color: #646464;">
+          <span>${dateStr}</span>
+          <span>© 虹靈御所｜超烜創意</span>
+          <span>第 ${pageNum} 頁</span>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+// 主要導出函數
+export const generatePDF = async (_elementId: string, fileName: string, coverData?: CoverPageData, reportData?: ReportData) => {
+  if (!reportData) {
+    console.error('No report data provided');
+    return;
   }
 
-  // 下載 PDF
-  pdf.save(fileName);
+  // 創建報告 HTML
+  const container = createReportContainer(reportData, coverData);
+  
+  // 等待字體和圖片加載
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  try {
+    // 獲取所有頁面
+    const pages = container.querySelectorAll<HTMLElement>('[style*="page-break-after"]');
+    
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    const pdfWidth = 210;
+    const pdfHeight = 297;
+    
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      
+      // 使用 html2canvas 截圖
+      const canvas = await html2canvas(page, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#0a0a0f',
+        logging: false,
+        windowWidth: 794,
+        windowHeight: 1123
+      });
+      
+      // 轉換為圖片並加入 PDF
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      
+      if (i > 0) {
+        pdf.addPage();
+      }
+      
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+    }
+    
+    // 下載 PDF
+    pdf.save(fileName);
+    
+  } finally {
+    // 清理臨時容器
+    document.body.removeChild(container);
+  }
 };
 
 // 保持向後兼容的簡化版本

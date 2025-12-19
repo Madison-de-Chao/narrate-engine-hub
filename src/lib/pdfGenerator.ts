@@ -311,12 +311,36 @@ export const generatePDF = async (elementId: string, fileName: string, coverData
       removeContainer: true,
       allowTaint: true,
       imageTimeout: 30000,
+      ignoreElements: (el) => {
+        // 忽略可能導致問題的 SVG 和 recharts 圖表
+        if (el.tagName === 'svg' || el.classList?.contains('recharts-wrapper')) {
+          return true;
+        }
+        // 忽略零尺寸的 canvas
+        if (el.tagName === 'CANVAS') {
+          const canvasEl = el as HTMLCanvasElement;
+          if (canvasEl.width === 0 || canvasEl.height === 0) {
+            return true;
+          }
+        }
+        return false;
+      },
       onclone: (clonedDoc) => {
         // 移除可能導致問題的動畫元素
         const clonedElement = clonedDoc.getElementById(elementId);
         if (clonedElement) {
           clonedElement.querySelectorAll('.animate-pulse, .animate-spin').forEach((el) => {
             (el as HTMLElement).style.animation = 'none';
+          });
+          // 移除 recharts 圖表容器（避免 createPattern 錯誤）
+          clonedElement.querySelectorAll('.recharts-wrapper, .recharts-surface').forEach((el) => {
+            (el as HTMLElement).style.display = 'none';
+          });
+          // 移除所有 SVG 元素中可能有問題的背景
+          clonedElement.querySelectorAll('svg').forEach((svg) => {
+            svg.querySelectorAll('pattern, defs').forEach((el) => {
+              el.remove();
+            });
           });
           // 確保所有元素都有明確的寬高
           clonedElement.querySelectorAll('canvas').forEach((canvasEl) => {

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Compass, 
@@ -6,12 +7,12 @@ import {
   Sparkles, 
   BookOpen, 
   Star, 
-  Crown,
   Swords,
   Shield,
   TrendingUp,
   MessageCircle,
-  ChevronRight
+  ChevronRight,
+  ExternalLink
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -119,9 +120,14 @@ export const MuseumNavigationMap: React.FC<MuseumNavigationMapProps> = ({
   onZoneClick,
   onAiConsultClick
 }) => {
+  const navigate = useNavigate();
   const { theme } = useTheme();
   const [activeZone, setActiveZone] = useState<string | null>(null);
   const [hoveredZone, setHoveredZone] = useState<string | null>(null);
+
+  const handleZoneNavigate = (zoneId: string) => {
+    navigate(`/guide/${zoneId}`);
+  };
 
   const getSizeClasses = (size: 'lg' | 'md' | 'sm') => {
     switch (size) {
@@ -287,6 +293,17 @@ export const MuseumNavigationMap: React.FC<MuseumNavigationMapProps> = ({
                     }`}>
                       {zone.description}
                     </p>
+                    <Button
+                      size="sm"
+                      variant="link"
+                      onClick={() => handleZoneNavigate(zone.id)}
+                      className={`mt-2 p-0 h-auto gap-1 ${
+                        theme === 'dark' ? 'text-gold hover:text-gold/80' : 'text-amber-600 hover:text-amber-500'
+                      }`}
+                    >
+                      深入了解
+                      <ExternalLink className="w-3 h-3" />
+                    </Button>
                   </div>
                   <Button
                     size="sm"

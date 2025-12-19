@@ -17,12 +17,13 @@ import { ShareImageDialog } from "@/components/ShareImageDialog";
 import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, BadgeCheck } from "lucide-react";
+import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, BadgeCheck, Shield } from "lucide-react";
 import { generatePDF, type CoverPageData } from "@/lib/pdfGenerator";
 import { toast } from "sonner";
 import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
 import { useGuestMode } from "@/hooks/useGuestMode";
 import { usePremiumStatus, PLAN_NAMES } from "@/hooks/usePremiumStatus";
+import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import logoSishi from "@/assets/logo-sishi.png";
 import logoHonglingyusuo from "@/assets/logo-honglingyusuo.png";
@@ -95,7 +96,7 @@ const Index = () => {
   const [activeSection, setActiveSection] = useState('summary');
   const [shenshaRuleset, setShenshaRuleset] = useState<'trad' | 'legion'>('trad');
   const { isPremium, tier, loading: premiumLoading } = usePremiumStatus(user?.id);
-
+  const { isAdmin } = useAdminStatus(user?.id);
   // 升級處理函數
   const handleUpgrade = () => {
     // 跳轉到訂閱頁面
@@ -400,6 +401,18 @@ const Index = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {/* 管理員入口 */}
+              {isAdmin && (
+                <Button
+                  onClick={() => navigate('/admin')}
+                  variant="ghost"
+                  size="sm"
+                  className="text-primary"
+                >
+                  <Shield className="mr-2 h-4 w-4" />
+                  管理後台
+                </Button>
+              )}
               {/* 訂閱狀態顯示 */}
               {user && !premiumLoading && (
                 isPremium ? (

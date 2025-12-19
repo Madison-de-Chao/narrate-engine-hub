@@ -5,10 +5,11 @@ import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, ArrowLeft, Users, CreditCard, BarChart3, Loader2 } from 'lucide-react';
+import { Shield, ArrowLeft, Users, CreditCard, BarChart3, Loader2, FileText } from 'lucide-react';
 import { AdminSubscriptions } from '@/components/admin/AdminSubscriptions';
 import { AdminUsers } from '@/components/admin/AdminUsers';
 import { AdminStats } from '@/components/admin/AdminStats';
+import { AdminReports } from '@/components/admin/AdminReports';
 import { Session } from '@supabase/supabase-js';
 
 const Admin = () => {
@@ -99,23 +100,31 @@ const Admin = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="stats" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
+          <TabsList className="grid w-full grid-cols-4 max-w-lg">
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
-              <span className="hidden sm:inline">數據統計</span>
+              <span className="hidden sm:inline">統計</span>
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">報告</span>
             </TabsTrigger>
             <TabsTrigger value="subscriptions" className="flex items-center gap-2">
               <CreditCard className="w-4 h-4" />
-              <span className="hidden sm:inline">訂閱管理</span>
+              <span className="hidden sm:inline">訂閱</span>
             </TabsTrigger>
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">用戶管理</span>
+              <span className="hidden sm:inline">用戶</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="stats">
             <AdminStats />
+          </TabsContent>
+
+          <TabsContent value="reports">
+            <AdminReports />
           </TabsContent>
 
           <TabsContent value="subscriptions">

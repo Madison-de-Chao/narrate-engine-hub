@@ -93,6 +93,12 @@
 /* 設計系統定義 - 所有顏色必須為 HSL */
 @layer base {
   :root {
+    /* 博物館主題色 - 深色模式 */
+    --void: 240 15% 3%;
+    --paper: 45 30% 95%;
+    --gold: 45 100% 50%;
+    --ink: 240 10% 15%;
+    
     /* 深色賽博朋克主題 + 傳統命理元素 */
     --background: 240 10% 8%;
     --foreground: 45 30% 90%;
@@ -164,6 +170,58 @@
     --sidebar-accent-foreground: 45 30% 90%;
     --sidebar-border: 45 30% 25%;
     --sidebar-ring: 45 100% 50%;
+  }
+
+  /* 淺色模式 */
+  .light {
+    --void: 240 15% 3%;
+    --paper: 45 30% 95%;
+    --gold: 45 90% 45%;
+    --ink: 240 10% 20%;
+    
+    --background: 45 20% 96%;
+    --foreground: 240 10% 10%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+    
+    --primary: 45 90% 45%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 200 80% 50%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --muted: 45 20% 90%;
+    --muted-foreground: 240 5% 40%;
+    
+    --accent: 320 80% 55%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 45 20% 80%;
+    --input: 45 20% 92%;
+    --ring: 45 90% 45%;
+    
+    --gradient-neon: linear-gradient(135deg, hsl(45 90% 50%), hsl(40 90% 55%), hsl(35 90% 50%));
+    --gradient-cyber: linear-gradient(180deg, hsl(45 20% 96%), hsl(45 25% 92%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100% / 0.9), hsl(45 20% 98% / 0.95));
+    
+    --shadow-neon: 0 0 15px hsl(45 90% 50% / 0.2), 0 0 30px hsl(45 90% 50% / 0.1);
+    --shadow-card: 0 10px 30px hsl(0 0% 0% / 0.1);
+    
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 240 10% 10%;
+    --sidebar-primary: 45 90% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 45 20% 95%;
+    --sidebar-accent-foreground: 240 10% 10%;
+    --sidebar-border: 45 20% 85%;
+    --sidebar-ring: 45 90% 45%;
   }
 
   .dark {

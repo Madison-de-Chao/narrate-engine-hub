@@ -24,6 +24,10 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        // 博物館主題色
+        void: "hsl(var(--void))",
+        paper: "hsl(var(--paper))",
+        ink: "hsl(var(--ink))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -69,6 +73,7 @@ export default {
           future: "hsl(var(--future-legion))",
         },
         gold: {
+          DEFAULT: "hsl(var(--gold))",
           50: "hsl(45 100% 96%)",
           100: "hsl(45 100% 90%)",
           200: "hsl(45 100% 80%)",

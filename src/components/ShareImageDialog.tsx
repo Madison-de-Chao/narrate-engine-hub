@@ -7,6 +7,7 @@ import html2canvas from "html2canvas";
 import logoHonglingyusuo from "@/assets/logo-honglingyusuo.png";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { QRCodeSVG } from "qrcode.react";
 
 interface ShareImageDialogProps {
   name: string;
@@ -308,14 +309,34 @@ export const ShareImageDialog = ({ name, gender, pillars, nayin, legionStories, 
                   </div>
                 )}
                 
-                {/* 底部品牌區 */}
-                <div className="relative text-center pt-3">
+                {/* 底部品牌區與二維碼 */}
+                <div className="relative pt-3">
                   <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent" />
-                  <p className="text-sm text-amber-200/70 font-medium mb-1">「你不是棋子，而是指揮官」</p>
-                  <div className="flex items-center justify-center gap-2 text-xs text-amber-200/40">
-                    <span>© 虹靈御所</span>
-                    <span>•</span>
-                    <span>超烜創意</span>
+                  
+                  <div className="flex items-center justify-between gap-4">
+                    {/* 左側品牌文字 */}
+                    <div className="flex-1 text-center">
+                      <p className="text-sm text-amber-200/70 font-medium mb-1">「你不是棋子，而是指揮官」</p>
+                      <div className="flex items-center justify-center gap-2 text-xs text-amber-200/40">
+                        <span>© 虹靈御所</span>
+                        <span>•</span>
+                        <span>超烜創意</span>
+                      </div>
+                    </div>
+                    
+                    {/* 右側二維碼 */}
+                    <div className="flex flex-col items-center">
+                      <div className="p-1.5 bg-white rounded-lg">
+                        <QRCodeSVG 
+                          value={typeof window !== 'undefined' ? window.location.href : 'https://hongling.lovable.app'}
+                          size={56}
+                          level="M"
+                          bgColor="#ffffff"
+                          fgColor="#1a1a2e"
+                        />
+                      </div>
+                      <p className="text-[10px] text-amber-200/50 mt-1">掃碼查看</p>
+                    </div>
                   </div>
                 </div>
               </div>

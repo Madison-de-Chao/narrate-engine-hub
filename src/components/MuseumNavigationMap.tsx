@@ -12,7 +12,8 @@ import {
   TrendingUp,
   MessageCircle,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  GraduationCap
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -320,8 +321,30 @@ export const MuseumNavigationMap: React.FC<MuseumNavigationMapProps> = ({
         )}
       </AnimatePresence>
 
-      {/* AI 諮詢入口 */}
-      <div className="relative z-10 px-4 pb-6">
+      {/* 底部按鈕區 */}
+      <div className="relative z-10 px-4 pb-6 space-y-3">
+        {/* 八字學堂入口 */}
+        <motion.button
+          onClick={() => navigate('/academy')}
+          className={`
+            w-full py-4 px-6 rounded-xl
+            flex items-center justify-center gap-3
+            font-bold text-lg tracking-wider
+            transition-all duration-300
+            ${theme === 'dark'
+              ? 'bg-gradient-to-r from-purple-600/30 via-indigo-500/30 to-purple-600/30 text-purple-300 border border-purple-500/40 hover:border-purple-400/60 hover:bg-purple-500/30'
+              : 'bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-500 text-white hover:from-purple-400 hover:via-indigo-400 hover:to-purple-400'
+            }
+          `}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <GraduationCap className="w-5 h-5" />
+          <span>八字學堂</span>
+          <ChevronRight className="w-5 h-5" />
+        </motion.button>
+
+        {/* AI 諮詢入口 */}
         <motion.button
           onClick={onAiConsultClick}
           className={`

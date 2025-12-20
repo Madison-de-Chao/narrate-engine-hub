@@ -11,6 +11,7 @@ import Subscribe from "./pages/Subscribe";
 import Admin from "./pages/Admin";
 import BaziTest from "./pages/BaziTest";
 import ZoneGuide from "./pages/ZoneGuide";
+import BaziAcademy from "./pages/BaziAcademy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
               <Route path="/subscribe" element={<Subscribe />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/test" element={<BaziTest />} />
+              <Route path="/academy" element={<BaziAcademy />} />
               <Route path="/guide/:zoneId" element={<ZoneGuide />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

@@ -1,7 +1,9 @@
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lock, Crown, Sparkles } from "lucide-react";
+import { Lock, Crown, Sparkles, Building2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { MembershipSource, getMembershipLabel } from "@/hooks/useMembershipStatus";
 
 interface PremiumGateProps {
   isPremium: boolean;
@@ -9,6 +11,10 @@ interface PremiumGateProps {
   title?: string;
   description?: string;
   onUpgrade?: () => void;
+  /** 會員來源：central = 中央會員, local = 本地會員 */
+  membershipSource?: MembershipSource;
+  /** 本地會員等級 */
+  tier?: string;
 }
 
 export const PremiumGate = ({
@@ -16,10 +22,22 @@ export const PremiumGate = ({
   children,
   title = "進階分析",
   description = "升級至收費版解鎖完整分析內容",
-  onUpgrade
+  onUpgrade,
+  membershipSource = 'none',
+  tier = 'free'
 }: PremiumGateProps) => {
   if (isPremium) {
-    return <>{children}</>;
+    return (
+      <div className="relative">
+        {/* 會員標記 */}
+        {membershipSource !== 'none' && (
+          <div className="absolute top-2 right-2 z-10">
+            <MembershipIndicator source={membershipSource} tier={tier} />
+          </div>
+        )}
+        {children}
+      </div>
+    );
   }
 
   return (
@@ -87,20 +105,67 @@ export const PremiumGate = ({
   );
 };
 
+// 會員來源指示器
+export const MembershipIndicator = ({ 
+  source, 
+  tier,
+  showLabel = true 
+}: { 
+  source: MembershipSource; 
+  tier?: string;
+  showLabel?: boolean;
+}) => {
+  if (source === 'none') return null;
+
+  const isCentral = source === 'central';
+  const label = getMembershipLabel(source, tier as any);
+
+  return (
+    <Badge 
+      variant="outline"
+      className={`${
+        isCentral 
+          ? 'bg-purple-500/20 text-purple-300 border-purple-500/40 hover:bg-purple-500/30' 
+          : 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
+      } transition-colors`}
+    >
+      {isCentral ? (
+        <Building2 className="h-3 w-3" />
+      ) : (
+        <Crown className="h-3 w-3" />
+      )}
+      {showLabel && <span className="ml-1">{label}</span>}
+    </Badge>
+  );
+};
+
 // 簡化版的故事預覽遮罩
 export const StoryPreviewGate = ({
   isPremium,
   fullStory,
   previewStory,
-  onUpgrade
+  onUpgrade,
+  membershipSource = 'none',
+  tier = 'free'
 }: {
   isPremium: boolean;
   fullStory: string;
   previewStory: string;
   onUpgrade?: () => void;
+  membershipSource?: MembershipSource;
+  tier?: string;
 }) => {
   if (isPremium) {
-    return <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap">{fullStory}</p>;
+    return (
+      <div className="relative">
+        {membershipSource !== 'none' && (
+          <div className="absolute top-0 right-0">
+            <MembershipIndicator source={membershipSource} tier={tier} showLabel={false} />
+          </div>
+        )}
+        <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap">{fullStory}</p>
+      </div>
+    );
   }
 
   return (

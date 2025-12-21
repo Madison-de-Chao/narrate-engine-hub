@@ -1,10 +1,11 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { useEntitlement } from '@/hooks/useEntitlement';
+import { useMembershipStatus, getMembershipLabel } from '@/hooks/useMembershipStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Lock, LogIn, ExternalLink } from 'lucide-react';
+import { Loader2, Lock, LogIn, ExternalLink, Crown, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
 
 interface EntitlementGuardProps {
   children: ReactNode;
@@ -18,7 +19,7 @@ export function EntitlementGuard({
   fallbackUrl = 'https://momo.maison-de-chao.com'
 }: EntitlementGuardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const { hasAccess, loading, error } = useEntitlement(productId);
+  const { hasAccess, loading, error, source, tier } = useMembershipStatus(productId);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -75,8 +76,8 @@ export function EntitlementGuard({
     );
   }
 
-  // Error state
-  if (error) {
+  // Error state (but still allow access check to proceed)
+  if (error && !hasAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
@@ -125,6 +126,32 @@ export function EntitlementGuard({
     );
   }
 
-  // Has access - render children
+  // Has access - render children with optional membership badge
   return <>{children}</>;
+}
+
+// Export a badge component for showing membership status
+export function MembershipBadge({ 
+  source, 
+  tier, 
+  className 
+}: { 
+  source: 'central' | 'local' | 'none'; 
+  tier: string;
+  className?: string;
+}) {
+  if (source === 'none') return null;
+
+  const label = getMembershipLabel(source, tier as any);
+  const isCentral = source === 'central';
+
+  return (
+    <Badge 
+      variant="secondary" 
+      className={`${isCentral ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'} ${className}`}
+    >
+      {isCentral ? <Building2 className="h-3 w-3 mr-1" /> : <Crown className="h-3 w-3 mr-1" />}
+      {label}
+    </Badge>
+  );
 }

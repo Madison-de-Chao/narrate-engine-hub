@@ -11,6 +11,7 @@ interface EntitlementResult {
     expires_at?: string;
   }>;
   expiresAt?: string | null;
+  details?: string;
   error?: string;
 }
 
@@ -45,9 +46,15 @@ export function useEntitlement(productId?: string): UseEntitlementReturn {
 
       const parsed: CachedEntitlement = JSON.parse(cached);
       const isExpired = Date.now() - parsed.timestamp > CACHE_DURATION;
-      
+
       if (isExpired) {
         localStorage.removeItem(CACHE_KEY);
+        return null;
+      }
+
+      // If this hook is called with a specific productId, make sure the cached
+      // value was for the same product to avoid cross-product cache leaks.
+      if (productId && parsed.data.productId && parsed.data.productId !== productId) {
         return null;
       }
 
@@ -55,7 +62,7 @@ export function useEntitlement(productId?: string): UseEntitlementReturn {
     } catch {
       return null;
     }
-  }, []);
+  }, [productId]);
 
   const setCachedEntitlement = useCallback((data: EntitlementResult) => {
     try {
@@ -93,6 +100,37 @@ export function useEntitlement(productId?: string): UseEntitlementReturn {
         return;
       }
 
+      const applyLocalPremiumFallback = async () => {
+        const userId = session.user.id;
+        const { data: isPremium, error: premiumError } = await supabase.rpc('is_premium', {
+          check_user_id: userId,
+        });
+
+        if (premiumError) {
+          console.error('Local premium check error:', premiumError);
+          return false;
+        }
+
+        if (isPremium) {
+          const fallbackData: EntitlementResult = {
+            hasAccess: true,
+            email: session.user.email ?? undefined,
+            productId,
+            entitlements: [],
+            expiresAt: null,
+          };
+
+          setHasAccess(true);
+          setEntitlements([]);
+          setExpiresAt(null);
+          setError(null);
+          setCachedEntitlement(fallbackData);
+          return true;
+        }
+
+        return false;
+      };
+
       // Call edge function
       const queryParams = productId ? `?product_id=${encodeURIComponent(productId)}` : '';
       const { data, error: fnError } = await supabase.functions.invoke<EntitlementResult>(
@@ -102,11 +140,29 @@ export function useEntitlement(productId?: string): UseEntitlementReturn {
         }
       );
 
+      // If the central entitlement service is temporarily failing, fall back to local
+      // subscription status so premium users are not incorrectly blocked.
       if (fnError) {
-        console.error('Entitlement check error:', fnError);
-        setError(fnError.message);
-        setHasAccess(false);
+        const fallbackApplied = await applyLocalPremiumFallback();
+        if (!fallbackApplied) {
+          console.error('Entitlement check error:', fnError);
+          setError(fnError.message);
+          setHasAccess(false);
+        }
       } else if (data) {
+        const centralFailed = Boolean(data.error) ||
+          (typeof data.details === 'string' &&
+            (data.details.includes('Invalid JWT') || data.details.includes('Missing authorization header')));
+
+        if (centralFailed) {
+          const fallbackApplied = await applyLocalPremiumFallback();
+          if (!fallbackApplied) {
+            setHasAccess(false);
+            setError(data.error ?? data.details ?? 'Central API error');
+          }
+          return;
+        }
+
         setHasAccess(data.hasAccess);
         setEntitlements(data.entitlements || []);
         setExpiresAt(data.expiresAt || null);

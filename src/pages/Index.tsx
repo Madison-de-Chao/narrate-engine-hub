@@ -450,7 +450,7 @@ const Index = () => {
                 hasCentralAccess || isPremium ? (
                   <div className="flex items-center gap-2 text-sm bg-gradient-to-r from-amber-500/20 to-amber-600/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/30">
                     <Crown className="h-4 w-4" />
-                    <span>{hasCentralAccess ? '中央會員' : PLAN_NAMES[tier]}</span>
+                    <span>{isPremium ? PLAN_NAMES[tier] : '中央會員'}</span>
                   </div>
                 ) : (
                   <Button

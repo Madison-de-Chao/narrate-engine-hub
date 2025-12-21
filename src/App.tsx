@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MuseumLayout } from "@/components/MuseumLayout";
+import { EntitlementGuard } from "@/components/EntitlementGuard";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Subscribe from "./pages/Subscribe";
@@ -30,8 +31,16 @@ const App = () => (
               <Route path="/subscribe" element={<Subscribe />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/test" element={<BaziTest />} />
-              <Route path="/academy" element={<BaziAcademy />} />
-              <Route path="/guide/:zoneId" element={<ZoneGuide />} />
+              <Route path="/academy" element={
+                <EntitlementGuard productId="bazi-academy">
+                  <BaziAcademy />
+                </EntitlementGuard>
+              } />
+              <Route path="/guide/:zoneId" element={
+                <EntitlementGuard productId="bazi-academy">
+                  <ZoneGuide />
+                </EntitlementGuard>
+              } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

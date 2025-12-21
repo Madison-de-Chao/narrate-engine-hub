@@ -13,14 +13,19 @@ import {
   Crown,
   Lock,
   GraduationCap,
-  MessageCircle
+  MessageCircle,
+  CheckCircle,
+  ChevronRight
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
+import { useAcademyProgress } from '@/hooks/useAcademyProgress';
 import { AiTeacher } from '@/components/AiTeacher';
+import { InteractiveLearning } from '@/components/InteractiveLearning';
 
 interface CourseZone {
   id: string;
@@ -112,7 +117,9 @@ const BaziAcademy: React.FC = () => {
   const { theme } = useTheme();
   const [userId, setUserId] = useState<string | undefined>();
   const [isAiTeacherOpen, setIsAiTeacherOpen] = useState(false);
+  const [activeLesson, setActiveLesson] = useState<{ zoneId: string; lessonId: string } | null>(null);
   const { isPremium, loading } = usePremiumStatus(userId);
+  const { progress, getZoneProgress, completeLesson, getZoneLessons, isLessonCompleted } = useAcademyProgress();
 
   useEffect(() => {
     const getUser = async () => {
@@ -123,12 +130,42 @@ const BaziAcademy: React.FC = () => {
   }, []);
 
   const handleZoneClick = (zone: CourseZone) => {
-    if (zone.isFree || isPremium) {
-      navigate(`/guide/${zone.id}`);
-    } else {
+    if (!zone.isFree && !isPremium) {
       navigate('/subscribe');
+      return;
+    }
+    // 開始該區域的第一個未完成課程
+    const lessons = getZoneLessons(zone.id);
+    const firstIncomplete = lessons.find(l => !isLessonCompleted(zone.id, l)) || lessons[0];
+    setActiveLesson({ zoneId: zone.id, lessonId: firstIncomplete });
+  };
+
+  const handleLessonComplete = (score: number) => {
+    if (activeLesson) {
+      completeLesson(activeLesson.zoneId, activeLesson.lessonId, score);
+      // 自動進入下一課
+      const lessons = getZoneLessons(activeLesson.zoneId);
+      const currentIndex = lessons.indexOf(activeLesson.lessonId);
+      if (currentIndex < lessons.length - 1) {
+        setActiveLesson({ zoneId: activeLesson.zoneId, lessonId: lessons[currentIndex + 1] });
+      } else {
+        setActiveLesson(null);
+      }
     }
   };
+
+  // 如果正在學習課程，顯示互動學習組件
+  if (activeLesson) {
+    return (
+      <InteractiveLearning
+        zoneId={activeLesson.zoneId}
+        lessonId={activeLesson.lessonId}
+        lessonTitle={activeLesson.lessonId}
+        onComplete={handleLessonComplete}
+        onBack={() => setActiveLesson(null)}
+      />
+    );
+  }
 
   const freeZones = COURSE_ZONES.filter(z => z.isFree);
   const premiumZones = COURSE_ZONES.filter(z => !z.isFree);

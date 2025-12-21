@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.generate-legion-story]
 verify_jwt = false
+
+[functions.check-entitlement]
+verify_jwt = false
+
+[functions.ai-fortune-consult]
+verify_jwt = false

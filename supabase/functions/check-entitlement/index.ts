@@ -9,6 +9,30 @@ const corsHeaders = {
 const CENTRAL_API_URL = 'https://yyzcgxnvtprojutnxisz.supabase.co/functions/v1/entitlements-lookup';
 const DEFAULT_PRODUCT_ID = 'bazi-premium';
 
+function safeJwtMeta(token: string) {
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+
+    const payload = parts[1]
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+
+    // base64 padding
+    const padded = payload.padEnd(Math.ceil(payload.length / 4) * 4, '=');
+    const decoded = atob(padded);
+    const json = JSON.parse(decoded);
+
+    return {
+      ref: json?.ref,
+      role: json?.role,
+      iss: json?.iss,
+    };
+  } catch {
+    return null;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -28,6 +52,13 @@ serve(async (req) => {
       );
     }
 
+    const centralMeta = safeJwtMeta(centralServiceRoleKey);
+    if (centralMeta) {
+      console.log(`Central key meta: ref=${centralMeta.ref ?? 'unknown'}, role=${centralMeta.role ?? 'unknown'}`);
+    } else {
+      console.log('Central key meta: unable to parse (not a JWT?)');
+    }
+
     // Get authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -44,7 +75,7 @@ serve(async (req) => {
     });
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
+
     if (userError || !user) {
       console.error('User verification failed:', userError);
       return new Response(
@@ -70,25 +101,33 @@ serve(async (req) => {
 
     // Call central API
     const centralApiUrl = `${CENTRAL_API_URL}?email=${encodeURIComponent(userEmail)}&product_id=${encodeURIComponent(productId)}`;
-    
+
     const centralResponse = await fetch(centralApiUrl, {
       method: 'GET',
       headers: {
-        'X-API-Key': centralServiceRoleKey,
+        // Supabase Functions gateway expects these headers (apikey + Authorization)
+        'apikey': centralServiceRoleKey,
         'Authorization': `Bearer ${centralServiceRoleKey}`,
+
+        // Keep legacy header too (harmless if ignored by gateway)
+        'X-API-Key': centralServiceRoleKey,
       },
     });
 
     if (!centralResponse.ok) {
       const errorText = await centralResponse.text();
       console.error('Central API error:', centralResponse.status, errorText);
+
+      // IMPORTANT: return 200 so the frontend can apply a graceful fallback
+      // (we still include the real central status in the payload for debugging).
       return new Response(
-        JSON.stringify({ 
-          error: 'Central API request failed', 
+        JSON.stringify({
+          error: 'Central API request failed',
           hasAccess: false,
-          details: errorText 
+          centralStatus: centralResponse.status,
+          details: errorText,
         }),
-        { status: centralResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -96,9 +135,9 @@ serve(async (req) => {
     console.log('Entitlement response:', JSON.stringify(entitlementData));
 
     // Determine access based on central API response
-    const hasAccess = entitlementData.hasAccess === true || 
-                      entitlementData.has_access === true ||
-                      (Array.isArray(entitlementData.entitlements) && entitlementData.entitlements.length > 0);
+    const hasAccess = entitlementData.hasAccess === true ||
+      entitlementData.has_access === true ||
+      (Array.isArray(entitlementData.entitlements) && entitlementData.entitlements.length > 0);
 
     return new Response(
       JSON.stringify({

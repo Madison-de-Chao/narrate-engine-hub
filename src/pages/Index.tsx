@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
 import { useGuestMode } from "@/hooks/useGuestMode";
 import { usePremiumStatus, PLAN_NAMES } from "@/hooks/usePremiumStatus";
+import { useEntitlement } from "@/hooks/useEntitlement";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import logoSishi from "@/assets/logo-sishi.png";
@@ -99,6 +100,7 @@ const Index = () => {
   const [shenshaRuleset, setShenshaRuleset] = useState<'trad' | 'legion'>('trad');
   const [isAiConsultOpen, setIsAiConsultOpen] = useState(false);
   const { isPremium, tier, loading: premiumLoading } = usePremiumStatus(user?.id);
+  const { hasAccess: hasCentralAccess, loading: entitlementLoading } = useEntitlement('bazi-premium');
   const { isAdmin } = useAdminStatus(user?.id);
   // 升級處理函數
   const handleUpgrade = () => {
@@ -444,11 +446,11 @@ const Index = () => {
                 </Button>
               )}
               {/* 訂閱狀態顯示 */}
-              {user && !premiumLoading && (
-                isPremium ? (
+              {user && !premiumLoading && !entitlementLoading && (
+                hasCentralAccess || isPremium ? (
                   <div className="flex items-center gap-2 text-sm bg-gradient-to-r from-amber-500/20 to-amber-600/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/30">
                     <Crown className="h-4 w-4" />
-                    <span>{PLAN_NAMES[tier]}</span>
+                    <span>{hasCentralAccess ? '中央會員' : PLAN_NAMES[tier]}</span>
                   </div>
                 ) : (
                   <Button

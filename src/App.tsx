@@ -32,12 +32,12 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               <Route path="/test" element={<BaziTest />} />
               <Route path="/academy" element={
-                <EntitlementGuard productId="bazi-academy">
+                <EntitlementGuard productId="bazi-premium">
                   <BaziAcademy />
                 </EntitlementGuard>
               } />
               <Route path="/guide/:zoneId" element={
-                <EntitlementGuard productId="bazi-academy">
+                <EntitlementGuard productId="bazi-premium">
                   <ZoneGuide />
                 </EntitlementGuard>
               } />

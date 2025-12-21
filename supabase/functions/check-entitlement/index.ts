@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const CENTRAL_API_URL = 'https://yyzcgxnvtprojutnxisz.supabase.co/functions/v1/entitlements-lookup';
-const DEFAULT_PRODUCT_ID = 'bazi-academy'; // 可根據需求修改
+const DEFAULT_PRODUCT_ID = 'bazi-premium';
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -75,6 +75,7 @@ serve(async (req) => {
       method: 'GET',
       headers: {
         'X-API-Key': centralServiceRoleKey,
+        'Authorization': `Bearer ${centralServiceRoleKey}`,
       },
     });
 

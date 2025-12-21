@@ -99,18 +99,14 @@ serve(async (req) => {
 
     console.log(`Checking entitlement for email: ${userEmail}, product: ${productId}`);
 
-    // Call central API
+    // Call central API using X-API-Key + email method
     const centralApiUrl = `${CENTRAL_API_URL}?email=${encodeURIComponent(userEmail)}&product_id=${encodeURIComponent(productId)}`;
 
     const centralResponse = await fetch(centralApiUrl, {
       method: 'GET',
       headers: {
-        // Supabase Functions gateway expects these headers (apikey + Authorization)
-        'apikey': centralServiceRoleKey,
-        'Authorization': `Bearer ${centralServiceRoleKey}`,
-
-        // Keep legacy header too (harmless if ignored by gateway)
         'X-API-Key': centralServiceRoleKey,
+        'Content-Type': 'application/json',
       },
     });
 

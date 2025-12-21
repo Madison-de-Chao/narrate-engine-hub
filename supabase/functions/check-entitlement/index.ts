@@ -74,8 +74,7 @@ serve(async (req) => {
     const centralResponse = await fetch(centralApiUrl, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${centralServiceRoleKey}`,
-        'Content-Type': 'application/json',
+        'X-API-Key': centralServiceRoleKey,
       },
     });
 

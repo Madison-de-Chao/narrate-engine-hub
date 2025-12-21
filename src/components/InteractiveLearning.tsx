@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { 
   CheckCircle, 
   XCircle, 
@@ -9,11 +9,19 @@ import {
   RefreshCw,
   ArrowLeft,
   BookOpen,
-  Sparkles
+  Sparkles,
+  Flame,
+  Star,
+  Zap,
+  Target,
+  Brain,
+  Shuffle,
+  Timer
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 interface QuizQuestion {
   id: string;
@@ -23,12 +31,27 @@ interface QuizQuestion {
   explanation: string;
 }
 
+interface MatchPair {
+  id: string;
+  term: string;
+  definition: string;
+}
+
+interface FillBlank {
+  id: string;
+  sentence: string;
+  blanks: string[];
+  options: string[];
+}
+
 interface LessonContent {
   id: string;
   title: string;
   introduction: string;
   keyPoints: string[];
   quiz: QuizQuestion[];
+  matchGame?: MatchPair[];
+  fillBlanks?: FillBlank[];
 }
 
 interface InteractiveLearningProps {
@@ -39,7 +62,23 @@ interface InteractiveLearningProps {
   onBack: () => void;
 }
 
-// 各課程的互動內容
+// 成就類型
+type Achievement = {
+  id: string;
+  title: string;
+  icon: React.ReactNode;
+  color: string;
+};
+
+const ACHIEVEMENTS: Achievement[] = [
+  { id: 'first_correct', title: '初試啼聲', icon: <Star className="w-6 h-6" />, color: 'from-yellow-400 to-amber-500' },
+  { id: 'streak_3', title: '三連勝', icon: <Flame className="w-6 h-6" />, color: 'from-orange-400 to-red-500' },
+  { id: 'streak_5', title: '五連霸', icon: <Zap className="w-6 h-6" />, color: 'from-purple-400 to-pink-500' },
+  { id: 'perfect', title: '完美無缺', icon: <Trophy className="w-6 h-6" />, color: 'from-green-400 to-emerald-500' },
+  { id: 'speed_demon', title: '閃電快手', icon: <Timer className="w-6 h-6" />, color: 'from-blue-400 to-cyan-500' },
+];
+
+// 課程內容（整合原有內容並新增互動遊戲）
 const LESSON_CONTENT: Record<string, Record<string, LessonContent>> = {
   bazi: {
     '四柱基礎': {
@@ -74,6 +113,20 @@ const LESSON_CONTENT: Record<string, Record<string, LessonContent>> = {
           correctIndex: 2,
           explanation: '日柱代表命主本人，日干為「日元」，是八字分析的核心。日支則與配偶相關。'
         }
+      ],
+      matchGame: [
+        { id: 'm1', term: '年柱', definition: '祖先、童年（1-16歲）' },
+        { id: 'm2', term: '月柱', definition: '父母、青年（17-32歲）' },
+        { id: 'm3', term: '日柱', definition: '自己、配偶（33-48歲）' },
+        { id: 'm4', term: '時柱', definition: '子女、晚年（49歲後）' },
+      ],
+      fillBlanks: [
+        {
+          id: 'f1',
+          sentence: '天干共有___個，地支共有___個，組合成___甲子',
+          blanks: ['十', '十二', '六十'],
+          options: ['八', '十', '十二', '六十', '一百二十']
+        }
       ]
     },
     '天干詳解': {
@@ -102,6 +155,13 @@ const LESSON_CONTENT: Record<string, Record<string, LessonContent>> = {
           correctIndex: 1,
           explanation: '辛為陰金，象徵珠玉、首飾，細膩精緻。庚為陽金。'
         }
+      ],
+      matchGame: [
+        { id: 'm1', term: '甲木', definition: '大樹（陽木）' },
+        { id: 'm2', term: '丙火', definition: '太陽（陽火）' },
+        { id: 'm3', term: '戊土', definition: '高山（陽土）' },
+        { id: 'm4', term: '庚金', definition: '刀劍（陽金）' },
+        { id: 'm5', term: '壬水', definition: '江河（陽水）' },
       ]
     },
     '地支詳解': {
@@ -129,6 +189,12 @@ const LESSON_CONTENT: Record<string, Record<string, LessonContent>> = {
           correctIndex: 2,
           explanation: '卯酉相沖，為東西方位對沖。其他選項都是相合關係。'
         }
+      ],
+      matchGame: [
+        { id: 'm1', term: '申子辰', definition: '三合水局' },
+        { id: 'm2', term: '寅午戌', definition: '三合火局' },
+        { id: 'm3', term: '巳酉丑', definition: '三合金局' },
+        { id: 'm4', term: '亥卯未', definition: '三合木局' },
       ]
     },
     '八字排盤': {
@@ -254,6 +320,13 @@ const LESSON_CONTENT: Record<string, Record<string, LessonContent>> = {
           correctIndex: 2,
           explanation: '水主智，特性為潤下、靈活、智慧。'
         }
+      ],
+      matchGame: [
+        { id: 'm1', term: '木', definition: '生長、仁愛' },
+        { id: 'm2', term: '火', definition: '熱情、禮儀' },
+        { id: 'm3', term: '土', definition: '穩重、信義' },
+        { id: 'm4', term: '金', definition: '決斷、義氣' },
+        { id: 'm5', term: '水', definition: '智慧、靈活' },
       ]
     },
     '相生關係': {
@@ -275,6 +348,13 @@ const LESSON_CONTENT: Record<string, Record<string, LessonContent>> = {
           correctIndex: 3,
           explanation: '土生金，土中蘊藏金屬礦脈。'
         }
+      ],
+      matchGame: [
+        { id: 'm1', term: '木生火', definition: '木燃燒產生火焰' },
+        { id: 'm2', term: '火生土', definition: '燃燒後成為灰燼' },
+        { id: 'm3', term: '土生金', definition: '土中蘊含礦藏' },
+        { id: 'm4', term: '金生水', definition: '金屬凝結水珠' },
+        { id: 'm5', term: '水生木', definition: '水滋潤樹木生長' },
       ]
     },
     '相剋關係': {
@@ -338,6 +418,12 @@ const LESSON_CONTENT: Record<string, Record<string, LessonContent>> = {
           correctIndex: 0,
           explanation: '正印是異性生我者，如陽日主見陰印星，代表母親和貴人。'
         }
+      ],
+      matchGame: [
+        { id: 'm1', term: '比肩', definition: '同性同五行，兄弟朋友' },
+        { id: 'm2', term: '劫財', definition: '異性同五行，競爭夥伴' },
+        { id: 'm3', term: '正印', definition: '異性生我，母親貴人' },
+        { id: 'm4', term: '偏印', definition: '同性生我，偏門學問' },
       ]
     },
     '食傷財星': {
@@ -420,6 +506,12 @@ const LESSON_CONTENT: Record<string, Record<string, LessonContent>> = {
           correctIndex: 1,
           explanation: '天乙貴人是最重要的吉神，主逢凶化吉、遇難呈祥。'
         }
+      ],
+      matchGame: [
+        { id: 'm1', term: '天乙貴人', definition: '逢凶化吉、貴人相助' },
+        { id: 'm2', term: '文昌星', definition: '聰明智慧、考試順利' },
+        { id: 'm3', term: '天德貴人', definition: '行善積德、逢難呈祥' },
+        { id: 'm4', term: '月德貴人', definition: '心地善良、自有天助' },
       ]
     },
     '凶煞總覽': {
@@ -605,6 +697,12 @@ const LESSON_CONTENT: Record<string, Record<string, LessonContent>> = {
           correctIndex: 1,
           explanation: '食傷代表才華與創意，食傷旺者創意豐富、表達能力佳。'
         }
+      ],
+      matchGame: [
+        { id: 'm1', term: '比劫旺', definition: '領導力強、善於合作' },
+        { id: 'm2', term: '印星旺', definition: '學習力強、有貴人緣' },
+        { id: 'm3', term: '食傷旺', definition: '創意豐富、表達力佳' },
+        { id: 'm4', term: '財官旺', definition: '務實穩重、事業心強' },
       ]
     },
     '成長課題': {
@@ -749,32 +847,251 @@ const getDefaultContent = (zoneId: string, lessonId: string): LessonContent => (
   ]
 });
 
+// 配對遊戲組件
+const MatchGame: React.FC<{
+  pairs: MatchPair[];
+  onComplete: (allCorrect: boolean) => void;
+  theme: string;
+}> = ({ pairs, onComplete, theme }) => {
+  const [selectedTerm, setSelectedTerm] = useState<string | null>(null);
+  const [matchedPairs, setMatchedPairs] = useState<string[]>([]);
+  const [wrongPair, setWrongPair] = useState<string | null>(null);
+  const [shuffledDefinitions, setShuffledDefinitions] = useState<MatchPair[]>([]);
+
+  useEffect(() => {
+    setShuffledDefinitions([...pairs].sort(() => Math.random() - 0.5));
+  }, [pairs]);
+
+  const handleTermClick = (id: string) => {
+    if (matchedPairs.includes(id)) return;
+    setSelectedTerm(id);
+    setWrongPair(null);
+  };
+
+  const handleDefinitionClick = (pair: MatchPair) => {
+    if (!selectedTerm || matchedPairs.includes(pair.id)) return;
+    
+    if (selectedTerm === pair.id) {
+      const newMatched = [...matchedPairs, pair.id];
+      setMatchedPairs(newMatched);
+      setSelectedTerm(null);
+      
+      if (newMatched.length === pairs.length) {
+        setTimeout(() => onComplete(true), 500);
+      }
+    } else {
+      setWrongPair(pair.id);
+      setTimeout(() => {
+        setWrongPair(null);
+        setSelectedTerm(null);
+      }, 800);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-center gap-2 mb-4">
+        <Shuffle className={`w-5 h-5 ${theme === 'dark' ? 'text-primary' : 'text-amber-600'}`} />
+        <h3 className={`text-lg font-bold ${theme === 'dark' ? 'text-foreground' : 'text-gray-900'}`}>
+          配對遊戲
+        </h3>
+      </div>
+      
+      <p className={`text-center text-sm ${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'}`}>
+        點擊左邊的詞彙，再點擊右邊對應的解釋
+      </p>
+
+      <div className="grid grid-cols-2 gap-4">
+        {/* 詞彙列 */}
+        <div className="space-y-2">
+          {pairs.map((pair) => {
+            const isMatched = matchedPairs.includes(pair.id);
+            const isSelected = selectedTerm === pair.id;
+            
+            return (
+              <motion.button
+                key={pair.id}
+                onClick={() => handleTermClick(pair.id)}
+                disabled={isMatched}
+                className={`w-full p-3 rounded-xl text-center font-medium transition-all ${
+                  isMatched
+                    ? 'bg-green-500/20 text-green-500 border-2 border-green-500'
+                    : isSelected
+                      ? theme === 'dark'
+                        ? 'bg-primary/30 border-2 border-primary text-primary'
+                        : 'bg-amber-100 border-2 border-amber-500 text-amber-700'
+                      : theme === 'dark'
+                        ? 'bg-card border-2 border-border hover:border-primary/50 text-foreground'
+                        : 'bg-white border-2 border-gray-200 hover:border-amber-300 text-gray-800'
+                }`}
+                whileHover={!isMatched ? { scale: 1.02 } : {}}
+                whileTap={!isMatched ? { scale: 0.98 } : {}}
+                animate={isMatched ? { scale: [1, 1.1, 1] } : {}}
+              >
+                {pair.term}
+                {isMatched && <CheckCircle className="inline-block ml-2 w-4 h-4" />}
+              </motion.button>
+            );
+          })}
+        </div>
+
+        {/* 解釋列 */}
+        <div className="space-y-2">
+          {shuffledDefinitions.map((pair) => {
+            const isMatched = matchedPairs.includes(pair.id);
+            const isWrong = wrongPair === pair.id;
+            
+            return (
+              <motion.button
+                key={pair.id}
+                onClick={() => handleDefinitionClick(pair)}
+                disabled={isMatched || !selectedTerm}
+                className={`w-full p-3 rounded-xl text-center text-sm transition-all ${
+                  isMatched
+                    ? 'bg-green-500/20 text-green-500 border-2 border-green-500'
+                    : isWrong
+                      ? 'bg-red-500/20 text-red-500 border-2 border-red-500'
+                      : theme === 'dark'
+                        ? 'bg-card border-2 border-border hover:border-primary/50 text-foreground'
+                        : 'bg-white border-2 border-gray-200 hover:border-amber-300 text-gray-800'
+                } ${!selectedTerm && !isMatched ? 'opacity-50 cursor-not-allowed' : ''}`}
+                whileHover={!isMatched && selectedTerm ? { scale: 1.02 } : {}}
+                whileTap={!isMatched && selectedTerm ? { scale: 0.98 } : {}}
+                animate={
+                  isWrong 
+                    ? { x: [0, -10, 10, -10, 10, 0] } 
+                    : isMatched 
+                      ? { scale: [1, 1.1, 1] } 
+                      : {}
+                }
+              >
+                {pair.definition}
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex justify-center">
+        <Badge variant="outline" className="text-sm">
+          已配對 {matchedPairs.length} / {pairs.length}
+        </Badge>
+      </div>
+    </div>
+  );
+};
+
+// 成就彈窗組件
+const AchievementPopup: React.FC<{
+  achievement: Achievement;
+  onClose: () => void;
+}> = ({ achievement, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 2000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -50, scale: 0.8 }}
+      className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50"
+    >
+      <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl bg-gradient-to-r ${achievement.color} text-white`}>
+        <motion.div
+          animate={{ rotate: [0, -10, 10, -10, 10, 0], scale: [1, 1.2, 1] }}
+          transition={{ duration: 0.5 }}
+        >
+          {achievement.icon}
+        </motion.div>
+        <div>
+          <div className="text-xs opacity-80">🎉 成就解鎖!</div>
+          <div className="font-bold">{achievement.title}</div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// 連續答對火焰效果
+const StreakFire: React.FC<{ streak: number }> = ({ streak }) => {
+  if (streak < 2) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex items-center gap-1"
+    >
+      <motion.div
+        animate={{ 
+          scale: [1, 1.2, 1],
+          rotate: [0, -5, 5, 0]
+        }}
+        transition={{ repeat: Infinity, duration: 0.5 }}
+      >
+        <Flame className={`w-5 h-5 ${
+          streak >= 5 ? 'text-purple-500' : streak >= 3 ? 'text-orange-500' : 'text-yellow-500'
+        }`} />
+      </motion.div>
+      <span className={`font-bold ${
+        streak >= 5 ? 'text-purple-500' : streak >= 3 ? 'text-orange-500' : 'text-yellow-500'
+      }`}>
+        {streak}連勝!
+      </span>
+    </motion.div>
+  );
+};
+
 export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
   zoneId,
   lessonId,
-  lessonTitle,
   onComplete,
   onBack
 }) => {
   const { theme } = useTheme();
-  const [stage, setStage] = useState<'intro' | 'keypoints' | 'quiz' | 'result'>('intro');
+  const [stage, setStage] = useState<'intro' | 'keypoints' | 'matchgame' | 'quiz' | 'result'>('intro');
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [answers, setAnswers] = useState<boolean[]>([]);
+  const [streak, setStreak] = useState(0);
+  const [unlockedAchievements, setUnlockedAchievements] = useState<Achievement[]>([]);
+  const [showAchievement, setShowAchievement] = useState<Achievement | null>(null);
+  const [startTime] = useState(Date.now());
+  const [matchGameCompleted, setMatchGameCompleted] = useState(false);
 
   const content = LESSON_CONTENT[zoneId]?.[lessonId] || getDefaultContent(zoneId, lessonId);
   const totalQuestions = content.quiz.length;
   const currentQuestion = content.quiz[currentQuestionIndex];
+  const hasMatchGame = content.matchGame && content.matchGame.length > 0;
+
+  // 解鎖成就
+  const unlockAchievement = (achievementId: string) => {
+    const achievement = ACHIEVEMENTS.find(a => a.id === achievementId);
+    if (achievement && !unlockedAchievements.find(a => a.id === achievementId)) {
+      setUnlockedAchievements(prev => [...prev, achievement]);
+      setShowAchievement(achievement);
+    }
+  };
 
   const handleNextPoint = () => {
     if (currentPointIndex < content.keyPoints.length - 1) {
       setCurrentPointIndex(prev => prev + 1);
+    } else if (hasMatchGame && !matchGameCompleted) {
+      setStage('matchgame');
     } else {
       setStage('quiz');
     }
+  };
+
+  const handleMatchGameComplete = () => {
+    setMatchGameCompleted(true);
+    unlockAchievement('first_correct');
+    setStage('quiz');
   };
 
   const handleAnswer = (index: number) => {
@@ -785,6 +1102,15 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
     const isCorrect = index === currentQuestion.correctIndex;
     if (isCorrect) {
       setCorrectAnswers(prev => prev + 1);
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      
+      // 檢查成就
+      if (correctAnswers === 0) unlockAchievement('first_correct');
+      if (newStreak === 3) unlockAchievement('streak_3');
+      if (newStreak === 5) unlockAchievement('streak_5');
+    } else {
+      setStreak(0);
     }
     setAnswers(prev => [...prev, isCorrect]);
   };
@@ -795,6 +1121,14 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
       setSelectedAnswer(null);
       setShowExplanation(false);
     } else {
+      // 檢查完美成就
+      if (correctAnswers === totalQuestions) {
+        unlockAchievement('perfect');
+      }
+      // 檢查速度成就（30秒內完成）
+      if (Date.now() - startTime < 30000) {
+        unlockAchievement('speed_demon');
+      }
       setStage('result');
     }
   };
@@ -812,16 +1146,29 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
     setShowExplanation(false);
     setCorrectAnswers(0);
     setAnswers([]);
+    setStreak(0);
+    setMatchGameCompleted(false);
   };
 
-  const progressPercentage = stage === 'intro' ? 10 : 
-    stage === 'keypoints' ? 20 + ((currentPointIndex + 1) / content.keyPoints.length) * 30 :
-    stage === 'quiz' ? 50 + ((currentQuestionIndex + 1) / totalQuestions) * 40 : 100;
+  const progressPercentage = stage === 'intro' ? 5 : 
+    stage === 'keypoints' ? 10 + ((currentPointIndex + 1) / content.keyPoints.length) * 25 :
+    stage === 'matchgame' ? 40 :
+    stage === 'quiz' ? 45 + ((currentQuestionIndex + 1) / totalQuestions) * 45 : 100;
 
   return (
     <div className={`min-h-screen pb-20 ${
       theme === 'dark' ? 'bg-background' : 'bg-gray-50'
     }`}>
+      {/* 成就彈窗 */}
+      <AnimatePresence>
+        {showAchievement && (
+          <AchievementPopup 
+            achievement={showAchievement} 
+            onClose={() => setShowAchievement(null)} 
+          />
+        )}
+      </AnimatePresence>
+
       {/* 頂部進度條 */}
       <div className={`sticky top-0 z-10 px-4 py-3 ${
         theme === 'dark' ? 'bg-card/95 backdrop-blur-sm border-b border-border' : 'bg-white/95 backdrop-blur-sm border-b border-gray-200'
@@ -836,9 +1183,12 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
             <ArrowLeft className="w-4 h-4" />
             返回
           </Button>
-          <span className={`text-sm ${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'}`}>
-            {Math.round(progressPercentage)}% 完成
-          </span>
+          <div className="flex items-center gap-3">
+            <StreakFire streak={streak} />
+            <span className={`text-sm ${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'}`}>
+              {Math.round(progressPercentage)}%
+            </span>
+          </div>
         </div>
         <Progress value={progressPercentage} className="h-2" />
       </div>
@@ -855,39 +1205,74 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
               className="space-y-6"
             >
               <div className="text-center mb-8">
-                <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
-                  theme === 'dark' 
-                    ? 'bg-gradient-to-br from-primary to-amber-600' 
-                    : 'bg-gradient-to-br from-amber-400 to-amber-600'
-                } text-white shadow-lg`}>
-                  <BookOpen className="w-8 h-8" />
-                </div>
+                <motion.div 
+                  className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 ${
+                    theme === 'dark' 
+                      ? 'bg-gradient-to-br from-primary to-amber-600' 
+                      : 'bg-gradient-to-br from-amber-400 to-amber-600'
+                  } text-white shadow-lg`}
+                  animate={{ 
+                    scale: [1, 1.05, 1],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                >
+                  <BookOpen className="w-10 h-10" />
+                </motion.div>
                 <h1 className={`text-2xl font-bold mb-2 ${
                   theme === 'dark' ? 'text-foreground' : 'text-gray-900'
                 }`}>
                   {content.title}
                 </h1>
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  <Badge variant="outline" className="gap-1">
+                    <Brain className="w-3 h-3" />
+                    {content.keyPoints.length} 知識點
+                  </Badge>
+                  <Badge variant="outline" className="gap-1">
+                    <Target className="w-3 h-3" />
+                    {totalQuestions} 題測驗
+                  </Badge>
+                  {hasMatchGame && (
+                    <Badge variant="outline" className="gap-1">
+                      <Shuffle className="w-3 h-3" />
+                      配對遊戲
+                    </Badge>
+                  )}
+                </div>
               </div>
 
-              <div className={`p-6 rounded-2xl ${
-                theme === 'dark' 
-                  ? 'bg-card border border-border' 
-                  : 'bg-white shadow-lg'
-              }`}>
+              <motion.div 
+                className={`p-6 rounded-2xl ${
+                  theme === 'dark' 
+                    ? 'bg-card border border-border' 
+                    : 'bg-white shadow-lg'
+                }`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
                 <p className={`text-lg leading-relaxed ${
                   theme === 'dark' ? 'text-foreground' : 'text-gray-700'
                 }`}>
                   {content.introduction}
                 </p>
-              </div>
+              </motion.div>
 
-              <Button
-                onClick={() => setStage('keypoints')}
-                className="w-full h-12 text-lg gap-2 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90"
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
               >
-                開始學習
-                <ChevronRight className="w-5 h-5" />
-              </Button>
+                <Button
+                  onClick={() => setStage('keypoints')}
+                  className="w-full h-14 text-lg gap-2 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90 rounded-xl shadow-lg"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  開始學習冒險
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
+              </motion.div>
             </motion.div>
           )}
 
@@ -900,27 +1285,49 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
               exit={{ opacity: 0, x: -50 }}
               className="space-y-6"
             >
-              <div className={`text-center mb-4 ${
-                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'
-              }`}>
-                知識點 {currentPointIndex + 1} / {content.keyPoints.length}
+              <div className="flex items-center justify-between mb-4">
+                <div className={`${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'}`}>
+                  知識點 {currentPointIndex + 1} / {content.keyPoints.length}
+                </div>
+                <div className="flex gap-1">
+                  {content.keyPoints.map((_, idx) => (
+                    <motion.div
+                      key={idx}
+                      className={`w-2 h-2 rounded-full ${
+                        idx <= currentPointIndex
+                          ? theme === 'dark' ? 'bg-primary' : 'bg-amber-500'
+                          : theme === 'dark' ? 'bg-muted' : 'bg-gray-200'
+                      }`}
+                      animate={idx === currentPointIndex ? { scale: [1, 1.3, 1] } : {}}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                    />
+                  ))}
+                </div>
               </div>
 
               <motion.div 
                 className={`p-8 rounded-2xl min-h-[200px] flex items-center justify-center ${
                   theme === 'dark' 
-                    ? 'bg-gradient-to-br from-card to-muted border border-border' 
-                    : 'bg-gradient-to-br from-white to-amber-50 shadow-lg'
+                    ? 'bg-gradient-to-br from-card via-card to-primary/10 border border-border' 
+                    : 'bg-gradient-to-br from-white via-white to-amber-50 shadow-lg'
                 }`}
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
               >
                 <div className="flex items-start gap-4">
-                  <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                    theme === 'dark' ? 'bg-primary/20 text-primary' : 'bg-amber-100 text-amber-600'
-                  }`}>
-                    <Lightbulb className="w-5 h-5" />
-                  </div>
+                  <motion.div 
+                    className={`shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
+                      theme === 'dark' ? 'bg-primary/20 text-primary' : 'bg-amber-100 text-amber-600'
+                    }`}
+                    animate={{ 
+                      rotate: [0, 10, -10, 0],
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Lightbulb className="w-6 h-6" />
+                  </motion.div>
                   <p className={`text-xl leading-relaxed ${
                     theme === 'dark' ? 'text-foreground' : 'text-gray-800'
                   }`}>
@@ -931,10 +1338,45 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
 
               <Button
                 onClick={handleNextPoint}
-                className="w-full h-12 text-lg gap-2 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90"
+                className="w-full h-14 text-lg gap-2 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90 rounded-xl shadow-lg"
               >
-                {currentPointIndex < content.keyPoints.length - 1 ? '下一個' : '開始測驗'}
+                {currentPointIndex < content.keyPoints.length - 1 
+                  ? '下一個知識點' 
+                  : hasMatchGame 
+                    ? '開始配對遊戲' 
+                    : '開始測驗挑戰'}
                 <ChevronRight className="w-5 h-5" />
+              </Button>
+            </motion.div>
+          )}
+
+          {/* 配對遊戲階段 */}
+          {stage === 'matchgame' && content.matchGame && (
+            <motion.div
+              key="matchgame"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <div className={`p-6 rounded-2xl ${
+                theme === 'dark' 
+                  ? 'bg-card border border-border' 
+                  : 'bg-white shadow-lg'
+              }`}>
+                <MatchGame 
+                  pairs={content.matchGame}
+                  onComplete={handleMatchGameComplete}
+                  theme={theme}
+                />
+              </div>
+              
+              <Button
+                variant="outline"
+                onClick={() => setStage('quiz')}
+                className="w-full"
+              >
+                跳過配對遊戲
               </Button>
             </motion.div>
           )}
@@ -948,17 +1390,21 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
               exit={{ opacity: 0, y: -20 }}
               className="space-y-6"
             >
-              <div className={`text-center mb-4 ${
-                theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'
-              }`}>
-                題目 {currentQuestionIndex + 1} / {totalQuestions}
+              <div className="flex items-center justify-between mb-4">
+                <div className={`${theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'}`}>
+                  題目 {currentQuestionIndex + 1} / {totalQuestions}
+                </div>
+                <StreakFire streak={streak} />
               </div>
 
-              <div className={`p-6 rounded-2xl ${
-                theme === 'dark' 
-                  ? 'bg-card border border-border' 
-                  : 'bg-white shadow-lg'
-              }`}>
+              <motion.div 
+                className={`p-6 rounded-2xl ${
+                  theme === 'dark' 
+                    ? 'bg-card border border-border' 
+                    : 'bg-white shadow-lg'
+                }`}
+                layout
+              >
                 <h2 className={`text-xl font-bold mb-6 ${
                   theme === 'dark' ? 'text-foreground' : 'text-gray-900'
                 }`}>
@@ -979,9 +1425,9 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
                         className={`w-full p-4 rounded-xl text-left transition-all ${
                           showResult
                             ? isCorrect
-                              ? 'bg-green-500/20 border-green-500 text-green-500'
+                              ? 'bg-green-500/20 border-green-500 text-green-600 dark:text-green-400'
                               : isSelected
-                                ? 'bg-red-500/20 border-red-500 text-red-500'
+                                ? 'bg-red-500/20 border-red-500 text-red-600 dark:text-red-400'
                                 : theme === 'dark'
                                   ? 'bg-muted/50 border-border text-muted-foreground'
                                   : 'bg-gray-100 border-gray-200 text-gray-400'
@@ -995,17 +1441,27 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
                         } border-2`}
                         whileHover={selectedAnswer === null ? { scale: 1.02 } : {}}
                         whileTap={selectedAnswer === null ? { scale: 0.98 } : {}}
+                        animate={
+                          showResult && isCorrect 
+                            ? { scale: [1, 1.05, 1] }
+                            : showResult && isSelected && !isCorrect
+                              ? { x: [0, -5, 5, -5, 5, 0] }
+                              : {}
+                        }
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                            showResult
-                              ? isCorrect
-                                ? 'bg-green-500 text-white'
-                                : isSelected
-                                  ? 'bg-red-500 text-white'
-                                  : theme === 'dark' ? 'bg-muted text-muted-foreground' : 'bg-gray-200 text-gray-500'
-                              : theme === 'dark' ? 'bg-muted text-foreground' : 'bg-gray-200 text-gray-700'
-                          }`}>
+                          <motion.div 
+                            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                              showResult
+                                ? isCorrect
+                                  ? 'bg-green-500 text-white'
+                                  : isSelected
+                                    ? 'bg-red-500 text-white'
+                                    : theme === 'dark' ? 'bg-muted text-muted-foreground' : 'bg-gray-200 text-gray-500'
+                                : theme === 'dark' ? 'bg-muted text-foreground' : 'bg-gray-200 text-gray-700'
+                            }`}
+                            animate={showResult && isCorrect ? { rotate: [0, 360] } : {}}
+                          >
                             {showResult && isCorrect ? (
                               <CheckCircle className="w-5 h-5" />
                             ) : showResult && isSelected ? (
@@ -1013,7 +1469,7 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
                             ) : (
                               String.fromCharCode(65 + index)
                             )}
-                          </div>
+                          </motion.div>
                           <span className={showResult && !isCorrect && !isSelected ? 'opacity-50' : ''}>
                             {option}
                           </span>
@@ -1032,14 +1488,19 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
                       exit={{ opacity: 0, height: 0 }}
                       className={`mt-6 p-4 rounded-xl ${
                         theme === 'dark' 
-                          ? 'bg-muted/50 border border-border' 
+                          ? 'bg-primary/10 border border-primary/30' 
                           : 'bg-amber-50 border border-amber-200'
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <Sparkles className={`w-5 h-5 shrink-0 mt-0.5 ${
-                          theme === 'dark' ? 'text-primary' : 'text-amber-600'
-                        }`} />
+                        <motion.div
+                          animate={{ rotate: [0, 15, -15, 0] }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          <Sparkles className={`w-5 h-5 shrink-0 mt-0.5 ${
+                            theme === 'dark' ? 'text-primary' : 'text-amber-600'
+                          }`} />
+                        </motion.div>
                         <p className={theme === 'dark' ? 'text-foreground' : 'text-gray-700'}>
                           {currentQuestion.explanation}
                         </p>
@@ -1047,16 +1508,21 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
 
               {showExplanation && (
-                <Button
-                  onClick={handleNextQuestion}
-                  className="w-full h-12 text-lg gap-2 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90"
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                 >
-                  {currentQuestionIndex < totalQuestions - 1 ? '下一題' : '查看結果'}
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
+                  <Button
+                    onClick={handleNextQuestion}
+                    className="w-full h-14 text-lg gap-2 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90 rounded-xl shadow-lg"
+                  >
+                    {currentQuestionIndex < totalQuestions - 1 ? '下一題' : '查看結果'}
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
+                </motion.div>
               )}
             </motion.div>
           )}
@@ -1070,80 +1536,129 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
               className="space-y-6 text-center"
             >
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: 'spring' }}
-                className={`inline-flex items-center justify-center w-24 h-24 rounded-full ${
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+                className={`inline-flex items-center justify-center w-28 h-28 rounded-full ${
                   correctAnswers === totalQuestions
-                    ? 'bg-gradient-to-br from-green-400 to-green-600'
+                    ? 'bg-gradient-to-br from-green-400 to-emerald-600'
                     : correctAnswers >= totalQuestions / 2
                       ? 'bg-gradient-to-br from-primary to-amber-600'
                       : 'bg-gradient-to-br from-orange-400 to-red-500'
-                } text-white shadow-xl`}
+                } text-white shadow-2xl`}
               >
-                <Trophy className="w-12 h-12" />
+                <Trophy className="w-14 h-14" />
               </motion.div>
 
-              <div>
-                <h2 className={`text-2xl font-bold mb-2 ${
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <h2 className={`text-3xl font-bold mb-2 ${
                   theme === 'dark' ? 'text-foreground' : 'text-gray-900'
                 }`}>
                   {correctAnswers === totalQuestions 
-                    ? '完美！全部答對！' 
+                    ? '🎉 完美通關！' 
                     : correctAnswers >= totalQuestions / 2
-                      ? '做得很好！'
-                      : '繼續加油！'}
+                      ? '👏 表現優秀！'
+                      : '💪 繼續加油！'}
                 </h2>
                 <p className={`text-xl ${
                   theme === 'dark' ? 'text-muted-foreground' : 'text-gray-600'
                 }`}>
                   答對 {correctAnswers} / {totalQuestions} 題
                 </p>
-              </div>
+              </motion.div>
 
-              <div className={`p-6 rounded-2xl ${
-                theme === 'dark' 
-                  ? 'bg-card border border-border' 
-                  : 'bg-white shadow-lg'
-              }`}>
+              {/* 成就展示 */}
+              {unlockedAchievements.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className={`p-4 rounded-xl ${
+                    theme === 'dark' ? 'bg-card border border-border' : 'bg-white shadow-lg'
+                  }`}
+                >
+                  <h3 className={`text-sm font-medium mb-3 ${
+                    theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'
+                  }`}>
+                    🏆 獲得成就
+                  </h3>
+                  <div className="flex justify-center gap-3 flex-wrap">
+                    {unlockedAchievements.map((achievement) => (
+                      <motion.div
+                        key={achievement.id}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-full bg-gradient-to-r ${achievement.color} text-white text-sm`}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        {achievement.icon}
+                        {achievement.title}
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              <motion.div 
+                className={`p-6 rounded-2xl ${
+                  theme === 'dark' 
+                    ? 'bg-card border border-border' 
+                    : 'bg-white shadow-lg'
+                }`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
                 <div className="flex justify-center gap-2 mb-4">
                   {answers.map((correct, idx) => (
-                    <div
+                    <motion.div
                       key={idx}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.7 + idx * 0.1 }}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
                         correct 
                           ? 'bg-green-500/20 text-green-500' 
                           : 'bg-red-500/20 text-red-500'
                       }`}
                     >
-                      {correct ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                    </div>
+                      {correct ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                    </motion.div>
                   ))}
                 </div>
                 <p className={`text-lg ${
                   theme === 'dark' ? 'text-foreground' : 'text-gray-700'
                 }`}>
-                  得分：<span className="font-bold text-2xl text-primary">{Math.round((correctAnswers / totalQuestions) * 100)}</span> 分
+                  得分：<span className="font-bold text-3xl text-primary">{Math.round((correctAnswers / totalQuestions) * 100)}</span> 分
                 </p>
-              </div>
+              </motion.div>
 
-              <div className="flex gap-3">
+              <motion.div 
+                className="flex gap-3"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+              >
                 <Button
                   variant="outline"
                   onClick={handleRetry}
-                  className="flex-1 h-12 gap-2"
+                  className="flex-1 h-14 gap-2 rounded-xl"
                 >
-                  <RefreshCw className="w-4 h-4" />
-                  重新學習
+                  <RefreshCw className="w-5 h-5" />
+                  重新挑戰
                 </Button>
                 <Button
                   onClick={handleComplete}
-                  className="flex-1 h-12 gap-2 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90"
+                  className="flex-1 h-14 gap-2 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90 rounded-xl shadow-lg"
                 >
                   完成課程
-                  <CheckCircle className="w-4 h-4" />
+                  <CheckCircle className="w-5 h-5" />
                 </Button>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

@@ -24,8 +24,8 @@ import { generatePDF, type CoverPageData, type ReportData } from "@/lib/pdfGener
 import { toast } from "sonner";
 import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
 import { useGuestMode } from "@/hooks/useGuestMode";
-import { usePremiumStatus, PLAN_NAMES } from "@/hooks/usePremiumStatus";
-import { useEntitlement } from "@/hooks/useEntitlement";
+import { useMembershipStatus, getMembershipLabel } from "@/hooks/useMembershipStatus";
+import { MembershipIndicator } from "@/components/PremiumGate";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import logoSishi from "@/assets/logo-sishi.png";
@@ -99,8 +99,7 @@ const Index = () => {
   const [activeSection, setActiveSection] = useState('summary');
   const [shenshaRuleset, setShenshaRuleset] = useState<'trad' | 'legion'>('trad');
   const [isAiConsultOpen, setIsAiConsultOpen] = useState(false);
-  const { isPremium, tier, loading: premiumLoading } = usePremiumStatus(user?.id);
-  const { hasAccess: hasCentralAccess, loading: entitlementLoading } = useEntitlement('bazi-premium');
+  const { hasAccess, source: membershipSource, tier, loading: membershipLoading } = useMembershipStatus('bazi-premium');
   const { isAdmin } = useAdminStatus(user?.id);
   // 升級處理函數
   const handleUpgrade = () => {
@@ -446,12 +445,9 @@ const Index = () => {
                 </Button>
               )}
               {/* 訂閱狀態顯示 */}
-              {user && !premiumLoading && !entitlementLoading && (
-                hasCentralAccess || isPremium ? (
-                  <div className="flex items-center gap-2 text-sm bg-gradient-to-r from-amber-500/20 to-amber-600/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/30">
-                    <Crown className="h-4 w-4" />
-                    <span>{isPremium ? PLAN_NAMES[tier] : '中央會員'}</span>
-                  </div>
+              {user && !membershipLoading && (
+                hasAccess ? (
+                  <MembershipIndicator source={membershipSource} tier={tier} />
                 ) : (
                   <Button
                     onClick={handleUpgrade}
@@ -661,14 +657,14 @@ const Index = () => {
 
               {/* 四時軍團故事區（兵法為重）*/}
               <section ref={sectionRefs.legion} className="animate-fade-in scroll-mt-36">
-                <LegionCards baziResult={baziResult} shenshaRuleset={shenshaRuleset} isPremium={isPremium} onUpgrade={handleUpgrade} />
+                <LegionCards baziResult={baziResult} shenshaRuleset={shenshaRuleset} isPremium={hasAccess} onUpgrade={handleUpgrade} />
               </section>
 
               {/* ===== 詳細分析區開始（收費內容）===== */}
               
               {/* 十神關係分析區 */}
               <section ref={sectionRefs.tenGods} className="animate-fade-in scroll-mt-36">
-                <PremiumGate isPremium={isPremium} title="十神深度分析" description="升級收費版解鎖完整十神關係解讀" onUpgrade={handleUpgrade}>
+                <PremiumGate isPremium={hasAccess} title="十神深度分析" description="升級收費版解鎖完整十神關係解讀" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                   <TenGodsAnalysis baziResult={baziResult} />
                 </PremiumGate>
               </section>
@@ -676,7 +672,7 @@ const Index = () => {
               {/* 神煞統計分析區 */}
               {baziResult.shensha && baziResult.shensha.length > 0 && (
                 <section ref={sectionRefs.shensha} className="animate-fade-in scroll-mt-36">
-                  <PremiumGate isPremium={isPremium} title="神煞統計分析" description="升級收費版查看完整神煞統計與解讀" onUpgrade={handleUpgrade}>
+                  <PremiumGate isPremium={hasAccess} title="神煞統計分析" description="升級收費版查看完整神煞統計與解讀" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                     <ShenshaStats shenshaList={baziResult.shensha.filter((s): s is ShenshaMatch => typeof s === 'object' && 'evidence' in s)} />
                   </PremiumGate>
                 </section>
@@ -684,21 +680,21 @@ const Index = () => {
 
               {/* 性格深度分析區 */}
               <section ref={sectionRefs.personality} className="animate-fade-in scroll-mt-36">
-                <PremiumGate isPremium={isPremium} title="性格深度剖析" description="升級收費版獲取完整性格分析報告" onUpgrade={handleUpgrade}>
+                <PremiumGate isPremium={hasAccess} title="性格深度剖析" description="升級收費版獲取完整性格分析報告" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                   <PersonalityAnalysis baziResult={baziResult} />
                 </PremiumGate>
               </section>
 
               {/* 納音五行分析區 */}
               <section className="animate-fade-in scroll-mt-36">
-                <PremiumGate isPremium={isPremium} title="納音五行詳解" description="升級收費版了解納音深層含義" onUpgrade={handleUpgrade}>
+                <PremiumGate isPremium={hasAccess} title="納音五行詳解" description="升級收費版了解納音深層含義" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                   <NayinAnalysis nayin={baziResult.nayin} />
                 </PremiumGate>
               </section>
 
               {/* 五行陰陽分析區 */}
               <section ref={sectionRefs.analysis} className="animate-fade-in scroll-mt-36">
-                <PremiumGate isPremium={isPremium} title="五行陰陽圖表" description="升級收費版查看完整五行平衡分析" onUpgrade={handleUpgrade}>
+                <PremiumGate isPremium={hasAccess} title="五行陰陽圖表" description="升級收費版查看完整五行平衡分析" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                   <AnalysisCharts baziResult={baziResult} />
                 </PremiumGate>
               </section>

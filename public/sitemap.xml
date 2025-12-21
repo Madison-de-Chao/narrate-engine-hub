@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- 首頁 - 最高優先級 -->
+  <url>
+    <loc>https://hongling-bazi.lovable.app/</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- 登入/註冊頁 -->
+  <url>
+    <loc>https://hongling-bazi.lovable.app/auth</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- 訂閱頁 -->
+  <url>
+    <loc>https://hongling-bazi.lovable.app/subscribe</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- 測試頁 -->
+  <url>
+    <loc>https://hongling-bazi.lovable.app/test</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <!-- 八字學院 (Premium) -->
+  <url>
+    <loc>https://hongling-bazi.lovable.app/academy</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>

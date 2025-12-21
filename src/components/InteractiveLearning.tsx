@@ -22,37 +22,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-
-interface QuizQuestion {
-  id: string;
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
-}
-
-interface MatchPair {
-  id: string;
-  term: string;
-  definition: string;
-}
-
-interface FillBlank {
-  id: string;
-  sentence: string;
-  blanks: string[];
-  options: string[];
-}
-
-interface LessonContent {
-  id: string;
-  title: string;
-  introduction: string;
-  keyPoints: string[];
-  quiz: QuizQuestion[];
-  matchGame?: MatchPair[];
-  fillBlanks?: FillBlank[];
-}
+import { LESSON_CONTENT, type QuizQuestion, type MatchPair, type FillBlank, type LessonContent } from '@/data/academyLessons';
 
 interface InteractiveLearningProps {
   zoneId: string;

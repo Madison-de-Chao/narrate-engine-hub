@@ -75,7 +75,6 @@ serve(async (req) => {
       method: 'GET',
       headers: {
         'X-API-Key': centralServiceRoleKey,
-        'Authorization': `Bearer ${centralServiceRoleKey}`,
       },
     });
 

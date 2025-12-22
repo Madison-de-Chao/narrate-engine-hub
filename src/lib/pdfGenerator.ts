@@ -1053,12 +1053,13 @@ export const generatePDF = async (
   // 創建報告 HTML，傳入選項
   const container = createReportContainer(reportData, coverData, options);
   
-  // 確保容器是可見的且有尺寸
-  container.style.visibility = 'hidden';
+  // 將容器放到螢幕外（保持可渲染，避免輸出全黑）
+  container.setAttribute('data-pdf-container', 'true');
   container.style.position = 'absolute';
-  container.style.left = '0';
+  container.style.left = '-9999px';
   container.style.top = '0';
-  container.style.zIndex = '-9999';
+  container.style.zIndex = '-1';
+  container.style.visibility = 'visible';
   
   // 等待字體和圖片加載 - 增加等待時間
   await new Promise(resolve => setTimeout(resolve, 1000));
@@ -1119,11 +1120,13 @@ export const generatePDF = async (
           return false;
         },
         onclone: (clonedDoc) => {
-          // 確保克隆的文檔中的元素都是可見的
-          const clonedContainer = clonedDoc.body.querySelector('div');
+          // 確保克隆的文檔中的容器是可渲染的
+          const clonedContainer = clonedDoc.body.querySelector('[data-pdf-container="true"]') as HTMLElement | null;
           if (clonedContainer) {
             clonedContainer.style.visibility = 'visible';
-            clonedContainer.style.position = 'static';
+            clonedContainer.style.position = 'absolute';
+            clonedContainer.style.left = '0';
+            clonedContainer.style.top = '0';
           }
         }
       });

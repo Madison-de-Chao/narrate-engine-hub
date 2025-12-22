@@ -18,10 +18,12 @@ export type Database = {
         Row: {
           api_key: string
           created_at: string
+          default_template_id: string | null
           id: string
           is_active: boolean
           last_used_at: string | null
           name: string
+          plan_id: string | null
           requests_count: number
           updated_at: string
           user_id: string
@@ -29,10 +31,12 @@ export type Database = {
         Insert: {
           api_key: string
           created_at?: string
+          default_template_id?: string | null
           id?: string
           is_active?: boolean
           last_used_at?: string | null
           name: string
+          plan_id?: string | null
           requests_count?: number
           updated_at?: string
           user_id: string
@@ -40,13 +44,63 @@ export type Database = {
         Update: {
           api_key?: string
           created_at?: string
+          default_template_id?: string | null
           id?: string
           is_active?: boolean
           last_used_at?: string | null
           name?: string
+          plan_id?: string | null
           requests_count?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_default_template_id_fkey"
+            columns: ["default_template_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_keys_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "api_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_plans: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          features: Json
+          id: string
+          is_active: boolean | null
+          monthly_quota: number | null
+          name: string
+          price_per_request: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          monthly_quota?: number | null
+          name: string
+          price_per_request?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          monthly_quota?: number | null
+          name?: string
+          price_per_request?: number | null
         }
         Relationships: []
       }
@@ -243,6 +297,51 @@ export type Database = {
         }
         Relationships: []
       }
+      prompt_templates: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_default: boolean | null
+          is_public: boolean | null
+          name: string
+          system_prompt: string
+          template_type: Database["public"]["Enums"]["template_type"]
+          updated_at: string | null
+          user_id: string | null
+          user_prompt_template: string | null
+          variables: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          is_public?: boolean | null
+          name: string
+          system_prompt: string
+          template_type: Database["public"]["Enums"]["template_type"]
+          updated_at?: string | null
+          user_id?: string | null
+          user_prompt_template?: string | null
+          variables?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          is_public?: boolean | null
+          name?: string
+          system_prompt?: string
+          template_type?: Database["public"]["Enums"]["template_type"]
+          updated_at?: string | null
+          user_id?: string | null
+          user_prompt_template?: string | null
+          variables?: Json | null
+        }
+        Relationships: []
+      }
       solar_terms: {
         Row: {
           created_at: string | null
@@ -347,6 +446,11 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      template_type:
+        | "legion_story"
+        | "fortune_consult"
+        | "personality"
+        | "custom"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -475,6 +579,12 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      template_type: [
+        "legion_story",
+        "fortune_consult",
+        "personality",
+        "custom",
+      ],
     },
   },
 } as const

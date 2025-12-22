@@ -13,6 +13,7 @@ import {
 import { calculateBazi } from "@/lib/baziCalculator";
 import { cn } from "@/lib/utils";
 import { BaziTestRunner } from "@/components/BaziTestRunner";
+import { BoundaryTestRunner } from "@/components/BoundaryTestRunner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type PillarKey = "year" | "month" | "day" | "hour";
@@ -285,11 +286,16 @@ export default function BaziTest() {
             <p className="text-muted-foreground">驗證計算準確性與邊界處理</p>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="api" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="api">API 邊界測試（推薦）</TabsTrigger>
+            <Tabs defaultValue="boundary" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsTrigger value="boundary">Strict Mode 邊界測試</TabsTrigger>
+                <TabsTrigger value="api">API 邊界測試</TabsTrigger>
                 <TabsTrigger value="local">本地計算測試</TabsTrigger>
               </TabsList>
+              
+              <TabsContent value="boundary">
+                <BoundaryTestRunner />
+              </TabsContent>
               
               <TabsContent value="api">
                 <BaziTestRunner />

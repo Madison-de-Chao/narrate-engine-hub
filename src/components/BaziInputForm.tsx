@@ -588,18 +588,34 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
           {/* 出生時辰 */}
           <div className="space-y-2">
             <Label htmlFor="hour" className="text-foreground">出生時辰</Label>
-            <Select value={formData.hour} onValueChange={(value) => setFormData({ ...formData, hour: value })}>
-              <SelectTrigger className="bg-input border-border text-foreground">
-                <SelectValue placeholder="請選擇時辰" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover border-border max-h-[300px] z-[9999]">
-                {HOUR_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={formData.hour} onValueChange={(value) => setFormData({ ...formData, hour: value })}>
+                <SelectTrigger className="bg-input border-border text-foreground flex-1">
+                  <SelectValue placeholder="請選擇時辰" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border max-h-[300px] z-[9999]">
+                  {HOUR_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {usePreciseTime && (
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    placeholder="分"
+                    min="0"
+                    max="59"
+                    value={formData.minute}
+                    onChange={(e) => setFormData({ ...formData, minute: e.target.value })}
+                    className="w-20 bg-input border-border text-foreground"
+                  />
+                  <span className="text-muted-foreground text-sm">分</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 出生地點 */}
@@ -613,6 +629,135 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
               className="bg-input border-border text-foreground"
             />
           </div>
+
+          {/* 進階設定 Collapsible */}
+          <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Settings2 className="w-4 h-4" />
+                  <span>進階設定</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4 space-y-4 p-4 border border-border/50 rounded-lg bg-muted/20">
+              {/* 精確時間開關 */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <Label htmlFor="precise-time" className="text-foreground">精確時間輸入</Label>
+                </div>
+                <Switch
+                  id="precise-time"
+                  checked={usePreciseTime}
+                  onCheckedChange={setUsePreciseTime}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground -mt-2 ml-6">
+                啟用後可輸入精確的分鐘數，提高計算準確度
+              </p>
+
+              {/* 城市/經度選擇 */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  <Label className="text-foreground">出生城市經度</Label>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Select value={selectedCity} onValueChange={handleCitySelect}>
+                    <SelectTrigger className="bg-input border-border text-foreground">
+                      <SelectValue placeholder="選擇城市" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border z-[9999]">
+                      {Object.entries(CITY_LONGITUDES).map(([city, data]) => (
+                        <SelectItem key={city} value={city}>
+                          {data.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    step="0.0001"
+                    placeholder="自訂經度"
+                    value={longitude}
+                    onChange={(e) => {
+                      setLongitude(e.target.value);
+                      setSelectedCity("");
+                    }}
+                    className="bg-input border-border text-foreground"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  東經為正數，西經為負數。用於計算真太陽時。
+                </p>
+              </div>
+
+              {/* 真太陽時模式 */}
+              <div className="space-y-2">
+                <Label className="text-foreground">太陽時模式</Label>
+                <RadioGroup
+                  className="flex flex-col gap-2"
+                  value={solarTimeMode}
+                  onValueChange={(value) => setSolarTimeMode(value as SolarTimeMode)}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem id="solar-none" value="NONE" />
+                    <Label htmlFor="solar-none" className="text-foreground cursor-pointer flex-1">
+                      <span className="font-medium">標準時區</span>
+                      <span className="text-xs text-muted-foreground ml-2">使用當地標準時間</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem id="solar-lmt" value="LMT" disabled={!longitude} />
+                    <Label htmlFor="solar-lmt" className={`cursor-pointer flex-1 ${!longitude ? 'opacity-50' : ''}`}>
+                      <span className="font-medium">平太陽時 (LMT)</span>
+                      <span className="text-xs text-muted-foreground ml-2">僅經度補償</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem id="solar-tst" value="TST" disabled={!longitude} />
+                    <Label htmlFor="solar-tst" className={`cursor-pointer flex-1 ${!longitude ? 'opacity-50' : ''}`}>
+                      <span className="font-medium">真太陽時 (TST)</span>
+                      <span className="text-xs text-muted-foreground ml-2">經度 + 均時差補償（專業）</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+                {!longitude && solarTimeMode !== "NONE" && (
+                  <p className="text-xs text-amber-500">⚠️ 請先選擇城市或輸入經度</p>
+                )}
+              </div>
+
+              {/* 子時模式 */}
+              <div className="space-y-2">
+                <Label className="text-foreground">子時換日規則</Label>
+                <RadioGroup
+                  className="flex gap-4"
+                  value={ziMode}
+                  onValueChange={(value) => setZiMode(value as ZiMode)}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem id="zi-early" value="EARLY" />
+                    <Label htmlFor="zi-early" className="text-foreground cursor-pointer">
+                      <span className="font-medium">早子時</span>
+                      <span className="text-xs text-muted-foreground ml-1">(23:00換日)</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem id="zi-late" value="LATE" />
+                    <Label htmlFor="zi-late" className="text-foreground cursor-pointer">
+                      <span className="font-medium">晚子時</span>
+                      <span className="text-xs text-muted-foreground ml-1">(00:00換日)</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+                <p className="text-xs text-muted-foreground">
+                  傳統八字多用「早子時」，23:00 起算入次日
+                </p>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
 
           {/* 提交按鈕 */}
           <Button 

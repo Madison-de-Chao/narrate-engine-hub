@@ -20,7 +20,8 @@ import { AiFortuneConsult } from "@/components/AiFortuneConsult";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, BadgeCheck, Shield, Share2, MessageCircle, Facebook } from "lucide-react";
-import { generatePDF, type CoverPageData, type ReportData } from "@/lib/pdfGenerator";
+import { generatePDF, type CoverPageData, type ReportData, type PdfOptions } from "@/lib/pdfGenerator";
+import { PdfOptionsDialog, type PdfOptions as DialogPdfOptions } from "@/components/PdfOptionsDialog";
 import { toast } from "sonner";
 import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
 import { useGuestMode } from "@/hooks/useGuestMode";
@@ -99,6 +100,7 @@ const Index = () => {
   const [activeSection, setActiveSection] = useState('summary');
   const [shenshaRuleset, setShenshaRuleset] = useState<'trad' | 'legion'>('trad');
   const [isAiConsultOpen, setIsAiConsultOpen] = useState(false);
+  const [isPdfOptionsOpen, setIsPdfOptionsOpen] = useState(false);
   const { hasAccess, source: membershipSource, tier, loading: membershipLoading } = useMembershipStatus('bazi-premium');
   const { isAdmin } = useAdminStatus(user?.id);
   // 升級處理函數
@@ -353,9 +355,16 @@ const Index = () => {
     }
   };
 
-  const handleDownloadReport = async () => {
+  const handleDownloadReport = async (options?: DialogPdfOptions) => {
     if (!baziResult) return;
     
+    // 如果沒有提供選項，開啟選項對話框
+    if (!options) {
+      setIsPdfOptionsOpen(true);
+      return;
+    }
+    
+    setIsPdfOptionsOpen(false);
     setIsDownloading(true);
     try {
       const fileName = `${baziResult.name}_八字命盤報告_${new Date().toLocaleDateString("zh-TW").replace(/\//g, "")}.pdf`;
@@ -405,7 +414,18 @@ const Index = () => {
         shensha: shenshaForPdf,
       };
       
-      await generatePDF("bazi-report-content", fileName, coverData, reportData);
+      // 轉換選項格式
+      const pdfOptions: PdfOptions = {
+        includeCover: options.includeCover,
+        includePillars: options.includePillars,
+        includeShensha: options.includeShensha,
+        includeYearStory: options.includeYearStory,
+        includeMonthStory: options.includeMonthStory,
+        includeDayStory: options.includeDayStory,
+        includeHourStory: options.includeHourStory,
+      };
+      
+      await generatePDF("bazi-report-content", fileName, coverData, reportData, pdfOptions);
       toast.success(`報告下載成功！`);
     } catch (error) {
       console.error("下載報告失敗:", error);
@@ -554,7 +574,7 @@ const Index = () => {
             <section className="animate-fade-in space-y-4">
               <div className="flex flex-wrap justify-center gap-4">
                 <Button
-                  onClick={handleDownloadReport}
+                  onClick={() => handleDownloadReport()}
                   disabled={isDownloading}
                   className="bg-gradient-to-r from-primary via-accent to-secondary hover:opacity-90 text-primary-foreground font-bold text-lg px-8 py-6 shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.7)] transition-all"
                 >
@@ -580,6 +600,20 @@ const Index = () => {
                   wuxing={baziResult.wuxing}
                 />
               </div>
+              
+              {/* PDF 選項對話框 */}
+              <PdfOptionsDialog
+                open={isPdfOptionsOpen}
+                onOpenChange={setIsPdfOptionsOpen}
+                onGenerate={(options) => handleDownloadReport(options)}
+                isDownloading={isDownloading}
+                hasLegionStories={{
+                  year: !!baziResult.legionStories?.year,
+                  month: !!baziResult.legionStories?.month,
+                  day: !!baziResult.legionStories?.day,
+                  hour: !!baziResult.legionStories?.hour,
+                }}
+              />
               
               {/* 快速社群分享 */}
               <div className="flex flex-wrap justify-center gap-3">

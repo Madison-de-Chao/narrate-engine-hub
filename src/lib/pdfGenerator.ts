@@ -23,6 +23,16 @@ export interface ShenshaItem {
   rarity?: string;
 }
 
+export interface PdfOptions {
+  includeCover: boolean;
+  includePillars: boolean;
+  includeShensha: boolean;
+  includeYearStory: boolean;
+  includeMonthStory: boolean;
+  includeDayStory: boolean;
+  includeHourStory: boolean;
+}
+
 export interface ReportData {
   name: string;
   gender: string;
@@ -71,8 +81,19 @@ export interface ReportData {
   shensha?: ShenshaItem[];
 }
 
+// 默認選項
+const defaultPdfOptions: PdfOptions = {
+  includeCover: true,
+  includePillars: true,
+  includeShensha: true,
+  includeYearStory: true,
+  includeMonthStory: true,
+  includeDayStory: true,
+  includeHourStory: true,
+};
+
 // 創建報告 HTML 容器
-const createReportContainer = (reportData: ReportData, coverData?: CoverPageData): HTMLDivElement => {
+const createReportContainer = (reportData: ReportData, coverData?: CoverPageData, options: PdfOptions = defaultPdfOptions): HTMLDivElement => {
   const container = document.createElement('div');
   container.style.cssText = `
     width: 794px;
@@ -658,24 +679,45 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
     </div>
   `;
 
-  // 神煞分析頁
-  const shenshaPages = reportData.shensha && reportData.shensha.length > 0 ? 
+  // 神煞分析頁 - 根據選項決定是否包含
+  const shenshaPages = (options.includeShensha && reportData.shensha && reportData.shensha.length > 0) ? 
     createShenshaPages(reportData.shensha, dateStr) : '';
 
-  // 軍團故事頁
+  // 計算頁數
+  let pageNum = 2; // 封面是第1頁，四柱是第2頁
+  if (options.includePillars) {
+    pageNum = 2;
+  }
+  const shenshaPageCount = options.includeShensha && reportData.shensha ? Math.ceil(reportData.shensha.length / 6) : 0;
+
+  // 軍團故事頁 - 根據選項決定是否包含每個故事
+  const storyTypeOptions: Record<'year' | 'month' | 'day' | 'hour', boolean> = {
+    year: options.includeYearStory,
+    month: options.includeMonthStory,
+    day: options.includeDayStory,
+    hour: options.includeHourStory,
+  };
+  
   const storyPages = (['year', 'month', 'day', 'hour'] as const)
-    .filter(type => reportData.legionStories?.[type])
+    .filter(type => storyTypeOptions[type] && reportData.legionStories?.[type])
     .map((type, idx) => createStoryPage(
       type,
       reportData.legionStories![type]!,
       reportData.pillars[type],
       reportData.nayin[type],
       dateStr,
-      3 + (reportData.shensha ? Math.ceil(reportData.shensha.length / 6) : 0) + idx
+      (options.includePillars ? 2 : 1) + shenshaPageCount + idx + 1
     ))
     .join('');
 
-  container.innerHTML = coverPage + pillarsPage + shenshaPages + storyPages;
+  // 組合頁面 - 根據選項決定包含哪些
+  let content = coverPage;
+  if (options.includePillars) {
+    content += pillarsPage;
+  }
+  content += shenshaPages + storyPages;
+
+  container.innerHTML = content;
   return container;
 };
 
@@ -996,14 +1038,20 @@ const createStoryPage = (
 };
 
 // 主要導出函數
-export const generatePDF = async (_elementId: string, fileName: string, coverData?: CoverPageData, reportData?: ReportData) => {
+export const generatePDF = async (
+  _elementId: string, 
+  fileName: string, 
+  coverData?: CoverPageData, 
+  reportData?: ReportData,
+  options: PdfOptions = defaultPdfOptions
+) => {
   if (!reportData) {
     console.error('No report data provided');
     throw new Error('No report data provided');
   }
 
-  // 創建報告 HTML
-  const container = createReportContainer(reportData, coverData);
+  // 創建報告 HTML，傳入選項
+  const container = createReportContainer(reportData, coverData, options);
   
   // 確保容器是可見的且有尺寸
   container.style.visibility = 'hidden';

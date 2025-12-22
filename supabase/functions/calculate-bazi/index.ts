@@ -713,6 +713,22 @@ function calculateDayPillar(
   };
 }
 
+// 獲取時支索引 - 與本地引擎 engine.ts 保持一致
+function getHourBranchIndex(hour: number): number {
+  if (hour >= 23 || hour < 1) return 0;  // 子
+  if (hour >= 1 && hour < 3) return 1;   // 丑
+  if (hour >= 3 && hour < 5) return 2;   // 寅
+  if (hour >= 5 && hour < 7) return 3;   // 卯
+  if (hour >= 7 && hour < 9) return 4;   // 辰
+  if (hour >= 9 && hour < 11) return 5;  // 巳
+  if (hour >= 11 && hour < 13) return 6; // 午
+  if (hour >= 13 && hour < 15) return 7; // 未
+  if (hour >= 15 && hour < 17) return 8; // 申
+  if (hour >= 17 && hour < 19) return 9; // 酉
+  if (hour >= 19 && hour < 21) return 10; // 戌
+  return 11; // 亥 (21-23)
+}
+
 // 計算時柱（五鼠遁時）
 function calculateHourPillar(dayStem: string, hour: number): { stem: string, branch: string } {
   const stemStartMap: { [key: string]: number } = {
@@ -723,14 +739,14 @@ function calculateHourPillar(dayStem: string, hour: number): { stem: string, bra
     "戊": 8, "癸": 8   // 壬子開始
   };
   
-  // 使用本地時刻的時支換算（0點為子初）
-  const hourBranch = Math.floor((hour + 1) / 2) % 12;
+  // 使用精確的時支判定（與本地引擎一致）
+  const branchIndex = getHourBranchIndex(hour);
   const startStem = stemStartMap[dayStem] || 0;
-  const stemIndex = (startStem + hourBranch) % 10;
+  const stemIndex = (startStem + branchIndex) % 10;
   
   return {
     stem: TIANGAN[stemIndex],
-    branch: DIZHI[hourBranch]
+    branch: DIZHI[branchIndex]
   };
 }
 

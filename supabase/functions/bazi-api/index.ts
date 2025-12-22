@@ -1,9 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 /**
- * 八字計算公開 API
+ * 八字計算公開 API v2.0 - 完整版
  * 
- * 此 API 可供外部系統調用，無需認證
+ * 包含完整的十神和神煞計算邏輯（隱藏於後端）
  * 
  * POST /bazi-api
  * 
@@ -25,7 +25,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
  *     "wuxingScores": { 木, 火, 土, 金, 水 },
  *     "yinyangRatio": { yin, yang },
  *     "tenGods": { year, month, day, hour },
- *     "shensha": [...]
+ *     "shensha": [...],
+ *     "shenshaDetails": [...]  // 完整神煞資訊
  *   }
  * }
  */
@@ -39,6 +40,36 @@ const corsHeaders = {
 // ========== 天干地支資料 ==========
 const TIANGAN = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
 const DIZHI = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+
+// 天干五行陰陽屬性
+const STEM_PROPERTIES: Record<string, { element: string; yinyang: string }> = {
+  "甲": { element: "木", yinyang: "陽" },
+  "乙": { element: "木", yinyang: "陰" },
+  "丙": { element: "火", yinyang: "陽" },
+  "丁": { element: "火", yinyang: "陰" },
+  "戊": { element: "土", yinyang: "陽" },
+  "己": { element: "土", yinyang: "陰" },
+  "庚": { element: "金", yinyang: "陽" },
+  "辛": { element: "金", yinyang: "陰" },
+  "壬": { element: "水", yinyang: "陽" },
+  "癸": { element: "水", yinyang: "陰" }
+};
+
+// 地支五行陰陽屬性
+const BRANCH_PROPERTIES: Record<string, { element: string; yinyang: string }> = {
+  "子": { element: "水", yinyang: "陽" },
+  "丑": { element: "土", yinyang: "陰" },
+  "寅": { element: "木", yinyang: "陽" },
+  "卯": { element: "木", yinyang: "陰" },
+  "辰": { element: "土", yinyang: "陽" },
+  "巳": { element: "火", yinyang: "陰" },
+  "午": { element: "火", yinyang: "陽" },
+  "未": { element: "土", yinyang: "陰" },
+  "申": { element: "金", yinyang: "陽" },
+  "酉": { element: "金", yinyang: "陰" },
+  "戌": { element: "土", yinyang: "陽" },
+  "亥": { element: "水", yinyang: "陰" }
+};
 
 // 納音五行表
 const NAYIN: Record<string, string> = {
@@ -121,6 +152,462 @@ const SOLAR_TERMS_DATA: Record<string, Record<string, string>> = {
   "2050": { "小寒": "2050-01-05", "立春": "2050-02-04", "驚蟄": "2050-03-05", "清明": "2050-04-05", "立夏": "2050-05-05", "芒種": "2050-06-05", "小暑": "2050-07-07", "立秋": "2050-08-07", "白露": "2050-09-07", "寒露": "2050-10-08", "立冬": "2050-11-07", "大雪": "2050-12-07" },
 };
 
+// ========== 五行生克關係 ==========
+const ELEMENT_GENERATES: Record<string, string> = {
+  "木": "火", "火": "土", "土": "金", "金": "水", "水": "木"
+};
+
+const ELEMENT_CONTROLS: Record<string, string> = {
+  "木": "土", "土": "水", "水": "火", "火": "金", "金": "木"
+};
+
+// ========== 神煞規則定義（完整版） ==========
+interface ShenshaRule {
+  anchor: string;
+  anchorType?: string;
+  rule_ref: string;
+  table: Record<string, string | string[]> | string[];
+  matchTarget?: string;
+  notes?: string;
+}
+
+interface ShenshaRuleDefinition {
+  name: string;
+  enabled: boolean;
+  priority: number;
+  category: "吉神" | "凶煞" | "桃花" | "特殊";
+  rarity: "SSR" | "SR" | "R" | "N";
+  effect: string;
+  modernMeaning: string;
+  buff: string | null;
+  debuff: string | null;
+  rules: ShenshaRule[];
+}
+
+interface ShenshaMatch {
+  name: string;
+  category: string;
+  rarity: string;
+  priority: number;
+  effect: string;
+  modernMeaning: string;
+  buff: string | null;
+  debuff: string | null;
+  evidence: {
+    anchor_basis: string;
+    anchor_value: string;
+    why_matched: string;
+    rule_ref: string;
+    matched_pillar: string;
+    matched_value: string;
+  };
+}
+
+// 完整神煞規則庫
+const SHENSHA_RULES: ShenshaRuleDefinition[] = [
+  // 吉神
+  {
+    name: "天乙貴人",
+    enabled: true, priority: 10, category: "吉神", rarity: "SSR",
+    effect: "逢凶化吉，貴人扶持，化解災難",
+    modernMeaning: "關鍵時刻的重要人脈，權威人士的支持",
+    buff: "危機化貴人", debuff: null,
+    rules: [{
+      anchor: "dayStem",
+      rule_ref: "傳統對照-日干取貴人支",
+      table: {
+        "甲": ["丑", "未"], "乙": ["子", "申"], "丙": ["亥", "酉"], "丁": ["酉", "亥"],
+        "戊": ["丑", "未"], "己": ["子", "申"], "庚": ["丑", "未"], "辛": ["子", "申"],
+        "壬": ["亥", "酉"], "癸": ["酉", "亥"]
+      }
+    }]
+  },
+  {
+    name: "文昌貴人",
+    enabled: true, priority: 15, category: "吉神", rarity: "SR",
+    effect: "利於學業考試，文章才華出眾",
+    modernMeaning: "學習能力強，考試運佳，適合從事文字工作",
+    buff: "學業加成", debuff: null,
+    rules: [{
+      anchor: "dayStem",
+      rule_ref: "傳統對照-日干取文昌位",
+      table: {
+        "甲": ["巳"], "乙": ["午"], "丙": ["申"], "丁": ["酉"],
+        "戊": ["申"], "己": ["酉"], "庚": ["亥"], "辛": ["子"],
+        "壬": ["寅"], "癸": ["卯"]
+      }
+    }]
+  },
+  {
+    name: "太極貴人",
+    enabled: true, priority: 18, category: "吉神", rarity: "SR",
+    effect: "悟性高，有靈性，適合研究玄學",
+    modernMeaning: "直覺敏銳，適合哲學研究或靈性發展",
+    buff: "靈感增強", debuff: null,
+    rules: [{
+      anchor: "dayStem",
+      rule_ref: "傳統對照-日干取太極位",
+      table: {
+        "甲": ["子", "午"], "乙": ["子", "午"], "丙": ["卯", "酉"], "丁": ["卯", "酉"],
+        "戊": ["辰", "戌", "丑", "未"], "己": ["辰", "戌", "丑", "未"],
+        "庚": ["寅", "亥"], "辛": ["寅", "亥"], "壬": ["巳", "申"], "癸": ["巳", "申"]
+      }
+    }]
+  },
+  {
+    name: "天德貴人",
+    enabled: true, priority: 20, category: "吉神", rarity: "SR",
+    effect: "逢凶化吉，品德高尚",
+    modernMeaning: "品格端正，容易獲得他人尊重",
+    buff: "品德守護", debuff: null,
+    rules: [{
+      anchor: "monthBranch",
+      rule_ref: "傳統對照-月支取天德位",
+      table: {
+        "寅": ["丁"], "卯": ["申"], "辰": ["壬"], "巳": ["辛"],
+        "午": ["亥"], "未": ["甲"], "申": ["癸"], "酉": ["寅"],
+        "戌": ["丙"], "亥": ["乙"], "子": ["巳"], "丑": ["庚"]
+      },
+      matchTarget: "anyStemOrBranch"
+    }]
+  },
+  {
+    name: "月德貴人",
+    enabled: true, priority: 22, category: "吉神", rarity: "SR",
+    effect: "化解災厄，福德深厚",
+    modernMeaning: "有福報庇佑，災厄易化解",
+    buff: "福德護身", debuff: null,
+    rules: [{
+      anchor: "monthBranch",
+      rule_ref: "傳統對照-月支取月德位",
+      table: {
+        "寅": ["丙"], "午": ["丙"], "戌": ["丙"],
+        "申": ["壬"], "子": ["壬"], "辰": ["壬"],
+        "亥": ["甲"], "卯": ["甲"], "未": ["甲"],
+        "巳": ["庚"], "酉": ["庚"], "丑": ["庚"]
+      },
+      matchTarget: "anyStem"
+    }]
+  },
+  {
+    name: "華蓋",
+    enabled: true, priority: 25, category: "吉神", rarity: "SR",
+    effect: "才華橫溢，藝術天賦，但性格孤高",
+    modernMeaning: "有藝術天賦，適合創作，但需注意人際關係",
+    buff: "藝術天賦", debuff: "孤獨傾向",
+    rules: [{
+      anchor: "yearBranch",
+      rule_ref: "傳統對照-年支取華蓋位",
+      table: {
+        "寅": ["戌"], "午": ["戌"], "戌": ["戌"],
+        "申": ["辰"], "子": ["辰"], "辰": ["辰"],
+        "亥": ["未"], "卯": ["未"], "未": ["未"],
+        "巳": ["丑"], "酉": ["丑"], "丑": ["丑"]
+      }
+    }]
+  },
+  {
+    name: "學堂",
+    enabled: true, priority: 28, category: "吉神", rarity: "R",
+    effect: "利於學習，聰明好學",
+    modernMeaning: "學習運好，適合進修或研究",
+    buff: "學習加成", debuff: null,
+    rules: [{
+      anchor: "dayStem",
+      rule_ref: "傳統對照-日干取學堂位",
+      table: {
+        "甲": ["亥"], "乙": ["午"], "丙": ["寅"], "丁": ["酉"],
+        "戊": ["寅"], "己": ["酉"], "庚": ["巳"], "辛": ["子"],
+        "壬": ["申"], "癸": ["卯"]
+      }
+    }]
+  },
+  {
+    name: "金輿",
+    enabled: true, priority: 35, category: "吉神", rarity: "R",
+    effect: "有貴人相助，出行順利",
+    modernMeaning: "交通順利，有車馬之便",
+    buff: "出行順利", debuff: null,
+    rules: [{
+      anchor: "dayStem",
+      rule_ref: "傳統對照-日干取金輿位",
+      table: {
+        "甲": ["辰"], "乙": ["巳"], "丙": ["未"], "丁": ["申"],
+        "戊": ["未"], "己": ["申"], "庚": ["戌"], "辛": ["亥"],
+        "壬": ["丑"], "癸": ["寅"]
+      }
+    }]
+  },
+  // 凶煞
+  {
+    name: "羊刃",
+    enabled: true, priority: 40, category: "凶煞", rarity: "SR",
+    effect: "性格剛烈，容易衝動，需防意外",
+    modernMeaning: "性格果斷但需控制情緒，注意安全",
+    buff: "決斷力強", debuff: "意外風險",
+    rules: [{
+      anchor: "dayStem",
+      rule_ref: "傳統對照-日干取羊刃位",
+      table: {
+        "甲": ["卯"], "乙": ["辰"], "丙": ["午"], "丁": ["未"],
+        "戊": ["午"], "己": ["未"], "庚": ["酉"], "辛": ["戌"],
+        "壬": ["子"], "癸": ["丑"]
+      }
+    }]
+  },
+  {
+    name: "劫煞",
+    enabled: true, priority: 42, category: "凶煞", rarity: "R",
+    effect: "防小人暗害，財物損失",
+    modernMeaning: "注意財務安全，防範詐騙",
+    buff: null, debuff: "財物損失",
+    rules: [{
+      anchor: "yearBranch",
+      rule_ref: "傳統對照-年支取劫煞位",
+      table: {
+        "寅": ["巳"], "午": ["巳"], "戌": ["巳"],
+        "申": ["亥"], "子": ["亥"], "辰": ["亥"],
+        "亥": ["寅"], "卯": ["寅"], "未": ["寅"],
+        "巳": ["申"], "酉": ["申"], "丑": ["申"]
+      }
+    }]
+  },
+  {
+    name: "亡神",
+    enabled: true, priority: 44, category: "凶煞", rarity: "R",
+    effect: "精神不振，容易抑鬱",
+    modernMeaning: "注意心理健康，避免過度思慮",
+    buff: null, debuff: "精神困擾",
+    rules: [{
+      anchor: "yearBranch",
+      rule_ref: "傳統對照-年支取亡神位",
+      table: {
+        "寅": ["巳"], "午": ["巳"], "戌": ["巳"],
+        "申": ["亥"], "子": ["亥"], "辰": ["亥"],
+        "亥": ["寅"], "卯": ["寅"], "未": ["寅"],
+        "巳": ["申"], "酉": ["申"], "丑": ["申"]
+      }
+    }]
+  },
+  {
+    name: "災煞",
+    enabled: true, priority: 46, category: "凶煞", rarity: "R",
+    effect: "防災禍疾病",
+    modernMeaning: "注意健康，避免危險活動",
+    buff: null, debuff: "災禍風險",
+    rules: [{
+      anchor: "yearBranch",
+      rule_ref: "傳統對照-年支取災煞位",
+      table: {
+        "寅": ["子"], "午": ["子"], "戌": ["子"],
+        "申": ["午"], "子": ["午"], "辰": ["午"],
+        "亥": ["酉"], "卯": ["酉"], "未": ["酉"],
+        "巳": ["卯"], "酉": ["卯"], "丑": ["卯"]
+      }
+    }]
+  },
+  {
+    name: "白虎",
+    enabled: true, priority: 50, category: "凶煞", rarity: "R",
+    effect: "血光之災，意外傷害",
+    modernMeaning: "注意安全，避免衝突",
+    buff: null, debuff: "意外傷害",
+    rules: [{
+      anchor: "yearBranch",
+      rule_ref: "傳統對照-年支取白虎位",
+      table: {
+        "子": ["申"], "丑": ["酉"], "寅": ["戌"], "卯": ["亥"],
+        "辰": ["子"], "巳": ["丑"], "午": ["寅"], "未": ["卯"],
+        "申": ["辰"], "酉": ["巳"], "戌": ["午"], "亥": ["未"]
+      }
+    }]
+  },
+  {
+    name: "喪門",
+    enabled: true, priority: 52, category: "凶煞", rarity: "R",
+    effect: "孝服之事，親人不順",
+    modernMeaning: "注意家人健康，避免悲傷事件",
+    buff: null, debuff: "親人不順",
+    rules: [{
+      anchor: "yearBranch",
+      rule_ref: "傳統對照-年支取喪門位",
+      table: {
+        "子": ["寅"], "丑": ["卯"], "寅": ["辰"], "卯": ["巳"],
+        "辰": ["午"], "巳": ["未"], "午": ["申"], "未": ["酉"],
+        "申": ["戌"], "酉": ["亥"], "戌": ["子"], "亥": ["丑"]
+      }
+    }]
+  },
+  // 桃花類
+  {
+    name: "桃花",
+    enabled: true, priority: 30, category: "桃花", rarity: "SR",
+    effect: "異性緣分，感情機會，魅力吸引",
+    modernMeaning: "人緣好，異性緣佳，但需注意感情糾紛",
+    buff: "魅力加成", debuff: "情感糾葛",
+    rules: [{
+      anchor: "yearBranch",
+      rule_ref: "傳統對照-年支取桃花位",
+      table: {
+        "申": ["酉"], "子": ["酉"], "辰": ["酉"],
+        "寅": ["卯"], "午": ["卯"], "戌": ["卯"],
+        "巳": ["午"], "酉": ["午"], "丑": ["午"],
+        "亥": ["子"], "卯": ["子"], "未": ["子"]
+      }
+    }]
+  },
+  {
+    name: "紅鸞",
+    enabled: true, priority: 32, category: "桃花", rarity: "SR",
+    effect: "婚姻喜慶，戀愛機會",
+    modernMeaning: "感情運佳，適合談戀愛或結婚",
+    buff: "感情順利", debuff: null,
+    rules: [{
+      anchor: "yearBranch",
+      rule_ref: "傳統對照-年支取紅鸞位",
+      table: {
+        "子": ["卯"], "丑": ["寅"], "寅": ["丑"], "卯": ["子"],
+        "辰": ["亥"], "巳": ["戌"], "午": ["酉"], "未": ["申"],
+        "申": ["未"], "酉": ["午"], "戌": ["巳"], "亥": ["辰"]
+      }
+    }]
+  },
+  {
+    name: "天喜",
+    enabled: true, priority: 34, category: "桃花", rarity: "SR",
+    effect: "喜慶之事，添丁發財",
+    modernMeaning: "有喜慶事件，可能有新生命或好消息",
+    buff: "喜事臨門", debuff: null,
+    rules: [{
+      anchor: "yearBranch",
+      rule_ref: "傳統對照-年支取天喜位",
+      table: {
+        "子": ["酉"], "丑": ["申"], "寅": ["未"], "卯": ["午"],
+        "辰": ["巳"], "巳": ["辰"], "午": ["卯"], "未": ["寅"],
+        "申": ["丑"], "酉": ["子"], "戌": ["亥"], "亥": ["戌"]
+      }
+    }]
+  },
+  {
+    name: "咸池",
+    enabled: true, priority: 36, category: "桃花", rarity: "R",
+    effect: "異性緣強，但需防感情困擾",
+    modernMeaning: "魅力出眾，但需注意感情問題",
+    buff: "魅力加成", debuff: "感情困擾",
+    rules: [{
+      anchor: "dayStem",
+      rule_ref: "傳統對照-日干取咸池位",
+      table: {
+        "甲": ["酉"], "乙": ["戌"], "丙": ["子"], "丁": ["丑"],
+        "戊": ["子"], "己": ["丑"], "庚": ["卯"], "辛": ["辰"],
+        "壬": ["午"], "癸": ["未"]
+      }
+    }]
+  },
+  // 特殊類
+  {
+    name: "驛馬",
+    enabled: true, priority: 38, category: "特殊", rarity: "SR",
+    effect: "奔波勞碌，但利於外出發展",
+    modernMeaning: "適合出差旅行，有外地發展機會",
+    buff: "出行順利", debuff: "奔波勞累",
+    rules: [{
+      anchor: "yearBranch",
+      rule_ref: "傳統對照-年支取驛馬位",
+      table: {
+        "寅": ["申"], "午": ["申"], "戌": ["申"],
+        "申": ["寅"], "子": ["寅"], "辰": ["寅"],
+        "亥": ["巳"], "卯": ["巳"], "未": ["巳"],
+        "巳": ["亥"], "酉": ["亥"], "丑": ["亥"]
+      }
+    }]
+  },
+  {
+    name: "空亡",
+    enabled: true, priority: 43, category: "特殊", rarity: "R",
+    effect: "空虛落空，事難成就",
+    modernMeaning: "所計劃之事易落空，需腳踏實地",
+    buff: "靈感異常", debuff: "計劃落空",
+    rules: [{
+      anchor: "dayPillar",
+      anchorType: "xunkong",
+      rule_ref: "傳統對照-日柱定旬空亡位",
+      table: {
+        "甲子旬": ["戌", "亥"],
+        "甲戌旬": ["申", "酉"],
+        "甲申旬": ["午", "未"],
+        "甲午旬": ["辰", "巳"],
+        "甲辰旬": ["寅", "卯"],
+        "甲寅旬": ["子", "丑"]
+      }
+    }]
+  },
+  {
+    name: "魁罡",
+    enabled: true, priority: 12, category: "特殊", rarity: "SSR",
+    effect: "聰明剛毅，具有領導才能和威嚴",
+    modernMeaning: "領導力強，決斷果敢，但人際需要柔和",
+    buff: "帝王之氣", debuff: "孤高易傷",
+    rules: [{
+      anchor: "dayPillar",
+      anchorType: "specific",
+      rule_ref: "傳統對照-特定日柱組合",
+      table: ["庚辰", "庚戌", "壬辰", "戊戌"]
+    }]
+  },
+  {
+    name: "孤辰",
+    enabled: true, priority: 48, category: "特殊", rarity: "R",
+    effect: "孤獨性格，適合獨立發展",
+    modernMeaning: "獨立性強，適合自主創業",
+    buff: "獨立能力", debuff: "孤獨傾向",
+    rules: [{
+      anchor: "yearBranch",
+      rule_ref: "傳統對照-年支取孤辰位",
+      table: {
+        "寅": ["巳"], "卯": ["巳"], "辰": ["巳"],
+        "巳": ["申"], "午": ["申"], "未": ["申"],
+        "申": ["亥"], "酉": ["亥"], "戌": ["亥"],
+        "亥": ["寅"], "子": ["寅"], "丑": ["寅"]
+      }
+    }]
+  },
+  {
+    name: "寡宿",
+    enabled: true, priority: 49, category: "特殊", rarity: "R",
+    effect: "感情不順，晚婚傾向",
+    modernMeaning: "感情路較曲折，適合晚婚",
+    buff: null, debuff: "感情不順",
+    rules: [{
+      anchor: "yearBranch",
+      rule_ref: "傳統對照-年支取寡宿位",
+      table: {
+        "寅": ["丑"], "卯": ["丑"], "辰": ["丑"],
+        "巳": ["辰"], "午": ["辰"], "未": ["辰"],
+        "申": ["未"], "酉": ["未"], "戌": ["未"],
+        "亥": ["戌"], "子": ["戌"], "丑": ["戌"]
+      }
+    }]
+  },
+  {
+    name: "將星",
+    enabled: true, priority: 26, category: "吉神", rarity: "SR",
+    effect: "具有領導才能，適合管理職位",
+    modernMeaning: "管理能力強，適合擔任主管",
+    buff: "領導加成", debuff: null,
+    rules: [{
+      anchor: "yearBranch",
+      rule_ref: "傳統對照-年支取將星位",
+      table: {
+        "寅": ["午"], "午": ["午"], "戌": ["午"],
+        "申": ["子"], "子": ["子"], "辰": ["子"],
+        "亥": ["卯"], "卯": ["卯"], "未": ["卯"],
+        "巳": ["酉"], "酉": ["酉"], "丑": ["酉"]
+      }
+    }]
+  }
+];
+
 // ========== 輔助函數 ==========
 
 function toLocal(dateUtc: Date, tzMinutes: number): Date {
@@ -140,13 +627,11 @@ function createUtcFromLocalParts(birth: Date, hour: number, minute: number, tzMi
   return new Date(utcMs);
 }
 
-// 取得節氣日期（優先使用資料庫，否則近似計算）
 function getSolarTermDate(year: number, termName: string): Date {
   const yearData = SOLAR_TERMS_DATA[String(year)];
   if (yearData && yearData[termName]) {
     return new Date(yearData[termName] + "T00:00:00Z");
   }
-  // 近似計算（作為備援）
   const termDates: Record<string, [number, number]> = {
     "小寒": [1, 6], "立春": [2, 4], "驚蟄": [3, 6], "清明": [4, 5],
     "立夏": [5, 6], "芒種": [6, 6], "小暑": [7, 7], "立秋": [8, 8],
@@ -154,6 +639,15 @@ function getSolarTermDate(year: number, termName: string): Date {
   };
   const [month, day] = termDates[termName] || [1, 1];
   return new Date(Date.UTC(year, month - 1, day));
+}
+
+// 獲取日柱所在旬
+function getXun(dayStem: string, dayBranch: string): string {
+  const stemIndex = TIANGAN.indexOf(dayStem);
+  const branchIndex = DIZHI.indexOf(dayBranch);
+  const xunIndex = ((stemIndex - branchIndex + 60) % 10) / 2;
+  const xunNames = ['甲子旬', '甲戌旬', '甲申旬', '甲午旬', '甲辰旬', '甲寅旬'];
+  return xunNames[Math.floor(xunIndex)] || '甲子旬';
 }
 
 // ========== 四柱計算 ==========
@@ -177,11 +671,9 @@ function calculateMonthPillar(yearStem: string, birthUtc: Date, tzOffset: number
   const birthLocal = toLocal(birthUtc, tzOffset);
   const year = birthLocal.getUTCFullYear();
   
-  // 找出當前所在的節氣月份
   const TERM_ORDER = ["小寒", "立春", "驚蟄", "清明", "立夏", "芒種", "小暑", "立秋", "白露", "寒露", "立冬", "大雪"];
-  let currentBranchIndex = 1; // 預設丑月
+  let currentBranchIndex = 1;
   
-  // 檢查當年和前一年的節氣
   for (let y = year; y >= year - 1; y--) {
     for (let i = TERM_ORDER.length - 1; i >= 0; i--) {
       const termDate = getSolarTermDate(y, TERM_ORDER[i]);
@@ -193,9 +685,8 @@ function calculateMonthPillar(yearStem: string, birthUtc: Date, tzOffset: number
     if (currentBranchIndex !== 1) break;
   }
   
-  // 五虎遁月：根據年干推月干
   const yearStemIdx = TIANGAN.indexOf(yearStem);
-  const monthStemStartIdx = [2, 4, 6, 8, 0][yearStemIdx % 5]; // 甲己起丙寅...
+  const monthStemStartIdx = [2, 4, 6, 8, 0][yearStemIdx % 5];
   const monthStemIdx = (monthStemStartIdx + (currentBranchIndex - 2 + 12) % 12) % 10;
   
   return {
@@ -205,7 +696,6 @@ function calculateMonthPillar(yearStem: string, birthUtc: Date, tzOffset: number
 }
 
 function calculateDayPillar(birthLocal: Date, hour: number): { stem: string; branch: string } {
-  // 計算儒略日數 (JDN)
   const y = birthLocal.getUTCFullYear();
   const m = birthLocal.getUTCMonth() + 1;
   const d = birthLocal.getUTCDate();
@@ -215,10 +705,7 @@ function calculateDayPillar(birthLocal: Date, hour: number): { stem: string; bra
   const mm = m + 12 * a - 3;
   const jdn = d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4) - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
   
-  // 子時（23:00-01:00）跨日處理
   const adjustedJdn = hour >= 23 ? jdn + 1 : jdn;
-  
-  // 甲子日 JDN = 2451911 (2001-01-01)
   const refJdn = 2451911;
   const cycleIndex = ((adjustedJdn - refJdn) % 60 + 60) % 60;
   
@@ -229,12 +716,10 @@ function calculateDayPillar(birthLocal: Date, hour: number): { stem: string; bra
 }
 
 function calculateHourPillar(dayStem: string, hour: number): { stem: string; branch: string } {
-  // 時支對照表
   const hourBranchIndex = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11][hour];
   
-  // 五鼠遁時
   const dayStemIdx = TIANGAN.indexOf(dayStem);
-  const hourStemStartIdx = [0, 2, 4, 6, 8][dayStemIdx % 5]; // 甲己起甲子...
+  const hourStemStartIdx = [0, 2, 4, 6, 8][dayStemIdx % 5];
   const hourStemIdx = (hourStemStartIdx + hourBranchIndex) % 10;
   
   return {
@@ -253,15 +738,13 @@ function calculateWuxingScores(pillars: {
 }) {
   const scores: Record<string, number> = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 };
   
-  // 天干得分
   const stemWeight = 1.0;
   Object.values(pillars).forEach(pillar => {
     const element = WUXING_MAP[pillar.stem];
     if (element) scores[element] += stemWeight;
   });
   
-  // 地支藏干得分
-  const branchWeights = [0.6, 0.3, 0.1]; // 本氣、中氣、餘氣
+  const branchWeights = [0.6, 0.3, 0.1];
   Object.values(pillars).forEach(pillar => {
     const hiddenStems = DIZHI_CANGGAN[pillar.branch] || [];
     hiddenStems.forEach((stem, idx) => {
@@ -292,60 +775,79 @@ function calculateYinYangRatio(pillars: {
   return { yin, yang, yinPercent: Math.round((yin / 8) * 100), yangPercent: Math.round((yang / 8) * 100) };
 }
 
-// ========== 十神計算 ==========
-
-const ELEMENT_RELATIONS: Record<string, { generates: string; controls: string }> = {
-  木: { generates: "火", controls: "土" },
-  火: { generates: "土", controls: "金" },
-  土: { generates: "金", controls: "水" },
-  金: { generates: "水", controls: "木" },
-  水: { generates: "木", controls: "火" },
-};
+// ========== 十神計算（完整版） ==========
 
 function calculateTenGod(dayStem: string, targetStem: string): string {
   if (dayStem === targetStem) return "比肩";
   
-  const dayElement = WUXING_MAP[dayStem];
-  const targetElement = WUXING_MAP[targetStem];
-  const dayYinYang = YINYANG_MAP[dayStem];
-  const targetYinYang = YINYANG_MAP[targetStem];
-  const samePolarity = dayYinYang === targetYinYang;
+  const dayProps = STEM_PROPERTIES[dayStem];
+  const targetProps = STEM_PROPERTIES[targetStem];
   
+  if (!dayProps || !targetProps) return "未知";
+  
+  const dayElement = dayProps.element;
+  const targetElement = targetProps.element;
+  const samePolarity = dayProps.yinyang === targetProps.yinyang;
+  
+  // 同五行
   if (dayElement === targetElement) {
     return samePolarity ? "比肩" : "劫財";
   }
   
-  const rel = ELEMENT_RELATIONS[dayElement];
-  if (rel.generates === targetElement) {
+  // 我生 - 食傷
+  if (ELEMENT_GENERATES[dayElement] === targetElement) {
     return samePolarity ? "食神" : "傷官";
   }
-  if (targetElement === rel.generates) {
-    // 目標生我
-    const targetRel = ELEMENT_RELATIONS[targetElement];
-    if (targetRel.generates === dayElement) {
-      return samePolarity ? "偏印" : "正印";
-    }
-  }
-  if (rel.controls === targetElement) {
+  
+  // 我克 - 財
+  if (ELEMENT_CONTROLS[dayElement] === targetElement) {
     return samePolarity ? "偏財" : "正財";
   }
-  // 目標剋我
-  const targetControlsMe = ELEMENT_RELATIONS[targetElement].controls === dayElement;
-  if (targetControlsMe) {
+  
+  // 克我 - 官殺
+  if (ELEMENT_CONTROLS[targetElement] === dayElement) {
     return samePolarity ? "七殺" : "正官";
   }
-  // 目標生我
-  if (ELEMENT_RELATIONS[targetElement].generates === dayElement) {
+  
+  // 生我 - 印
+  if (ELEMENT_GENERATES[targetElement] === dayElement) {
     return samePolarity ? "偏印" : "正印";
   }
   
   return "未知";
 }
 
-function calculateTenGodForBranch(dayStem: string, branch: string): string {
-  const hiddenStems = DIZHI_CANGGAN[branch];
-  if (!hiddenStems || hiddenStems.length === 0) return "未知";
-  return calculateTenGod(dayStem, hiddenStems[0]); // 取本氣
+function calculateBranchTenGod(dayStem: string, branch: string): string {
+  const dayProps = STEM_PROPERTIES[dayStem];
+  const branchProps = BRANCH_PROPERTIES[branch];
+  
+  if (!dayProps || !branchProps) return "未知";
+  
+  const dayElement = dayProps.element;
+  const branchElement = branchProps.element;
+  const samePolarity = dayProps.yinyang === branchProps.yinyang;
+  
+  if (dayElement === branchElement) {
+    return samePolarity ? "比肩" : "劫財";
+  }
+  
+  if (ELEMENT_GENERATES[dayElement] === branchElement) {
+    return samePolarity ? "食神" : "傷官";
+  }
+  
+  if (ELEMENT_CONTROLS[dayElement] === branchElement) {
+    return samePolarity ? "偏財" : "正財";
+  }
+  
+  if (ELEMENT_CONTROLS[branchElement] === dayElement) {
+    return samePolarity ? "七殺" : "正官";
+  }
+  
+  if (ELEMENT_GENERATES[branchElement] === dayElement) {
+    return samePolarity ? "偏印" : "正印";
+  }
+  
+  return "未知";
 }
 
 function calculateTenGods(pillars: {
@@ -359,110 +861,208 @@ function calculateTenGods(pillars: {
   return {
     year: {
       stem: calculateTenGod(dayStem, pillars.year.stem),
-      branch: calculateTenGodForBranch(dayStem, pillars.year.branch)
+      branch: calculateBranchTenGod(dayStem, pillars.year.branch)
     },
     month: {
       stem: calculateTenGod(dayStem, pillars.month.stem),
-      branch: calculateTenGodForBranch(dayStem, pillars.month.branch)
+      branch: calculateBranchTenGod(dayStem, pillars.month.branch)
     },
     day: {
       stem: "日元",
-      branch: calculateTenGodForBranch(dayStem, pillars.day.branch)
+      branch: calculateBranchTenGod(dayStem, pillars.day.branch)
     },
     hour: {
       stem: calculateTenGod(dayStem, pillars.hour.stem),
-      branch: calculateTenGodForBranch(dayStem, pillars.hour.branch)
+      branch: calculateBranchTenGod(dayStem, pillars.hour.branch)
     }
   };
 }
 
-// ========== 簡易神煞計算 ==========
+// ========== 神煞計算（完整規則引擎） ==========
 
-function calculateShensha(
-  dayStem: string,
-  yearBranch: string,
-  monthBranch: string,
-  dayBranch: string,
-  hourBranch: string
-): string[] {
-  const results: string[] = [];
-  const branches = [yearBranch, monthBranch, dayBranch, hourBranch];
-  const pillarNames = ["年柱", "月柱", "日柱", "時柱"];
-  
-  // 天乙貴人
-  const tianyiMap: Record<string, string[]> = {
-    甲: ["丑", "未"], 戊: ["丑", "未"], 庚: ["丑", "未"],
-    乙: ["子", "申"], 己: ["子", "申"],
-    丙: ["亥", "酉"], 丁: ["亥", "酉"],
-    壬: ["卯", "巳"], 癸: ["卯", "巳"],
-    辛: ["寅", "午"]
-  };
-  const tianyiBranches = tianyiMap[dayStem] || [];
-  branches.forEach((b, i) => {
-    if (tianyiBranches.includes(b)) {
-      results.push(`天乙貴人（${pillarNames[i]}）`);
+function calculateShenshaComplete(pillars: {
+  year: { stem: string; branch: string };
+  month: { stem: string; branch: string };
+  day: { stem: string; branch: string };
+  hour: { stem: string; branch: string };
+}): ShenshaMatch[] {
+  const matches: ShenshaMatch[] = [];
+  const allBranches = [
+    { value: pillars.year.branch, pillar: '年支' },
+    { value: pillars.month.branch, pillar: '月支' },
+    { value: pillars.day.branch, pillar: '日支' },
+    { value: pillars.hour.branch, pillar: '時支' }
+  ];
+  const allStems = [
+    { value: pillars.year.stem, pillar: '年干' },
+    { value: pillars.month.stem, pillar: '月干' },
+    { value: pillars.day.stem, pillar: '日干' },
+    { value: pillars.hour.stem, pillar: '時干' }
+  ];
+
+  for (const ruleDef of SHENSHA_RULES) {
+    if (!ruleDef.enabled) continue;
+
+    for (const rule of ruleDef.rules) {
+      let matched = false;
+      let evidence = {
+        anchor_basis: "",
+        anchor_value: "",
+        why_matched: "",
+        rule_ref: rule.rule_ref,
+        matched_pillar: "",
+        matched_value: ""
+      };
+
+      switch (rule.anchor) {
+        case "dayStem": {
+          const dayStem = pillars.day.stem;
+          if (!rule.table || Array.isArray(rule.table)) break;
+          
+          const targetValues = rule.table[dayStem];
+          if (!targetValues) break;
+          
+          const targets = Array.isArray(targetValues) ? targetValues : [targetValues];
+          
+          for (const branch of allBranches) {
+            if (targets.includes(branch.value)) {
+              matched = true;
+              evidence = {
+                anchor_basis: `日干=${dayStem}`,
+                anchor_value: dayStem,
+                why_matched: `查表得[${targets.join('/')}]，四柱${branch.pillar}=${branch.value}命中`,
+                rule_ref: rule.rule_ref,
+                matched_pillar: branch.pillar,
+                matched_value: branch.value
+              };
+              break;
+            }
+          }
+          break;
+        }
+
+        case "yearBranch":
+        case "monthBranch": {
+          const anchorBranch = rule.anchor === "yearBranch" ? pillars.year.branch : pillars.month.branch;
+          const anchorName = rule.anchor === "yearBranch" ? "年支" : "月支";
+          
+          if (!rule.table || Array.isArray(rule.table)) break;
+          
+          const targetValues = rule.table[anchorBranch];
+          if (!targetValues) break;
+          
+          const targets = Array.isArray(targetValues) ? targetValues : [targetValues];
+          const matchTarget = rule.matchTarget || "anyBranch";
+          
+          // 檢查地支
+          if (matchTarget === "anyBranch" || matchTarget === "anyStemOrBranch") {
+            for (const branch of allBranches) {
+              if (targets.includes(branch.value)) {
+                matched = true;
+                evidence = {
+                  anchor_basis: `${anchorName}=${anchorBranch}`,
+                  anchor_value: anchorBranch,
+                  why_matched: `查表得[${targets.join('/')}]，${branch.pillar}=${branch.value}命中`,
+                  rule_ref: rule.rule_ref,
+                  matched_pillar: branch.pillar,
+                  matched_value: branch.value
+                };
+                break;
+              }
+            }
+          }
+          
+          // 檢查天干
+          if (!matched && (matchTarget === "anyStem" || matchTarget === "anyStemOrBranch")) {
+            for (const stem of allStems) {
+              if (targets.includes(stem.value)) {
+                matched = true;
+                evidence = {
+                  anchor_basis: `${anchorName}=${anchorBranch}`,
+                  anchor_value: anchorBranch,
+                  why_matched: `查表得[${targets.join('/')}]，${stem.pillar}=${stem.value}命中`,
+                  rule_ref: rule.rule_ref,
+                  matched_pillar: stem.pillar,
+                  matched_value: stem.value
+                };
+                break;
+              }
+            }
+          }
+          break;
+        }
+
+        case "dayPillar": {
+          const dayPillar = `${pillars.day.stem}${pillars.day.branch}`;
+          
+          // 特定日柱（魁罡）
+          if (rule.anchorType === "specific") {
+            if (Array.isArray(rule.table) && rule.table.includes(dayPillar)) {
+              matched = true;
+              evidence = {
+                anchor_basis: `日柱=${dayPillar}`,
+                anchor_value: dayPillar,
+                why_matched: `日柱${dayPillar}為特定組合`,
+                rule_ref: rule.rule_ref,
+                matched_pillar: "日柱",
+                matched_value: dayPillar
+              };
+            }
+          }
+          
+          // 旬空亡
+          if (rule.anchorType === "xunkong" && !Array.isArray(rule.table)) {
+            const xun = getXun(pillars.day.stem, pillars.day.branch);
+            const emptyBranches = rule.table[xun];
+            if (emptyBranches) {
+              const targets = Array.isArray(emptyBranches) ? emptyBranches : [emptyBranches];
+              for (const branch of allBranches) {
+                if (targets.includes(branch.value)) {
+                  matched = true;
+                  evidence = {
+                    anchor_basis: `日柱${dayPillar}(${xun})`,
+                    anchor_value: xun,
+                    why_matched: `${xun}空亡[${targets.join('/')}]，${branch.pillar}=${branch.value}落空`,
+                    rule_ref: rule.rule_ref,
+                    matched_pillar: branch.pillar,
+                    matched_value: branch.value
+                  };
+                  break;
+                }
+              }
+            }
+          }
+          break;
+        }
+      }
+
+      if (matched) {
+        matches.push({
+          name: ruleDef.name,
+          category: ruleDef.category,
+          rarity: ruleDef.rarity,
+          priority: ruleDef.priority,
+          effect: ruleDef.effect,
+          modernMeaning: ruleDef.modernMeaning,
+          buff: ruleDef.buff,
+          debuff: ruleDef.debuff,
+          evidence
+        });
+        break;
+      }
     }
-  });
-  
-  // 桃花
-  const taohuaMap: Record<string, string> = {
-    寅: "卯", 午: "卯", 戌: "卯",
-    申: "酉", 子: "酉", 辰: "酉",
-    亥: "子", 卯: "子", 未: "子",
-    巳: "午", 酉: "午", 丑: "午"
-  };
-  const taohua = taohuaMap[yearBranch];
-  if (taohua && branches.includes(taohua)) {
-    results.push(`桃花（${pillarNames[branches.indexOf(taohua)]}）`);
   }
-  
-  // 驛馬
-  const yimaMap: Record<string, string> = {
-    寅: "申", 午: "申", 戌: "申",
-    申: "寅", 子: "寅", 辰: "寅",
-    亥: "巳", 卯: "巳", 未: "巳",
-    巳: "亥", 酉: "亥", 丑: "亥"
-  };
-  const yima = yimaMap[yearBranch];
-  if (yima && branches.includes(yima)) {
-    results.push(`驛馬（${pillarNames[branches.indexOf(yima)]}）`);
-  }
-  
-  // 文昌
-  const wenchangMap: Record<string, string> = {
-    甲: "巳", 乙: "午", 丙: "申", 丁: "酉",
-    戊: "申", 己: "酉", 庚: "亥", 辛: "子",
-    壬: "寅", 癸: "卯"
-  };
-  const wenchang = wenchangMap[dayStem];
-  if (wenchang && branches.includes(wenchang)) {
-    results.push(`文昌（${pillarNames[branches.indexOf(wenchang)]}）`);
-  }
-  
-  // 華蓋
-  const huagaiMap: Record<string, string> = {
-    寅: "戌", 午: "戌", 戌: "戌",
-    申: "辰", 子: "辰", 辰: "辰",
-    亥: "未", 卯: "未", 未: "未",
-    巳: "丑", 酉: "丑", 丑: "丑"
-  };
-  const huagai = huagaiMap[yearBranch];
-  if (huagai && branches.includes(huagai)) {
-    results.push(`華蓋（${pillarNames[branches.indexOf(huagai)]}）`);
-  }
-  
-  return results;
+
+  return matches.sort((a, b) => a.priority - b.priority);
 }
 
 // ========== 主函數 ==========
 
 serve(async (req) => {
-  // 處理 CORS 預檢請求
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // 只接受 POST 請求
   if (req.method !== 'POST') {
     return new Response(
       JSON.stringify({
@@ -476,20 +1076,10 @@ serve(async (req) => {
             birthDate: 'YYYY-MM-DD (必填)',
             birthTime: 'HH:MM (必填)',
             timezoneOffsetMinutes: '時區偏移分鐘數，預設480 (UTC+8)'
-          },
-          example: {
-            name: '張三',
-            gender: 'male',
-            birthDate: '1990-05-15',
-            birthTime: '14:30',
-            timezoneOffsetMinutes: 480
           }
         }
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 405
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 405 }
     );
   }
 
@@ -497,47 +1087,25 @@ serve(async (req) => {
     const body = await req.json();
     const { name, gender, birthDate, birthTime, timezoneOffsetMinutes = 480 } = body;
 
-    // 驗證必填欄位
     if (!name || !gender || !birthDate || !birthTime) {
       return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Missing required fields',
-          required: ['name', 'gender', 'birthDate', 'birthTime']
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400
-        }
+        JSON.stringify({ success: false, error: 'Missing required fields', required: ['name', 'gender', 'birthDate', 'birthTime'] }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
-    // 驗證性別
     if (!['male', 'female'].includes(gender)) {
       return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Invalid gender. Must be "male" or "female".'
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400
-        }
+        JSON.stringify({ success: false, error: 'Invalid gender. Must be "male" or "female".' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
-    // 解析出生日期和時間
     const birth = new Date(birthDate);
     if (isNaN(birth.getTime())) {
       return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Invalid birthDate format. Use YYYY-MM-DD.'
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400
-        }
+        JSON.stringify({ success: false, error: 'Invalid birthDate format. Use YYYY-MM-DD.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
@@ -547,14 +1115,8 @@ serve(async (req) => {
 
     if (isNaN(hour) || hour < 0 || hour > 23) {
       return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Invalid birthTime format. Use HH:MM (00:00-23:59).'
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400
-        }
+        JSON.stringify({ success: false, error: 'Invalid birthTime format. Use HH:MM (00:00-23:59).' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
@@ -571,12 +1133,7 @@ serve(async (req) => {
     const dayPillar = calculateDayPillar(birthLocal, hour);
     const hourPillar = calculateHourPillar(dayPillar.stem, hour);
 
-    const pillars = {
-      year: yearPillar,
-      month: monthPillar,
-      day: dayPillar,
-      hour: hourPillar
-    };
+    const pillars = { year: yearPillar, month: monthPillar, day: dayPillar, hour: hourPillar };
 
     // 納音
     const nayin = {
@@ -590,17 +1147,12 @@ serve(async (req) => {
     const wuxingScores = calculateWuxingScores(pillars);
     const yinyangRatio = calculateYinYangRatio(pillars);
 
-    // 十神
+    // 十神（完整版）
     const tenGods = calculateTenGods(pillars);
 
-    // 神煞
-    const shensha = calculateShensha(
-      dayPillar.stem,
-      yearPillar.branch,
-      monthPillar.branch,
-      dayPillar.branch,
-      hourPillar.branch
-    );
+    // 神煞（完整規則引擎）
+    const shenshaMatches = calculateShenshaComplete(pillars);
+    const shensha = shenshaMatches.map(m => m.name);
 
     // 藏干詳情
     const hiddenStems = {
@@ -611,18 +1163,13 @@ serve(async (req) => {
     };
 
     console.log(`[bazi-api] Result: ${yearPillar.stem}${yearPillar.branch} ${monthPillar.stem}${monthPillar.branch} ${dayPillar.stem}${dayPillar.branch} ${hourPillar.stem}${hourPillar.branch}`);
+    console.log(`[bazi-api] Shensha found: ${shensha.length}`);
 
     return new Response(
       JSON.stringify({
         success: true,
         data: {
-          input: {
-            name,
-            gender,
-            birthDate,
-            birthTime,
-            timezoneOffsetMinutes: tzOffset
-          },
+          input: { name, gender, birthDate, birthTime, timezoneOffsetMinutes: tzOffset },
           pillars,
           baziString: `${yearPillar.stem}${yearPillar.branch} ${monthPillar.stem}${monthPillar.branch} ${dayPillar.stem}${dayPillar.branch} ${hourPillar.stem}${hourPillar.branch}`,
           nayin,
@@ -631,6 +1178,7 @@ serve(async (req) => {
           yinyangRatio,
           tenGods,
           shensha,
+          shenshaDetails: shenshaMatches,
           dayMaster: {
             stem: dayPillar.stem,
             element: WUXING_MAP[dayPillar.stem],
@@ -638,28 +1186,20 @@ serve(async (req) => {
           }
         },
         meta: {
-          version: "1.0.0",
-          timestamp: new Date().toISOString()
+          version: "2.0.0",
+          timestamp: new Date().toISOString(),
+          note: "十神和神煞計算邏輯已完整隱藏於後端"
         }
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
 
   } catch (error: unknown) {
     console.error('[bazi-api] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: errorMessage
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
-      }
+      JSON.stringify({ success: false, error: errorMessage }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });

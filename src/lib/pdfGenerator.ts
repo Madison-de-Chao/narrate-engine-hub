@@ -999,18 +999,37 @@ const createStoryPage = (
 export const generatePDF = async (_elementId: string, fileName: string, coverData?: CoverPageData, reportData?: ReportData) => {
   if (!reportData) {
     console.error('No report data provided');
-    return;
+    throw new Error('No report data provided');
   }
 
   // 創建報告 HTML
   const container = createReportContainer(reportData, coverData);
   
-  // 等待字體和圖片加載
-  await new Promise(resolve => setTimeout(resolve, 500));
+  // 確保容器是可見的且有尺寸
+  container.style.visibility = 'hidden';
+  container.style.position = 'absolute';
+  container.style.left = '0';
+  container.style.top = '0';
+  container.style.zIndex = '-9999';
+  
+  // 等待字體和圖片加載 - 增加等待時間
+  await new Promise(resolve => setTimeout(resolve, 1000));
   
   try {
-    // 獲取所有頁面
-    const pages = container.querySelectorAll<HTMLElement>('[style*="page-break-after"]');
+    // 獲取所有頁面 - 使用更可靠的選擇器
+    const pages = Array.from(container.children).filter(
+      (child): child is HTMLElement => 
+        child instanceof HTMLElement && 
+        child.offsetWidth > 0 && 
+        child.offsetHeight > 0
+    );
+    
+    if (pages.length === 0) {
+      console.error('No pages found in container');
+      throw new Error('No pages found in container');
+    }
+    
+    console.log(`Found ${pages.length} pages to render`);
     
     const pdf = new jsPDF({
       orientation: 'portrait',
@@ -1024,6 +1043,14 @@ export const generatePDF = async (_elementId: string, fileName: string, coverDat
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
       
+      // 確保頁面有尺寸
+      if (page.offsetWidth === 0 || page.offsetHeight === 0) {
+        console.warn(`Page ${i} has no dimensions, skipping`);
+        continue;
+      }
+      
+      console.log(`Rendering page ${i + 1}/${pages.length}, size: ${page.offsetWidth}x${page.offsetHeight}`);
+      
       // 使用 html2canvas 截圖
       const canvas = await html2canvas(page, {
         scale: 2,
@@ -1031,8 +1058,33 @@ export const generatePDF = async (_elementId: string, fileName: string, coverDat
         backgroundColor: '#0a0a0f',
         logging: false,
         windowWidth: 794,
-        windowHeight: 1123
+        windowHeight: 1123,
+        // 忽略無法渲染的元素
+        ignoreElements: (element) => {
+          // 忽略寬度或高度為 0 的元素
+          if (element instanceof HTMLElement) {
+            const style = window.getComputedStyle(element);
+            if (style.width === '0px' || style.height === '0px') {
+              return true;
+            }
+          }
+          return false;
+        },
+        onclone: (clonedDoc) => {
+          // 確保克隆的文檔中的元素都是可見的
+          const clonedContainer = clonedDoc.body.querySelector('div');
+          if (clonedContainer) {
+            clonedContainer.style.visibility = 'visible';
+            clonedContainer.style.position = 'static';
+          }
+        }
       });
+      
+      // 檢查 canvas 是否有效
+      if (canvas.width === 0 || canvas.height === 0) {
+        console.warn(`Canvas for page ${i} has no dimensions, skipping`);
+        continue;
+      }
       
       // 轉換為圖片並加入 PDF
       const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -1049,7 +1101,9 @@ export const generatePDF = async (_elementId: string, fileName: string, coverDat
     
   } finally {
     // 清理臨時容器
-    document.body.removeChild(container);
+    if (container.parentNode) {
+      document.body.removeChild(container);
+    }
   }
 };
 

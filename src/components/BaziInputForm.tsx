@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Loader2, History, User, ChevronDown, Trash2, Sparkles, RefreshCw } from "lucide-react";
+import { CalendarIcon, Loader2, History, User, ChevronDown, Trash2, Sparkles, RefreshCw, Clock, MapPin, Settings2 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
@@ -25,6 +27,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import type { SolarTimeMode, ZiMode } from "@/types/bazi";
+import { TIMEZONE_PRESETS, fromJsTimezoneOffset } from "@/types/bazi";
+
 const GUEST_STORAGE_KEY = 'bazi_guest_form_data';
 
 // 時辰選項（子時到亥時）
@@ -48,6 +53,19 @@ const BRANCH_TO_HOUR: Record<string, string> = {
   '子': '23', '丑': '1', '寅': '3', '卯': '5',
   '辰': '7', '巳': '9', '午': '11', '未': '13',
   '申': '15', '酉': '17', '戌': '19', '亥': '21'
+};
+
+// 常用城市經度預設
+const CITY_LONGITUDES: Record<string, { longitude: number; tzOffset: number; label: string }> = {
+  "台北": { longitude: 121.5654, tzOffset: 480, label: "台北 (121.57°E)" },
+  "香港": { longitude: 114.1694, tzOffset: 480, label: "香港 (114.17°E)" },
+  "北京": { longitude: 116.4074, tzOffset: 480, label: "北京 (116.41°E)" },
+  "上海": { longitude: 121.4737, tzOffset: 480, label: "上海 (121.47°E)" },
+  "新加坡": { longitude: 103.8198, tzOffset: 480, label: "新加坡 (103.82°E)" },
+  "東京": { longitude: 139.6917, tzOffset: 540, label: "東京 (139.69°E)" },
+  "首爾": { longitude: 126.9780, tzOffset: 540, label: "首爾 (126.98°E)" },
+  "洛杉磯": { longitude: -118.2437, tzOffset: -480, label: "洛杉磯 (-118.24°E)" },
+  "紐約": { longitude: -74.0060, tzOffset: -300, label: "紐約 (-74.01°E)" },
 };
 
 interface HistoryRecord {
@@ -74,9 +92,19 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
     month: "",
     day: "",
     hour: "",
+    minute: "0",
     gender: "",
     location: "",
   });
+  
+  // 進階設定
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [usePreciseTime, setUsePreciseTime] = useState(false);
+  const [longitude, setLongitude] = useState<string>("");
+  const [solarTimeMode, setSolarTimeMode] = useState<SolarTimeMode>("NONE");
+  const [ziMode, setZiMode] = useState<ZiMode>("EARLY");
+  const [selectedCity, setSelectedCity] = useState<string>("");
+  
   const [historyRecords, setHistoryRecords] = useState<HistoryRecord[]>([]);
   const [dataSource, setDataSource] = useState<'none' | 'history' | 'guest' | 'demo'>('none');
   const [deleteTarget, setDeleteTarget] = useState<HistoryRecord | null>(null);
@@ -122,6 +150,7 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
       month: "6",
       day: "15",
       hour: "9",
+      minute: "0",
       gender: "male",
       location: "台北市",
     };
@@ -166,14 +195,14 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
           // 無歷史紀錄但有訪客資料 → 提示同步
           setPendingGuestData(guestData);
           setShowGuestSyncPrompt(true);
-          setFormData(guestData);
+          setFormData({ ...guestData, minute: guestData.minute || "0" });
           setDataSource('guest');
         }
       } catch (err) {
         console.error('載入歷史記錄失敗:', err);
         // 若載入失敗但有訪客資料，仍然載入
         if (guestData && guestData.name) {
-          setFormData(guestData);
+          setFormData({ ...guestData, minute: guestData.minute || "0" });
           setDataSource('guest');
         }
       }
@@ -185,7 +214,7 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
   // 同步訪客資料到會員帳號（直接填入表單，下次計算時會存入資料庫）
   const handleSyncGuestData = () => {
     if (pendingGuestData) {
-      setFormData(pendingGuestData);
+      setFormData({ ...pendingGuestData, minute: (pendingGuestData as any).minute || "0" });
       setDataSource('guest');
       clearGuestData();
       setShowGuestSyncPrompt(false);
@@ -218,6 +247,7 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
       month: (birthDate.getMonth() + 1).toString(),
       day: birthDate.getDate().toString(),
       hour: hour,
+      minute: record.birth_time ? record.birth_time.split(':')[1] || "0" : "0",
       gender: record.gender || '',
       location: record.location || '',
     });
@@ -254,6 +284,15 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
     }
   };
 
+  // 處理城市選擇
+  const handleCitySelect = (city: string) => {
+    setSelectedCity(city);
+    const cityData = CITY_LONGITUDES[city];
+    if (cityData) {
+      setLongitude(cityData.longitude.toString());
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -267,7 +306,7 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
       saveGuestData(formData);
     }
 
-    // 使用UTC創建日期，然後傳入中國時區偏移（+8小時 = 480分鐘）
+    // 使用UTC創建日期
     const birthDate = new Date(
       Date.UTC(
         parseInt(formData.year),
@@ -277,12 +316,23 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
       )
     );
 
+    // 決定時區偏移
+    let tzOffset: number = 480; // 預設台灣時區
+    if (selectedCity && CITY_LONGITUDES[selectedCity]) {
+      tzOffset = CITY_LONGITUDES[selectedCity].tzOffset;
+    }
+
     onCalculate({
       ...formData,
       birthDate,
       birthHour: parseInt(formData.hour),
-      birthMinute: 0,
-      timezoneOffsetMinutes: 480 // UTC+8 中國標準時間
+      birthMinute: usePreciseTime ? parseInt(formData.minute || "0") : 0,
+      timezoneOffsetMinutes: tzOffset,
+      // 新增進階設定
+      longitude: longitude ? parseFloat(longitude) : undefined,
+      solarTimeMode,
+      ziMode,
+      usePreciseTime
     });
   };
 

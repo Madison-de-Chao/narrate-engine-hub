@@ -63,7 +63,7 @@ const ApiDocs = () => {
 
   const curlExample = `curl -X POST "${baseUrl}/bazi-api" \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: YOUR_API_KEY" \\
+  -H "X-API-Key: YOUR_API_KEY" \\
   -d '{
     "name": "張三",
     "gender": "男",
@@ -75,7 +75,7 @@ const ApiDocs = () => {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    "x-api-key": "YOUR_API_KEY"
+    "X-API-Key": "YOUR_API_KEY"
   },
   body: JSON.stringify({
     name: "張三",
@@ -94,7 +94,7 @@ console.log(data);`;
 url = "${baseUrl}/bazi-api"
 headers = {
     "Content-Type": "application/json",
-    "x-api-key": "YOUR_API_KEY"
+    "X-API-Key": "YOUR_API_KEY"
 }
 payload = {
     "name": "張三",
@@ -199,9 +199,9 @@ print(response.json())`;
                   <div>
                     <h4 className="font-medium mb-2">認證方式</h4>
                     <p className="text-sm text-muted-foreground mb-2">
-                      在請求標頭中加入 API Key：
+                      在請求標頭中加入 API Key（建議使用 <code>X-API-Key</code>）：
                     </p>
-                    <CodeBlock code='x-api-key: YOUR_API_KEY' id="auth-header" />
+                    <CodeBlock code={'X-API-Key: YOUR_API_KEY'} id="auth-header" />
                   </div>
                 </div>
               </CardContent>

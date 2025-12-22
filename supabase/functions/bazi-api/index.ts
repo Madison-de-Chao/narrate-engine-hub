@@ -1,11 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 /**
- * 八字計算公開 API v2.0 - 完整版
+ * 八字計算公開 API v2.1 - 完整版（含 API Key 驗證）
  * 
  * 包含完整的十神和神煞計算邏輯（隱藏於後端）
  * 
  * POST /bazi-api
+ * 
+ * Headers:
+ *   X-API-Key: your-api-key (必填)
  * 
  * Request Body:
  * {
@@ -33,9 +37,95 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-api-key',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+// Supabase client for API key verification
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+interface ApiKeyRecord {
+  id: string;
+  user_id: string;
+  api_key: string;
+  is_active: boolean;
+  requests_count: number;
+}
+
+// Verify API key and update usage
+async function verifyApiKey(apiKey: string): Promise<{ valid: boolean; keyId?: string; error?: string }> {
+  if (!apiKey) {
+    return { valid: false, error: 'API key is required. Include X-API-Key header.' };
+  }
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Check if API key exists and is active
+    const { data: keyData, error: fetchError } = await supabase
+      .from('api_keys')
+      .select('id, user_id, api_key, is_active, requests_count')
+      .eq('api_key', apiKey)
+      .single();
+
+    if (fetchError || !keyData) {
+      console.log('[bazi-api] API key not found:', apiKey.substring(0, 8) + '...');
+      return { valid: false, error: 'Invalid API key.' };
+    }
+
+    const key = keyData as ApiKeyRecord;
+
+    if (!key.is_active) {
+      console.log('[bazi-api] API key is inactive:', key.id);
+      return { valid: false, error: 'API key is inactive.' };
+    }
+
+    // Update usage statistics
+    const { error: updateError } = await supabase
+      .from('api_keys')
+      .update({ 
+        requests_count: key.requests_count + 1,
+        last_used_at: new Date().toISOString()
+      })
+      .eq('id', key.id);
+
+    if (updateError) {
+      console.error('[bazi-api] Failed to update API key usage:', updateError);
+    }
+
+    console.log(`[bazi-api] API key verified: ${key.id}, requests: ${key.requests_count + 1}`);
+    return { valid: true, keyId: key.id };
+  } catch (error) {
+    console.error('[bazi-api] API key verification error:', error);
+    return { valid: false, error: 'API key verification failed.' };
+  }
+}
+
+// Log API request
+async function logApiRequest(
+  keyId: string | null,
+  endpoint: string,
+  requestBody: Record<string, unknown> | null,
+  responseStatus: number,
+  responseTimeMs: number,
+  ipAddress: string | null
+): Promise<void> {
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    await supabase.from('api_request_logs').insert({
+      api_key_id: keyId,
+      endpoint,
+      request_body: requestBody,
+      response_status: responseStatus,
+      response_time_ms: responseTimeMs,
+      ip_address: ipAddress
+    });
+  } catch (error) {
+    console.error('[bazi-api] Failed to log request:', error);
+  }
+}
 
 // ========== 天干地支資料 ==========
 const TIANGAN = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
@@ -1059,6 +1149,11 @@ function calculateShenshaComplete(pillars: {
 // ========== 主函數 ==========
 
 serve(async (req) => {
+  const startTime = Date.now();
+  const ipAddress = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || null;
+  let apiKeyId: string | null = null;
+  let requestBody: Record<string, unknown> | null = null;
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -1070,6 +1165,9 @@ serve(async (req) => {
         error: 'Method not allowed. Use POST.',
         usage: {
           method: 'POST',
+          headers: {
+            'X-API-Key': 'your-api-key (必填)'
+          },
           body: {
             name: '姓名 (必填)',
             gender: 'male 或 female (必填)',
@@ -1084,7 +1182,26 @@ serve(async (req) => {
   }
 
   try {
+    // Verify API key
+    const apiKey = req.headers.get('x-api-key') || req.headers.get('X-API-Key') || '';
+    const keyVerification = await verifyApiKey(apiKey);
+
+    if (!keyVerification.valid) {
+      const responseTime = Date.now() - startTime;
+      await logApiRequest(null, '/bazi-api', null, 401, responseTime, ipAddress);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: keyVerification.error,
+          hint: 'Include X-API-Key header with a valid API key'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
+    apiKeyId = keyVerification.keyId || null;
     const body = await req.json();
+    requestBody = body;
     const { name, gender, birthDate, birthTime, timezoneOffsetMinutes = 480 } = body;
 
     if (!name || !gender || !birthDate || !birthTime) {
@@ -1165,6 +1282,9 @@ serve(async (req) => {
     console.log(`[bazi-api] Result: ${yearPillar.stem}${yearPillar.branch} ${monthPillar.stem}${monthPillar.branch} ${dayPillar.stem}${dayPillar.branch} ${hourPillar.stem}${hourPillar.branch}`);
     console.log(`[bazi-api] Shensha found: ${shensha.length}`);
 
+    const responseTime = Date.now() - startTime;
+    await logApiRequest(apiKeyId, '/bazi-api', requestBody, 200, responseTime, ipAddress);
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -1186,7 +1306,7 @@ serve(async (req) => {
           }
         },
         meta: {
-          version: "2.0.0",
+          version: "2.1.0",
           timestamp: new Date().toISOString(),
           note: "十神和神煞計算邏輯已完整隱藏於後端"
         }
@@ -1197,6 +1317,8 @@ serve(async (req) => {
   } catch (error: unknown) {
     console.error('[bazi-api] Error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const responseTime = Date.now() - startTime;
+    await logApiRequest(apiKeyId, '/bazi-api', requestBody, 500, responseTime, ipAddress);
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }

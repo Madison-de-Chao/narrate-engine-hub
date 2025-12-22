@@ -15,6 +15,7 @@ import ZoneGuide from "./pages/ZoneGuide";
 import BaziAcademy from "./pages/BaziAcademy";
 import ApiDocs from "./pages/ApiDocs";
 import ApiConsole from "./pages/ApiConsole";
+import ExportData from "./pages/ExportData";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
               } />
               <Route path="/api-docs" element={<ApiDocs />} />
               <Route path="/api-console" element={<ApiConsole />} />
+              <Route path="/export" element={<ExportData />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

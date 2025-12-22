@@ -14,6 +14,7 @@ import { calculateBazi } from "@/lib/baziCalculator";
 import { cn } from "@/lib/utils";
 import { BaziTestRunner } from "@/components/BaziTestRunner";
 import { BoundaryTestRunner } from "@/components/BoundaryTestRunner";
+import { ApiBoundaryTestRunner } from "@/components/ApiBoundaryTestRunner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type PillarKey = "year" | "month" | "day" | "hour";
@@ -299,7 +300,7 @@ export default function BaziTest() {
               </TabsContent>
               
               <TabsContent value="api">
-                <BaziTestRunner />
+                <ApiBoundaryTestRunner />
               </TabsContent>
               
               <TabsContent value="local">

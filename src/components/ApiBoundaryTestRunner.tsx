@@ -33,11 +33,13 @@ interface ApiTestCase {
   description: string;
   category: "standard" | "solar_term" | "zi_hour" | "month_boundary";
   input: {
-    birthDate: string;  // YYYY-MM-DD
-    birthTime: string;  // HH:MM
-    timezone: string;
-    gender?: "male" | "female";
+    name: string;        // Required by edge function
+    gender: "male" | "female";  // Required by edge function
+    birthDate: string;   // YYYY-MM-DD
+    birthTime: string;   // HH:MM
     location?: string;
+    useSolarTime?: boolean;
+    timezoneOffsetMinutes?: number;
   };
   localInput: BirthLocalInput;
   notes?: string;
@@ -51,10 +53,11 @@ const API_TEST_CASES: ApiTestCase[] = [
     description: "2000-01-01 12:00 台北",
     category: "standard",
     input: {
+      name: "測試用戶",
+      gender: "male",
       birthDate: "2000-01-01",
       birthTime: "12:00",
-      timezone: "Asia/Taipei",
-      gender: "male",
+      timezoneOffsetMinutes: 480,
       location: "台北"
     },
     localInput: {
@@ -71,10 +74,11 @@ const API_TEST_CASES: ApiTestCase[] = [
     description: "1990-05-15 21:00 台北",
     category: "standard",
     input: {
+      name: "測試用戶",
+      gender: "female",
       birthDate: "1990-05-15",
       birthTime: "21:00",
-      timezone: "Asia/Taipei",
-      gender: "female",
+      timezoneOffsetMinutes: 480,
       location: "台北"
     },
     localInput: {
@@ -91,10 +95,11 @@ const API_TEST_CASES: ApiTestCase[] = [
     description: "1985-10-06 12:00（規格書戊寅日）",
     category: "standard",
     input: {
+      name: "測試用戶",
+      gender: "male",
       birthDate: "1985-10-06",
       birthTime: "12:00",
-      timezone: "Asia/Taipei",
-      gender: "male"
+      timezoneOffsetMinutes: 480
     },
     localInput: {
       year: 1985, month: 10, day: 6, hour: 12, minute: 0, second: 0,
@@ -111,10 +116,11 @@ const API_TEST_CASES: ApiTestCase[] = [
     description: "2024-02-04 17:26 北京時間",
     category: "solar_term",
     input: {
+      name: "測試用戶",
+      gender: "male",
       birthDate: "2024-02-04",
       birthTime: "17:26",
-      timezone: "Asia/Shanghai",
-      gender: "male"
+      timezoneOffsetMinutes: 480
     },
     localInput: {
       year: 2024, month: 2, day: 4, hour: 17, minute: 26, second: 0,
@@ -130,10 +136,11 @@ const API_TEST_CASES: ApiTestCase[] = [
     description: "2024-02-04 17:28 北京時間",
     category: "solar_term",
     input: {
+      name: "測試用戶",
+      gender: "male",
       birthDate: "2024-02-04",
       birthTime: "17:28",
-      timezone: "Asia/Shanghai",
-      gender: "male"
+      timezoneOffsetMinutes: 480
     },
     localInput: {
       year: 2024, month: 2, day: 4, hour: 17, minute: 28, second: 0,
@@ -150,10 +157,11 @@ const API_TEST_CASES: ApiTestCase[] = [
     description: "2024-06-15 23:00",
     category: "zi_hour",
     input: {
+      name: "測試用戶",
+      gender: "male",
       birthDate: "2024-06-15",
       birthTime: "23:00",
-      timezone: "Asia/Taipei",
-      gender: "male"
+      timezoneOffsetMinutes: 480
     },
     localInput: {
       year: 2024, month: 6, day: 15, hour: 23, minute: 0, second: 0,
@@ -169,10 +177,11 @@ const API_TEST_CASES: ApiTestCase[] = [
     description: "2024-06-15 22:59",
     category: "zi_hour",
     input: {
+      name: "測試用戶",
+      gender: "male",
       birthDate: "2024-06-15",
       birthTime: "22:59",
-      timezone: "Asia/Taipei",
-      gender: "male"
+      timezoneOffsetMinutes: 480
     },
     localInput: {
       year: 2024, month: 6, day: 15, hour: 22, minute: 59, second: 0,
@@ -189,10 +198,11 @@ const API_TEST_CASES: ApiTestCase[] = [
     description: "1999-12-06 12:00（大雪12-07前）",
     category: "month_boundary",
     input: {
+      name: "測試用戶",
+      gender: "male",
       birthDate: "1999-12-06",
       birthTime: "12:00",
-      timezone: "Asia/Taipei",
-      gender: "male"
+      timezoneOffsetMinutes: 480
     },
     localInput: {
       year: 1999, month: 12, day: 6, hour: 12, minute: 0, second: 0,
@@ -208,10 +218,11 @@ const API_TEST_CASES: ApiTestCase[] = [
     description: "1999-12-08 12:00（大雪12-07後）",
     category: "month_boundary",
     input: {
+      name: "測試用戶",
+      gender: "male",
       birthDate: "1999-12-08",
       birthTime: "12:00",
-      timezone: "Asia/Taipei",
-      gender: "male"
+      timezoneOffsetMinutes: 480
     },
     localInput: {
       year: 1999, month: 12, day: 8, hour: 12, minute: 0, second: 0,

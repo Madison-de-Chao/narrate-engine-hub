@@ -13,6 +13,8 @@ import Admin from "./pages/Admin";
 import BaziTest from "./pages/BaziTest";
 import ZoneGuide from "./pages/ZoneGuide";
 import BaziAcademy from "./pages/BaziAcademy";
+import ApiDocs from "./pages/ApiDocs";
+import ApiConsole from "./pages/ApiConsole";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +43,8 @@ const App = () => (
                   <ZoneGuide />
                 </EntitlementGuard>
               } />
+              <Route path="/api-docs" element={<ApiDocs />} />
+              <Route path="/api-console" element={<ApiConsole />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

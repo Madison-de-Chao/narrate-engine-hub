@@ -6,6 +6,7 @@
 import type { SolarTermSource, SolarTermResult } from "@/types/bazi";
 import keySolarTermsData from "@/data/key_solar_terms_database.json";
 import preciseSolarTermsData from "@/data/solar_terms.json";
+import completeSolarTermsData from "@/data/complete_solar_terms_1850_2100.json";
 
 // ============================================
 // 資料類型定義
@@ -49,8 +50,28 @@ interface PreciseSolarTermsData {
   };
 }
 
+interface CompleteTermData {
+  month: number;
+  day: number;
+  date: string;
+  method?: string;
+  confidence?: number;
+}
+
+interface CompleteYearData {
+  [termName: string]: CompleteTermData;
+}
+
+interface CompleteSolarTermsData {
+  metadata?: object;
+  solar_terms: {
+    [year: string]: CompleteYearData;
+  };
+}
+
 const hkoData = keySolarTermsData as HkoSolarTermsData;
 const preciseData = preciseSolarTermsData as PreciseSolarTermsData;
+const completeData = completeSolarTermsData as CompleteSolarTermsData;
 
 // ============================================
 // 快取機制
@@ -117,8 +138,19 @@ function findInPreciseJson(year: number, termName: string): Date | null {
   const yearData = preciseData.years?.[year.toString()];
   if (!yearData || !yearData[termName]) return null;
   
-  // 精確資料假設為 UTC+8（與 HKO 一致）
-  return parseSolarTermDate(yearData[termName].date, 480);
+  // solar_terms.json 資料已經是 UTC 格式（以 Z 結尾）
+  // 直接解析，不需要額外的時區轉換
+  const dateStr = yearData[termName].date;
+  if (!dateStr) return null;
+  
+  // 如果已經有時區標記（Z 或 +/-offset），直接解析
+  if (/[zZ]$/.test(dateStr) || /[+-]\d{2}:?\d{2}$/.test(dateStr)) {
+    const parsed = new Date(dateStr);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  
+  // 如果沒有時區標記，假設為 UTC+8（向後兼容）
+  return parseSolarTermDate(dateStr, 480);
 }
 
 /**
@@ -128,7 +160,19 @@ function findInHkoJson(year: number, termName: string): Date | null {
   const yearData = hkoData.key_solar_terms[year.toString()];
   if (!yearData || !yearData[termName]) return null;
   
-  // HKO 資料為香港時間 (UTC+8)
+  // HKO 資料僅有日期（如 "1999-01-06"），無精確時間
+  // 假設為當地時間 00:00（香港 UTC+8）
+  return parseSolarTermDate(yearData[termName].date, 480);
+}
+
+/**
+ * 查詢完整節氣資料庫（1850-2100）
+ */
+function findInCompleteJson(year: number, termName: string): Date | null {
+  const yearData = completeData.solar_terms?.[year.toString()];
+  if (!yearData || !yearData[termName]) return null;
+  
+  // 完整資料僅有日期，假設為當地時間 00:00（UTC+8）
   return parseSolarTermDate(yearData[termName].date, 480);
 }
 
@@ -153,7 +197,7 @@ export function getSolarTermDetail(year: number, termName: string): SolarTermRes
   // 2. 查資料庫（按優先順序）
   let result: SolarTermResult | null = null;
 
-  // 優先查精確資料
+  // 優先查精確資料（有精確時間）
   const preciseDate = findInPreciseJson(year, termName);
   if (preciseDate) {
     result = { dateUtc: preciseDate, source: "PRECISE_JSON", termName };
@@ -162,6 +206,12 @@ export function getSolarTermDetail(year: number, termName: string): SolarTermRes
     const hkoDate = findInHkoJson(year, termName);
     if (hkoDate) {
       result = { dateUtc: hkoDate, source: "HKO_JSON", termName };
+    } else {
+      // Fallback 查完整資料庫（1850-2100）
+      const completeDate = findInCompleteJson(year, termName);
+      if (completeDate) {
+        result = { dateUtc: completeDate, source: "HKO_JSON", termName };
+      }
     }
   }
 

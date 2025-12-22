@@ -1,5 +1,7 @@
 // 🌈 八字精准计算引擎 - 基于香港天文台資料
-// 參考 lookup-calculator.ts 專業計算邏輯改進
+// 已升級為 Strict Mode 引擎，支援真太陽時、子時模式等專業功能
+// 向下兼容舊有接口
+
 import keySolarTermsData from "@/data/key_solar_terms_database.json";
 import preciseSolarTermsData from "@/data/solar_terms.json";
 import fiveTigersData from "@/data/five_tigers.json";
@@ -8,6 +10,49 @@ import ganZhiData from "@/data/gan_zhi.json";
 import nayinData from "@/data/nayin.json";
 import hiddenStemsData from "@/data/hidden_stems.json";
 import { getFourSeasonsTeam as calculateFourSeasonsTeam } from "./fourSeasonsAnalyzer";
+
+// 重新導出新引擎模組
+export {
+  calculateBaziStrict,
+  calculateBaziSimple,
+  applySolarTime,
+  calculateEquationOfTimeSeconds,
+  buildLocalDateTimeUtc,
+  formatSolarTimeResult,
+  getStandardTimezoneForLongitude,
+  getSolarTermUtc as getSolarTermUtcStrict,
+  getSolarTermDetail,
+  findNearestSolarTerm as findNearestSolarTermStrict,
+  parseSolarTermDate as parseSolarTermDateStrict,
+  getMonthBranchIndex as getMonthBranchIndexStrict,
+  clearSolarTermCache,
+  SOLAR_TERM_BRANCH_ORDER as SOLAR_TERM_BRANCH_ORDER_NEW,
+  detectInteractions,
+  getInteractionColor,
+  getInteractionIcon,
+  validateBaziInput,
+  quickValidateBaziInput,
+  formatValidationErrors,
+  fromJsTimezoneOffset,
+  toJsTimezoneOffset,
+  TIMEZONE_PRESETS,
+  STANDARD_LONGITUDE_CHINA
+} from "./bazi";
+
+export type {
+  BirthLocalInput,
+  SolarTimeMode,
+  ZiMode,
+  DayBoundaryMode,
+  SolarTimeResult,
+  ValidationError,
+  ValidationResult,
+  SolarTermSource,
+  SolarTermResult,
+  InteractionType,
+  InteractionResult,
+  CalculationMeta
+} from "./bazi";
 
 const MS_PER_MINUTE = 60 * 1000;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;

@@ -146,7 +146,7 @@ const standardTestCases: TestCase[] = [
   {
     id: "standard-2000-01-01",
     name: "2000年1月1日 12:00（標準樣本2）",
-    description: "經外部萬年曆確認，千禧年元旦",
+    description: "千禧年元旦：大雪後子月，己卯年（立春前仍屬前一年）",
     input: {
       birthDate: "2000-01-01",
       birthTime: "12:00",
@@ -154,6 +154,9 @@ const standardTestCases: TestCase[] = [
       gender: "female"
     },
     expected: {
+      // 2000-01-01 在立春(2/4)前 → 己卯年
+      // 1999-12-07 大雪後 → 子月 (小寒1/6前)
+      // 丙子月：己年五虎遁 → 丙子
       yearPillar: { stem: "己", branch: "卯" },
       monthPillar: { stem: "丙", branch: "子" },
       dayPillar: { stem: "戊", branch: "午" },

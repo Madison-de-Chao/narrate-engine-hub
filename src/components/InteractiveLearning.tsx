@@ -22,7 +22,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { LESSON_CONTENT, type QuizQuestion, type MatchPair, type FillBlank, type LessonContent } from '@/data/academyLessons';
+import { LESSON_CONTENT as ACADEMY_LESSON_CONTENT, type QuizQuestion, type MatchPair, type FillBlank, type LessonContent } from '@/data/academyLessons';
 
 interface InteractiveLearningProps {
   zoneId: string;
@@ -284,7 +284,7 @@ export const InteractiveLearning: React.FC<InteractiveLearningProps> = ({
   const [startTime] = useState(Date.now());
   const [matchGameCompleted, setMatchGameCompleted] = useState(false);
 
-  const content = LESSON_CONTENT[zoneId]?.[lessonId] || getDefaultContent(zoneId, lessonId);
+  const content = ACADEMY_LESSON_CONTENT[zoneId]?.[lessonId] || getDefaultContent(zoneId, lessonId);
   const totalQuestions = content.quiz.length;
   const currentQuestion = content.quiz[currentQuestionIndex];
   const hasMatchGame = content.matchGame && content.matchGame.length > 0;

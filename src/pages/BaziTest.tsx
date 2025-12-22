@@ -48,9 +48,10 @@ const TEST_CASES: TestCase[] = [
     date: "2000-01-01",
     time: "12:00",
     location: "台北",
-    expected: { year: "己卯", month: "己丑", day: "戊午", hour: "戊午" },
+    // 2000-01-01 在大雪(1999-12-07)後、小寒(2000-01-06)前 → 子月
+    // 己卯年 + 子月 → 五虎遁 → 丙子月
+    expected: { year: "己卯", month: "丙子", day: "戊午", hour: "戊午" },
     category: "standard",
-    notes: "原規格標註甲辰庚午，待節氣資料校準後再核對",
     timezoneOffsetMinutes: 480
   },
   {

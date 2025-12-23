@@ -91,20 +91,22 @@ export function translatePillarToLegion(
   }
   
   // 構建奇謀（藏干副星）
-  const specialists: LegionMember[] = hiddenStems.slice(1).map(h => {
-    const specChar = getGanCharacter(h.stem);
-    if (!specChar) return null;
-    return {
-      role: 'specialist' as const,
-      character: { ...specChar, position: 'specialist' as const },
-      buffDebuffs: [{
-        buff: specChar.buff,
-        buffValue: Math.round(specChar.buffValue * 0.4),
-        debuff: specChar.debuff,
-        debuffValue: Math.round(specChar.debuffValue * 0.4)
-      }]
-    };
-  }).filter((s): s is LegionMember => s !== null);
+  const specialists: LegionMember[] = hiddenStems.slice(1)
+    .map(h => {
+      const specChar = getGanCharacter(h.stem);
+      if (!specChar) return null;
+      return {
+        role: 'specialist' as const,
+        character: { ...specChar, position: 'specialist' as const },
+        buffDebuffs: [{
+          buff: specChar.buff,
+          buffValue: Math.round(specChar.buffValue * 0.4),
+          debuff: specChar.debuff,
+          debuffValue: Math.round(specChar.debuffValue * 0.4)
+        }]
+      };
+    })
+    .filter((s): s is NonNullable<typeof s> => s !== null);
   
   // 計算內部和諧度
   const harmony = calculateInternalHarmony(

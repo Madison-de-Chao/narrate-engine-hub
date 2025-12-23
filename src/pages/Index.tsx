@@ -624,7 +624,7 @@ const Index = () => {
         
         {/* 博物館導覽地圖 */}
         {!baziResult && (
-          <section className="animate-fade-in">
+          <section id="museum-map" className="animate-fade-in scroll-mt-20">
             <MuseumNavigationMap 
               onZoneClick={(zoneId) => {
                 console.log('Zone clicked:', zoneId);

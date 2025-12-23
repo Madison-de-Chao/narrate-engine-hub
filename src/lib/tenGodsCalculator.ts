@@ -1,5 +1,6 @@
 import ganZhiData from '@/data/gan_zhi.json';
 import tenGodsData from '@/data/ten_gods.json';
+import hiddenStemsData from '@/data/hidden_stems.json';
 
 // 五行生克關係
 const ELEMENT_RELATIONS = {
@@ -19,8 +20,37 @@ const ELEMENT_RELATIONS = {
   }
 };
 
+// 地支藏干數據類型
+interface HiddenStemEntry {
+  stem: string;
+  weight: number;
+  ratio: number;
+  type: '本氣' | '中氣' | '餘氣';
+}
+
+interface HiddenStemsDataset {
+  hiddenStems: Record<string, { stems: HiddenStemEntry[] }>;
+}
+
+const hiddenStems = hiddenStemsData as HiddenStemsDataset;
+
 /**
- * 計算十神
+ * 獲取地支的本氣（主氣）藏干
+ * @param branch 地支
+ * @returns 本氣藏干天干
+ */
+function getMainHiddenStem(branch: string): string | null {
+  const data = hiddenStems.hiddenStems[branch];
+  if (!data || !data.stems || data.stems.length === 0) {
+    return null;
+  }
+  // 本氣是第一個藏干（type 為 '本氣'）
+  const mainStem = data.stems.find(s => s.type === '本氣') || data.stems[0];
+  return mainStem.stem;
+}
+
+/**
+ * 計算十神（天干對天干）
  * @param dayStem 日元（日干）
  * @param targetStem 目標天干
  * @returns 十神名稱
@@ -76,61 +106,53 @@ export function calculateTenGod(dayStem: string, targetStem: string): string {
 }
 
 /**
- * 計算地支的十神（根據藏干）
+ * 計算地支的十神（正統做法：使用藏干本氣）
+ * 
+ * 修正說明：
+ * - 舊版本使用地支本身的五行屬性（如子水、午火）
+ * - 正統八字學應使用地支藏干的「本氣」來判定十神
+ * - 例如：寅的本氣是甲木，所以寅的十神由甲與日干的關係決定
+ * 
  * @param dayStem 日元（日干）
  * @param branch 目標地支
- * @returns 十神名稱（主氣的十神）
+ * @returns 十神名稱（本氣的十神）
  */
 export function calculateBranchTenGod(dayStem: string, branch: string): string {
-  const branchProps = ganZhiData.branchProperties[branch as keyof typeof ganZhiData.branchProperties];
+  // 獲取地支的本氣藏干
+  const mainHiddenStem = getMainHiddenStem(branch);
   
-  if (!branchProps) {
-    console.error('Invalid branch:', branch);
+  if (!mainHiddenStem) {
+    console.error('Cannot find main hidden stem for branch:', branch);
     return '未知';
   }
 
-  // 使用地支本身的五行屬性來計算十神
-  const dayProps = ganZhiData.stemProperties[dayStem as keyof typeof ganZhiData.stemProperties];
-  
-  if (!dayProps) {
-    console.error('Invalid day stem:', dayStem);
-    return '未知';
+  // 使用本氣藏干計算十神
+  return calculateTenGod(dayStem, mainHiddenStem);
+}
+
+/**
+ * 計算地支所有藏干的十神
+ * @param dayStem 日元（日干）
+ * @param branch 目標地支
+ * @returns 所有藏干的十神列表
+ */
+export function calculateBranchAllTenGods(dayStem: string, branch: string): Array<{
+  stem: string;
+  tenGod: string;
+  type: string;
+  weight: number;
+}> {
+  const data = hiddenStems.hiddenStems[branch];
+  if (!data || !data.stems) {
+    return [];
   }
 
-  const dayElement = dayProps.element;
-  const branchElement = branchProps.element;
-  const dayYinyang = dayProps.yinyang;
-  const branchYinyang = branchProps.yinyang;
-
-  const sameYinyang = dayYinyang === branchYinyang;
-  const sameElement = dayElement === branchElement;
-
-  // 同五行 - 比劫
-  if (sameElement) {
-    return sameYinyang ? '比肩' : '劫財';
-  }
-
-  // 我生 - 食傷
-  if (ELEMENT_RELATIONS.生[dayElement as keyof typeof ELEMENT_RELATIONS.生] === branchElement) {
-    return sameYinyang ? '食神' : '傷官';
-  }
-
-  // 我克 - 財
-  if (ELEMENT_RELATIONS.克[dayElement as keyof typeof ELEMENT_RELATIONS.克] === branchElement) {
-    return sameYinyang ? '偏財' : '正財';
-  }
-
-  // 克我 - 官殺
-  if (ELEMENT_RELATIONS.克[branchElement as keyof typeof ELEMENT_RELATIONS.克] === dayElement) {
-    return sameYinyang ? '七殺' : '正官';
-  }
-
-  // 生我 - 印
-  if (ELEMENT_RELATIONS.生[branchElement as keyof typeof ELEMENT_RELATIONS.生] === dayElement) {
-    return sameYinyang ? '偏印' : '正印';
-  }
-
-  return '未知';
+  return data.stems.map(entry => ({
+    stem: entry.stem,
+    tenGod: calculateTenGod(dayStem, entry.stem),
+    type: entry.type,
+    weight: entry.weight
+  }));
 }
 
 /**

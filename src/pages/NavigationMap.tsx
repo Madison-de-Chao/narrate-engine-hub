@@ -33,92 +33,26 @@ interface MapZone {
 
 const ZONES: MapZone[] = [
   {
-    id: 'bazi',
-    name: '命盤核心',
-    subtitle: '四柱八字',
-    description: '年月日時四柱，天干地支交織的命運密碼',
-    icon: <Compass className="w-6 h-6" />,
-    color: 'from-amber-500 to-yellow-400',
-    glowColor: 'rgba(245, 158, 11, 0.4)',
-    position: { x: 50, y: 35 },
+    id: 'legion',
+    name: '四時軍團',
+    subtitle: '八字人生兵法系統',
+    description: '年月日時四大軍團，十天干統帥、十二地支謀士，你的靈魂戰士們集結於此',
+    icon: <Swords className="w-8 h-8" />,
+    color: 'from-red-600 to-amber-500',
+    glowColor: 'rgba(239, 68, 68, 0.5)',
+    position: { x: 35, y: 50 },
     size: 'lg'
   },
   {
-    id: 'tenGods',
-    name: '十神殿堂',
-    subtitle: '性格與關係',
-    description: '比劫、食傷、財星、官殺、印綬，解讀人生角色',
-    icon: <Users className="w-5 h-5" />,
-    color: 'from-blue-500 to-cyan-400',
-    glowColor: 'rgba(59, 130, 246, 0.4)',
-    position: { x: 20, y: 25 },
-    size: 'md'
-  },
-  {
-    id: 'shensha',
-    name: '神煞迷宮',
-    subtitle: '吉凶星曜',
-    description: '天乙貴人、華蓋、桃花等神煞的神秘指引',
-    icon: <Sparkles className="w-5 h-5" />,
-    color: 'from-purple-500 to-pink-400',
-    glowColor: 'rgba(168, 85, 247, 0.4)',
-    position: { x: 80, y: 25 },
-    size: 'md'
-  },
-  {
-    id: 'wuxing',
-    name: '五行殿',
-    subtitle: '金木水火土',
-    description: '五行生剋制化，宇宙能量的平衡之道',
-    icon: <Star className="w-5 h-5" />,
-    color: 'from-emerald-500 to-teal-400',
-    glowColor: 'rgba(16, 185, 129, 0.4)',
-    position: { x: 15, y: 55 },
-    size: 'md'
-  },
-  {
-    id: 'nayin',
-    name: '納音寶庫',
-    subtitle: '六十甲子',
-    description: '海中金、爐中火...六十納音的深層意涵',
-    icon: <BookOpen className="w-5 h-5" />,
-    color: 'from-orange-500 to-red-400',
-    glowColor: 'rgba(249, 115, 22, 0.4)',
-    position: { x: 85, y: 55 },
-    size: 'md'
-  },
-  {
-    id: 'legion',
-    name: '四時軍團',
-    subtitle: '命運戰場',
-    description: '年月日時四大軍團，你的靈魂戰士們',
-    icon: <Swords className="w-5 h-5" />,
-    color: 'from-red-500 to-rose-400',
-    glowColor: 'rgba(239, 68, 68, 0.4)',
-    position: { x: 35, y: 70 },
-    size: 'md'
-  },
-  {
-    id: 'personality',
-    name: '性格分析',
-    subtitle: '內在探索',
-    description: '從命盤解讀你的性格特質與潛能',
-    icon: <Shield className="w-5 h-5" />,
-    color: 'from-indigo-500 to-violet-400',
-    glowColor: 'rgba(99, 102, 241, 0.4)',
-    position: { x: 65, y: 70 },
-    size: 'md'
-  },
-  {
-    id: 'fortune',
-    name: '運勢預測',
-    subtitle: '流年大運',
-    description: '大運流年的起伏變化與人生節奏',
-    icon: <TrendingUp className="w-4 h-4" />,
-    color: 'from-sky-500 to-blue-400',
-    glowColor: 'rgba(14, 165, 233, 0.4)',
-    position: { x: 50, y: 85 },
-    size: 'sm'
+    id: 'academy',
+    name: '八字學堂',
+    subtitle: '命理知識殿堂',
+    description: '從基礎到進階，系統化學習八字命理，解鎖古老智慧的現代應用',
+    icon: <GraduationCap className="w-8 h-8" />,
+    color: 'from-purple-600 to-indigo-500',
+    glowColor: 'rgba(147, 51, 234, 0.5)',
+    position: { x: 65, y: 50 },
+    size: 'lg'
   }
 ];
 
@@ -129,7 +63,13 @@ const NavigationMap: React.FC = () => {
   const [hoveredZone, setHoveredZone] = useState<string | null>(null);
 
   const handleZoneNavigate = (zoneId: string) => {
-    navigate(`/guide/${zoneId}`);
+    if (zoneId === 'academy') {
+      navigate('/academy');
+    } else if (zoneId === 'legion') {
+      navigate('/');
+    } else {
+      navigate(`/guide/${zoneId}`);
+    }
   };
 
   const getSizeClasses = (size: 'lg' | 'md' | 'sm') => {
@@ -204,33 +144,31 @@ const NavigationMap: React.FC = () => {
               theme === 'dark' ? 'bg-[radial-gradient(circle_at_50%_50%,hsl(45_100%_50%/0.1)_0%,transparent_50%)]' : ''
             }`} />
             
-            {/* 連接線 */}
+            {/* 連接線 - 連接兩個主要區域 */}
             <svg className="absolute inset-0 w-full h-full" style={{ minHeight: '500px' }}>
               <defs>
                 <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor={theme === 'dark' ? 'hsl(45, 100%, 50%)' : 'hsl(45, 90%, 45%)'} stopOpacity="0.1" />
-                  <stop offset="50%" stopColor={theme === 'dark' ? 'hsl(45, 100%, 50%)' : 'hsl(45, 90%, 45%)'} stopOpacity="0.3" />
-                  <stop offset="100%" stopColor={theme === 'dark' ? 'hsl(45, 100%, 50%)' : 'hsl(45, 90%, 45%)'} stopOpacity="0.1" />
+                  <stop offset="0%" stopColor={theme === 'dark' ? 'hsl(45, 100%, 50%)' : 'hsl(45, 90%, 45%)'} stopOpacity="0.2" />
+                  <stop offset="50%" stopColor={theme === 'dark' ? 'hsl(45, 100%, 50%)' : 'hsl(45, 90%, 45%)'} stopOpacity="0.5" />
+                  <stop offset="100%" stopColor={theme === 'dark' ? 'hsl(45, 100%, 50%)' : 'hsl(45, 90%, 45%)'} stopOpacity="0.2" />
                 </linearGradient>
               </defs>
-              {ZONES.filter(z => z.id !== 'bazi').map(zone => (
-                <motion.line
-                  key={zone.id}
-                  x1="50%"
-                  y1="35%"
-                  x2={`${zone.position.x}%`}
-                  y2={`${zone.position.y}%`}
-                  stroke="url(#lineGradient)"
-                  strokeWidth="2"
-                  strokeDasharray="6 4"
-                  initial={{ pathLength: 0 }}
-                  animate={{ 
-                    pathLength: 1,
-                    opacity: hoveredZone === zone.id || hoveredZone === 'bazi' ? 1 : 0.4
-                  }}
-                  transition={{ duration: 0.5, delay: 0.1 * ZONES.indexOf(zone) }}
-                />
-              ))}
+              {/* 連接兩個主區域的線 */}
+              <motion.line
+                x1="35%"
+                y1="50%"
+                x2="65%"
+                y2="50%"
+                stroke="url(#lineGradient)"
+                strokeWidth="3"
+                strokeDasharray="8 4"
+                initial={{ pathLength: 0 }}
+                animate={{ 
+                  pathLength: 1,
+                  opacity: hoveredZone ? 0.8 : 0.4
+                }}
+                transition={{ duration: 0.8 }}
+              />
             </svg>
           </div>
 
@@ -465,6 +403,27 @@ const NavigationMap: React.FC = () => {
 
         {/* 底部按鈕區 */}
         <div className="mt-6 space-y-3">
+          {/* 四時軍團入口 */}
+          <motion.button
+            onClick={() => navigate('/')}
+            className={`
+              w-full py-4 px-6 rounded-xl
+              flex items-center justify-center gap-3
+              font-bold text-lg tracking-wider
+              transition-all duration-300
+              ${theme === 'dark'
+                ? 'bg-gradient-to-r from-red-600/30 via-amber-500/30 to-red-600/30 text-amber-300 border border-red-500/40 hover:border-red-400/60 hover:bg-red-500/30'
+                : 'bg-gradient-to-r from-red-600 via-amber-500 to-red-600 text-white hover:from-red-500 hover:via-amber-400 hover:to-red-500'
+              }
+            `}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Swords className="w-5 h-5" />
+            <span>四時軍團 · 八字人生兵法</span>
+            <ChevronRight className="w-5 h-5" />
+          </motion.button>
+
           {/* 八字學堂入口 */}
           <motion.button
             onClick={() => navigate('/academy')}
@@ -483,27 +442,6 @@ const NavigationMap: React.FC = () => {
           >
             <GraduationCap className="w-5 h-5" />
             <span>八字學堂</span>
-            <ChevronRight className="w-5 h-5" />
-          </motion.button>
-
-          {/* AI 諮詢入口 */}
-          <motion.button
-            onClick={() => navigate('/')}
-            className={`
-              w-full py-4 px-6 rounded-xl
-              flex items-center justify-center gap-3
-              font-bold text-lg tracking-wider
-              transition-all duration-300
-              ${theme === 'dark'
-                ? 'bg-gradient-to-r from-amber-500/20 via-amber-400/30 to-amber-500/20 text-amber-300 border border-amber-500/40 hover:border-amber-400/60 hover:bg-amber-500/30'
-                : 'bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-white hover:from-amber-400 hover:via-amber-300 hover:to-amber-400'
-              }
-            `}
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <MessageCircle className="w-5 h-5" />
-            <span>開始八字測算</span>
             <ChevronRight className="w-5 h-5" />
           </motion.button>
         </div>

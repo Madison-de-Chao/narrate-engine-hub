@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarIcon, Loader2, History, User, ChevronDown, Trash2, Sparkles, RefreshCw, Clock, MapPin, Settings2, HelpCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { CitySelector, CITY_DATABASE } from "@/components/CitySelector";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -56,18 +57,8 @@ const BRANCH_TO_HOUR: Record<string, string> = {
   '申': '15', '酉': '17', '戌': '19', '亥': '21'
 };
 
-// 常用城市經度預設
-const CITY_LONGITUDES: Record<string, { longitude: number; tzOffset: number; label: string }> = {
-  "台北": { longitude: 121.5654, tzOffset: 480, label: "台北 (121.57°E)" },
-  "香港": { longitude: 114.1694, tzOffset: 480, label: "香港 (114.17°E)" },
-  "北京": { longitude: 116.4074, tzOffset: 480, label: "北京 (116.41°E)" },
-  "上海": { longitude: 121.4737, tzOffset: 480, label: "上海 (121.47°E)" },
-  "新加坡": { longitude: 103.8198, tzOffset: 480, label: "新加坡 (103.82°E)" },
-  "東京": { longitude: 139.6917, tzOffset: 540, label: "東京 (139.69°E)" },
-  "首爾": { longitude: 126.9780, tzOffset: 540, label: "首爾 (126.98°E)" },
-  "洛杉磯": { longitude: -118.2437, tzOffset: -480, label: "洛杉磯 (-118.24°E)" },
-  "紐約": { longitude: -74.0060, tzOffset: -300, label: "紐約 (-74.01°E)" },
-};
+// 舊的城市經度預設（保留向後兼容）- 現使用 CitySelector
+const CITY_LONGITUDES = CITY_DATABASE;
 
 interface HistoryRecord {
   id: string;
@@ -285,12 +276,13 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
     }
   };
 
-  // 處理城市選擇
-  const handleCitySelect = (city: string) => {
+  // 處理城市選擇（支援新的 CitySelector）
+  const handleCitySelect = (city: string, data?: typeof CITY_DATABASE[string]) => {
     setSelectedCity(city);
-    const cityData = CITY_LONGITUDES[city];
+    const cityData = data || CITY_LONGITUDES[city];
     if (cityData) {
       setLongitude(cityData.longitude.toString());
+      setFormData(prev => ({ ...prev, location: cityData.label }));
     }
   };
 
@@ -669,27 +661,22 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Select value={selectedCity} onValueChange={handleCitySelect}>
-                <SelectTrigger className="bg-input border-border text-foreground">
-                  <SelectValue placeholder="選擇城市" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border z-[9999]">
-                  {Object.entries(CITY_LONGITUDES).map(([city, data]) => (
-                    <SelectItem key={city} value={city}>
-                      {data.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                id="location"
-                placeholder="或輸入地點名稱"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="bg-input border-border text-foreground"
-              />
-            </div>
+            
+            {/* 城市選擇器（帶搜尋功能） */}
+            <CitySelector
+              value={selectedCity}
+              onSelect={handleCitySelect}
+              placeholder="搜尋出生城市..."
+            />
+            
+            {/* 或手動輸入地點 */}
+            <Input
+              id="location"
+              placeholder="或輸入其他地點名稱"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              className="bg-input border-border text-foreground"
+            />
             {solarTimeMode === "TST" && longitude && (
               <p className="text-xs text-primary flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />

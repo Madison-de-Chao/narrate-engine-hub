@@ -11,3 +11,12 @@ verify_jwt = false
 
 [functions.ai-fortune-consult]
 verify_jwt = false
+
+[functions.bazi-api]
+verify_jwt = false
+
+[functions.v1-bazi-calculate]
+verify_jwt = false
+
+[functions.v1-bazi-analyze]
+verify_jwt = false

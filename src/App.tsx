@@ -18,6 +18,7 @@ import ApiDocs from "./pages/ApiDocs";
 import ApiConsole from "./pages/ApiConsole";
 import ExportData from "./pages/ExportData";
 import PromptTemplates from "./pages/PromptTemplates";
+import VersionInfo from "./pages/VersionInfo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/api-console" element={<ApiConsole />} />
               <Route path="/export" element={<ExportData />} />
               <Route path="/prompt-templates" element={<PromptTemplates />} />
+              <Route path="/version" element={<VersionInfo />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

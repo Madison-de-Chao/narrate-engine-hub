@@ -108,17 +108,19 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
       <div className={`relative z-10 ${shouldShowRibbon ? 'pt-16' : ''}`}>
         {/* 返回按鈕 */}
         {shouldShowBackButton && !isHome && (
-          <button
-            onClick={handleBack}
-            className={`fixed top-20 left-4 sm:left-6 z-40 px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-300 ${
-              theme === 'dark'
-                ? 'hover:bg-gold/10 text-paper/70 hover:text-paper'
-                : 'hover:bg-ink/10 text-void/70 hover:text-void'
-            }`}
-          >
-            <ChevronLeft className="w-5 h-5" />
-            <span className="text-sm font-semibold hidden sm:inline">返回</span>
-          </button>
+          <div className="absolute top-4 left-4 sm:left-6 z-40">
+            <button
+              onClick={handleBack}
+              className={`px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-300 ${
+                theme === 'dark'
+                  ? 'hover:bg-gold/10 text-paper/70 hover:text-paper'
+                  : 'hover:bg-ink/10 text-void/70 hover:text-void'
+              }`}
+            >
+              <ChevronLeft className="w-5 h-5" />
+              <span className="text-sm font-semibold hidden sm:inline">返回</span>
+            </button>
+          </div>
         )}
 
         {children}

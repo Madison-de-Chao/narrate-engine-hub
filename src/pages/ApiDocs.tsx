@@ -498,13 +498,46 @@ const createPsychologyPrompt = (baziData) => {
             <Card>
               <CardHeader>
                 <CardTitle>可用端點</CardTitle>
+                <CardDescription>RSBZS v3.0 提供兩類 API 端點</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                    <Badge className="bg-green-500">POST</Badge>
-                    <code className="text-sm">/bazi-api</code>
-                    <span className="text-sm text-muted-foreground ml-auto">計算八字命盤</span>
+                <div className="space-y-4">
+                  {/* V1 API Section */}
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge className="bg-primary/20 text-primary border-primary/30">v3.0 NEW</Badge>
+                      <h4 className="font-medium">SKU 1 & 2 - 標準化 API</h4>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                        <Badge className="bg-green-500">POST</Badge>
+                        <code className="text-sm font-mono">/v1-bazi-calculate</code>
+                        <Badge variant="secondary" className="text-xs">SKU 1</Badge>
+                        <span className="text-sm text-muted-foreground ml-auto">基礎八字計算</span>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                        <Badge className="bg-green-500">POST</Badge>
+                        <code className="text-sm font-mono">/v1-bazi-analyze</code>
+                        <Badge variant="secondary" className="text-xs">SKU 2</Badge>
+                        <span className="text-sm text-muted-foreground ml-auto">進階分析（含十神、神煞、性格）</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      ✨ 新版 API 支援真太陽時校正、跨日修正、藏干本氣十神等進階功能
+                    </p>
+                  </div>
+
+                  {/* Legacy API Section */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge variant="outline" className="text-xs">Legacy</Badge>
+                      <h4 className="font-medium text-muted-foreground">傳統 API</h4>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                      <Badge className="bg-green-500">POST</Badge>
+                      <code className="text-sm">/bazi-api</code>
+                      <span className="text-sm text-muted-foreground ml-auto">計算八字命盤</span>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -512,11 +545,203 @@ const createPsychologyPrompt = (baziData) => {
           </TabsContent>
 
           <TabsContent value="endpoint" className="space-y-6">
+            {/* V1 Calculate API */}
+            <Card className="border-primary/30">
+              <CardHeader>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Badge className="bg-green-500">POST</Badge>
+                  <CardTitle className="font-mono">/v1-bazi-calculate</CardTitle>
+                  <Badge className="bg-primary/20 text-primary border-primary/30">SKU 1</Badge>
+                  <Badge variant="outline" className="text-xs">v3.0</Badge>
+                </div>
+                <CardDescription>基礎八字計算 API - 輸入出生時間，輸出四柱八字基礎數據</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <h4 className="font-medium mb-3">請求參數</h4>
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="text-left p-3">參數名</th>
+                          <th className="text-left p-3">類型</th>
+                          <th className="text-left p-3">必填</th>
+                          <th className="text-left p-3">說明</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-t">
+                          <td className="p-3"><code>year</code></td>
+                          <td className="p-3">number</td>
+                          <td className="p-3"><Badge variant="destructive" className="text-xs">必填</Badge></td>
+                          <td className="p-3">出生年份（西元年，如 1990）</td>
+                        </tr>
+                        <tr className="border-t">
+                          <td className="p-3"><code>month</code></td>
+                          <td className="p-3">number</td>
+                          <td className="p-3"><Badge variant="destructive" className="text-xs">必填</Badge></td>
+                          <td className="p-3">出生月份（1-12）</td>
+                        </tr>
+                        <tr className="border-t">
+                          <td className="p-3"><code>day</code></td>
+                          <td className="p-3">number</td>
+                          <td className="p-3"><Badge variant="destructive" className="text-xs">必填</Badge></td>
+                          <td className="p-3">出生日期（1-31）</td>
+                        </tr>
+                        <tr className="border-t">
+                          <td className="p-3"><code>hour</code></td>
+                          <td className="p-3">number</td>
+                          <td className="p-3"><Badge variant="destructive" className="text-xs">必填</Badge></td>
+                          <td className="p-3">出生時辰（0-23）</td>
+                        </tr>
+                        <tr className="border-t">
+                          <td className="p-3"><code>minute</code></td>
+                          <td className="p-3">number</td>
+                          <td className="p-3"><Badge variant="destructive" className="text-xs">必填</Badge></td>
+                          <td className="p-3">出生分鐘（0-59）</td>
+                        </tr>
+                        <tr className="border-t">
+                          <td className="p-3"><code>tzOffsetMinutesEast</code></td>
+                          <td className="p-3">number</td>
+                          <td className="p-3"><Badge variant="destructive" className="text-xs">必填</Badge></td>
+                          <td className="p-3">時區偏移（分鐘），東半球為正。例如 UTC+8 = 480</td>
+                        </tr>
+                        <tr className="border-t">
+                          <td className="p-3"><code>solarTimeMode</code></td>
+                          <td className="p-3">string</td>
+                          <td className="p-3"><Badge variant="destructive" className="text-xs">必填</Badge></td>
+                          <td className="p-3">NONE（不校正）、LMT（地方平太陽時）、TST（真太陽時）</td>
+                        </tr>
+                        <tr className="border-t">
+                          <td className="p-3"><code>ziMode</code></td>
+                          <td className="p-3">string</td>
+                          <td className="p-3"><Badge variant="destructive" className="text-xs">必填</Badge></td>
+                          <td className="p-3">EARLY（早子時換日）、LATE（晚子時不換日）</td>
+                        </tr>
+                        <tr className="border-t">
+                          <td className="p-3"><code>longitude</code></td>
+                          <td className="p-3">number</td>
+                          <td className="p-3"><Badge variant="outline" className="text-xs">選填</Badge></td>
+                          <td className="p-3">出生地經度（東經為正），用於太陽時計算</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-3">請求範例</h4>
+                  <CodeBlock code={`{
+  "year": 1990,
+  "month": 5,
+  "day": 15,
+  "hour": 14,
+  "minute": 30,
+  "tzOffsetMinutesEast": 480,
+  "longitude": 121.47,
+  "solarTimeMode": "TST",
+  "ziMode": "EARLY"
+}`} id="v1-calculate-request" />
+                </div>
+                <div>
+                  <h4 className="font-medium mb-3">回應範例</h4>
+                  <CodeBlock code={`{
+  "success": true,
+  "data": {
+    "pillars": {
+      "year": { "stem": "庚", "branch": "午" },
+      "month": { "stem": "辛", "branch": "巳" },
+      "day": { "stem": "甲", "branch": "子" },
+      "hour": { "stem": "辛", "branch": "未" }
+    },
+    "hiddenStems": { ... },
+    "nayin": { "year": "路旁土", "month": "白蠟金", "day": "海中金", "hour": "路旁土" },
+    "wuxing": { "wood": 1.6, "fire": 2.4, "earth": 1.8, "metal": 3.2, "water": 1.0 },
+    "yinyang": { "yang": 50, "yin": 50 },
+    "meta": {
+      "birthUtc": "1990-05-15T06:30:00.000Z",
+      "solarAdjustedTime": "14:36:00",
+      "dayDelta": 0,
+      "solarMode": "TST",
+      "ziMode": "EARLY"
+    }
+  },
+  "version": "3.0.0"
+}`} id="v1-calculate-response" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* V1 Analyze API */}
+            <Card className="border-primary/30">
+              <CardHeader>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Badge className="bg-green-500">POST</Badge>
+                  <CardTitle className="font-mono">/v1-bazi-analyze</CardTitle>
+                  <Badge className="bg-primary/20 text-primary border-primary/30">SKU 2</Badge>
+                  <Badge variant="outline" className="text-xs">v3.0</Badge>
+                </div>
+                <CardDescription>進階八字分析 API - 包含十神、神煞、性格分析</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    📌 請求參數與 <code>/v1-bazi-calculate</code> 相同，回應包含額外的分析欄位。
+                  </p>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-3">額外回應欄位</h4>
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="text-left p-3">欄位</th>
+                          <th className="text-left p-3">說明</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-t">
+                          <td className="p-3"><code>tenGods</code></td>
+                          <td className="p-3">四柱十神分析（使用藏干本氣計算）</td>
+                        </tr>
+                        <tr className="border-t">
+                          <td className="p-3"><code>shensha</code></td>
+                          <td className="p-3">神煞列表（天乙貴人、文昌、桃花、驛馬等）</td>
+                        </tr>
+                        <tr className="border-t">
+                          <td className="p-3"><code>personality</code></td>
+                          <td className="p-3">性格特質分析（基於日元五行與十神組合）</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-3">回應範例（額外欄位）</h4>
+                  <CodeBlock code={`{
+  "tenGods": {
+    "year": { "stem": "偏財", "branch": "傷官" },
+    "month": { "stem": "正財", "branch": "食神" },
+    "day": { "stem": "日元", "branch": "正印" },
+    "hour": { "stem": "正財", "branch": "正官" }
+  },
+  "shensha": [
+    { "name": "天乙貴人", "category": "吉神", "pillar": "hour", "description": "逢凶化吉" }
+  ],
+  "personality": [
+    { "trait": "仁慈", "strength": 80, "description": "富有同情心，善良正直" }
+  ]
+}`} id="v1-analyze-extra" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Legacy API */}
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <Badge className="bg-green-500">POST</Badge>
                   <CardTitle>/bazi-api</CardTitle>
+                  <Badge variant="outline" className="text-xs">Legacy</Badge>
                 </div>
                 <CardDescription>計算八字命盤，包含四柱、十神、神煞分析</CardDescription>
               </CardHeader>

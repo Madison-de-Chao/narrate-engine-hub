@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Shield, Swords, Sparkles, TrendingUp, TrendingDown, Users } from "lucide-react";
 import { getCommanderAvatar } from "@/assets/commanders";
@@ -12,6 +13,7 @@ interface LegionCharacterCardProps {
   character: CharacterType;
   member?: LegionMember;
   legionColor?: string;
+  index?: number;
 }
 
 // 類型守衛
@@ -27,7 +29,8 @@ export const LegionCharacterCard = ({
   type, 
   character, 
   member,
-  legionColor 
+  legionColor,
+  index = 0
 }: LegionCharacterCardProps) => {
   const isGeneral = type === 'general';
   const isStrategist = type === 'strategist';
@@ -64,15 +67,12 @@ export const LegionCharacterCard = ({
   const debuffValue = member?.buffDebuffs?.[0]?.debuffValue ?? character.debuffValue;
 
   return (
-    <div 
-      className={`
-        relative overflow-hidden rounded-xl
-        bg-gradient-to-br from-card via-card/95 to-card/90
-        border-2 border-border/50
-        transition-all duration-500
-        hover:shadow-xl hover:border-primary/30
-        group
-      `}
+    <motion.div 
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      whileHover={{ y: -8, scale: 1.02 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="relative overflow-hidden rounded-xl bg-gradient-to-br from-card via-card/95 to-card/90 border-2 border-border/50 group cursor-pointer transition-shadow duration-300 hover:shadow-xl hover:shadow-primary/10"
       style={{
         boxShadow: `inset 0 0 60px ${accentColor}15`
       }}
@@ -240,6 +240,13 @@ export const LegionCharacterCard = ({
 
       {/* 懸停效果 */}
       <div className="absolute inset-0 bg-gradient-to-t from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-    </div>
+      {/* Hover 發光效果 */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{
+          boxShadow: `0 0 40px ${accentColor}40, inset 0 0 40px ${accentColor}10`
+        }}
+      />
+    </motion.div>
   );
 };

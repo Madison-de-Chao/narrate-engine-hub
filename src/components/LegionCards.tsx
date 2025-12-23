@@ -8,9 +8,10 @@ import { ModularShenshaEngine, type RulesetType } from "@/lib/shenshaRuleEngine"
 import type { ShenshaMatch } from "@/data/shenshaTypes";
 import { LegionCharacterCard } from "./LegionCharacterCard";
 import { ShenshaCardList } from "./ShenshaCard";
+import { LegionOverviewChart } from "./LegionOverviewChart";
 import { truncateStoryForFree } from "@/hooks/usePremiumStatus";
 import { Button } from "./ui/button";
-import { translatePillarToLegion, getGanCharacter, getZhiCharacter } from "@/lib/legionTranslator";
+import { translatePillarToLegion, translateBaziToArmy, getGanCharacter, getZhiCharacter } from "@/lib/legionTranslator";
 
 interface LegionCardsProps {
   baziResult: BaziResult;
@@ -257,6 +258,18 @@ export const LegionCards = ({ baziResult, shenshaRuleset = 'trad', isPremium = f
   const strengthLevel = strengthRatio > 0.55 ? '身強' : strengthRatio < 0.45 ? '身弱' : '中和';
   const yongShenInfo = getSimpleYongShen(dayMasterElement, strengthLevel);
 
+  // 生成完整軍團數據用於總覽圖
+  const fullArmy = translateBaziToArmy({
+    yearStem: pillars.year.stem,
+    yearBranch: pillars.year.branch,
+    monthStem: pillars.month.stem,
+    monthBranch: pillars.month.branch,
+    dayStem: pillars.day.stem,
+    dayBranch: pillars.day.branch,
+    hourStem: pillars.hour.stem,
+    hourBranch: pillars.hour.branch
+  });
+
   return (
     <div className="space-y-6">
       <div className="text-center mb-8 p-6 rounded-xl bg-gradient-to-br from-orange-950 via-orange-900/80 to-slate-900 border-2 border-orange-500/40">
@@ -265,6 +278,9 @@ export const LegionCards = ({ baziResult, shenshaRuleset = 'trad', isPremium = f
         </h2>
         <p className="text-orange-200/70">每個軍團的完整命盤解釋</p>
       </div>
+
+      {/* 軍團總覽圖 */}
+      <LegionOverviewChart army={fullArmy} />
 
       <div className="grid grid-cols-1 gap-8">
         {(["year", "month", "day", "hour"] as const).map((pillarName) => {

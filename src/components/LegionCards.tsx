@@ -6,10 +6,11 @@ import tenGodsData from "@/data/ten_gods.json";
 import { storyMaterialsManager } from "@/lib/storyMaterials";
 import { ModularShenshaEngine, type RulesetType } from "@/lib/shenshaRuleEngine";
 import type { ShenshaMatch } from "@/data/shenshaTypes";
-import { ArmyCard } from "./ArmyCard";
+import { LegionCharacterCard } from "./LegionCharacterCard";
 import { ShenshaCardList } from "./ShenshaCard";
 import { truncateStoryForFree } from "@/hooks/usePremiumStatus";
 import { Button } from "./ui/button";
+import { translatePillarToLegion, getGanCharacter, getZhiCharacter } from "@/lib/legionTranslator";
 
 interface LegionCardsProps {
   baziResult: BaziResult;
@@ -272,6 +273,12 @@ export const LegionCards = ({ baziResult, shenshaRuleset = 'trad', isPremium = f
           const { stem, branch } = pillar;
           const tenGod = tenGods[pillarName] || { stem: "待計算", branch: "待計算" };
           
+          // 使用新的轉譯模組獲取角色數據
+          const ganCharacter = getGanCharacter(stem);
+          const zhiCharacter = getZhiCharacter(branch);
+          const translatedLegion = translatePillarToLegion(pillarName, stem, branch, pillars.day.stem);
+          
+          // 保留舊的角色對照（用於策略建議）
           const commanderRole = tianganRoles[stem];
           const advisorRole = dizhiRoles[branch];
           
@@ -323,22 +330,106 @@ export const LegionCards = ({ baziResult, shenshaRuleset = 'trad', isPremium = f
                   </div>
                 </div>
 
-                {/* 指揮官與軍師 - 使用新的 ArmyCard 組件 */}
+                {/* 指揮官與軍師 - 使用新的 LegionCharacterCard 組件 */}
                 <div className="grid md:grid-cols-2 gap-4">
-                  <ArmyCard 
-                    type="commander" 
-                    character={stem} 
-                    role={commanderRole} 
-                    legionColor={legion.gradient}
-                    characterColor={storyMaterialsManager.getGanRole(stem)?.color}
-                  />
-                  <ArmyCard 
-                    type="advisor" 
-                    character={branch} 
-                    role={advisorRole} 
-                    legionColor={legion.gradient}
-                    characterColor={storyMaterialsManager.getZhiRole(branch)?.color}
-                  />
+                  {ganCharacter && (
+                    <LegionCharacterCard 
+                      type="general" 
+                      character={ganCharacter}
+                      member={translatedLegion.general}
+                      legionColor={legion.gradient}
+                    />
+                  )}
+                  {zhiCharacter && (
+                    <LegionCharacterCard 
+                      type="strategist" 
+                      character={zhiCharacter}
+                      member={translatedLegion.strategist}
+                      legionColor={legion.gradient}
+                    />
+                  )}
+                </div>
+                
+                {/* 副將與奇謀 - 藏干角色 */}
+                {(translatedLegion.lieutenant || translatedLegion.specialists.length > 0) && (
+                  <div className="grid md:grid-cols-3 gap-3">
+                    {translatedLegion.lieutenant && (
+                      <LegionCharacterCard 
+                        type="lieutenant" 
+                        character={translatedLegion.lieutenant.character}
+                        member={translatedLegion.lieutenant}
+                        legionColor={legion.gradient}
+                      />
+                    )}
+                    {translatedLegion.specialists.slice(0, 2).map((spec, idx) => (
+                      <LegionCharacterCard 
+                        key={idx}
+                        type="specialist" 
+                        character={spec.character}
+                        member={spec}
+                        legionColor={legion.gradient}
+                      />
+                    ))}
+                  </div>
+                )}
+                
+                {/* 戰場環境（納音） */}
+                <div className="p-4 bg-gradient-to-br from-amber-950/40 to-orange-900/20 rounded-xl border border-amber-600/30">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">⚔️</span>
+                    <div>
+                      <h5 className="font-bold text-lg text-amber-300">戰場環境</h5>
+                      <p className="text-sm text-amber-200/70">{translatedLegion.battlefield.name}</p>
+                    </div>
+                    <Badge 
+                      variant="outline" 
+                      className="ml-auto border-amber-500/50 text-amber-300"
+                    >
+                      {translatedLegion.battlefield.element}屬性
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-amber-100/80 mb-3">
+                    {translatedLegion.battlefield.environment}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2 bg-green-950/40 rounded-lg border border-green-600/30">
+                      <p className="text-xs text-green-400 mb-1">戰場優勢</p>
+                      <p className="text-xs text-green-300/80">
+                        {translatedLegion.battlefield.advantages?.join('、') || '平衡戰場'}
+                      </p>
+                    </div>
+                    <div className="p-2 bg-red-950/40 rounded-lg border border-red-600/30">
+                      <p className="text-xs text-red-400 mb-1">環境挑戰</p>
+                      <p className="text-xs text-red-300/80">
+                        {translatedLegion.battlefield.challenges?.join('、') || '無明顯挑戰'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 軍團戰力分析 */}
+                <div className="flex items-center gap-4 p-4 bg-card/60 rounded-xl border border-border/50">
+                  <div className="flex-1">
+                    <p className="text-xs text-muted-foreground mb-1">內部和諧度</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full"
+                          style={{ width: `${Math.min(100, Math.max(0, translatedLegion.internalHarmony))}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium">{translatedLegion.internalHarmony}%</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {translatedLegion.harmonyDescription}
+                    </p>
+                  </div>
+                  <div className="text-center px-4 border-l border-border/50">
+                    <p className="text-xs text-muted-foreground mb-1">總戰力</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {translatedLegion.totalBuff > 0 ? '+' : ''}{translatedLegion.totalBuff}
+                    </p>
+                  </div>
                 </div>
 
                 {/* AI生成的150字軍團傳說故事 */}

@@ -289,11 +289,19 @@ export function ApiBoundaryTestRunner() {
       // 調用本地引擎
       const localResult = calculateBaziStrict(testCase.localInput, false);
 
-      const apiPillars = {
+      // 解析 API 回應 - 支援嵌套結構
+      const pillars = data.calculation?.pillars || data.pillars || {
         year: { stem: data.yearStem, branch: data.yearBranch },
         month: { stem: data.monthStem, branch: data.monthBranch },
         day: { stem: data.dayStem, branch: data.dayBranch },
         hour: { stem: data.hourStem, branch: data.hourBranch }
+      };
+
+      const apiPillars = {
+        year: { stem: pillars.year?.stem, branch: pillars.year?.branch },
+        month: { stem: pillars.month?.stem, branch: pillars.month?.branch },
+        day: { stem: pillars.day?.stem, branch: pillars.day?.branch },
+        hour: { stem: pillars.hour?.stem, branch: pillars.hour?.branch }
       };
 
       const localPillars = {

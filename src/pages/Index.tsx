@@ -17,6 +17,7 @@ import { ShareImageDialog } from "@/components/ShareImageDialog";
 import { PremiumGate } from "@/components/PremiumGate";
 import { MuseumNavigationMap } from "@/components/MuseumNavigationMap";
 import { AiFortuneConsult } from "@/components/AiFortuneConsult";
+import { LegionSummoningOverlay } from "@/components/LegionSummoningOverlay";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, BadgeCheck, Shield, Share2, MessageCircle, Facebook } from "lucide-react";
@@ -96,6 +97,7 @@ const Index = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [baziResult, setBaziResult] = useState<BaziResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [calculatingUserName, setCalculatingUserName] = useState<string>("");
   const [isDownloading, setIsDownloading] = useState(false);
   const [activeSection, setActiveSection] = useState('summary');
   const [shenshaRuleset, setShenshaRuleset] = useState<'trad' | 'legion'>('trad');
@@ -206,6 +208,53 @@ const Index = () => {
         shenshaByPillar[pillar].push(match.name);
       }
     });
+
+    // 計算數據標籤（用於 AI 敘事）
+    const calculateDataLabels = () => {
+      const wuxing = result.wuxing;
+      const dayStem = result.pillars.day.stem;
+      
+      // 計算日主強弱
+      const dayStemElement = getElementFromStem(dayStem);
+      const sameElement = getSameElementScore(wuxing, dayStemElement);
+      const oppositeElement = getOppositeElementScore(wuxing, dayStemElement);
+      const strengthRatio = sameElement / (sameElement + oppositeElement + 0.01);
+      
+      let strengthTag = '中和';
+      if (strengthRatio > 0.55) strengthTag = '身強';
+      else if (strengthRatio < 0.45) strengthTag = '身弱';
+      
+      // 找出主導五行
+      const elements = Object.entries(wuxing);
+      const sorted = elements.sort((a, b) => b[1] - a[1]);
+      const dominantElement = sorted[0][0];
+      
+      // 找出主導十神
+      const tenGodCounts: Record<string, number> = {};
+      Object.values(result.tenGods).forEach(tg => {
+        if (tg.stem) tenGodCounts[tg.stem] = (tenGodCounts[tg.stem] || 0) + 1;
+        if (tg.branch) tenGodCounts[tg.branch] = (tenGodCounts[tg.branch] || 0) + 1;
+      });
+      const sortedTenGods = Object.entries(tenGodCounts).sort((a, b) => b[1] - a[1]);
+      const dominantTenGod = sortedTenGods[0]?.[0] ? `${sortedTenGods[0][0]}旺` : '待分析';
+      
+      // 特殊格局（從神煞中提取高稀有度的）
+      const specialPatterns: string[] = [];
+      allShenshaMatches.forEach(m => {
+        if (m.rarity === 'SSR' || m.rarity === 'SR') {
+          specialPatterns.push(m.name);
+        }
+      });
+      
+      return {
+        strengthTag,
+        dominantElement: translateElement(dominantElement),
+        dominantTenGod,
+        specialPatterns
+      };
+    };
+    
+    const dataLabels = calculateDataLabels();
     
     for (const { type, pillar } of legionTypes) {
       try {
@@ -222,7 +271,9 @@ const Index = () => {
               nayin: result.nayin[pillar as keyof typeof result.nayin],
               tenGod: result.tenGods[pillar as keyof typeof result.tenGods],
               hiddenStems: result.hiddenStems[pillar as keyof typeof result.hiddenStems],
-              shensha: pillarShensha  // 傳入該柱專屬的神煞
+              shensha: pillarShensha,
+              // 傳入數據標籤給 AI
+              dataLabels
             },
             name: result.name,
             calculationId: calculationId
@@ -250,6 +301,52 @@ const Index = () => {
     toast.success("軍團傳說故事生成完成！");
   };
 
+  // 輔助函數：獲取天干五行
+  const getElementFromStem = (stem: string): string => {
+    const stemElements: Record<string, string> = {
+      '甲': 'wood', '乙': 'wood',
+      '丙': 'fire', '丁': 'fire',
+      '戊': 'earth', '己': 'earth',
+      '庚': 'metal', '辛': 'metal',
+      '壬': 'water', '癸': 'water'
+    };
+    return stemElements[stem] || 'earth';
+  };
+
+  // 輔助函數：計算同類五行分數
+  const getSameElementScore = (wuxing: BaziResult['wuxing'], element: string): number => {
+    const supportMap: Record<string, string[]> = {
+      'wood': ['wood', 'water'],
+      'fire': ['fire', 'wood'],
+      'earth': ['earth', 'fire'],
+      'metal': ['metal', 'earth'],
+      'water': ['water', 'metal']
+    };
+    const supporting = supportMap[element] || [];
+    return supporting.reduce((sum, el) => sum + (wuxing[el as keyof typeof wuxing] || 0), 0);
+  };
+
+  // 輔助函數：計算異類五行分數
+  const getOppositeElementScore = (wuxing: BaziResult['wuxing'], element: string): number => {
+    const opposeMap: Record<string, string[]> = {
+      'wood': ['metal', 'fire', 'earth'],
+      'fire': ['water', 'earth', 'metal'],
+      'earth': ['wood', 'metal', 'water'],
+      'metal': ['fire', 'water', 'wood'],
+      'water': ['earth', 'wood', 'fire']
+    };
+    const opposing = opposeMap[element] || [];
+    return opposing.reduce((sum, el) => sum + (wuxing[el as keyof typeof wuxing] || 0), 0);
+  };
+
+  // 輔助函數：翻譯五行名稱
+  const translateElement = (element: string): string => {
+    const map: Record<string, string> = {
+      'wood': '木', 'fire': '火', 'earth': '土', 'metal': '金', 'water': '水'
+    };
+    return map[element] || element;
+  };
+
   const handleCalculate = async (formData: Record<string, unknown>) => {
     // Guest users can calculate but won't save to database
     if (!session && !isGuest) {
@@ -258,6 +355,7 @@ const Index = () => {
       return;
     }
 
+    setCalculatingUserName(formData.name as string);
     setIsCalculating(true);
     
     try {
@@ -436,6 +534,10 @@ const Index = () => {
   };
 
   return (
+    <>
+    {/* Loading 動畫覆蓋層 */}
+    <LegionSummoningOverlay isVisible={isCalculating} userName={calculatingUserName} />
+    
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
       {/* 頂部標題 */}
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
@@ -782,6 +884,7 @@ const Index = () => {
         baziResult={baziResult}
       />
     </div>
+    </>
   );
 };
 

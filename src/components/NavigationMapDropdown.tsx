@@ -129,64 +129,105 @@ export const NavigationMapDropdown: React.FC = () => {
         </div>
         
         {/* 區域列表 */}
-        {ZONES.map((zone, index) => (
-          <DropdownMenuItem
-            key={zone.id}
-            onClick={() => navigate(`/guide/${zone.id}`)}
-            onMouseEnter={() => setHoveredZone(zone.id)}
-            onMouseLeave={() => setHoveredZone(null)}
-            className={`
-              flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer
-              transition-all duration-200
-              ${theme === 'dark' 
-                ? 'hover:bg-gold/10 focus:bg-gold/10' 
-                : 'hover:bg-ink/5 focus:bg-ink/5'
-              }
-            `}
-          >
-            <motion.div 
-              className={`
-                w-9 h-9 rounded-full bg-gradient-to-br ${zone.color}
-                flex items-center justify-center text-white shrink-0
-                shadow-sm
-              `}
-              animate={{
-                scale: hoveredZone === zone.id ? 1.1 : 1,
-                boxShadow: hoveredZone === zone.id 
-                  ? '0 4px 12px rgba(0,0,0,0.2)' 
-                  : '0 2px 4px rgba(0,0,0,0.1)'
-              }}
-              transition={{ duration: 0.2 }}
-            >
-              {zone.icon}
-            </motion.div>
-            
-            <div className="flex-1 min-w-0">
-              <div className={`font-medium text-sm ${
-                theme === 'dark' ? 'text-paper' : 'text-void'
-              }`}>
-                {zone.name}
-              </div>
-              <div className={`text-xs ${
-                theme === 'dark' ? 'text-paper/50' : 'text-void/50'
-              }`}>
-                {zone.subtitle}
-              </div>
-            </div>
-            
+        {ZONES.map((zone, index) => {
+          // 根據索引計算飛入方向
+          const directions = [
+            { x: -30, y: 0 },   // 從左
+            { x: 30, y: 0 },    // 從右
+            { x: 0, y: -20 },   // 從上
+            { x: 0, y: 20 },    // 從下
+            { x: -20, y: -20 }, // 從左上
+            { x: 20, y: -20 },  // 從右上
+            { x: -20, y: 20 },  // 從左下
+            { x: 20, y: 20 },   // 從右下
+          ];
+          const direction = directions[index % directions.length];
+          
+          return (
             <motion.div
-              animate={{ 
-                x: hoveredZone === zone.id ? 0 : -4,
-                opacity: hoveredZone === zone.id ? 1 : 0
+              key={zone.id}
+              initial={{ opacity: 0, x: direction.x, y: direction.y }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              transition={{ 
+                duration: 0.4, 
+                delay: index * 0.05,
+                type: 'spring',
+                stiffness: 300,
+                damping: 20
               }}
-              transition={{ duration: 0.15 }}
             >
-              <ExternalLink className={`w-3.5 h-3.5 ${
-                theme === 'dark' ? 'text-gold' : 'text-amber-600'
-              }`} />
+              <DropdownMenuItem
+                onClick={() => navigate(`/guide/${zone.id}`)}
+                onMouseEnter={() => setHoveredZone(zone.id)}
+                onMouseLeave={() => setHoveredZone(null)}
+                className={`
+                  flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer
+                  transition-all duration-200
+                  ${theme === 'dark' 
+                    ? 'hover:bg-gold/10 focus:bg-gold/10' 
+                    : 'hover:bg-ink/5 focus:bg-ink/5'
+                  }
+                `}
+              >
+                <motion.div 
+                  className={`
+                    w-9 h-9 rounded-full bg-gradient-to-br ${zone.color}
+                    flex items-center justify-center text-white shrink-0
+                    shadow-sm
+                  `}
+                  animate={{
+                    scale: hoveredZone === zone.id ? 1.1 : 1,
+                    rotate: hoveredZone === zone.id ? [0, -5, 5, 0] : 0,
+                    boxShadow: hoveredZone === zone.id 
+                      ? '0 4px 12px rgba(0,0,0,0.2)' 
+                      : '0 2px 4px rgba(0,0,0,0.1)'
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {zone.icon}
+                </motion.div>
+                
+                <div className="flex-1 min-w-0">
+                  <motion.div 
+                    className={`font-medium text-sm ${
+                      theme === 'dark' ? 'text-paper' : 'text-void'
+                    }`}
+                    animate={{
+                      x: hoveredZone === zone.id ? 4 : 0
+                    }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {zone.name}
+                  </motion.div>
+                  <motion.div 
+                    className={`text-xs ${
+                      theme === 'dark' ? 'text-paper/50' : 'text-void/50'
+                    }`}
+                    animate={{
+                      x: hoveredZone === zone.id ? 4 : 0
+                    }}
+                    transition={{ duration: 0.2, delay: 0.05 }}
+                  >
+                    {zone.subtitle}
+                  </motion.div>
+                </div>
+                
+                <motion.div
+                  animate={{ 
+                    x: hoveredZone === zone.id ? 0 : -4,
+                    opacity: hoveredZone === zone.id ? 1 : 0,
+                    scale: hoveredZone === zone.id ? [1, 1.2, 1] : 1
+                  }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ExternalLink className={`w-3.5 h-3.5 ${
+                    theme === 'dark' ? 'text-gold' : 'text-amber-600'
+                  }`} />
+                </motion.div>
+              </DropdownMenuItem>
             </motion.div>
-          </DropdownMenuItem>
-        ))}
+          );
+        })}
         
         <DropdownMenuSeparator className={theme === 'dark' ? 'bg-gold/20' : 'bg-ink/10'} />
         

@@ -340,20 +340,22 @@ export const storyTemplates = {
   }
 };
 
-// AI 提示詞配置
+// AI 提示詞配置（優化版：傳入數據標籤避免 AI 幻覺）
 export const aiPrompts = {
   systemPrompt: `你是一位資深的八字命理大師，擅長用生動的軍團故事來解釋八字命盤。
 
 核心理念：命理展示的是一條「相對好走但不一定是你要走的路」。這是上天給予的天賦與建議，而非不可改變的宿命。
 
-你需要根據完整的四柱信息創作一個150字內的軍團傳說故事。
+你需要根據完整的四柱信息和「數據標籤」創作一個150字內的軍團傳說故事。
+
+【重要】你收到的「數據標籤」是後端命理引擎精確計算的結果，請嚴格依據這些標籤來描述命主特質，不要自行推導或臆測。
 
 故事創作要求：
 1. 必須融合天干、地支、十神、納音、藏干的所有信息
-2. 以軍團戰爭、策略、角色互動為主題包裝命盤解讀
-3. 嚴格使用提供的角色設定，包括角色名稱、形象、風格、Buff和Debuff
-4. 體現該柱對命主在特定人生階段的性格特質與機遇
-5. 語言生動富有畫面感，讓讀者感受到命理的深度
+2. 【關鍵】嚴格使用提供的「數據標籤」來描述命主特質（如身強/身弱、印旺/財旺等）
+3. 以軍團戰爭、策略、角色互動為主題包裝命盤解讀
+4. 嚴格使用提供的角色設定，包括角色名稱、形象、風格、Buff和Debuff
+5. 若有神煞標籤，需在故事中自然融入（如天乙貴人=貴人相助、羊刃=戰鬥力強但需控制脾氣）
 6. 強調這是天賦潛能的展現，而非註定的命運
 7. 故事結尾要帶出「選擇權在你手中」的啟發
 8. 嚴格控制在150字以內
@@ -362,7 +364,7 @@ export const aiPrompts = {
 - 用軍團戰爭隱喻人生挑戰
 - 用指揮官（天干）與軍師（地支）的配合展現性格特質
 - 明確提及角色的Buff（優勢技能）和Debuff（弱點）
-- 用戰略選擇隱喻人生抉擇的自由
+- 根據數據標籤調整敘事角度（身強則強調開創，身弱則強調借力）
 - 避免絕對化的預言，多用「傾向」「潛能」「機會」等詞`,
 
   buildUserPrompt: (params: {
@@ -376,13 +378,35 @@ export const aiPrompts = {
       nayin?: string;
       tenGod?: { stem: string; branch: string };
       hiddenStems?: string[];
-      shensha?: string[];  // 新增：該柱專屬的神煞列表
+      shensha?: string[];
+      // 新增：數據標籤（後端計算結果）
+      dataLabels?: {
+        strengthTag?: string;      // 身強/身弱/中和
+        dominantElement?: string;  // 主導五行
+        dominantTenGod?: string;   // 主導十神（印旺/財旺/官旺等）
+        specialPatterns?: string[];// 特殊格局
+      };
     };
   }) => {
     const { name, context, tianganRole, dizhiRole, pillarData } = params;
-    return `請為${name}創作${context.name}的傳說故事。
+    
+    // 構建數據標籤區塊
+    const dataLabels = pillarData.dataLabels;
+    const labelSection = dataLabels ? `
+【命理數據標籤】（後端精確計算，請嚴格依據）
+- 日主強弱：${dataLabels.strengthTag || '待分析'}
+- 主導五行：${dataLabels.dominantElement || '待分析'}
+- 十神傾向：${dataLabels.dominantTenGod || '待分析'}
+${dataLabels.specialPatterns && dataLabels.specialPatterns.length > 0 ? `- 特殊格局：${dataLabels.specialPatterns.join('、')}` : ''}
+` : '';
 
-完整四柱信息：
+    // 構建神煞標籤
+    const shenshaSection = pillarData.shensha && pillarData.shensha.length > 0 
+      ? `\n【神煞裝備】（請在故事中自然融入）\n${pillarData.shensha.map(s => `- ${s}`).join('\n')}`
+      : '';
+
+    return `請為${name}創作${context.name}的傳說故事。
+${labelSection}
 【天干指揮官 - ${pillarData.stem}】
 - 角色名稱：${tianganRole.role}
 - 形象：${tianganRole.image}
@@ -403,6 +427,7 @@ export const aiPrompts = {
 - 天干十神：${pillarData.tenGod?.stem || '未知'}
 - 地支十神：${pillarData.tenGod?.branch || '未知'}
 - 地支藏干：${pillarData.hiddenStems?.join('、') || '未知'}
+${shenshaSection}
 
 【人生階段】
 - 影響時期：${context.stage}
@@ -411,11 +436,12 @@ export const aiPrompts = {
 
 請創作一個150字內的軍團故事，要：
 1. 開場點明「${tianganRole.role}」作為指揮官，「${dizhiRole.role}」作為軍師
-2. 描述他們如何運用各自的Buff技能（${tianganRole.buff}和${dizhiRole.buff}）在${context.stage}發揮優勢
-3. 同時提醒要注意的Debuff弱點（${tianganRole.debuff}和${dizhiRole.debuff}）
-4. 融入十神和納音的命理含義
-5. 最後點出「這些是天賦潛能與戰略建議，真正的選擇權在${name}手中」的啟發
-6. 語言生動、富有畫面感，讓讀者感受到角色的鮮明個性`;
+2. 【重要】根據數據標籤描述命主特質（${dataLabels?.strengthTag || ''}${dataLabels?.dominantTenGod ? '、' + dataLabels.dominantTenGod : ''}）
+3. 描述他們如何運用各自的Buff技能（${tianganRole.buff}和${dizhiRole.buff}）在${context.stage}發揮優勢
+4. 同時提醒要注意的Debuff弱點（${tianganRole.debuff}和${dizhiRole.debuff}）
+5. 自然融入神煞的影響（如有）
+6. 最後點出「這些是天賦潛能與戰略建議，真正的選擇權在${name}手中」的啟發
+7. 語言生動、富有畫面感，讓讀者感受到角色的鮮明個性`;
   }
 };
 

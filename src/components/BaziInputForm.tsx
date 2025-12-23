@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, Loader2, History, User, ChevronDown, Trash2, Sparkles, RefreshCw, Clock, MapPin, Settings2 } from "lucide-react";
+import { CalendarIcon, Loader2, History, User, ChevronDown, Trash2, Sparkles, RefreshCw, Clock, MapPin, Settings2, HelpCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -587,7 +588,20 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
 
           {/* 出生時辰 */}
           <div className="space-y-2">
-            <Label htmlFor="hour" className="text-foreground">出生時辰</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="hour" className="text-foreground">出生時辰</Label>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="precise-time-toggle"
+                  checked={usePreciseTime}
+                  onCheckedChange={setUsePreciseTime}
+                  className="scale-75"
+                />
+                <Label htmlFor="precise-time-toggle" className="text-xs text-muted-foreground cursor-pointer">
+                  精確分鐘
+                </Label>
+              </div>
+            </div>
             <div className="flex gap-2">
               <Select value={formData.hour} onValueChange={(value) => setFormData({ ...formData, hour: value })}>
                 <SelectTrigger className="bg-input border-border text-foreground flex-1">
@@ -616,18 +630,72 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                 </div>
               )}
             </div>
+            {usePreciseTime && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                節氣交界精確到分鐘，輸入精確時間可提高準確度
+              </p>
+            )}
           </div>
 
-          {/* 出生地點 */}
+          {/* 出生城市 - 整合經度選擇 */}
           <div className="space-y-2">
-            <Label htmlFor="location" className="text-foreground">出生地點（選填）</Label>
-            <Input
-              id="location"
-              placeholder="例：台北市"
-              value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="bg-input border-border text-foreground"
-            />
+            <div className="flex items-center justify-between">
+              <Label className="text-foreground flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                出生城市
+              </Label>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="solar-time-toggle"
+                  checked={solarTimeMode === "TST"}
+                  onCheckedChange={(checked) => {
+                    setSolarTimeMode(checked ? "TST" : "NONE");
+                    if (checked && !longitude && !selectedCity) {
+                      toast.info("請選擇出生城市以啟用真太陽時計算");
+                    }
+                  }}
+                  disabled={!longitude && !selectedCity}
+                  className="scale-75"
+                />
+                <div className="relative group">
+                  <Label htmlFor="solar-time-toggle" className={`text-xs cursor-pointer ${(!longitude && !selectedCity) ? 'text-muted-foreground/50' : 'text-primary'}`}>
+                    真太陽時 ✨
+                  </Label>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-popover border border-border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-64 z-50">
+                    <p className="text-xs text-foreground font-medium mb-1">真太陽時 (TST)</p>
+                    <p className="text-xs text-muted-foreground">根據出生地經度校正時間，考慮地球自轉與公轉的均時差，是專業命理師推薦的高精度計算方式。</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Select value={selectedCity} onValueChange={handleCitySelect}>
+                <SelectTrigger className="bg-input border-border text-foreground">
+                  <SelectValue placeholder="選擇城市" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border z-[9999]">
+                  {Object.entries(CITY_LONGITUDES).map(([city, data]) => (
+                    <SelectItem key={city} value={city}>
+                      {data.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                id="location"
+                placeholder="或輸入地點名稱"
+                value={formData.location}
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                className="bg-input border-border text-foreground"
+              />
+            </div>
+            {solarTimeMode === "TST" && longitude && (
+              <p className="text-xs text-primary flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                已啟用真太陽時校正 (經度: {parseFloat(longitude).toFixed(2)}°E)
+              </p>
+            )}
           </div>
 
           {/* 進階設定 Collapsible */}

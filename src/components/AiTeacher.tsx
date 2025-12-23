@@ -72,17 +72,6 @@ export const AiTeacher: React.FC<AiTeacherProps> = ({
   }, [isOpen]);
 
   const streamChat = async (userMessages: Message[]) => {
-    const systemPrompt = `你是「明心」，八字學堂的虛擬 AI 老師。你專門教授八字命理知識，包括：
-- 四柱八字基礎概念
-- 天干地支的意義
-- 十神體系與解讀
-- 五行相生相剋
-- 神煞的種類與意義
-- 大運流年判讀
-- 納音六十甲子
-
-請用淺顯易懂的方式講解命理知識，可以舉例說明。回答要有教育性質，幫助學生循序漸進地理解命理。`;
-
     const response = await fetch(CHAT_URL, {
       method: 'POST',
       headers: {
@@ -90,11 +79,9 @@ export const AiTeacher: React.FC<AiTeacherProps> = ({
         Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       },
       body: JSON.stringify({ 
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...userMessages
-        ],
-        baziContext: null
+        messages: userMessages,
+        baziContext: null,
+        role: 'teacher' // 指定使用明心老師角色
       }),
     });
 

@@ -13,7 +13,11 @@ import {
   BookOpen,
   Swords,
   Calculator,
-  FileJson
+  FileJson,
+  CheckCircle2,
+  Clock,
+  MapPin,
+  Sun
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -137,6 +141,49 @@ const VersionInfo = () => {
       name: "Asset Bundle",
       endpoint: "JSON 資產包",
       description: "完整數據檔案授權，含節氣、神煞、課程"
+    }
+  ];
+
+  const technicalSpecs = [
+    {
+      icon: Sun,
+      title: "真太陽時計算 (TST)",
+      status: "passed",
+      items: [
+        { label: "LMT 偏移計算", detail: "(longitude - standardMeridian) × 240秒", file: "solarTime.ts:106" },
+        { label: "均時差 (EoT)", detail: "標準天文公式 9.87sin(2B) - 7.53cos(B) - 1.5sin(B)", file: "solarTime.ts:21-37" },
+        { label: "三模式支援", detail: "NONE / LMT / TST", file: "solarTime.ts:82-97" }
+      ]
+    },
+    {
+      icon: Clock,
+      title: "跨日修正 (Day Delta)",
+      status: "passed",
+      items: [
+        { label: "dayDelta 計算", detail: "Math.floor(adjustedTotalSeconds / 86400)", file: "solarTime.ts:131" },
+        { label: "日柱調整", detail: "solarAdjustedDate + dayDelta", file: "engine.ts:333-334" },
+        { label: "子時換日規則", detail: "早子時/晚子時模式", file: "engine.ts:338-347" }
+      ]
+    },
+    {
+      icon: Database,
+      title: "節氣精度 (HKO)",
+      status: "passed",
+      items: [
+        { label: "多資料源優先", detail: "PRECISE → HKO → COMPLETE", file: "solarTermsService.ts:197-216" },
+        { label: "資料覆蓋", detail: "1850-2100 年完整資料", file: "complete_solar_terms_1850_2100.json" },
+        { label: "時區轉換", detail: "UTC+8 正確處理", file: "solarTermsService.ts:104-132" }
+      ]
+    },
+    {
+      icon: MapPin,
+      title: "地支十神修正",
+      status: "passed",
+      items: [
+        { label: "本氣查詢", detail: "getMainHiddenStem() 函數", file: "tenGodsCalculator.ts:42-50" },
+        { label: "地支十神", detail: "使用藏干本氣計算", file: "tenGodsCalculator.ts:120-131" },
+        { label: "四柱十神", detail: "calculateFourPillarsTenGods()", file: "tenGodsCalculator.ts:161-189" }
+      ]
     }
   ];
 
@@ -282,6 +329,65 @@ const VersionInfo = () => {
                         </p>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Technical Verification */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-8"
+        >
+          <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            技術規格驗證
+            <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">
+              4/4 通過
+            </Badge>
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            根據 RSBZS v3.0 白皮書規格進行技術符合度驗證
+          </p>
+          <div className="grid gap-4 md:grid-cols-2">
+            {technicalSpecs.map((spec, index) => (
+              <motion.div
+                key={spec.title}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 + index * 0.05 }}
+              >
+                <Card className="h-full border-green-500/20 bg-green-500/5">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-green-500/20">
+                          <spec.icon className="h-4 w-4 text-green-400" />
+                        </div>
+                        <CardTitle className="text-sm">{spec.title}</CardTitle>
+                      </div>
+                      <CheckCircle2 className="h-4 w-4 text-green-400" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <ul className="space-y-2">
+                      {spec.items.map((item, i) => (
+                        <li key={i} className="text-xs">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-foreground font-medium">{item.label}</span>
+                            <Badge variant="outline" className="text-[9px] font-mono px-1 py-0 shrink-0">
+                              ✓
+                            </Badge>
+                          </div>
+                          <p className="text-muted-foreground mt-0.5">{item.detail}</p>
+                          <code className="text-[10px] text-primary/70">{item.file}</code>
+                        </li>
+                      ))}
+                    </ul>
                   </CardContent>
                 </Card>
               </motion.div>

@@ -9,6 +9,7 @@ import type { ShenshaMatch } from "@/data/shenshaTypes";
 import { LegionCharacterCard } from "./LegionCharacterCard";
 import { ShenshaCardList } from "./ShenshaCard";
 import { LegionOverviewChart } from "./LegionOverviewChart";
+import { LegionRelationshipDiagram } from "./LegionRelationshipDiagram";
 import { truncateStoryForFree } from "@/hooks/usePremiumStatus";
 import { Button } from "./ui/button";
 import { translatePillarToLegion, translateBaziToArmy, getGanCharacter, getZhiCharacter } from "@/lib/legionTranslator";
@@ -281,6 +282,9 @@ export const LegionCards = ({ baziResult, shenshaRuleset = 'trad', isPremium = f
 
       {/* 軍團總覽圖 */}
       <LegionOverviewChart army={fullArmy} />
+
+      {/* 軍團關係分析圖 */}
+      <LegionRelationshipDiagram army={fullArmy} />
 
       <div className="grid grid-cols-1 gap-8">
         {(["year", "month", "day", "hour"] as const).map((pillarName) => {

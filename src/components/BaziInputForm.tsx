@@ -785,31 +785,81 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
               </div>
 
               {/* 子時模式 */}
-              <div className="space-y-2">
-                <Label className="text-foreground">子時換日規則</Label>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Label className="text-foreground">子時換日規則</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="max-w-sm p-4">
+                        <div className="space-y-2">
+                          <p className="font-bold text-foreground">子時換日爭議</p>
+                          <p className="text-xs text-muted-foreground">
+                            子時（23:00-01:00）跨越午夜，究竟何時換日是命理界數百年來的重要議題。
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            此爭議源於古代計時方式與現代時鐘的差異，至今仍無定論。
+                          </p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                
                 <RadioGroup
-                  className="flex gap-4"
+                  className="flex flex-col gap-3"
                   value={ziMode}
                   onValueChange={(value) => setZiMode(value as ZiMode)}
                 >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem id="zi-early" value="EARLY" />
-                    <Label htmlFor="zi-early" className="text-foreground cursor-pointer">
-                      <span className="font-medium">早子時</span>
-                      <span className="text-xs text-muted-foreground ml-1">(23:00換日)</span>
+                  {/* 早子時選項 */}
+                  <div className="flex items-start space-x-3 p-3 rounded-lg border border-border/50 hover:border-primary/30 hover:bg-muted/20 transition-colors">
+                    <RadioGroupItem id="zi-early" value="EARLY" className="mt-1" />
+                    <Label htmlFor="zi-early" className="text-foreground cursor-pointer flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold">早子時派</span>
+                        <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">推薦</span>
+                        <span className="text-xs text-muted-foreground">(23:00換日)</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        認為子時一到（23:00）即換日。此派源於《子平真詮》等經典，認為天氣交接於子正（23:00），故日柱應隨之更換。為當代多數命理師採用的主流派別。
+                      </p>
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem id="zi-late" value="LATE" />
-                    <Label htmlFor="zi-late" className="text-foreground cursor-pointer">
-                      <span className="font-medium">晚子時</span>
-                      <span className="text-xs text-muted-foreground ml-1">(00:00換日)</span>
+                  
+                  {/* 晚子時選項 */}
+                  <div className="flex items-start space-x-3 p-3 rounded-lg border border-border/50 hover:border-primary/30 hover:bg-muted/20 transition-colors">
+                    <RadioGroupItem id="zi-late" value="LATE" className="mt-1" />
+                    <Label htmlFor="zi-late" className="text-foreground cursor-pointer flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold">晚子時派</span>
+                        <span className="text-xs text-muted-foreground">(00:00換日)</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        認為需到午夜（00:00）才換日，23:00-00:00 屬「夜子時」仍歸當日。此派認為日柱應以太陽過下中天為準，與現代曆法同步。部分港台命理師採用此法。
+                      </p>
                     </Label>
                   </div>
                 </RadioGroup>
-                <p className="text-xs text-muted-foreground">
-                  傳統八字多用「早子時」，23:00 起算入次日
-                </p>
+                
+                {/* 歷史背景說明 */}
+                <div className="p-3 bg-muted/30 rounded-lg border border-border/30">
+                  <div className="flex items-start gap-2">
+                    <History className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-medium text-foreground">歷史背景</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        古代中國以「銅壺滴漏」計時，一晝夜分為十二時辰，子時橫跨今之 23:00-01:00。
+                        由於古人日落而息、日出而作，子時（深夜）換日的精確時刻在實務上較少觸及。
+                      </p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        清代以降，隨著西方時鐘傳入，「子初」（23:00）與「子正」（00:00）之辨才成為討論焦點。
+                        兩派各有典籍依據，建議可分別測試，選擇與自身經歷更相符者。
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </CollapsibleContent>
           </Collapsible>

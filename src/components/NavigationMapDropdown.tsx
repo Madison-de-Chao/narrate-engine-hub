@@ -1,15 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
-  Compass, 
-  Users, 
-  Sparkles, 
-  BookOpen, 
-  Star, 
   Swords,
-  Shield,
-  TrendingUp,
+  GraduationCap,
   Map,
   ChevronDown,
   ExternalLink
@@ -30,64 +24,25 @@ interface MapZone {
   subtitle: string;
   icon: React.ReactNode;
   color: string;
+  route: string;
 }
 
 const ZONES: MapZone[] = [
   {
-    id: 'bazi',
-    name: '命盤核心',
-    subtitle: '四柱八字',
-    icon: <Compass className="w-4 h-4" />,
-    color: 'from-amber-500 to-yellow-400'
-  },
-  {
-    id: 'tenGods',
-    name: '十神殿堂',
-    subtitle: '性格與關係',
-    icon: <Users className="w-4 h-4" />,
-    color: 'from-blue-500 to-cyan-400'
-  },
-  {
-    id: 'shensha',
-    name: '神煞迷宮',
-    subtitle: '吉凶星曜',
-    icon: <Sparkles className="w-4 h-4" />,
-    color: 'from-purple-500 to-pink-400'
-  },
-  {
-    id: 'wuxing',
-    name: '五行殿',
-    subtitle: '金木水火土',
-    icon: <Star className="w-4 h-4" />,
-    color: 'from-emerald-500 to-teal-400'
-  },
-  {
-    id: 'nayin',
-    name: '納音寶庫',
-    subtitle: '六十甲子',
-    icon: <BookOpen className="w-4 h-4" />,
-    color: 'from-orange-500 to-red-400'
-  },
-  {
     id: 'legion',
     name: '四時軍團',
-    subtitle: '命運戰場',
+    subtitle: '八字人生兵法系統',
     icon: <Swords className="w-4 h-4" />,
-    color: 'from-red-500 to-rose-400'
+    color: 'from-red-600 to-amber-500',
+    route: '/'
   },
   {
-    id: 'personality',
-    name: '性格分析',
-    subtitle: '內在探索',
-    icon: <Shield className="w-4 h-4" />,
-    color: 'from-indigo-500 to-violet-400'
-  },
-  {
-    id: 'fortune',
-    name: '運勢預測',
-    subtitle: '流年大運',
-    icon: <TrendingUp className="w-4 h-4" />,
-    color: 'from-sky-500 to-blue-400'
+    id: 'academy',
+    name: '八字學堂',
+    subtitle: '命理知識殿堂',
+    icon: <GraduationCap className="w-4 h-4" />,
+    color: 'from-purple-600 to-indigo-500',
+    route: '/academy'
   }
 ];
 
@@ -157,7 +112,7 @@ export const NavigationMapDropdown: React.FC = () => {
               }}
             >
               <DropdownMenuItem
-                onClick={() => navigate(`/guide/${zone.id}`)}
+                onClick={() => navigate(zone.route)}
                 onMouseEnter={() => setHoveredZone(zone.id)}
                 onMouseLeave={() => setHoveredZone(null)}
                 className={`

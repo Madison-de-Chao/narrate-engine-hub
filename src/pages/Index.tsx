@@ -542,13 +542,23 @@ const Index = () => {
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between gap-4">
-            <img 
-              src={logoSishi}
-              alt="四時系統" 
-              className="h-16 md:h-20 object-contain"
-            />
+            <div className="flex items-center gap-3">
+              <img 
+                src={logoSishi}
+                alt="四時系統" 
+                className="h-14 md:h-16 object-contain"
+              />
+              <div className="hidden sm:block">
+                <span className="text-xs font-mono text-primary/80 bg-primary/10 px-2 py-0.5 rounded">
+                  RSBZS v3.0
+                </span>
+              </div>
+            </div>
             <div className="flex-1 text-center">
-              <p className="text-lg md:text-xl text-muted-foreground">
+              <h1 className="text-sm md:text-base font-semibold text-foreground/90">
+                虹靈御所八字人生兵法
+              </h1>
+              <p className="text-xs md:text-sm text-muted-foreground">
                 八字不是宿命，而是靈魂的戰場
               </p>
             </div>

@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Edit, Trash2, Copy, Eye, Lock, Globe, Sparkles, Swords, Shield, Wand2, Crown, Users, Star, Zap, Info } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, Copy, Eye, Lock, Globe, Sparkles, Swords, Shield, Wand2, Crown, Users, Star, Zap, Info, Download } from "lucide-react";
 
 interface PromptTemplate {
   id: string;
@@ -430,6 +430,45 @@ export default function PromptTemplates() {
     toast.success(`已插入 {{${varName}}}`);
   };
 
+  // 一鍵下載所有設定和模板
+  const handleExportAll = () => {
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      version: "1.0",
+      baziApiVariables: BAZI_DATA_VARIABLES,
+      exampleTemplates: EXAMPLE_TEMPLATES,
+      savedTemplates: templates.map(t => ({
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        template_type: t.template_type,
+        system_prompt: t.system_prompt,
+        user_prompt_template: t.user_prompt_template,
+        variables: t.variables,
+        is_public: t.is_public,
+        is_default: t.is_default,
+        created_at: t.created_at,
+      })),
+      templateTypes: TEMPLATE_TYPES.map(t => ({
+        value: t.value,
+        label: t.label,
+        description: t.description,
+      })),
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `bazi-templates-export-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success("已下載所有設定和模板");
+  };
+
   const systemTemplates = templates.filter(t => t.user_id === null);
   const myTemplates = templates.filter(t => t.user_id !== null);
 
@@ -451,10 +490,16 @@ export default function PromptTemplates() {
                 將專業八字數據轉化為您獨特的現代化解釋方案
               </p>
             </div>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              新增模板
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleExportAll}>
+                <Download className="h-4 w-4 mr-2" />
+                匯出全部
+              </Button>
+              <Button onClick={() => setIsDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                新增模板
+              </Button>
+            </div>
           </div>
 
           {/* Concept Explanation */}

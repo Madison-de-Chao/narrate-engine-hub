@@ -63,7 +63,7 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
               <span className={`text-xs tracking-wider ${
                 theme === 'dark' ? 'text-paper/60' : 'text-void/60'
               }`}>
-                科博館等級官方導覽 · 專業可信任
+                虹靈御所八字導覽 · 專業可信任
               </span>
               <span className={`text-xs hidden sm:inline ${
                 theme === 'dark' ? 'text-paper/40' : 'text-void/40'
@@ -97,17 +97,19 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
                 LIVE 導覽模式
               </span>
               
-              <Button
-                onClick={() => navigate('/')}
-                className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-bold tracking-wider uppercase transition-colors duration-300 shadow-md flex items-center gap-2 ${
-                  theme === 'dark'
-                    ? 'bg-gradient-to-r from-amber-400 to-amber-300 text-void hover:from-amber-300 hover:to-amber-200'
-                    : 'bg-gradient-to-r from-ink to-slate-800 text-paper hover:from-slate-800 hover:to-slate-700'
-                }`}
-              >
-                <Map className="w-4 h-4" />
-                <span className="hidden sm:inline">立即體驗</span>
-              </Button>
+              {!isHome && (
+                <Button
+                  onClick={() => navigate('/')}
+                  className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-bold tracking-wider uppercase transition-colors duration-300 shadow-md flex items-center gap-2 ${
+                    theme === 'dark'
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-300 text-void hover:from-amber-300 hover:to-amber-200'
+                      : 'bg-gradient-to-r from-ink to-slate-800 text-paper hover:from-slate-800 hover:to-slate-700'
+                  }`}
+                >
+                  <Map className="w-4 h-4" />
+                  <span className="hidden sm:inline">立即體驗</span>
+                </Button>
+              )}
             </div>
           </div>
         </header>

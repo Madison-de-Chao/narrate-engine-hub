@@ -15,7 +15,6 @@ import { TenGodsAnalysis } from "@/components/TenGodsAnalysis";
 import { ProfessionalReportHeader } from "@/components/ProfessionalReportHeader";
 import { ShareImageDialog } from "@/components/ShareImageDialog";
 import { PremiumGate } from "@/components/PremiumGate";
-import { MuseumNavigationMap } from "@/components/MuseumNavigationMap";
 import { AiFortuneConsult } from "@/components/AiFortuneConsult";
 import { LegionSummoningOverlay } from "@/components/LegionSummoningOverlay";
 import { Button } from "@/components/ui/button";
@@ -622,17 +621,6 @@ const Index = () => {
           </Alert>
         )}
         
-        {/* 博物館導覽地圖 */}
-        {!baziResult && (
-          <section id="museum-map" className="animate-fade-in scroll-mt-20">
-            <MuseumNavigationMap 
-              onZoneClick={(zoneId) => {
-                console.log('Zone clicked:', zoneId);
-              }}
-              onAiConsultClick={() => setIsAiConsultOpen(true)}
-            />
-          </section>
-        )}
 
         {/* 區域1：資料輸入區 */}
         <section className="animate-fade-in space-y-4">

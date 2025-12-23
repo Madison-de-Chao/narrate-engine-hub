@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, Map, Sun, Moon } from 'lucide-react';
+import { ChevronLeft, Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
+import { NavigationMapDropdown } from '@/components/NavigationMapDropdown';
 
 interface MuseumLayoutProps {
   children: React.ReactNode;
@@ -97,28 +98,7 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
                 LIVE 導覽模式
               </span>
               
-              <Button
-                onClick={() => {
-                  if (isHome) {
-                    // 已在首頁，滾動到地圖區域
-                    const mapSection = document.getElementById('museum-map');
-                    if (mapSection) {
-                      mapSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  } else {
-                    // 不在首頁，導航到首頁
-                    navigate('/');
-                  }
-                }}
-                className={`px-3 sm:px-4 py-2 rounded-xl text-xs font-bold tracking-wider uppercase transition-colors duration-300 shadow-md flex items-center gap-2 ${
-                  theme === 'dark'
-                    ? 'bg-gradient-to-r from-amber-400 to-amber-300 text-void hover:from-amber-300 hover:to-amber-200'
-                    : 'bg-gradient-to-r from-ink to-slate-800 text-paper hover:from-slate-800 hover:to-slate-700'
-                }`}
-              >
-                <Map className="w-4 h-4" />
-                <span className="hidden sm:inline">立即體驗</span>
-              </Button>
+              <NavigationMapDropdown />
             </div>
           </div>
         </header>

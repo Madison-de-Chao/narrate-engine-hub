@@ -13,6 +13,7 @@ import Admin from "./pages/Admin";
 import BaziTest from "./pages/BaziTest";
 import ZoneGuide from "./pages/ZoneGuide";
 import BaziAcademy from "./pages/BaziAcademy";
+import NavigationMap from "./pages/NavigationMap";
 import ApiDocs from "./pages/ApiDocs";
 import ApiConsole from "./pages/ApiConsole";
 import ExportData from "./pages/ExportData";
@@ -45,6 +46,7 @@ const App = () => (
                   <ZoneGuide />
                 </EntitlementGuard>
               } />
+              <Route path="/map" element={<NavigationMap />} />
               <Route path="/api-docs" element={<ApiDocs />} />
               <Route path="/api-console" element={<ApiConsole />} />
               <Route path="/export" element={<ExportData />} />

@@ -549,9 +549,14 @@ const Index = () => {
                 className="h-14 md:h-16 object-contain"
               />
               <div className="hidden sm:block">
-                <span className="text-xs font-mono text-primary/80 bg-primary/10 px-2 py-0.5 rounded">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/version')}
+                  className="text-xs font-mono text-primary/80 bg-primary/10 px-2 py-0.5 rounded hover:bg-primary/20"
+                >
                   RSBZS v3.0
-                </span>
+                </Button>
               </div>
             </div>
             <div className="flex-1 text-center">

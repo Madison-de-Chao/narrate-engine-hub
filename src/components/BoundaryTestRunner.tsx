@@ -44,43 +44,43 @@ interface BoundaryTestCase {
   notes?: string;
 }
 
-// 節氣交界測試案例
+// 節氣交界測試案例 (2024立春精確時間: 16:26:53 北京時間 = 08:26:53 UTC)
 const SOLAR_TERM_BOUNDARY_TESTS: BoundaryTestCase[] = [
   {
     id: "lichun-before-1min",
     name: "立春前1分鐘",
-    description: "2024-02-04 17:26 (立春17:27前1分鐘，北京時間)",
+    description: "2024-02-04 16:25 (立春16:26:53前，北京時間)",
     category: "solar_term",
     input: {
-      year: 2024, month: 2, day: 4, hour: 17, minute: 26, second: 0,
+      year: 2024, month: 2, day: 4, hour: 16, minute: 25, second: 0,
       tzOffsetMinutesEast: 480,
       solarTimeMode: "NONE",
       ziMode: "EARLY"
     },
     expected: { yearBranch: "卯" }, // 癸卯年
-    notes: "立春前應為癸卯年（資料：UTC 09:27 = 北京 17:27）"
+    notes: "立春前應為癸卯年（資料：UTC 08:26:53 = 北京 16:26:53）"
   },
   {
     id: "lichun-exact",
     name: "立春當刻",
-    description: "2024-02-04 17:27 (立春精確時刻，北京時間)",
+    description: "2024-02-04 16:27 (立春16:26:53後，北京時間)",
     category: "solar_term",
     input: {
-      year: 2024, month: 2, day: 4, hour: 17, minute: 27, second: 0,
+      year: 2024, month: 2, day: 4, hour: 16, minute: 27, second: 0,
       tzOffsetMinutesEast: 480,
       solarTimeMode: "NONE",
       ziMode: "EARLY"
     },
     expected: { yearBranch: "辰" }, // 甲辰年
-    notes: "立春後應為甲辰年（資料：UTC 09:27 = 北京 17:27）"
+    notes: "立春後應為甲辰年（資料：UTC 08:26:53 = 北京 16:26:53）"
   },
   {
     id: "lichun-after-1min",
     name: "立春後1分鐘",
-    description: "2024-02-04 17:28 (立春後1分鐘，北京時間)",
+    description: "2024-02-04 16:28 (立春後1分鐘，北京時間)",
     category: "solar_term",
     input: {
-      year: 2024, month: 2, day: 4, hour: 17, minute: 28, second: 0,
+      year: 2024, month: 2, day: 4, hour: 16, minute: 28, second: 0,
       tzOffsetMinutesEast: 480,
       solarTimeMode: "NONE",
       ziMode: "EARLY"

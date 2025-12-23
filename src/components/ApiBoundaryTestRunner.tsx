@@ -109,46 +109,46 @@ const API_TEST_CASES: ApiTestCase[] = [
     },
     notes: "日柱應為戊寅（錨點驗證）"
   },
-  // 節氣邊界
+  // 節氣邊界測試 (2024立春精確時間: 16:26:53 北京時間)
   {
     id: "lichun-2024-before",
     name: "2024立春前1分鐘",
-    description: "2024-02-04 17:26 北京時間",
+    description: "2024-02-04 16:25 北京時間（立春16:26:53前）",
     category: "solar_term",
     input: {
       name: "測試用戶",
       gender: "male",
       birthDate: "2024-02-04",
-      birthTime: "17:26",
+      birthTime: "16:25",
       timezoneOffsetMinutes: 480
     },
     localInput: {
-      year: 2024, month: 2, day: 4, hour: 17, minute: 26, second: 0,
+      year: 2024, month: 2, day: 4, hour: 16, minute: 25, second: 0,
       tzOffsetMinutesEast: 480,
       solarTimeMode: "NONE",
       ziMode: "EARLY"
     },
-    notes: "立春17:27前，應為癸卯年"
+    notes: "立春16:26:53前，應為癸卯年、丙寅月"
   },
   {
     id: "lichun-2024-after",
     name: "2024立春後1分鐘",
-    description: "2024-02-04 17:28 北京時間",
+    description: "2024-02-04 16:28 北京時間（立春16:26:53後）",
     category: "solar_term",
     input: {
       name: "測試用戶",
       gender: "male",
       birthDate: "2024-02-04",
-      birthTime: "17:28",
+      birthTime: "16:28",
       timezoneOffsetMinutes: 480
     },
     localInput: {
-      year: 2024, month: 2, day: 4, hour: 17, minute: 28, second: 0,
+      year: 2024, month: 2, day: 4, hour: 16, minute: 28, second: 0,
       tzOffsetMinutesEast: 480,
       solarTimeMode: "NONE",
       ziMode: "EARLY"
     },
-    notes: "立春17:27後，應為甲辰年"
+    notes: "立春16:26:53後，應為甲辰年、丙寅月"
   },
   // 子時測試
   {

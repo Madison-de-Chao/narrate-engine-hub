@@ -171,7 +171,7 @@ const BaziAcademy: React.FC = () => {
   const premiumZones = COURSE_ZONES.filter(z => !z.isFree);
 
   return (
-    <div className={`min-h-screen pb-20 ${
+    <div className={`min-h-screen pb-20 pt-16 ${
       theme === 'dark' ? 'bg-background' : 'bg-gray-50'
     }`}>
       {/* 頂部橫幅 */}

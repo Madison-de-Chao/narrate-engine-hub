@@ -236,93 +236,155 @@ const NavigationMap: React.FC = () => {
 
           {/* 導覽地圖區域 */}
           <div className="relative z-10 w-full pt-8" style={{ minHeight: '500px', paddingBottom: '20px' }}>
-            {ZONES.map((zone, index) => (
-              <motion.div
-                key={zone.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-                style={{
-                  left: `${zone.position.x}%`,
-                  top: `${zone.position.y}%`
-                }}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ 
-                  delay: 0.1 * index,
-                  type: 'spring',
-                  stiffness: 200
-                }}
-                whileHover={{ 
-                  scale: 1.15, 
-                  zIndex: 20,
-                  transition: { duration: 0.2 }
-                }}
-                whileTap={{ scale: 0.9 }}
-                onHoverStart={() => setHoveredZone(zone.id)}
-                onHoverEnd={() => setHoveredZone(null)}
-                onClick={() => {
-                  setActiveZone(zone.id);
-                }}
-              >
-                {/* 光暈效果 */}
+            {ZONES.map((zone, index) => {
+              // 根據位置計算飛入方向
+              const getEntryDirection = () => {
+                const centerX = 50;
+                const centerY = 50;
+                const dx = zone.position.x - centerX;
+                const dy = zone.position.y - centerY;
+                // 從外側飛入，放大偏移量
+                return {
+                  x: dx * 3,
+                  y: dy * 3,
+                  rotate: dx > 0 ? 45 : -45
+                };
+              };
+              const entryDir = getEntryDirection();
+              
+              return (
                 <motion.div
-                  className="absolute inset-0 rounded-full"
+                  key={zone.id}
+                  className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
                   style={{
-                    background: `radial-gradient(circle, ${zone.glowColor} 0%, transparent 70%)`,
-                    transform: 'scale(1.5)'
+                    left: `${zone.position.x}%`,
+                    top: `${zone.position.y}%`
                   }}
-                  animate={{
-                    opacity: hoveredZone === zone.id ? 0.8 : 0,
-                    scale: hoveredZone === zone.id ? 2 : 1.5
+                  initial={{ 
+                    scale: 0, 
+                    opacity: 0,
+                    x: entryDir.x,
+                    y: entryDir.y,
+                    rotate: entryDir.rotate
                   }}
-                  transition={{ duration: 0.3 }}
-                />
-                
-                {/* 脈動環 */}
-                <motion.div
-                  className={`absolute inset-0 rounded-full border-2 ${
-                    theme === 'dark' ? 'border-white/30' : 'border-black/20'
-                  }`}
-                  animate={{
-                    scale: hoveredZone === zone.id ? [1, 1.3, 1] : 1,
-                    opacity: hoveredZone === zone.id ? [0.5, 0, 0.5] : 0
+                  animate={{ 
+                    scale: 1, 
+                    opacity: 1,
+                    x: 0,
+                    y: 0,
+                    rotate: 0
                   }}
                   transition={{ 
-                    duration: 1.5, 
-                    repeat: hoveredZone === zone.id ? Infinity : 0 
+                    delay: 0.15 * index,
+                    type: 'spring',
+                    stiffness: 150,
+                    damping: 15,
+                    mass: 0.8
                   }}
-                />
-                
-                <div className={`
-                  ${getSizeClasses(zone.size)}
-                  rounded-full 
-                  bg-gradient-to-br ${zone.color}
-                  flex flex-col items-center justify-center
-                  shadow-lg
-                  transition-all duration-300
-                  relative
-                  ${hoveredZone === zone.id ? 'shadow-2xl ring-4 ring-white/40' : ''}
-                  ${theme === 'dark' ? 'shadow-black/50' : 'shadow-black/20'}
-                `}>
-                  <motion.div 
-                    className="text-white mb-1"
-                    animate={{ 
-                      rotate: hoveredZone === zone.id ? [0, -10, 10, 0] : 0 
+                  whileHover={{ 
+                    scale: 1.15, 
+                    zIndex: 20,
+                    transition: { duration: 0.2 }
+                  }}
+                  whileTap={{ scale: 0.9 }}
+                  onHoverStart={() => setHoveredZone(zone.id)}
+                  onHoverEnd={() => setHoveredZone(null)}
+                  onClick={() => {
+                    setActiveZone(zone.id);
+                  }}
+                >
+                  {/* 光暈效果 */}
+                  <motion.div
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                      background: `radial-gradient(circle, ${zone.glowColor} 0%, transparent 70%)`,
+                      transform: 'scale(1.5)'
                     }}
-                    transition={{ duration: 0.5 }}
+                    animate={{
+                      opacity: hoveredZone === zone.id ? 0.8 : 0,
+                      scale: hoveredZone === zone.id ? 2 : 1.5
+                    }}
+                    transition={{ duration: 0.3 }}
+                  />
+                  
+                  {/* 脈動環 */}
+                  <motion.div
+                    className={`absolute inset-0 rounded-full border-2 ${
+                      theme === 'dark' ? 'border-white/30' : 'border-black/20'
+                    }`}
+                    animate={{
+                      scale: hoveredZone === zone.id ? [1, 1.3, 1] : 1,
+                      opacity: hoveredZone === zone.id ? [0.5, 0, 0.5] : 0
+                    }}
+                    transition={{ 
+                      duration: 1.5, 
+                      repeat: hoveredZone === zone.id ? Infinity : 0 
+                    }}
+                  />
+                  
+                  {/* 第二層脈動環（點擊反饋） */}
+                  <motion.div
+                    className={`absolute inset-0 rounded-full border ${
+                      theme === 'dark' ? 'border-gold/50' : 'border-amber-400/50'
+                    }`}
+                    initial={{ scale: 1, opacity: 0 }}
+                    whileTap={{
+                      scale: [1, 1.5],
+                      opacity: [0.8, 0],
+                      transition: { duration: 0.4 }
+                    }}
+                  />
+                  
+                  <motion.div 
+                    className={`
+                      ${getSizeClasses(zone.size)}
+                      rounded-full 
+                      bg-gradient-to-br ${zone.color}
+                      flex flex-col items-center justify-center
+                      shadow-lg
+                      transition-all duration-300
+                      relative
+                      ${hoveredZone === zone.id ? 'shadow-2xl ring-4 ring-white/40' : ''}
+                      ${theme === 'dark' ? 'shadow-black/50' : 'shadow-black/20'}
+                    `}
+                    whileHover={{
+                      boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+                    }}
                   >
-                    {zone.icon}
+                    <motion.div 
+                      className="text-white mb-1"
+                      animate={{ 
+                        rotate: hoveredZone === zone.id ? [0, -10, 10, 0] : 0,
+                        scale: hoveredZone === zone.id ? [1, 1.2, 1] : 1
+                      }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      {zone.icon}
+                    </motion.div>
+                    <motion.span 
+                      className="text-white text-xs md:text-sm font-bold text-center px-1 leading-tight"
+                      animate={{
+                        y: hoveredZone === zone.id ? -2 : 0
+                      }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {zone.name}
+                    </motion.span>
+                    {zone.size !== 'sm' && (
+                      <motion.span 
+                        className="text-white/70 text-[10px] md:text-xs text-center px-1"
+                        animate={{
+                          opacity: hoveredZone === zone.id ? 1 : 0.7
+                        }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {zone.subtitle}
+                      </motion.span>
+                    )}
                   </motion.div>
-                  <span className="text-white text-xs md:text-sm font-bold text-center px-1 leading-tight">
-                    {zone.name}
-                  </span>
-                  {zone.size !== 'sm' && (
-                    <span className="text-white/70 text-[10px] md:text-xs text-center px-1">
-                      {zone.subtitle}
-                    </span>
-                  )}
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
 
           {/* 區域詳情彈出框 */}

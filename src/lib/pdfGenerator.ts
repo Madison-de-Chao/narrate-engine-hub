@@ -1118,36 +1118,78 @@ export const generatePDF = async (
       console.log(`[PDF] Rendering page ${i + 1}/${pages.length}, size: ${page.offsetWidth}x${page.offsetHeight}`);
       
       try {
-        // 使用 html2canvas 截圖
-        const canvas = await html2canvas(page, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#0a0a0f',
-          logging: false,
-          windowWidth: 794,
-          windowHeight: 1123,
-          // 忽略無法渲染的元素
-          ignoreElements: (element) => {
-            // 忽略寬度或高度為 0 的元素
-            if (element instanceof HTMLElement) {
-              const style = window.getComputedStyle(element);
-              if (style.width === '0px' || style.height === '0px') {
-                return true;
-              }
+        // 修補 html2canvas 在遇到 0x0 canvas pattern 時會直接丟錯，導致整頁渲染失敗
+        const originalCreatePattern = CanvasRenderingContext2D.prototype.createPattern;
+        CanvasRenderingContext2D.prototype.createPattern = function (
+          image: any,
+          repetition: string | null
+        ) {
+          try {
+            const w = typeof image?.width === "number" ? image.width : undefined;
+            const h = typeof image?.height === "number" ? image.height : undefined;
+            if (w === 0 || h === 0) {
+              const dummy = document.createElement("canvas");
+              dummy.width = 1;
+              dummy.height = 1;
+              return originalCreatePattern.call(this, dummy, repetition);
             }
-            return false;
-          },
-          onclone: (clonedDoc) => {
-            // 確保克隆的文檔中的容器是可渲染的
-            const clonedContainer = clonedDoc.body.querySelector('[data-pdf-container="true"]') as HTMLElement | null;
-            if (clonedContainer) {
-              clonedContainer.style.visibility = 'visible';
-              clonedContainer.style.position = 'absolute';
-              clonedContainer.style.left = '0';
-              clonedContainer.style.top = '0';
-            }
+          } catch {
+            // ignore
           }
-        });
+          return originalCreatePattern.call(this, image, repetition);
+        };
+
+        let canvas: HTMLCanvasElement;
+        try {
+          // 使用 html2canvas 截圖
+          canvas = await html2canvas(page, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: "#0a0a0f",
+            logging: false,
+            windowWidth: 794,
+            windowHeight: 1123,
+            // 忽略無法渲染的元素
+            ignoreElements: (element) => {
+              // 忽略尺寸為 0 的 canvas（常見於某些圖表/背景生成器）
+              if (element instanceof HTMLCanvasElement) {
+                return element.width === 0 || element.height === 0;
+              }
+
+              if (element instanceof HTMLElement) {
+                const rect = element.getBoundingClientRect();
+                if (rect.width === 0 || rect.height === 0) return true;
+              }
+
+              return false;
+            },
+            onclone: (clonedDoc) => {
+              // 確保克隆的文檔中的容器是可渲染的
+              const clonedContainer = clonedDoc.body.querySelector(
+                '[data-pdf-container="true"]'
+              ) as HTMLElement | null;
+              if (clonedContainer) {
+                clonedContainer.style.visibility = "visible";
+                clonedContainer.style.position = "absolute";
+                clonedContainer.style.left = "0";
+                clonedContainer.style.top = "0";
+              }
+
+              // 移除/修正 0x0 canvas，避免 html2canvas 在 createPattern 時崩潰
+              clonedDoc.querySelectorAll("canvas").forEach((c) => {
+                const canvasEl = c as HTMLCanvasElement;
+                if (canvasEl.width === 0 || canvasEl.height === 0) {
+                  canvasEl.width = 1;
+                  canvasEl.height = 1;
+                  (canvasEl.style as any).width = "1px";
+                  (canvasEl.style as any).height = "1px";
+                }
+              });
+            },
+          });
+        } finally {
+          CanvasRenderingContext2D.prototype.createPattern = originalCreatePattern;
+        }
         
         // 檢查 canvas 是否有效
         if (canvas.width === 0 || canvas.height === 0) {

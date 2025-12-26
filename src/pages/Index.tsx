@@ -30,8 +30,8 @@ import { MembershipIndicator } from "@/components/PremiumGate";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import logoSishi from "@/assets/logo-sishi.png";
-import logoHonglingyusuo from "@/assets/logo-honglingyusuo.png";
-import logoChaoxuan from "@/assets/logo-chaoxuan.png";
+import logoHonglingyusuo from "@/assets/logo-honglingyusuo-new.png";
+import logoChaoxuan from "@/assets/logo-chaoxuan-new.png";
 import { getFourSeasonsTeam } from "@/lib/fourSeasonsAnalyzer";
 import { ModularShenshaEngine } from "@/lib/shenshaRuleEngine";
 import type { ShenshaMatch } from "@/data/shenshaTypes";
@@ -855,7 +855,7 @@ const Index = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <img 
               src={logoHonglingyusuo}
-              alt="虹靈御所" 
+              alt="虹靈御所 Rainbow Sanctuary - 八字命理系統" 
               className="h-12 object-contain"
             />
             <p className="text-muted-foreground text-center">
@@ -863,7 +863,7 @@ const Index = () => {
             </p>
             <img 
               src={logoChaoxuan}
-              alt="超烜創意" 
+              alt="超烜創意 Maison de Chao - 創意設計" 
               className="h-12 object-contain"
             />
           </div>

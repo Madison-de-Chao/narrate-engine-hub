@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Share2, Download, Loader2, Copy, Check, MessageCircle, Facebook, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
-import logoHonglingyusuo from "@/assets/logo-honglingyusuo.png";
+import logoHonglingyusuo from "@/assets/logo-honglingyusuo-new.png";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QRCodeSVG } from "qrcode.react";
@@ -195,7 +195,7 @@ export const ShareImageDialog = ({ name, gender, pillars, nayin, legionStories, 
               <div className="relative p-6">
                 {/* Logo 與標題 */}
                 <div className="flex flex-col items-center mb-4">
-                  <img src={logoHonglingyusuo} alt="虹靈御所" className="h-10 object-contain mb-2" />
+                  <img src={logoHonglingyusuo} alt="虹靈御所 Rainbow Sanctuary" className="h-10 object-contain mb-2" />
                   <div className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-amber-400" />
                     <h3 className="text-lg font-bold bg-gradient-to-r from-amber-200 via-amber-300 to-amber-200 bg-clip-text text-transparent">

@@ -1045,26 +1045,39 @@ export const generatePDF = async (
   reportData?: ReportData,
   options: PdfOptions = defaultPdfOptions
 ) => {
+  console.log('[PDF] Starting PDF generation...', { fileName, options });
+  
   if (!reportData) {
-    console.error('No report data provided');
+    console.error('[PDF] No report data provided');
     throw new Error('No report data provided');
   }
 
-  // 創建報告 HTML，傳入選項
-  const container = createReportContainer(reportData, coverData, options);
-  
-  // 將容器放到螢幕外（保持可渲染，避免輸出全黑）
-  container.setAttribute('data-pdf-container', 'true');
-  container.style.position = 'absolute';
-  container.style.left = '-9999px';
-  container.style.top = '0';
-  container.style.zIndex = '-1';
-  container.style.visibility = 'visible';
-  
-  // 等待字體和圖片加載 - 增加等待時間
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  console.log('[PDF] Report data received:', { 
+    name: reportData.name, 
+    gender: reportData.gender,
+    hasLegionStories: !!reportData.legionStories,
+    hasShensha: !!reportData.shensha?.length
+  });
+
+  let container: HTMLDivElement | null = null;
   
   try {
+    // 創建報告 HTML，傳入選項
+    container = createReportContainer(reportData, coverData, options);
+    console.log('[PDF] Container created');
+    
+    // 將容器放到螢幕外（保持可渲染，避免輸出全黑）
+    container.setAttribute('data-pdf-container', 'true');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.zIndex = '-1';
+    container.style.visibility = 'visible';
+    
+    // 等待字體和圖片加載 - 增加等待時間
+    console.log('[PDF] Waiting for fonts and images to load...');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
     // 獲取所有頁面 - 使用更可靠的選擇器
     const pages = Array.from(container.children).filter(
       (child): child is HTMLElement => 
@@ -1073,8 +1086,10 @@ export const generatePDF = async (
         child.offsetHeight > 0
     );
     
+    console.log('[PDF] Pages found:', pages.length);
+    
     if (pages.length === 0) {
-      console.error('No pages found in container');
+      console.error('[PDF] No pages found in container. Container children:', container.children.length);
       throw new Error('No pages found in container');
     }
     
@@ -1089,71 +1104,93 @@ export const generatePDF = async (
     const pdfWidth = 210;
     const pdfHeight = 297;
     
+    let renderedPages = 0;
+    
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
       
       // 確保頁面有尺寸
       if (page.offsetWidth === 0 || page.offsetHeight === 0) {
-        console.warn(`Page ${i} has no dimensions, skipping`);
+        console.warn(`[PDF] Page ${i} has no dimensions, skipping`);
         continue;
       }
       
-      console.log(`Rendering page ${i + 1}/${pages.length}, size: ${page.offsetWidth}x${page.offsetHeight}`);
+      console.log(`[PDF] Rendering page ${i + 1}/${pages.length}, size: ${page.offsetWidth}x${page.offsetHeight}`);
       
-      // 使用 html2canvas 截圖
-      const canvas = await html2canvas(page, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#0a0a0f',
-        logging: false,
-        windowWidth: 794,
-        windowHeight: 1123,
-        // 忽略無法渲染的元素
-        ignoreElements: (element) => {
-          // 忽略寬度或高度為 0 的元素
-          if (element instanceof HTMLElement) {
-            const style = window.getComputedStyle(element);
-            if (style.width === '0px' || style.height === '0px') {
-              return true;
+      try {
+        // 使用 html2canvas 截圖
+        const canvas = await html2canvas(page, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#0a0a0f',
+          logging: false,
+          windowWidth: 794,
+          windowHeight: 1123,
+          // 忽略無法渲染的元素
+          ignoreElements: (element) => {
+            // 忽略寬度或高度為 0 的元素
+            if (element instanceof HTMLElement) {
+              const style = window.getComputedStyle(element);
+              if (style.width === '0px' || style.height === '0px') {
+                return true;
+              }
+            }
+            return false;
+          },
+          onclone: (clonedDoc) => {
+            // 確保克隆的文檔中的容器是可渲染的
+            const clonedContainer = clonedDoc.body.querySelector('[data-pdf-container="true"]') as HTMLElement | null;
+            if (clonedContainer) {
+              clonedContainer.style.visibility = 'visible';
+              clonedContainer.style.position = 'absolute';
+              clonedContainer.style.left = '0';
+              clonedContainer.style.top = '0';
             }
           }
-          return false;
-        },
-        onclone: (clonedDoc) => {
-          // 確保克隆的文檔中的容器是可渲染的
-          const clonedContainer = clonedDoc.body.querySelector('[data-pdf-container="true"]') as HTMLElement | null;
-          if (clonedContainer) {
-            clonedContainer.style.visibility = 'visible';
-            clonedContainer.style.position = 'absolute';
-            clonedContainer.style.left = '0';
-            clonedContainer.style.top = '0';
-          }
+        });
+        
+        // 檢查 canvas 是否有效
+        if (canvas.width === 0 || canvas.height === 0) {
+          console.warn(`[PDF] Canvas for page ${i} has no dimensions, skipping`);
+          continue;
         }
-      });
-      
-      // 檢查 canvas 是否有效
-      if (canvas.width === 0 || canvas.height === 0) {
-        console.warn(`Canvas for page ${i} has no dimensions, skipping`);
-        continue;
+        
+        console.log(`[PDF] Canvas generated for page ${i + 1}, size: ${canvas.width}x${canvas.height}`);
+        
+        // 轉換為圖片並加入 PDF
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        
+        if (renderedPages > 0) {
+          pdf.addPage();
+        }
+        
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+        renderedPages++;
+        console.log(`[PDF] Page ${i + 1} added to PDF`);
+        
+      } catch (pageError) {
+        console.error(`[PDF] Error rendering page ${i + 1}:`, pageError);
+        // 繼續處理其他頁面，不中斷整個過程
       }
-      
-      // 轉換為圖片並加入 PDF
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      
-      if (i > 0) {
-        pdf.addPage();
-      }
-      
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+    }
+    
+    if (renderedPages === 0) {
+      throw new Error('No pages were successfully rendered');
     }
     
     // 下載 PDF
+    console.log(`[PDF] Saving PDF with ${renderedPages} pages...`);
     pdf.save(fileName);
+    console.log('[PDF] PDF saved successfully!');
     
+  } catch (error) {
+    console.error('[PDF] PDF generation failed:', error);
+    throw error;
   } finally {
     // 清理臨時容器
-    if (container.parentNode) {
+    if (container && container.parentNode) {
       document.body.removeChild(container);
+      console.log('[PDF] Cleanup completed');
     }
   }
 };

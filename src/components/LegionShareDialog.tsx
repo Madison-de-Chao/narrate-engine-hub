@@ -19,7 +19,8 @@ import {
   Sparkles,
   Shield,
   Swords,
-  Crown
+  Crown,
+  BookOpen
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -172,6 +173,30 @@ export function LegionShareDialog({
     }
   }, [name]);
 
+  // 提取軍團故事精華
+  const extractStoryHighlight = (story: string | undefined, maxLength: number = 60): string => {
+    if (!story) return '';
+    // 移除可能的標題和格式符號
+    const cleanedStory = story.replace(/^[#\*]+\s*/gm, '').replace(/\n+/g, ' ').trim();
+    // 取第一句或指定長度
+    const firstSentence = cleanedStory.split(/[。！？]/)[0];
+    if (firstSentence && firstSentence.length <= maxLength) {
+      return firstSentence + '。';
+    }
+    return cleanedStory.slice(0, maxLength) + '...';
+  };
+
+  // 獲取所有軍團故事摘要
+  const storyHighlights = {
+    year: extractStoryHighlight(legionStories.year),
+    month: extractStoryHighlight(legionStories.month),
+    day: extractStoryHighlight(legionStories.day),
+    hour: extractStoryHighlight(legionStories.hour),
+  };
+
+  // 檢查是否有任何故事
+  const hasStories = Object.values(storyHighlights).some(s => s.length > 0);
+
   const renderElegantStyle = () => (
     <div 
       ref={previewRef}
@@ -184,7 +209,7 @@ export function LegionShareDialog({
       </div>
       
       {/* Header */}
-      <div className="relative z-10 text-center mb-6">
+      <div className="relative z-10 text-center mb-4">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-500/20 rounded-full border border-amber-500/30 mb-3">
           <Sparkles className="w-4 h-4 text-amber-400" />
           <span className="text-sm text-amber-300">命理軍團</span>
@@ -198,7 +223,7 @@ export function LegionShareDialog({
       </div>
 
       {/* Four Pillars */}
-      <div className="relative z-10 grid grid-cols-4 gap-2 mb-6">
+      <div className="relative z-10 grid grid-cols-4 gap-2 mb-4">
         {(['year', 'month', 'day', 'hour'] as const).map((key) => {
           const pillar = pillars[key];
           const config = LEGION_CONFIG[key];
@@ -226,9 +251,9 @@ export function LegionShareDialog({
       </div>
 
       {/* Day Master */}
-      <div className="relative z-10 text-center mb-6 p-4 bg-slate-800/50 rounded-xl border border-white/10">
+      <div className="relative z-10 text-center mb-4 p-3 bg-slate-800/50 rounded-xl border border-white/10">
         <div className="text-sm text-slate-400 mb-1">日主元素</div>
-        <div className={`text-3xl font-bold ${WUXING_CONFIG[dayElement]?.color || 'text-white'}`}>
+        <div className={`text-2xl font-bold ${WUXING_CONFIG[dayElement]?.color || 'text-white'}`}>
           {dayStem} · {dayElement}
         </div>
       </div>
@@ -249,8 +274,31 @@ export function LegionShareDialog({
         </div>
       )}
 
+      {/* Legion Story Highlights */}
+      {hasStories && (
+        <div className="relative z-10 mb-4">
+          <div className="text-xs text-slate-400 mb-2 text-center flex items-center justify-center gap-1">
+            <BookOpen className="w-3 h-3" />
+            軍團故事精華
+          </div>
+          <div className="space-y-2">
+            {(['year', 'month', 'day', 'hour'] as const).map((key) => {
+              const highlight = storyHighlights[key];
+              if (!highlight) return null;
+              const config = LEGION_CONFIG[key];
+              return (
+                <div key={key} className="flex items-start gap-2 text-xs">
+                  <span className={`${config.color} flex-shrink-0`}>{config.icon}</span>
+                  <span className="text-slate-300 leading-relaxed">{highlight}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
-      <div className="relative z-10 text-center pt-4 border-t border-white/10">
+      <div className="relative z-10 text-center pt-3 border-t border-white/10">
         <p className="text-xs text-slate-500">紅翎域所 · 命理軍團分析</p>
       </div>
     </div>
@@ -322,7 +370,7 @@ export function LegionShareDialog({
 
       {/* Wuxing */}
       {Object.keys(wuxingScores).length > 0 && (
-        <div className="relative z-10 grid grid-cols-5 gap-2 mb-6">
+        <div className="relative z-10 grid grid-cols-5 gap-2 mb-4">
           {['木', '火', '土', '金', '水'].map((element) => {
             const score = wuxingScores[element] || 0;
             const config = WUXING_CONFIG[element];
@@ -336,8 +384,31 @@ export function LegionShareDialog({
         </div>
       )}
 
+      {/* Legion Story Highlights - Epic Style */}
+      {hasStories && (
+        <div className="relative z-10 mb-4 p-4 bg-stone-900/60 rounded-xl border border-amber-500/20">
+          <div className="text-xs text-amber-500/80 mb-3 text-center flex items-center justify-center gap-2 tracking-wider">
+            <BookOpen className="w-3 h-3" />
+            軍團故事精華
+          </div>
+          <div className="space-y-2">
+            {(['year', 'month', 'day', 'hour'] as const).map((key) => {
+              const highlight = storyHighlights[key];
+              if (!highlight) return null;
+              const config = LEGION_CONFIG[key];
+              return (
+                <div key={key} className="flex items-start gap-2 text-xs">
+                  <span className={`${config.color} flex-shrink-0`}>{config.icon}</span>
+                  <span className="text-amber-100/80 leading-relaxed">{highlight}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
-      <div className="relative z-10 text-center pt-6 border-t border-amber-500/20">
+      <div className="relative z-10 text-center pt-4 border-t border-amber-500/20">
         <p className="text-sm text-amber-600/60 tracking-wider">紅翎域所 · 命理軍團</p>
       </div>
     </div>
@@ -380,13 +451,36 @@ export function LegionShareDialog({
 
       {/* Wuxing */}
       {Object.keys(wuxingScores).length > 0 && (
-        <div className="flex justify-center gap-3 mb-6">
+        <div className="flex justify-center gap-3 mb-4">
           {Object.entries(wuxingScores).map(([element, score]) => (
             <div key={element} className="text-center">
               <div className="text-lg font-medium text-slate-700">{element}</div>
               <div className="text-sm text-slate-400">{score}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Legion Story Highlights - Minimal Style */}
+      {hasStories && (
+        <div className="mb-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div className="text-xs text-slate-500 mb-2 text-center flex items-center justify-center gap-1">
+            <BookOpen className="w-3 h-3" />
+            軍團故事精華
+          </div>
+          <div className="space-y-1.5">
+            {(['year', 'month', 'day', 'hour'] as const).map((key) => {
+              const highlight = storyHighlights[key];
+              if (!highlight) return null;
+              const pillarLabel = key === 'year' ? '年' : key === 'month' ? '月' : key === 'day' ? '日' : '時';
+              return (
+                <div key={key} className="flex items-start gap-2 text-xs">
+                  <span className="text-slate-500 flex-shrink-0 font-medium">{pillarLabel}</span>
+                  <span className="text-slate-600 leading-relaxed">{highlight}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 

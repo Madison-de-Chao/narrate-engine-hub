@@ -130,7 +130,15 @@
 
     --radius: 0.75rem;
 
-    /* 四軍團代表色 - 傳統五行配色 */
+    /* 報告區塊專用色 - 深色模式 */
+    --report-bg: 240 10% 10%;
+    --report-card: 240 8% 14%;
+    --report-border: 45 40% 30%;
+    --report-title: 45 100% 70%;
+    --report-subtitle: 45 40% 75%;
+    --report-text: 45 20% 85%;
+    --report-muted: 45 15% 55%;
+
     --family-legion: 40 70% 55%;
     --growth-legion: 120 60% 45%;
     --self-legion: 260 80% 60%;
@@ -206,6 +214,15 @@
     --border: 45 20% 80%;
     --input: 45 20% 92%;
     --ring: 45 90% 45%;
+
+    /* 報告區塊專用色 - 淺色模式 */
+    --report-bg: 45 25% 97%;
+    --report-card: 0 0% 100%;
+    --report-border: 45 30% 75%;
+    --report-title: 240 15% 20%;
+    --report-subtitle: 240 10% 35%;
+    --report-text: 240 8% 25%;
+    --report-muted: 240 5% 50%;
     
     --gradient-neon: linear-gradient(135deg, hsl(45 90% 50%), hsl(40 90% 55%), hsl(35 90% 50%));
     --gradient-cyber: linear-gradient(180deg, hsl(45 20% 96%), hsl(45 25% 92%));

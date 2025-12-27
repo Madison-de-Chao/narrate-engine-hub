@@ -90,45 +90,45 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
   };
 
   return (
-    <Card className="relative overflow-hidden border-2 border-indigo-500/40 bg-gradient-to-br from-indigo-950 via-indigo-900/80 to-slate-900 card-professional">
+    <Card className="relative overflow-hidden border-2 border-report-border bg-report-card dark:bg-gradient-to-br dark:from-indigo-950 dark:via-indigo-900/80 dark:to-slate-900">
       {/* 裝飾性背景 */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-radial from-indigo-500/20 to-transparent rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-radial from-violet-500/20 to-transparent rounded-full blur-3xl" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-radial from-primary/10 dark:from-indigo-500/20 to-transparent rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-radial from-secondary/10 dark:from-violet-500/20 to-transparent rounded-full blur-3xl" />
       
       {/* 四角裝飾 */}
-      <div className="absolute top-3 left-3 w-8 h-8 border-l-2 border-t-2 border-indigo-500/50" />
-      <div className="absolute top-3 right-3 w-8 h-8 border-r-2 border-t-2 border-indigo-500/50" />
-      <div className="absolute bottom-3 left-3 w-8 h-8 border-l-2 border-b-2 border-indigo-500/50" />
-      <div className="absolute bottom-3 right-3 w-8 h-8 border-r-2 border-b-2 border-indigo-500/50" />
+      <div className="absolute top-3 left-3 w-8 h-8 border-l-2 border-t-2 border-primary/50 dark:border-indigo-500/50" />
+      <div className="absolute top-3 right-3 w-8 h-8 border-r-2 border-t-2 border-primary/50 dark:border-indigo-500/50" />
+      <div className="absolute bottom-3 left-3 w-8 h-8 border-l-2 border-b-2 border-primary/50 dark:border-indigo-500/50" />
+      <div className="absolute bottom-3 right-3 w-8 h-8 border-r-2 border-b-2 border-primary/50 dark:border-indigo-500/50" />
       
       <CardHeader className="relative pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-3xl font-bold font-serif bg-gradient-to-r from-indigo-300 via-violet-300 to-purple-300 bg-clip-text text-transparent tracking-wider">
+            <CardTitle className="text-3xl font-bold font-serif bg-gradient-to-r from-primary via-primary/80 to-secondary dark:from-indigo-300 dark:via-violet-300 dark:to-purple-300 bg-clip-text text-transparent tracking-wider">
               命盤總覽
             </CardTitle>
-            <p className="text-indigo-200/70 mt-1 font-serif">
+            <p className="text-report-subtitle dark:text-indigo-200/70 mt-1 font-serif">
               {name} · {gender === 'male' ? '乾造' : '坤造'} · 日主 {pillars.day.stem}（{elementNames[dayMasterElement]}{YINYANG_MAP[pillars.day.stem]}）
             </p>
           </div>
           <div className="text-right">
-            <div className="text-5xl font-bold text-indigo-300 font-serif animate-pulse-glow">{fortuneIndex}</div>
-            <p className="text-xs text-indigo-200/60">綜合運勢指數</p>
+            <div className="text-5xl font-bold text-primary dark:text-indigo-300 font-serif animate-pulse-glow">{fortuneIndex}</div>
+            <p className="text-xs text-report-muted dark:text-indigo-200/60">綜合運勢指數</p>
           </div>
         </div>
       </CardHeader>
       
       <CardContent className="relative space-y-6">
         {/* 核心四柱展示 */}
-        <div className="grid grid-cols-4 gap-2 p-4 bg-black/30 rounded-xl border border-indigo-500/20">
+        <div className="grid grid-cols-4 gap-2 p-4 bg-muted/30 dark:bg-black/30 rounded-xl border border-report-border/30 dark:border-indigo-500/20">
           {(['year', 'month', 'day', 'hour'] as const).map((pillar, idx) => {
             const labels = ['年柱', '月柱', '日柱', '時柱'];
             return (
               <div key={pillar} className="text-center">
-                <p className="text-xs text-indigo-300/60 mb-1">{labels[idx]}</p>
+                <p className="text-xs text-report-muted dark:text-indigo-300/60 mb-1">{labels[idx]}</p>
                 <div className="text-2xl font-bold">
-                  <span className="text-indigo-300">{pillars[pillar].stem}</span>
-                  <span className="text-violet-300">{pillars[pillar].branch}</span>
+                  <span className="text-primary dark:text-indigo-300">{pillars[pillar].stem}</span>
+                  <span className="text-secondary dark:text-violet-300">{pillars[pillar].branch}</span>
                 </div>
               </div>
             );
@@ -138,63 +138,63 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
         {/* 關鍵指標卡片 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {/* 日主強弱 */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-rose-900/50 to-rose-950/50 border border-rose-500/30">
+          <div className="p-4 rounded-xl bg-rose-100 dark:bg-gradient-to-br dark:from-rose-900/50 dark:to-rose-950/50 border border-rose-300 dark:border-rose-500/30">
             <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-4 h-4 text-rose-400" />
-              <span className="text-xs text-rose-200/70">日主強弱</span>
+              <Shield className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+              <span className="text-xs text-rose-700 dark:text-rose-200/70">日主強弱</span>
             </div>
-            <p className="text-xl font-bold text-rose-300">{strengthLevel}</p>
-            <p className="text-xs text-rose-200/60 mt-1">
+            <p className="text-xl font-bold text-rose-700 dark:text-rose-300">{strengthLevel}</p>
+            <p className="text-xs text-rose-600/80 dark:text-rose-200/60 mt-1">
               {elementNames[dayMasterElement]}命 · {getStrengthDescription(strengthLevel)}
             </p>
           </div>
 
           {/* 陰陽平衡 */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-900/50 to-cyan-950/50 border border-cyan-500/30">
+          <div className="p-4 rounded-xl bg-cyan-100 dark:bg-gradient-to-br dark:from-cyan-900/50 dark:to-cyan-950/50 border border-cyan-300 dark:border-cyan-500/30">
             <div className="flex items-center gap-2 mb-2">
-              <Star className="w-4 h-4 text-cyan-400" />
-              <span className="text-xs text-cyan-200/70">陰陽平衡</span>
+              <Star className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+              <span className="text-xs text-cyan-700 dark:text-cyan-200/70">陰陽平衡</span>
             </div>
             <div className="flex items-center gap-2">
-              <p className="text-xl font-bold text-cyan-300">
+              <p className="text-xl font-bold text-cyan-700 dark:text-cyan-300">
                 {Math.abs(yinyang.yang - yinyang.yin) < 20 ? '平衡' : 
                  yinyang.yang > yinyang.yin ? '偏陽' : '偏陰'}
               </p>
               {Math.abs(yinyang.yang - yinyang.yin) < 20 ? 
-                <Minus className="w-4 h-4 text-green-400" /> :
+                <Minus className="w-4 h-4 text-green-500 dark:text-green-400" /> :
                 yinyang.yang > yinyang.yin ? 
-                <ArrowUpRight className="w-4 h-4 text-orange-400" /> :
-                <ArrowDownRight className="w-4 h-4 text-blue-400" />
+                <ArrowUpRight className="w-4 h-4 text-orange-500 dark:text-orange-400" /> :
+                <ArrowDownRight className="w-4 h-4 text-blue-500 dark:text-blue-400" />
               }
             </div>
-            <p className="text-xs text-cyan-200/60 mt-1">{yinyang.yang}% / {yinyang.yin}%</p>
+            <p className="text-xs text-cyan-600/80 dark:text-cyan-200/60 mt-1">{yinyang.yang}% / {yinyang.yin}%</p>
           </div>
 
           {/* 五行特點 */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-amber-900/50 to-amber-950/50 border border-amber-500/30">
+          <div className="p-4 rounded-xl bg-amber-100 dark:bg-gradient-to-br dark:from-amber-900/50 dark:to-amber-950/50 border border-amber-300 dark:border-amber-500/30">
             <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-amber-400" />
-              <span className="text-xs text-amber-200/70">五行特點</span>
+              <TrendingUp className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span className="text-xs text-amber-700 dark:text-amber-200/70">五行特點</span>
             </div>
-            <p className="text-sm font-bold text-amber-300">
+            <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
               {elementNames[maxElement.name]}旺 · {elementNames[minElement.name]}弱
             </p>
-            <p className="text-xs text-amber-200/60 mt-1">
+            <p className="text-xs text-amber-600/80 dark:text-amber-200/60 mt-1">
               喜用：{yongShenAnalysis.xiYong.map(e => elementNames[e]).join('')}
             </p>
           </div>
 
           {/* 神煞統計 */}
-          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-900/50 to-emerald-950/50 border border-emerald-500/30">
+          <div className="p-4 rounded-xl bg-emerald-100 dark:bg-gradient-to-br dark:from-emerald-900/50 dark:to-emerald-950/50 border border-emerald-300 dark:border-emerald-500/30">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs text-emerald-200/70">神煞統計</span>
+              <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs text-emerald-700 dark:text-emerald-200/70">神煞統計</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-lg font-bold text-emerald-400">{jiShen} 吉</span>
-              <span className="text-lg font-bold text-rose-400">{xiongSha} 凶</span>
+              <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{jiShen} 吉</span>
+              <span className="text-lg font-bold text-rose-600 dark:text-rose-400">{xiongSha} 凶</span>
             </div>
-            <p className="text-xs text-emerald-200/60 mt-1">共 {shensha.length} 個神煞</p>
+            <p className="text-xs text-emerald-600/80 dark:text-emerald-200/60 mt-1">共 {shensha.length} 個神煞</p>
           </div>
         </div>
 

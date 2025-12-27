@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -241,7 +241,7 @@ export const WuxingRelationshipDiagram = ({ pillars }: WuxingRelationshipDiagram
       {/* 主體圖示區 */}
       <div className="grid grid-cols-7 gap-1 items-center">
         {pillarOrder.map((pillar, index) => (
-          <>
+          <React.Fragment key={pillar}>
             {/* 柱位顯示 */}
             <div key={pillar} className="text-center">
               <div className="text-[10px] text-indigo-300/70 mb-1">{pillarNames[pillar]}</div>
@@ -308,7 +308,7 @@ export const WuxingRelationshipDiagram = ({ pillars }: WuxingRelationshipDiagram
                 </TooltipProvider>
               </div>
             )}
-          </>
+          </React.Fragment>
         ))}
       </div>
 

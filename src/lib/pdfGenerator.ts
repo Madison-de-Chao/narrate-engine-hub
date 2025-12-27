@@ -1037,7 +1037,206 @@ const createStoryPage = (
   `;
 };
 
+// ========================
+// 字體載入檢測
+// ========================
+const waitForFonts = async (timeout = 3000): Promise<boolean> => {
+  console.log('[PDF] Waiting for fonts to load...');
+  try {
+    if (document.fonts && typeof document.fonts.ready !== 'undefined') {
+      await Promise.race([
+        document.fonts.ready,
+        new Promise(resolve => setTimeout(resolve, timeout))
+      ]);
+      console.log('[PDF] Fonts loaded or timeout reached');
+      return true;
+    }
+  } catch (e) {
+    console.warn('[PDF] Font loading check failed:', e);
+  }
+  // Fallback: 等待固定時間
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return true;
+};
+
+// ========================
+// 圖片預載入
+// ========================
+const waitForImages = async (container: HTMLElement, timeout = 3000): Promise<void> => {
+  console.log('[PDF] Waiting for images to load...');
+  const images = container.querySelectorAll('img');
+  if (images.length === 0) {
+    console.log('[PDF] No images found');
+    return;
+  }
+
+  const imagePromises = Array.from(images).map(img => {
+    if (img.complete && img.naturalHeight > 0) {
+      return Promise.resolve();
+    }
+    return new Promise<void>((resolve) => {
+      const handler = () => {
+        img.removeEventListener('load', handler);
+        img.removeEventListener('error', handler);
+        resolve();
+      };
+      img.addEventListener('load', handler);
+      img.addEventListener('error', handler);
+    });
+  });
+
+  await Promise.race([
+    Promise.all(imagePromises),
+    new Promise(resolve => setTimeout(resolve, timeout))
+  ]);
+  console.log('[PDF] Images loaded or timeout reached');
+};
+
+// ========================
+// 安全的 html2canvas 封裝
+// ========================
+const safeHtml2Canvas = async (element: HTMLElement, pageIndex: number): Promise<HTMLCanvasElement | null> => {
+  // Monkey-patch createPattern 防止 0x0 canvas 錯誤
+  const originalCreatePattern = CanvasRenderingContext2D.prototype.createPattern;
+  
+  CanvasRenderingContext2D.prototype.createPattern = function(
+    image: CanvasImageSource,
+    repetition: string | null
+  ): CanvasPattern | null {
+    try {
+      // 檢查 canvas 或 image 尺寸
+      if (image instanceof HTMLCanvasElement || image instanceof OffscreenCanvas) {
+        if (image.width === 0 || image.height === 0) {
+          console.warn('[PDF] Detected 0x0 canvas in createPattern, using fallback');
+          const dummy = document.createElement('canvas');
+          dummy.width = 1;
+          dummy.height = 1;
+          return originalCreatePattern.call(this, dummy, repetition);
+        }
+      }
+      if (image instanceof HTMLImageElement) {
+        if (image.width === 0 || image.height === 0 || !image.complete) {
+          console.warn('[PDF] Detected invalid image in createPattern');
+          return null;
+        }
+      }
+    } catch (e) {
+      console.warn('[PDF] createPattern check error:', e);
+    }
+    return originalCreatePattern.call(this, image, repetition);
+  };
+
+  try {
+    console.log(`[PDF] html2canvas starting for page ${pageIndex + 1}...`);
+    
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#0a0a0f',
+      logging: false,
+      windowWidth: 794,
+      windowHeight: 1123,
+      removeContainer: false,
+      
+      // 忽略問題元素
+      ignoreElements: (el) => {
+        // 忽略 0x0 canvas
+        if (el instanceof HTMLCanvasElement) {
+          if (el.width === 0 || el.height === 0) {
+            console.log('[PDF] Ignoring 0x0 canvas element');
+            return true;
+          }
+        }
+        
+        // 忽略 0x0 元素
+        if (el instanceof HTMLElement) {
+          const style = window.getComputedStyle(el);
+          if (style.display === 'none' || style.visibility === 'hidden') {
+            return true;
+          }
+          // 檢查 rect
+          try {
+            const rect = el.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) {
+              // 只忽略非佈局元素
+              if (!['DIV', 'SPAN', 'P'].includes(el.tagName)) {
+                return true;
+              }
+            }
+          } catch {
+            // ignore
+          }
+        }
+        
+        return false;
+      },
+      
+      // 克隆後處理
+      onclone: (clonedDoc, clonedElement) => {
+        console.log(`[PDF] onclone for page ${pageIndex + 1}`);
+        
+        // 確保可見性
+        if (clonedElement instanceof HTMLElement) {
+          clonedElement.style.visibility = 'visible';
+          clonedElement.style.position = 'relative';
+          clonedElement.style.left = '0';
+          clonedElement.style.top = '0';
+        }
+        
+        // 修復所有 0x0 canvas
+        clonedDoc.querySelectorAll('canvas').forEach((canvas) => {
+          const c = canvas as HTMLCanvasElement;
+          if (c.width === 0 || c.height === 0) {
+            console.log('[PDF] Fixing 0x0 canvas in cloned doc');
+            c.width = 1;
+            c.height = 1;
+            c.style.width = '1px';
+            c.style.height = '1px';
+          }
+        });
+        
+        // 修復 SVG 問題
+        clonedDoc.querySelectorAll('svg').forEach((svg) => {
+          const s = svg as SVGElement;
+          if (!s.getAttribute('width') || !s.getAttribute('height')) {
+            const rect = s.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+              s.setAttribute('width', String(rect.width));
+              s.setAttribute('height', String(rect.height));
+            }
+          }
+        });
+        
+        // 確保所有圖片有 crossorigin
+        clonedDoc.querySelectorAll('img').forEach((img) => {
+          img.crossOrigin = 'anonymous';
+        });
+      }
+    });
+    
+    console.log(`[PDF] html2canvas completed for page ${pageIndex + 1}, canvas size: ${canvas.width}x${canvas.height}`);
+    
+    // 驗證 canvas
+    if (canvas.width === 0 || canvas.height === 0) {
+      console.error(`[PDF] Canvas for page ${pageIndex + 1} has 0 dimensions`);
+      return null;
+    }
+    
+    return canvas;
+    
+  } catch (error) {
+    console.error(`[PDF] html2canvas failed for page ${pageIndex + 1}:`, error);
+    return null;
+  } finally {
+    // 恢復原始 createPattern
+    CanvasRenderingContext2D.prototype.createPattern = originalCreatePattern;
+  }
+};
+
+// ========================
 // 主要導出函數
+// ========================
 export const generatePDF = async (
   _elementId: string, 
   fileName: string, 
@@ -1045,7 +1244,9 @@ export const generatePDF = async (
   reportData?: ReportData,
   options: PdfOptions = defaultPdfOptions
 ) => {
+  console.log('[PDF] ========================================');
   console.log('[PDF] Starting PDF generation...', { fileName, options });
+  console.log('[PDF] ========================================');
   
   if (!reportData) {
     console.error('[PDF] No report data provided');
@@ -1056,45 +1257,57 @@ export const generatePDF = async (
     name: reportData.name, 
     gender: reportData.gender,
     hasLegionStories: !!reportData.legionStories,
-    hasShensha: !!reportData.shensha?.length
+    legionStoriesKeys: reportData.legionStories ? Object.keys(reportData.legionStories) : [],
+    hasShensha: !!reportData.shensha?.length,
+    shenshaCount: reportData.shensha?.length || 0
   });
 
   let container: HTMLDivElement | null = null;
   
   try {
-    // 創建報告 HTML，傳入選項
+    // Step 1: 等待字體載入
+    await waitForFonts();
+    
+    // Step 2: 創建報告 HTML
+    console.log('[PDF] Creating report container...');
     container = createReportContainer(reportData, coverData, options);
-    console.log('[PDF] Container created');
-    
-    // 將容器放到螢幕外（保持可渲染，避免輸出全黑）
     container.setAttribute('data-pdf-container', 'true');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.zIndex = '-1';
-    container.style.visibility = 'visible';
+    console.log('[PDF] Container created, children count:', container.children.length);
     
-    // 等待字體和圖片加載 - 增加等待時間
-    console.log('[PDF] Waiting for fonts and images to load...');
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Step 3: 等待圖片載入
+    await waitForImages(container);
     
-    // 獲取所有頁面 - 使用更可靠的選擇器
-    const pages = Array.from(container.children).filter(
-      (child): child is HTMLElement => 
-        child instanceof HTMLElement && 
-        child.offsetWidth > 0 && 
-        child.offsetHeight > 0
-    );
+    // Step 4: 額外等待確保 DOM 穩定
+    console.log('[PDF] Waiting for DOM to stabilize...');
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    console.log('[PDF] Pages found:', pages.length);
-    
-    if (pages.length === 0) {
-      console.error('[PDF] No pages found in container. Container children:', container.children.length);
-      throw new Error('No pages found in container');
+    // Step 5: 獲取所有頁面
+    const pages: HTMLElement[] = [];
+    for (let i = 0; i < container.children.length; i++) {
+      const child = container.children[i];
+      if (child instanceof HTMLElement) {
+        // 強制觸發 layout
+        void child.offsetWidth;
+        void child.offsetHeight;
+        
+        if (child.offsetWidth > 0 && child.offsetHeight > 0) {
+          pages.push(child);
+          console.log(`[PDF] Page ${pages.length} found, size: ${child.offsetWidth}x${child.offsetHeight}`);
+        } else {
+          console.warn(`[PDF] Skipping child ${i} with 0 dimensions`);
+        }
+      }
     }
     
-    console.log(`Found ${pages.length} pages to render`);
+    console.log(`[PDF] Total pages found: ${pages.length}`);
     
+    if (pages.length === 0) {
+      console.error('[PDF] No valid pages found!');
+      console.error('[PDF] Container innerHTML preview:', container.innerHTML.substring(0, 500));
+      throw new Error('No valid pages found in container');
+    }
+    
+    // Step 6: 創建 PDF
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -1103,130 +1316,65 @@ export const generatePDF = async (
     
     const pdfWidth = 210;
     const pdfHeight = 297;
-    
     let renderedPages = 0;
     
+    // Step 7: 逐頁渲染
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
-      
-      // 確保頁面有尺寸
-      if (page.offsetWidth === 0 || page.offsetHeight === 0) {
-        console.warn(`[PDF] Page ${i} has no dimensions, skipping`);
-        continue;
-      }
-      
-      console.log(`[PDF] Rendering page ${i + 1}/${pages.length}, size: ${page.offsetWidth}x${page.offsetHeight}`);
+      console.log(`[PDF] Processing page ${i + 1}/${pages.length}...`);
       
       try {
-        // 修補 html2canvas 在遇到 0x0 canvas pattern 時會直接丟錯，導致整頁渲染失敗
-        const originalCreatePattern = CanvasRenderingContext2D.prototype.createPattern;
-        CanvasRenderingContext2D.prototype.createPattern = function (
-          image: any,
-          repetition: string | null
-        ) {
-          try {
-            const w = typeof image?.width === "number" ? image.width : undefined;
-            const h = typeof image?.height === "number" ? image.height : undefined;
-            if (w === 0 || h === 0) {
-              const dummy = document.createElement("canvas");
-              dummy.width = 1;
-              dummy.height = 1;
-              return originalCreatePattern.call(this, dummy, repetition);
-            }
-          } catch {
-            // ignore
-          }
-          return originalCreatePattern.call(this, image, repetition);
-        };
-
-        let canvas: HTMLCanvasElement;
-        try {
-          // 使用 html2canvas 截圖
-          canvas = await html2canvas(page, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: "#0a0a0f",
-            logging: false,
-            windowWidth: 794,
-            windowHeight: 1123,
-            // 忽略無法渲染的元素
-            ignoreElements: (element) => {
-              // 忽略尺寸為 0 的 canvas（常見於某些圖表/背景生成器）
-              if (element instanceof HTMLCanvasElement) {
-                return element.width === 0 || element.height === 0;
-              }
-
-              if (element instanceof HTMLElement) {
-                const rect = element.getBoundingClientRect();
-                if (rect.width === 0 || rect.height === 0) return true;
-              }
-
-              return false;
-            },
-            onclone: (clonedDoc) => {
-              // 確保克隆的文檔中的容器是可渲染的
-              const clonedContainer = clonedDoc.body.querySelector(
-                '[data-pdf-container="true"]'
-              ) as HTMLElement | null;
-              if (clonedContainer) {
-                clonedContainer.style.visibility = "visible";
-                clonedContainer.style.position = "absolute";
-                clonedContainer.style.left = "0";
-                clonedContainer.style.top = "0";
-              }
-
-              // 移除/修正 0x0 canvas，避免 html2canvas 在 createPattern 時崩潰
-              clonedDoc.querySelectorAll("canvas").forEach((c) => {
-                const canvasEl = c as HTMLCanvasElement;
-                if (canvasEl.width === 0 || canvasEl.height === 0) {
-                  canvasEl.width = 1;
-                  canvasEl.height = 1;
-                  (canvasEl.style as any).width = "1px";
-                  (canvasEl.style as any).height = "1px";
-                }
-              });
-            },
-          });
-        } finally {
-          CanvasRenderingContext2D.prototype.createPattern = originalCreatePattern;
-        }
+        const canvas = await safeHtml2Canvas(page, i);
         
-        // 檢查 canvas 是否有效
-        if (canvas.width === 0 || canvas.height === 0) {
-          console.warn(`[PDF] Canvas for page ${i} has no dimensions, skipping`);
+        if (!canvas) {
+          console.warn(`[PDF] Page ${i + 1} rendering returned null, skipping`);
           continue;
         }
         
-        console.log(`[PDF] Canvas generated for page ${i + 1}, size: ${canvas.width}x${canvas.height}`);
+        // 轉換為圖片
+        let imgData: string;
+        try {
+          imgData = canvas.toDataURL('image/jpeg', 0.92);
+          if (!imgData || imgData === 'data:,') {
+            console.error(`[PDF] Page ${i + 1} canvas.toDataURL failed`);
+            continue;
+          }
+        } catch (e) {
+          console.error(`[PDF] Page ${i + 1} toDataURL error:`, e);
+          continue;
+        }
         
-        // 轉換為圖片並加入 PDF
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        
+        // 添加到 PDF
         if (renderedPages > 0) {
           pdf.addPage();
         }
         
         pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
         renderedPages++;
-        console.log(`[PDF] Page ${i + 1} added to PDF`);
+        console.log(`[PDF] Page ${i + 1} added to PDF successfully`);
         
       } catch (pageError) {
-        console.error(`[PDF] Error rendering page ${i + 1}:`, pageError);
-        // 繼續處理其他頁面，不中斷整個過程
+        console.error(`[PDF] Error processing page ${i + 1}:`, pageError);
+        // 繼續處理其他頁面
       }
     }
     
+    // Step 8: 檢查結果
     if (renderedPages === 0) {
-      throw new Error('No pages were successfully rendered');
+      throw new Error('No pages were successfully rendered to PDF');
     }
     
-    // 下載 PDF
+    // Step 9: 下載 PDF
     console.log(`[PDF] Saving PDF with ${renderedPages} pages...`);
     pdf.save(fileName);
+    console.log('[PDF] ========================================');
     console.log('[PDF] PDF saved successfully!');
+    console.log('[PDF] ========================================');
     
   } catch (error) {
+    console.error('[PDF] ========================================');
     console.error('[PDF] PDF generation failed:', error);
+    console.error('[PDF] ========================================');
     throw error;
   } finally {
     // 清理臨時容器

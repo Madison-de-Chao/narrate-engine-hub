@@ -72,6 +72,15 @@ export default {
           self: "hsl(var(--self-legion))",
           future: "hsl(var(--future-legion))",
         },
+        report: {
+          bg: "hsl(var(--report-bg))",
+          card: "hsl(var(--report-card))",
+          border: "hsl(var(--report-border))",
+          title: "hsl(var(--report-title))",
+          subtitle: "hsl(var(--report-subtitle))",
+          text: "hsl(var(--report-text))",
+          muted: "hsl(var(--report-muted))",
+        },
         gold: {
           DEFAULT: "hsl(var(--gold))",
           50: "hsl(45 100% 96%)",

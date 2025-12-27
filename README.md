@@ -1,73 +1,130 @@
-# Welcome to your Lovable project
+# Narrate Engine Hub
 
-## Project info
+一個基於 React 和 TypeScript 構建的敘事引擎平台。
 
-**URL**: https://lovable.dev/projects/77bf5d47-53c6-44e3-ae4a-e2ca30c3fbb2
+🌐 **線上展示**: [https://narrate-engine-hub.vercel.app](https://narrate-engine-hub.vercel.app)
 
-## How can I edit this code?
+## 📋 專案簡介
 
-There are several ways of editing your application.
+Narrate Engine Hub 是一個現代化的網頁應用程式，專注於提供敘事內容的創建和管理功能。
 
-**Use Lovable**
+## 🚀 技術棧
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/77bf5d47-53c6-44e3-ae4a-e2ca30c3fbb2) and start prompting.
+本專案使用以下技術構建：
 
-Changes made via Lovable will be committed automatically to this repo.
+- **前端框架**: React 18
+- **開發語言**: TypeScript
+- **建置工具**: Vite
+- **UI 組件**: shadcn-ui
+- **樣式方案**: Tailwind CSS
+- **部署平台**: Vercel
 
-**Use your preferred IDE**
+## 🛠️ 本地開發
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 環境需求
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Node.js (建議使用 LTS 版本)
+- npm 或 yarn
 
-Follow these steps:
+### 安裝步驟
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+```bash
+# 1. 克隆儲存庫
+git clone https://github.com/Madison-de-Chao/narrate-engine-hub.git
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# 2. 進入專案目錄
+cd narrate-engine-hub
 
-# Step 3: Install the necessary dependencies.
-npm i
+# 3. 安裝依賴
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 4. 啟動開發伺服器
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+開發伺服器將在 `http://localhost:5173` 啟動（預設端口）。
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 可用腳本
 
-**Use GitHub Codespaces**
+```bash
+npm run dev          # 啟動開發伺服器
+npm run build        # 建置生產版本
+npm run preview      # 預覽生產建置
+npm run lint         # 執行程式碼檢查
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📦 專案結構
 
-## What technologies are used for this project?
+```
+narrate-engine-hub/
+├── src/              # 源代碼目錄
+│   ├── components/   # React 組件
+│   ├── pages/        # 頁面組件
+│   ├── lib/          # 工具函數和配置
+│   └── App.tsx       # 主應用組件
+├── public/           # 靜態資源
+└── package.json      # 專案配置
+```
 
-This project is built with:
+## 🔧 使用 Lovable 編輯
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+本專案支援使用 [Lovable](https://lovable.dev) 平台進行視覺化編輯：
 
-## How can I deploy this project?
+- **專案連結**: [Lovable 專案頁面](https://lovable.dev/projects/77bf5d47-53c6-44e3-ae4a-e2ca30c3fbb2)
+- 透過 Lovable 進行的變更會自動提交到此儲存庫
 
-Simply open [Lovable](https://lovable.dev/projects/77bf5d47-53c6-44e3-ae4a-e2ca30c3fbb2) and click on Share -> Publish.
+## 🌍 部署
 
-## Can I connect a custom domain to my Lovable project?
+### Vercel 部署（推薦）
 
-Yes, you can!
+本專案已配置自動部署到 Vercel。每次推送到 `main` 分支時會自動觸發部署。
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### 手動部署
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```bash
+# 建置專案
+npm run build
+
+# dist/ 目錄包含可部署的靜態文件
+```
+
+## 🔐 安全知識指南
+
+### 專案安全情境
+
+為了提供更準確的安全建議，請了解本專案的安全背景：
+
+- **專案類型**: [請說明：原型/展示/生產環境]
+- **使用者情境**: [請說明：內部使用/公開應用/特定客戶]
+- **資料敏感度**: [請說明：測試資料/真實資料/敏感資訊]
+- **環境類型**: [請說明：開發/測試/生產環境]
+
+> 💡 **注意**: 此資訊幫助開發團隊和安全工具理解專案的安全需求，但不應用於忽視合法的安全問題。
+
+## 🤝 貢獻指南
+
+歡迎提交 Issue 和 Pull Request！
+
+1. Fork 本儲存庫
+2. 創建您的特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交您的變更 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 開啟一個 Pull Request
+
+## 📝 授權
+
+本專案目前未指定授權協議。
+
+## 👥 作者
+
+**Madison-de-Chao** - [GitHub](https://github.com/Madison-de-Chao)
+
+## 🔗 相關連結
+
+- [線上展示](https://narrate-engine-hub.vercel.app)
+- [問題追蹤](https://github.com/Madison-de-Chao/narrate-engine-hub/issues)
+- [Lovable 專案](https://lovable.dev/projects/77bf5d47-53c6-44e3-ae4a-e2ca30c3fbb2)
+
+---
+
+⭐ 如果這個專案對您有幫助，請給我們一個星星！

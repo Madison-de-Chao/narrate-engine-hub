@@ -9,6 +9,7 @@ export interface PdfOptions {
   includeCover: boolean;
   includePillars: boolean;
   includeShensha: boolean;
+  includeLegionDetails: boolean;
   includeYearStory: boolean;
   includeMonthStory: boolean;
   includeDayStory: boolean;
@@ -32,6 +33,7 @@ const defaultOptions: PdfOptions = {
   includeCover: true,
   includePillars: true,
   includeShensha: true,
+  includeLegionDetails: true,
   includeYearStory: true,
   includeMonthStory: true,
   includeDayStory: true,
@@ -56,6 +58,7 @@ export function PdfOptionsDialog({
       includeCover: true,
       includePillars: true,
       includeShensha: true,
+      includeLegionDetails: true,
       includeYearStory: hasLegionStories.year,
       includeMonthStory: hasLegionStories.month,
       includeDayStory: hasLegionStories.day,
@@ -68,6 +71,7 @@ export function PdfOptionsDialog({
       includeCover: true, // 封面永遠包含
       includePillars: false,
       includeShensha: false,
+      includeLegionDetails: false,
       includeYearStory: false,
       includeMonthStory: false,
       includeDayStory: false,
@@ -151,7 +155,20 @@ export function PdfOptionsDialog({
               <Label htmlFor="shensha" className="flex items-center gap-2 flex-1 cursor-pointer">
                 <Sparkles className="h-4 w-4 text-purple-400" />
                 <span>神煞分析</span>
-                <span className="text-xs text-muted-foreground ml-auto">吉凶神煞解讀</span>
+              <span className="text-xs text-muted-foreground ml-auto">吉凶神煞解讀</span>
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/30 transition-colors">
+              <Checkbox
+                id="legionDetails"
+                checked={options.includeLegionDetails}
+                onCheckedChange={(checked) => handleOptionChange("includeLegionDetails", checked as boolean)}
+              />
+              <Label htmlFor="legionDetails" className="flex items-center gap-2 flex-1 cursor-pointer">
+                <Users className="h-4 w-4 text-amber-400" />
+                <span>軍團角色詳解</span>
+                <span className="text-xs text-muted-foreground ml-auto">主將與軍師資料</span>
               </Label>
             </div>
           </div>

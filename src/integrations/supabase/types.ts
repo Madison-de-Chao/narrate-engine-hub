@@ -17,6 +17,8 @@ export type Database = {
       api_keys: {
         Row: {
           api_key: string
+          api_key_hash: string | null
+          api_key_prefix: string | null
           created_at: string
           default_template_id: string | null
           id: string
@@ -30,6 +32,8 @@ export type Database = {
         }
         Insert: {
           api_key: string
+          api_key_hash?: string | null
+          api_key_prefix?: string | null
           created_at?: string
           default_template_id?: string | null
           id?: string
@@ -43,6 +47,8 @@ export type Database = {
         }
         Update: {
           api_key?: string
+          api_key_hash?: string | null
+          api_key_prefix?: string | null
           created_at?: string
           default_template_id?: string | null
           id?: string

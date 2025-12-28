@@ -241,6 +241,30 @@ export type Database = {
         }
         Relationships: []
       }
+      character_favorites: {
+        Row: {
+          character_id: string
+          character_type: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          character_id: string
+          character_type: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          character_id?: string
+          character_type?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       legion_stories: {
         Row: {
           calculation_id: string

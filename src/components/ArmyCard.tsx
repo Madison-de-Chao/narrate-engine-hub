@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Shield, Swords, Sparkles } from "lucide-react";
 import { getCommanderAvatar } from "@/assets/commanders";
@@ -31,14 +32,23 @@ interface ArmyCardProps {
 }
 
 export const ArmyCard = ({ type, character, role, legionColor, characterColor }: ArmyCardProps) => {
+  const [imageError, setImageError] = useState(false);
   const isCommander = type === 'commander';
   const commanderRole = role as CommanderRole;
   const advisorRole = role as AdvisorRole;
   
-  // 取得角色頭像
-  const avatarSrc = isCommander 
-    ? getCommanderAvatar(character) 
-    : getAdvisorAvatar(character);
+  // 取得角色頭像 - 與 LegionCharacterCard 一致的邏輯
+  const getAvatarSrc = () => {
+    if (isCommander) {
+      // 天干角色（指揮官）
+      return getCommanderAvatar(character);
+    } else {
+      // 地支角色（軍師）
+      return getAdvisorAvatar(character);
+    }
+  };
+  
+  const avatarSrc = getAvatarSrc();
 
   // 使用角色專屬顏色或預設
   const accentColor = characterColor || (isCommander ? '#8B5CF6' : '#22C55E');
@@ -87,8 +97,8 @@ export const ArmyCard = ({ type, character, role, legionColor, characterColor }:
         {/* 角色頭像與名稱 */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            {/* 頭像 */}
-            {avatarSrc ? (
+            {/* 頭像 - 帶有載入失敗 fallback */}
+            {avatarSrc && !imageError ? (
               <div 
                 className="w-16 h-16 rounded-lg overflow-hidden border-2 shadow-lg"
                 style={{ borderColor: `${accentColor}60` }}
@@ -97,19 +107,24 @@ export const ArmyCard = ({ type, character, role, legionColor, characterColor }:
                   src={avatarSrc} 
                   alt={`${character} ${isCommander ? '指揮官' : '軍師'}`}
                   className="w-full h-full object-cover"
+                  onError={() => setImageError(true)}
                 />
               </div>
             ) : (
-              <span 
-                className="text-5xl font-bold"
+              <div 
+                className="w-16 h-16 rounded-lg flex items-center justify-center border-2"
                 style={{ 
-                  background: `linear-gradient(135deg, ${accentColor}, ${accentColor}99)`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
+                  borderColor: `${accentColor}60`,
+                  background: `linear-gradient(135deg, ${accentColor}20, ${accentColor}05)`
                 }}
               >
-                {character}
-              </span>
+                <span 
+                  className="text-3xl font-bold"
+                  style={{ color: accentColor }}
+                >
+                  {character}
+                </span>
+              </div>
             )}
             <div>
               <p className="text-2xl font-bold" style={{ color: accentColor }}>

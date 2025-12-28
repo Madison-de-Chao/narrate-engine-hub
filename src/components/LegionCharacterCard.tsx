@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Shield, Swords, Sparkles, TrendingUp, TrendingDown, Users } from "lucide-react";
@@ -32,6 +33,7 @@ export const LegionCharacterCard = ({
   legionColor,
   index = 0
 }: LegionCharacterCardProps) => {
+  const [imageError, setImageError] = useState(false);
   const isGeneral = type === 'general';
   const isStrategist = type === 'strategist';
   const isLieutenant = type === 'lieutenant';
@@ -122,8 +124,8 @@ export const LegionCharacterCard = ({
         {/* 角色頭像與名稱 */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            {/* 頭像 */}
-            {avatarSrc ? (
+            {/* 頭像 - 帶有載入失敗 fallback */}
+            {avatarSrc && !imageError ? (
               <div 
                 className="w-16 h-16 rounded-lg overflow-hidden border-2 shadow-lg"
                 style={{ borderColor: `${accentColor}60` }}
@@ -132,6 +134,7 @@ export const LegionCharacterCard = ({
                   src={avatarSrc} 
                   alt={`${characterId} ${roleLabel.subtitle}`}
                   className="w-full h-full object-cover"
+                  onError={() => setImageError(true)}
                 />
               </div>
             ) : (

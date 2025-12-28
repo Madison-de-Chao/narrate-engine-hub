@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Crown, Shield, Swords, Sparkles, TrendingUp, TrendingDown, Users } from "lucide-react";
 import { getCommanderAvatar } from "@/assets/commanders";
 import { getAdvisorAvatar } from "@/assets/advisors";
@@ -33,6 +34,7 @@ export const LegionCharacterCard = ({
   legionColor,
   index = 0
 }: LegionCharacterCardProps) => {
+  const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const isGeneral = type === 'general';
   const isStrategist = type === 'strategist';
@@ -124,17 +126,24 @@ export const LegionCharacterCard = ({
         {/* 角色頭像與名稱 */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            {/* 頭像 - 帶有載入失敗 fallback */}
+            {/* 頭像 - 帶有載入動畫與失敗 fallback */}
             {avatarSrc && !imageError ? (
               <div 
-                className="w-16 h-16 rounded-lg overflow-hidden border-2 shadow-lg"
+                className="w-16 h-16 rounded-lg overflow-hidden border-2 shadow-lg relative"
                 style={{ borderColor: `${accentColor}60` }}
               >
+                {imageLoading && (
+                  <Skeleton className="absolute inset-0 w-full h-full rounded-lg animate-pulse" />
+                )}
                 <img 
                   src={avatarSrc} 
                   alt={`${characterId} ${roleLabel.subtitle}`}
-                  className="w-full h-full object-cover"
-                  onError={() => setImageError(true)}
+                  className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+                  onLoad={() => setImageLoading(false)}
+                  onError={() => {
+                    setImageLoading(false);
+                    setImageError(true);
+                  }}
                 />
               </div>
             ) : (

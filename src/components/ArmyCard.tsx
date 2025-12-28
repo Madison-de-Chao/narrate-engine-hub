@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Crown, Shield, Swords, Sparkles } from "lucide-react";
 import { getCommanderAvatar } from "@/assets/commanders";
 import { getAdvisorAvatar } from "@/assets/advisors";
@@ -32,6 +33,7 @@ interface ArmyCardProps {
 }
 
 export const ArmyCard = ({ type, character, role, legionColor, characterColor }: ArmyCardProps) => {
+  const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const isCommander = type === 'commander';
   const commanderRole = role as CommanderRole;
@@ -97,17 +99,24 @@ export const ArmyCard = ({ type, character, role, legionColor, characterColor }:
         {/* 角色頭像與名稱 */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            {/* 頭像 - 帶有載入失敗 fallback */}
+            {/* 頭像 - 帶有載入動畫與失敗 fallback */}
             {avatarSrc && !imageError ? (
               <div 
-                className="w-16 h-16 rounded-lg overflow-hidden border-2 shadow-lg"
+                className="w-16 h-16 rounded-lg overflow-hidden border-2 shadow-lg relative"
                 style={{ borderColor: `${accentColor}60` }}
               >
+                {imageLoading && (
+                  <Skeleton className="absolute inset-0 w-full h-full rounded-lg animate-pulse" />
+                )}
                 <img 
                   src={avatarSrc} 
                   alt={`${character} ${isCommander ? '指揮官' : '軍師'}`}
-                  className="w-full h-full object-cover"
-                  onError={() => setImageError(true)}
+                  className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+                  onLoad={() => setImageLoading(false)}
+                  onError={() => {
+                    setImageLoading(false);
+                    setImageError(true);
+                  }}
                 />
               </div>
             ) : (

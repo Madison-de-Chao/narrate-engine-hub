@@ -167,6 +167,160 @@ const ensureFontsLoaded = async (): Promise<void> => {
   }
 };
 
+// 預載入圖片函數 - 確保頭像正確嵌入 PDF
+const preloadImages = async (imageSrcs: string[]): Promise<Map<string, boolean>> => {
+  const results = new Map<string, boolean>();
+  
+  const loadPromises = imageSrcs.map(src => {
+    return new Promise<void>((resolve) => {
+      if (!src) {
+        resolve();
+        return;
+      }
+      
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = () => {
+        results.set(src, true);
+        resolve();
+      };
+      
+      img.onerror = () => {
+        console.warn(`[PDF] Failed to preload image: ${src}`);
+        results.set(src, false);
+        resolve();
+      };
+      
+      img.src = src;
+    });
+  });
+  
+  await Promise.all(loadPromises);
+  return results;
+};
+
+// 獲取所有需要的頭像 URL
+const collectAvatarUrls = (pillars: ReportData['pillars']): string[] => {
+  const urls: string[] = [];
+  
+  Object.values(pillars).forEach(pillar => {
+    const commanderAvatar = commanderAvatars[pillar.stem];
+    const advisorAvatar = advisorAvatars[pillar.branch];
+    
+    if (commanderAvatar) urls.push(commanderAvatar);
+    if (advisorAvatar) urls.push(advisorAvatar);
+  });
+  
+  return urls;
+};
+
+// 生成頭像 HTML - 帶有 onerror fallback
+const createAvatarHTML = (
+  avatarSrc: string | undefined, 
+  fallbackChar: string, 
+  title: string, 
+  color: string, 
+  badge: string
+): string => {
+  if (!avatarSrc) {
+    return `
+      <div style="position: relative;">
+        <div style="
+          width: 64px; 
+          height: 64px; 
+          border-radius: 50%; 
+          background: linear-gradient(135deg, ${color}30, ${color}10); 
+          border: 3px solid ${color}60; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center; 
+          font-size: 26px; 
+          color: ${color};
+          font-family: ${FONTS.heading};
+          box-shadow: 0 6px 20px ${color}25;
+        ">${fallbackChar}</div>
+        <div style="
+          position: absolute;
+          bottom: -2px;
+          right: -2px;
+          width: 22px;
+          height: 22px;
+          background: linear-gradient(135deg, ${color} 0%, ${color}cc 100%);
+          border-radius: 50%;
+          border: 2px solid #0a0a0f;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 10px;
+          color: ${badge === '干' ? '#0a0a0f' : '#fff'};
+          font-weight: bold;
+        ">${badge}</div>
+      </div>
+    `;
+  }
+  
+  return `
+    <div style="position: relative;">
+      <img 
+        src="${avatarSrc}" 
+        alt="${title}" 
+        style="
+          width: 64px; 
+          height: 64px; 
+          border-radius: 50%; 
+          border: 3px solid ${color}60; 
+          object-fit: cover; 
+          background: #1a1a24;
+          box-shadow: 
+            0 6px 20px ${color}35,
+            inset 0 -2px 10px rgba(0, 0, 0, 0.3);
+        " 
+        crossorigin="anonymous"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+      />
+      <div style="
+        display: none;
+        width: 64px; 
+        height: 64px; 
+        border-radius: 50%; 
+        background: linear-gradient(135deg, ${color}30, ${color}10); 
+        border: 3px solid ${color}60; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 26px; 
+        color: ${color};
+        font-family: ${FONTS.heading};
+        box-shadow: 0 6px 20px ${color}25;
+      ">${fallbackChar}</div>
+      <div style="
+        position: absolute;
+        inset: -5px;
+        border-radius: 50%;
+        border: 1px solid ${color}25;
+        background: radial-gradient(circle, transparent 60%, ${color}10 100%);
+        pointer-events: none;
+      "></div>
+      <div style="
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 22px;
+        height: 22px;
+        background: linear-gradient(135deg, ${badge === '干' ? COLORS.gold : color} 0%, ${badge === '干' ? '#f59e0b' : color}cc 100%);
+        border-radius: 50%;
+        border: 2px solid #0a0a0f;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: ${badge === '干' ? '#0a0a0f' : '#fff'};
+        font-weight: bold;
+      ">${badge}</div>
+    </div>
+  `;
+};
+
 // 章節配置 - 用於頁眉頁腳動態顯示
 interface ChapterConfig {
   id: string;
@@ -1905,59 +2059,7 @@ const createLegionDetailsPages = (
                 
                 <!-- 頭像與標題 -->
                 <div style="display: flex; align-items: center; gap: 14px; margin: 8px 0 16px 0;">
-                  ${commanderAvatar ? `
-                    <div style="position: relative;">
-                      <img src="${commanderAvatar}" alt="${ganChar?.title || pillar.stem}" style="
-                        width: 64px; 
-                        height: 64px; 
-                        border-radius: 50%; 
-                        border: 3px solid ${config.color}60; 
-                        object-fit: cover; 
-                        background: #1a1a24;
-                        box-shadow: 
-                          0 6px 20px ${config.color}35,
-                          inset 0 -2px 10px rgba(0, 0, 0, 0.3);
-                      " crossorigin="anonymous" />
-                      <div style="
-                        position: absolute;
-                        inset: -5px;
-                        border-radius: 50%;
-                        border: 1px solid ${config.color}25;
-                        background: radial-gradient(circle, transparent 60%, ${config.color}10 100%);
-                      "></div>
-                      <!-- 等級標記 -->
-                      <div style="
-                        position: absolute;
-                        bottom: -2px;
-                        right: -2px;
-                        width: 22px;
-                        height: 22px;
-                        background: linear-gradient(135deg, ${COLORS.gold} 0%, #f59e0b 100%);
-                        border-radius: 50%;
-                        border: 2px solid #0a0a0f;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 10px;
-                        color: #0a0a0f;
-                        font-weight: bold;
-                      ">干</div>
-                    </div>
-                  ` : `
-                    <div style="
-                      width: 64px; 
-                      height: 64px; 
-                      border-radius: 50%; 
-                      background: linear-gradient(135deg, ${config.color}30, ${config.color}10); 
-                      border: 3px solid ${config.color}60; 
-                      display: flex; 
-                      align-items: center; 
-                      justify-content: center; 
-                      font-size: 26px; 
-                      color: ${config.color};
-                      box-shadow: 0 6px 20px ${config.color}25;
-                    ">${pillar.stem}</div>
-                  `}
+                  ${createAvatarHTML(commanderAvatar, pillar.stem, ganChar?.title || pillar.stem, config.color, '干')}
                   <div style="flex: 1;">
                     <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 0 0 4px 0; letter-spacing: 1px;">天干 · Commander</p>
                     <p style="
@@ -2057,59 +2159,7 @@ const createLegionDetailsPages = (
                 
                 <!-- 頭像與標題 -->
                 <div style="display: flex; align-items: center; gap: 14px; margin: 8px 0 16px 0;">
-                  ${advisorAvatar ? `
-                    <div style="position: relative;">
-                      <img src="${advisorAvatar}" alt="${zhiChar?.title || pillar.branch}" style="
-                        width: 64px; 
-                        height: 64px; 
-                        border-radius: 50%; 
-                        border: 3px solid ${COLORS.purple}60; 
-                        object-fit: cover; 
-                        background: #1a1a24;
-                        box-shadow: 
-                          0 6px 20px ${COLORS.purple}35,
-                          inset 0 -2px 10px rgba(0, 0, 0, 0.3);
-                      " crossorigin="anonymous" />
-                      <div style="
-                        position: absolute;
-                        inset: -5px;
-                        border-radius: 50%;
-                        border: 1px solid ${COLORS.purple}25;
-                        background: radial-gradient(circle, transparent 60%, ${COLORS.purple}10 100%);
-                      "></div>
-                      <!-- 等級標記 -->
-                      <div style="
-                        position: absolute;
-                        bottom: -2px;
-                        right: -2px;
-                        width: 22px;
-                        height: 22px;
-                        background: linear-gradient(135deg, ${COLORS.purple} 0%, #8b5cf6 100%);
-                        border-radius: 50%;
-                        border: 2px solid #0a0a0f;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 10px;
-                        color: #fff;
-                        font-weight: bold;
-                      ">支</div>
-                    </div>
-                  ` : `
-                    <div style="
-                      width: 64px; 
-                      height: 64px; 
-                      border-radius: 50%; 
-                      background: linear-gradient(135deg, ${COLORS.purple}30, ${COLORS.purple}10); 
-                      border: 3px solid ${COLORS.purple}60; 
-                      display: flex; 
-                      align-items: center; 
-                      justify-content: center; 
-                      font-size: 26px; 
-                      color: ${COLORS.purple};
-                      box-shadow: 0 6px 20px ${COLORS.purple}25;
-                    ">${pillar.branch}</div>
-                  `}
+                  ${createAvatarHTML(advisorAvatar, pillar.branch, zhiChar?.title || pillar.branch, COLORS.purple, '支')}
                   <div style="flex: 1;">
                     <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 0 0 4px 0; letter-spacing: 1px;">地支 · Advisor</p>
                     <p style="
@@ -3354,6 +3404,12 @@ export const generatePDF = async (
   try {
     // Step 1: 等待字體載入
     await waitForFonts();
+    
+    // Step 1.5: 預載入所有頭像圖片
+    console.log('[PDF] Preloading avatar images...');
+    const avatarUrls = collectAvatarUrls(reportData.pillars);
+    const preloadedImages = await preloadImages(avatarUrls);
+    console.log(`[PDF] Preloaded ${preloadedImages.size} images, success: ${[...preloadedImages.values()].filter(v => v).length}`);
     
     // Step 2: 創建報告 HTML
     console.log('[PDF] Creating report container...');

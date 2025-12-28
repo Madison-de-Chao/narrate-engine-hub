@@ -1393,41 +1393,87 @@ const createStoryPage = (
       subtitle: '家族傳承 · 童年根基',
       icon: '👑', 
       color: '#fbbf24',
-      gradient: 'linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.03) 100%)',
-      borderGradient: 'linear-gradient(180deg, #fbbf24, #f59e0b)'
+      colorLight: '#fef3c7',
+      gradient: 'linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(251, 191, 36, 0.02) 100%)',
+      borderGradient: 'linear-gradient(180deg, #fbbf24, #f59e0b)',
+      bgPattern: 'radial-gradient(circle at 10% 10%, rgba(251, 191, 36, 0.08) 0%, transparent 30%)'
     },
     month: { 
       name: '關係軍團', 
       subtitle: '社交人脈 · 事業發展',
       icon: '🤝', 
       color: '#4ade80',
-      gradient: 'linear-gradient(135deg, rgba(74, 222, 128, 0.15) 0%, rgba(74, 222, 128, 0.03) 100%)',
-      borderGradient: 'linear-gradient(180deg, #4ade80, #22c55e)'
+      colorLight: '#dcfce7',
+      gradient: 'linear-gradient(135deg, rgba(74, 222, 128, 0.12) 0%, rgba(74, 222, 128, 0.02) 100%)',
+      borderGradient: 'linear-gradient(180deg, #4ade80, #22c55e)',
+      bgPattern: 'radial-gradient(circle at 90% 10%, rgba(74, 222, 128, 0.08) 0%, transparent 30%)'
     },
     day: { 
       name: '核心軍團', 
       subtitle: '核心自我 · 婚姻感情',
       icon: '⭐', 
       color: '#c084fc',
-      gradient: 'linear-gradient(135deg, rgba(192, 132, 252, 0.15) 0%, rgba(192, 132, 252, 0.03) 100%)',
-      borderGradient: 'linear-gradient(180deg, #c084fc, #a855f7)'
+      colorLight: '#f3e8ff',
+      gradient: 'linear-gradient(135deg, rgba(192, 132, 252, 0.12) 0%, rgba(192, 132, 252, 0.02) 100%)',
+      borderGradient: 'linear-gradient(180deg, #c084fc, #a855f7)',
+      bgPattern: 'radial-gradient(circle at 50% 90%, rgba(192, 132, 252, 0.08) 0%, transparent 30%)'
     },
     hour: { 
       name: '未來軍團', 
       subtitle: '未來規劃 · 子女傳承',
       icon: '🚀', 
       color: '#f97316',
-      gradient: 'linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(249, 115, 22, 0.03) 100%)',
-      borderGradient: 'linear-gradient(180deg, #f97316, #ea580c)'
+      colorLight: '#ffedd5',
+      gradient: 'linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0.02) 100%)',
+      borderGradient: 'linear-gradient(180deg, #f97316, #ea580c)',
+      bgPattern: 'radial-gradient(circle at 90% 90%, rgba(249, 115, 22, 0.08) 0%, transparent 30%)'
     }
   };
   
   const config = legionConfig[type];
   const pillarLabels = { year: '年柱', month: '月柱', day: '日柱', hour: '時柱' };
   
-  // 處理故事內容，分段顯示
+  // 處理故事內容，智能分段
   const storyParagraphs = story.split('\n').filter(p => p.trim());
-  
+  const formattedStory = storyParagraphs.map((para, idx) => {
+    // 首段使用首字下沉效果
+    if (idx === 0 && para.length > 10) {
+      const firstChar = para.charAt(0);
+      const restText = para.slice(1);
+      return `
+        <p style="
+          font-size: 14px;
+          color: ${COLORS.textSecondary};
+          line-height: 2.2;
+          margin: 0 0 18px 0;
+          text-align: justify;
+          letter-spacing: 0.6px;
+        ">
+          <span style="
+            float: left;
+            font-size: 48px;
+            font-family: ${FONTS.heading};
+            color: ${config.color};
+            line-height: 1;
+            margin: 0 12px 0 0;
+            text-shadow: 0 2px 10px ${config.color}30;
+          ">${firstChar}</span>${restText}
+        </p>
+      `;
+    }
+    return `
+      <p style="
+        font-size: 14px;
+        color: ${COLORS.textSecondary};
+        line-height: 2.2;
+        margin: 0 0 16px 0;
+        text-align: justify;
+        letter-spacing: 0.6px;
+        text-indent: 2em;
+      ">${para}</p>
+    `;
+  }).join('');
+
   return `
     <div style="
       width: 794px;
@@ -1439,177 +1485,266 @@ const createStoryPage = (
       page-break-after: always;
       overflow: hidden;
     ">
-      <!-- 背景裝飾光暈 -->
+      <!-- 多層背景裝飾 -->
       <div style="
         position: absolute;
         inset: 0;
         background: 
-          radial-gradient(ellipse 60% 40% at 50% 20%, ${config.color}08 0%, transparent 50%),
-          radial-gradient(ellipse 40% 30% at 20% 80%, ${COLORS.gold}05 0%, transparent 50%),
-          radial-gradient(ellipse 40% 30% at 80% 80%, ${config.color}05 0%, transparent 50%);
+          ${config.bgPattern},
+          radial-gradient(ellipse 70% 50% at 50% 15%, ${config.color}06 0%, transparent 60%),
+          radial-gradient(ellipse 50% 40% at 15% 85%, ${COLORS.gold}04 0%, transparent 50%),
+          radial-gradient(ellipse 50% 40% at 85% 85%, ${config.color}04 0%, transparent 50%);
         pointer-events: none;
       "></div>
       
-      <!-- 精緻邊框 -->
-      <div style="position: absolute; inset: 15px; border: 1px solid ${COLORS.border}; pointer-events: none;"></div>
+      <!-- 精緻雙層邊框 -->
+      <div style="position: absolute; inset: 12px; border: 1px solid ${config.color}15; pointer-events: none;"></div>
+      <div style="position: absolute; inset: 18px; border: 1px solid ${COLORS.border}; pointer-events: none;"></div>
       
-      <!-- 角落彩色裝飾 -->
-      <div style="position: absolute; top: 15px; left: 15px; width: 25px; height: 25px;">
-        <div style="position: absolute; top: 0; left: 0; width: 20px; height: 3px; background: ${config.borderGradient};"></div>
-        <div style="position: absolute; top: 0; left: 0; width: 3px; height: 20px; background: ${config.borderGradient};"></div>
+      <!-- 角落裝飾 - 漸變色彩 -->
+      <div style="position: absolute; top: 12px; left: 12px; width: 35px; height: 35px;">
+        <div style="position: absolute; top: 0; left: 0; width: 25px; height: 3px; background: ${config.borderGradient}; border-radius: 2px;"></div>
+        <div style="position: absolute; top: 0; left: 0; width: 3px; height: 25px; background: ${config.borderGradient}; border-radius: 2px;"></div>
+        <div style="position: absolute; top: 8px; left: 8px; width: 6px; height: 6px; background: ${config.color}; border-radius: 50%; box-shadow: 0 0 8px ${config.color};"></div>
       </div>
-      <div style="position: absolute; top: 15px; right: 15px; width: 25px; height: 25px;">
-        <div style="position: absolute; top: 0; right: 0; width: 20px; height: 3px; background: ${config.borderGradient};"></div>
-        <div style="position: absolute; top: 0; right: 0; width: 3px; height: 20px; background: ${config.borderGradient};"></div>
+      <div style="position: absolute; top: 12px; right: 12px; width: 35px; height: 35px;">
+        <div style="position: absolute; top: 0; right: 0; width: 25px; height: 3px; background: ${config.borderGradient}; border-radius: 2px;"></div>
+        <div style="position: absolute; top: 0; right: 0; width: 3px; height: 25px; background: ${config.borderGradient}; border-radius: 2px;"></div>
+        <div style="position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; background: ${config.color}; border-radius: 50%; box-shadow: 0 0 8px ${config.color};"></div>
       </div>
-      <div style="position: absolute; bottom: 15px; left: 15px; width: 25px; height: 25px;">
-        <div style="position: absolute; bottom: 0; left: 0; width: 20px; height: 3px; background: ${config.borderGradient};"></div>
-        <div style="position: absolute; bottom: 0; left: 0; width: 3px; height: 20px; background: ${config.borderGradient};"></div>
+      <div style="position: absolute; bottom: 12px; left: 12px; width: 35px; height: 35px;">
+        <div style="position: absolute; bottom: 0; left: 0; width: 25px; height: 3px; background: ${config.borderGradient}; border-radius: 2px;"></div>
+        <div style="position: absolute; bottom: 0; left: 0; width: 3px; height: 25px; background: ${config.borderGradient}; border-radius: 2px;"></div>
+        <div style="position: absolute; bottom: 8px; left: 8px; width: 6px; height: 6px; background: ${config.color}; border-radius: 50%; box-shadow: 0 0 8px ${config.color};"></div>
       </div>
-      <div style="position: absolute; bottom: 15px; right: 15px; width: 25px; height: 25px;">
-        <div style="position: absolute; bottom: 0; right: 0; width: 20px; height: 3px; background: ${config.borderGradient};"></div>
-        <div style="position: absolute; bottom: 0; right: 0; width: 3px; height: 20px; background: ${config.borderGradient};"></div>
+      <div style="position: absolute; bottom: 12px; right: 12px; width: 35px; height: 35px;">
+        <div style="position: absolute; bottom: 0; right: 0; width: 25px; height: 3px; background: ${config.borderGradient}; border-radius: 2px;"></div>
+        <div style="position: absolute; bottom: 0; right: 0; width: 3px; height: 25px; background: ${config.borderGradient}; border-radius: 2px;"></div>
+        <div style="position: absolute; bottom: 8px; right: 8px; width: 6px; height: 6px; background: ${config.color}; border-radius: 50%; box-shadow: 0 0 8px ${config.color};"></div>
       </div>
       
       ${createHeader('四時軍團戰略命理系統')}
       
-      <!-- 軍團標題卡片 -->
+      <!-- 軍團標題卡片 - 增強設計 -->
       <div style="
         text-align: center;
-        padding: 35px 40px;
+        padding: 30px 40px;
         background: ${config.gradient};
-        border: 1px solid ${config.color}30;
-        border-radius: 16px;
-        margin-bottom: 25px;
+        border: 1px solid ${config.color}25;
+        border-radius: 20px;
+        margin-bottom: 22px;
         position: relative;
         box-shadow: 
-          0 10px 40px rgba(0, 0, 0, 0.25),
-          inset 0 1px 0 ${config.color}20;
+          0 15px 50px rgba(0, 0, 0, 0.25),
+          0 0 0 1px ${config.color}10,
+          inset 0 1px 0 ${config.color}15;
       ">
         <!-- 頂部發光線 -->
         <div style="
           position: absolute;
-          top: 0;
+          top: -1px;
           left: 50%;
           transform: translateX(-50%);
-          width: 50%;
+          width: 60%;
           height: 2px;
           background: linear-gradient(90deg, transparent, ${config.color}, transparent);
+          border-radius: 1px;
         "></div>
         
-        <!-- 圖標與標題 -->
-        <span style="
-          font-size: 52px; 
-          display: block; 
-          margin-bottom: 12px; 
-          filter: drop-shadow(0 0 15px ${config.color}50);
-        ">${config.icon}</span>
+        <!-- 背景紋理 -->
+        <div style="
+          position: absolute;
+          inset: 0;
+          background: 
+            repeating-linear-gradient(
+              45deg,
+              transparent,
+              transparent 20px,
+              ${config.color}03 20px,
+              ${config.color}03 40px
+            );
+          border-radius: 20px;
+          pointer-events: none;
+        "></div>
+        
+        <!-- 圖標容器 -->
+        <div style="
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 15px;
+          background: radial-gradient(circle, ${config.color}20 0%, transparent 70%);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+        ">
+          <div style="
+            position: absolute;
+            inset: 0;
+            border: 2px solid ${config.color}30;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+          "></div>
+          <span style="
+            font-size: 48px;
+            filter: drop-shadow(0 0 20px ${config.color}60);
+          ">${config.icon}</span>
+        </div>
         
         <h3 style="
-          font-size: 30px;
+          font-size: 32px;
+          font-family: ${FONTS.heading};
           color: ${config.color};
           margin: 0 0 8px 0;
           font-weight: 600;
-          letter-spacing: 8px;
-          text-shadow: 0 0 25px ${config.color}30;
+          letter-spacing: 10px;
+          text-shadow: 0 0 30px ${config.color}40;
+          position: relative;
         ">${config.name}</h3>
         
-        <p style="font-size: 12px; color: ${COLORS.textMuted}; margin: 0 0 20px 0; letter-spacing: 3px;">${config.subtitle}</p>
+        <p style="font-size: 12px; color: ${COLORS.textMuted}; margin: 0 0 18px 0; letter-spacing: 4px;">${config.subtitle}</p>
         
-        <!-- 柱位資訊 -->
+        <!-- 柱位資訊卡 -->
         <div style="
           display: inline-flex;
           align-items: center;
-          gap: 20px;
-          padding: 14px 35px;
-          background: rgba(10, 10, 15, 0.5);
-          border-radius: 30px;
-          border: 1px solid ${config.color}25;
+          gap: 25px;
+          padding: 16px 40px;
+          background: linear-gradient(135deg, rgba(10, 10, 15, 0.7) 0%, rgba(15, 15, 22, 0.6) 100%);
+          border-radius: 40px;
+          border: 1px solid ${config.color}20;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
         ">
           <div style="text-align: center;">
-            <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 0 0 4px 0; letter-spacing: 2px;">${pillarLabels[type]}</p>
+            <p style="font-size: 9px; color: ${config.color}80; margin: 0 0 5px 0; letter-spacing: 3px; text-transform: uppercase;">${pillarLabels[type]}</p>
             <span style="
-              font-size: 28px; 
+              font-size: 30px; 
               color: ${COLORS.goldLight}; 
-              letter-spacing: 6px; 
+              letter-spacing: 8px; 
               font-family: ${FONTS.heading};
-              text-shadow: 0 0 10px ${COLORS.gold}30;
+              text-shadow: 0 0 15px ${COLORS.gold}40;
             ">${pillar.stem}${pillar.branch}</span>
           </div>
-          <div style="width: 1px; height: 35px; background: linear-gradient(180deg, transparent, ${config.color}50, transparent);"></div>
+          
+          <div style="width: 1px; height: 45px; background: linear-gradient(180deg, transparent, ${config.color}40, transparent);"></div>
+          
           <div style="text-align: center;">
-            <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 0 0 4px 0; letter-spacing: 2px;">納音</p>
-            <span style="font-size: 16px; color: ${COLORS.textSecondary};">${nayin}</span>
+            <p style="font-size: 9px; color: ${config.color}80; margin: 0 0 5px 0; letter-spacing: 3px; text-transform: uppercase;">納音五行</p>
+            <span style="font-size: 16px; color: ${COLORS.textSecondary}; letter-spacing: 1px;">${nayin}</span>
           </div>
         </div>
       </div>
       
-      <!-- 故事內容區 -->
+      <!-- 故事內容區 - 書卷風格 -->
       <div style="
-        background: linear-gradient(135deg, rgba(25, 25, 35, 0.8) 0%, rgba(20, 20, 28, 0.8) 100%);
-        border: 1px solid ${config.color}20;
-        border-radius: 12px;
-        padding: 28px 32px;
+        background: linear-gradient(180deg, rgba(25, 25, 38, 0.9) 0%, rgba(20, 20, 30, 0.85) 100%);
+        border: 1px solid ${config.color}15;
+        border-radius: 16px;
+        padding: 30px 35px;
         position: relative;
-        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+        box-shadow: 
+          0 8px 30px rgba(0, 0, 0, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.02);
       ">
-        <!-- 左上角裝飾線 -->
+        <!-- 頂部裝飾條 -->
         <div style="
-          position: absolute; 
-          top: 0; 
-          left: 25px; 
-          width: 80px; 
-          height: 3px; 
-          background: linear-gradient(90deg, ${config.color}, transparent);
-          border-radius: 0 0 2px 2px;
+          position: absolute;
+          top: -1px;
+          left: 30px;
+          right: 30px;
+          height: 3px;
+          background: linear-gradient(90deg, transparent, ${config.color}60, ${config.color}, ${config.color}60, transparent);
+          border-radius: 0 0 3px 3px;
         "></div>
         
-        <!-- 標題 -->
-        <h4 style="
-          font-size: 16px; 
-          color: ${COLORS.gold}; 
-          margin: 0 0 20px 0; 
-          display: flex; 
-          align-items: center; 
-          gap: 12px;
-          letter-spacing: 2px;
-        ">
-          <span style="
-            width: 4px;
-            height: 20px;
-            background: ${config.borderGradient};
-            border-radius: 2px;
-            box-shadow: 0 0 8px ${config.color}50;
-          "></span>
-          <span>軍團故事</span>
-          <span style="
-            font-size: 11px;
-            color: ${COLORS.textMuted};
-            font-weight: normal;
-            margin-left: auto;
-          ">AI 命理敘事</span>
-        </h4>
-        
-        <!-- 故事文字 -->
+        <!-- 側邊裝飾線 -->
         <div style="
-          font-size: 14px;
-          color: ${COLORS.textSecondary};
-          line-height: 2.1;
-          white-space: pre-wrap;
-          text-align: justify;
-          letter-spacing: 0.5px;
-        ">${story}</div>
+          position: absolute;
+          left: 0;
+          top: 30px;
+          bottom: 30px;
+          width: 4px;
+          background: linear-gradient(180deg, ${config.color}, ${config.color}50, ${config.color});
+          border-radius: 0 2px 2px 0;
+          box-shadow: 0 0 12px ${config.color}40;
+        "></div>
         
-        <!-- 底部裝飾 -->
+        <!-- 標題區 -->
+        <div style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 22px;
+          padding-bottom: 15px;
+          border-bottom: 1px solid ${COLORS.border};
+        ">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="
+              width: 8px;
+              height: 24px;
+              background: ${config.borderGradient};
+              border-radius: 4px;
+              box-shadow: 0 0 10px ${config.color}50;
+            "></div>
+            <span style="
+              font-size: 17px;
+              font-family: ${FONTS.heading};
+              color: ${COLORS.gold};
+              letter-spacing: 3px;
+            ">軍團故事</span>
+          </div>
+          
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: ${config.color}10;
+            border: 1px solid ${config.color}20;
+            border-radius: 20px;
+          ">
+            <span style="font-size: 12px; color: ${config.color};">✦</span>
+            <span style="font-size: 10px; color: ${COLORS.textMuted}; letter-spacing: 1px;">AI 命理敘事</span>
+          </div>
+        </div>
+        
+        <!-- 故事內容 - 首字下沉效果 -->
+        <div style="padding-left: 12px;">
+          ${formattedStory || `
+            <p style="
+              font-size: 14px;
+              color: ${COLORS.textSecondary};
+              line-height: 2.2;
+              text-align: justify;
+              letter-spacing: 0.6px;
+            ">${story}</p>
+          `}
+        </div>
+        
+        <!-- 底部裝飾區 -->
         <div style="
           margin-top: 25px;
-          padding-top: 15px;
+          padding-top: 18px;
           border-top: 1px solid ${COLORS.border};
-          text-align: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 15px;
         ">
-          <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 0; font-style: italic; letter-spacing: 1px;">
-            「此故事根據命盤特徵生成，僅供參考與啟發」
+          <div style="width: 40px; height: 1px; background: linear-gradient(90deg, transparent, ${config.color}50);"></div>
+          <span style="font-size: 16px; color: ${config.color}60;">❖</span>
+          <p style="
+            font-size: 10px; 
+            color: ${COLORS.textMuted}; 
+            margin: 0; 
+            font-style: italic; 
+            letter-spacing: 1.5px;
+          ">
+            此故事根據命盤特徵生成，僅供參考與啟發
           </p>
+          <span style="font-size: 16px; color: ${config.color}60;">❖</span>
+          <div style="width: 40px; height: 1px; background: linear-gradient(270deg, transparent, ${config.color}50);"></div>
         </div>
       </div>
       

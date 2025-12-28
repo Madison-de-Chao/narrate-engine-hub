@@ -25,10 +25,12 @@
     <meta name="twitter:description" content="將傳統八字命理轉化為遊戲化軍團戰略系統，探索你的四時軍團，掌握人生兵法。" />
     <meta name="twitter:image" content="/logo-honglingyusuo-new.png" />
 
-    <!-- 專業中文字體 -->
+    <!-- 專業中文字體 - 優化載入 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- 預載入核心字體以改善 PDF 渲染 -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&family=Noto+Sans+TC:wght@300;400;500;700&family=ZCOOL+XiaoWei&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&family=Noto+Sans+TC:wght@300;400;500;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet"></noscript>
   </head>
 
   <body>

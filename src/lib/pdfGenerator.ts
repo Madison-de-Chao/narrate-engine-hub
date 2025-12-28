@@ -574,37 +574,114 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
     </div>
   `;
 
-  // 四柱詳解頁 - 優化版
+  // 四柱詳解頁 - 專業增強版
   const pillarLabels = {
-    year: { name: '年柱', legion: '祖源軍團', icon: '👑', color: COLORS.gold },
-    month: { name: '月柱', legion: '關係軍團', icon: '🤝', color: COLORS.green },
-    day: { name: '日柱', legion: '核心軍團', icon: '⭐', color: COLORS.purple },
-    hour: { name: '時柱', legion: '未來軍團', icon: '🚀', color: COLORS.orange }
+    year: { name: '年柱', legion: '祖源軍團', icon: '👑', color: COLORS.gold, element: '根基', bgGradient: 'linear-gradient(135deg, #c8aa6408 0%, #c8aa6402 100%)' },
+    month: { name: '月柱', legion: '關係軍團', icon: '🤝', color: COLORS.green, element: '發展', bgGradient: 'linear-gradient(135deg, #4ade8008 0%, #4ade8002 100%)' },
+    day: { name: '日柱', legion: '核心軍團', icon: '⭐', color: COLORS.purple, element: '核心', bgGradient: 'linear-gradient(135deg, #a855f708 0%, #a855f702 100%)' },
+    hour: { name: '時柱', legion: '未來軍團', icon: '🚀', color: COLORS.orange, element: '歸宿', bgGradient: 'linear-gradient(135deg, #f9731608 0%, #f9731602 100%)' }
   };
+
+  // 五行配置
+  const wuxingConfig = [
+    { key: 'wood', name: '木', color: '#4ade80', icon: '🌲', desc: '生發' },
+    { key: 'fire', name: '火', color: '#f87171', icon: '🔥', desc: '光明' },
+    { key: 'earth', name: '土', color: '#fbbf24', icon: '🏔️', desc: '承載' },
+    { key: 'metal', name: '金', color: '#e5e5e5', icon: '⚔️', desc: '收斂' },
+    { key: 'water', name: '水', color: '#60a5fa', icon: '🌊', desc: '潤下' }
+  ];
 
   const pillarsPage = `
     <div style="
       width: 794px;
       min-height: 1123px;
-      background: linear-gradient(180deg, ${COLORS.bgPrimary} 0%, ${COLORS.bgSecondary} 100%);
+      background: linear-gradient(180deg, ${COLORS.bgPrimary} 0%, ${COLORS.bgSecondary} 50%, ${COLORS.bgPrimary} 100%);
       position: relative;
       padding: 40px 50px;
       box-sizing: border-box;
       page-break-after: always;
       overflow: hidden;
     ">
-      <!-- 邊框 -->
-      <div style="position: absolute; inset: 15px; border: 1px solid ${COLORS.border}; pointer-events: none;"></div>
+      <!-- 多層背景裝飾 -->
+      <div style="
+        position: absolute;
+        inset: 0;
+        background: 
+          radial-gradient(ellipse 80% 50% at 50% 0%, ${COLORS.gold}06 0%, transparent 60%),
+          radial-gradient(ellipse 60% 40% at 0% 50%, ${COLORS.purple}04 0%, transparent 50%),
+          radial-gradient(ellipse 60% 40% at 100% 50%, ${COLORS.blue}04 0%, transparent 50%),
+          radial-gradient(ellipse 50% 50% at 50% 100%, ${COLORS.gold}04 0%, transparent 60%);
+        pointer-events: none;
+      "></div>
+      
+      <!-- 八卦紋背景 -->
+      <div style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 500px;
+        height: 500px;
+        background: 
+          repeating-conic-gradient(from 0deg at 50% 50%, 
+            ${COLORS.gold}02 0deg 45deg, 
+            transparent 45deg 90deg);
+        border-radius: 50%;
+        opacity: 0.3;
+        pointer-events: none;
+      "></div>
+      
+      <!-- 精緻雙層邊框 -->
+      <div style="position: absolute; inset: 12px; border: 2px solid ${COLORS.gold}40; pointer-events: none;"></div>
+      <div style="position: absolute; inset: 18px; border: 1px solid ${COLORS.border}; pointer-events: none;"></div>
+      
+      <!-- 角落裝飾徽章 -->
+      <div style="position: absolute; top: 12px; left: 12px; width: 35px; height: 35px;">
+        <div style="position: absolute; top: 0; left: 0; width: 22px; height: 3px; background: linear-gradient(90deg, ${COLORS.gold}, ${COLORS.gold}60);"></div>
+        <div style="position: absolute; top: 0; left: 0; width: 3px; height: 22px; background: linear-gradient(180deg, ${COLORS.gold}, ${COLORS.gold}60);"></div>
+        <div style="position: absolute; top: 5px; left: 5px; width: 8px; height: 8px; border: 1px solid ${COLORS.gold}50; transform: rotate(45deg);"></div>
+      </div>
+      <div style="position: absolute; top: 12px; right: 12px; width: 35px; height: 35px;">
+        <div style="position: absolute; top: 0; right: 0; width: 22px; height: 3px; background: linear-gradient(270deg, ${COLORS.gold}, ${COLORS.gold}60);"></div>
+        <div style="position: absolute; top: 0; right: 0; width: 3px; height: 22px; background: linear-gradient(180deg, ${COLORS.gold}, ${COLORS.gold}60);"></div>
+        <div style="position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border: 1px solid ${COLORS.gold}50; transform: rotate(45deg);"></div>
+      </div>
+      <div style="position: absolute; bottom: 12px; left: 12px; width: 35px; height: 35px;">
+        <div style="position: absolute; bottom: 0; left: 0; width: 22px; height: 3px; background: linear-gradient(90deg, ${COLORS.gold}, ${COLORS.gold}60);"></div>
+        <div style="position: absolute; bottom: 0; left: 0; width: 3px; height: 22px; background: linear-gradient(0deg, ${COLORS.gold}, ${COLORS.gold}60);"></div>
+        <div style="position: absolute; bottom: 5px; left: 5px; width: 8px; height: 8px; border: 1px solid ${COLORS.gold}50; transform: rotate(45deg);"></div>
+      </div>
+      <div style="position: absolute; bottom: 12px; right: 12px; width: 35px; height: 35px;">
+        <div style="position: absolute; bottom: 0; right: 0; width: 22px; height: 3px; background: linear-gradient(270deg, ${COLORS.gold}, ${COLORS.gold}60);"></div>
+        <div style="position: absolute; bottom: 0; right: 0; width: 3px; height: 22px; background: linear-gradient(0deg, ${COLORS.gold}, ${COLORS.gold}60);"></div>
+        <div style="position: absolute; bottom: 5px; right: 5px; width: 8px; height: 8px; border: 1px solid ${COLORS.gold}50; transform: rotate(45deg);"></div>
+      </div>
       
       ${createHeader('四時軍團戰略命理系統')}
       
-      <!-- 標題 -->
-      <div style="text-align: center; margin: 15px 0 30px 0;">
-        <h3 style="font-size: 22px; color: ${COLORS.goldLight}; margin: 0; letter-spacing: 5px; font-weight: 500;">四柱命盤詳解</h3>
+      <!-- 增強版標題區域 -->
+      <div style="text-align: center; margin: 10px 0 25px 0;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 12px;">
+          <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.goldDark});"></div>
+          <span style="font-size: 10px; color: ${COLORS.goldDark}; letter-spacing: 6px; text-transform: uppercase;">FOUR PILLARS ANALYSIS</span>
+          <div style="width: 60px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.goldDark});"></div>
+        </div>
+        <h3 style="
+          font-size: 28px; 
+          font-family: ${FONTS.heading};
+          color: ${COLORS.goldLight}; 
+          margin: 0 0 8px 0; 
+          letter-spacing: 8px; 
+          font-weight: 600;
+          text-shadow: 0 2px 15px ${COLORS.gold}25;
+        ">四柱命盤詳解</h3>
+        <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 0; letter-spacing: 2px;">
+          天干地支 · 納音五行 · 十神關係 · 藏干透出
+        </p>
       </div>
       
-      <!-- 四柱卡片網格 -->
-      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-bottom: 25px;">
+      <!-- 四柱卡片網格 - 精緻版 -->
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 20px;">
         ${(['year', 'month', 'day', 'hour'] as const).map(key => {
           const pillar = reportData.pillars[key];
           const nayin = reportData.nayin[key];
@@ -613,82 +690,321 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
           const label = pillarLabels[key];
           return `
             <div style="
-              background: ${COLORS.bgCard};
-              border: 1px solid ${label.color}30;
-              border-left: 4px solid ${label.color};
-              padding: 20px;
+              background: linear-gradient(145deg, rgba(25, 25, 38, 0.95) 0%, rgba(18, 18, 28, 0.9) 100%);
+              border: 1px solid ${label.color}25;
+              border-radius: 12px;
+              overflow: hidden;
+              position: relative;
+              box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
             ">
-              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <span style="font-size: 22px;">${label.icon}</span>
-                <div>
-                  <span style="font-size: 15px; color: ${label.color}; font-weight: 600;">${label.name}</span>
-                  <span style="font-size: 10px; color: ${COLORS.textMuted}; margin-left: 8px;">${label.legion}</span>
-                </div>
-              </div>
+              <!-- 頂部發光邊 -->
+              <div style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: linear-gradient(90deg, transparent, ${label.color}, transparent);
+              "></div>
               
-              <div style="text-align: center; padding: 15px; background: rgba(10, 10, 15, 0.5); margin-bottom: 15px;">
-                <span style="font-size: 32px; color: ${COLORS.goldLight}; letter-spacing: 6px; font-family: ${FONTS.heading};">${pillar.stem}${pillar.branch}</span>
-              </div>
+              <!-- 左側漸變條 -->
+              <div style="
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 5px;
+                background: linear-gradient(180deg, ${label.color}, ${label.color}40, ${label.color}10);
+              "></div>
               
-              <div style="display: flex; flex-direction: column; gap: 6px; font-size: 11px;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span style="color: ${COLORS.textMuted}; min-width: 32px;">納音</span>
-                  <span style="color: ${COLORS.textSecondary};">${nayin}</span>
+              <!-- 背景圖案 -->
+              <div style="
+                position: absolute;
+                right: -20px;
+                top: -20px;
+                width: 100px;
+                height: 100px;
+                font-size: 80px;
+                opacity: 0.04;
+                pointer-events: none;
+              ">${label.icon}</div>
+              
+              <div style="padding: 18px 18px 18px 22px;">
+                <!-- 標題區 -->
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
+                  <div style="
+                    width: 42px;
+                    height: 42px;
+                    background: linear-gradient(135deg, ${label.color}25 0%, ${label.color}08 100%);
+                    border: 2px solid ${label.color}40;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 4px 12px ${label.color}20;
+                    position: relative;
+                  ">
+                    <span style="font-size: 22px; filter: drop-shadow(0 2px 4px ${label.color}40);">${label.icon}</span>
+                    <!-- 脈動環 -->
+                    <div style="position: absolute; inset: -3px; border: 1px solid ${label.color}20; border-radius: 14px;"></div>
+                  </div>
+                  <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span style="
+                        font-size: 16px; 
+                        font-family: ${FONTS.heading};
+                        color: ${label.color}; 
+                        font-weight: 600;
+                        letter-spacing: 2px;
+                      ">${label.name}</span>
+                      <span style="
+                        font-size: 9px;
+                        color: ${COLORS.textMuted};
+                        background: ${label.color}12;
+                        padding: 2px 8px;
+                        border-radius: 8px;
+                        border: 1px solid ${label.color}20;
+                      ">${label.element}</span>
+                    </div>
+                    <span style="font-size: 10px; color: ${COLORS.textMuted}; letter-spacing: 1px;">${label.legion}</span>
+                  </div>
                 </div>
-                ${tenGod ? `
-                  <div style="display: flex; align-items: center; gap: 6px;">
-                    <span style="color: ${COLORS.textMuted}; min-width: 32px;">十神</span>
-                    <span style="color: ${COLORS.textSecondary};">${tenGod.stem} / ${tenGod.branch}</span>
+                
+                <!-- 核心干支展示 - 印章風格 -->
+                <div style="
+                  text-align: center; 
+                  padding: 16px 12px; 
+                  background: linear-gradient(135deg, rgba(8, 8, 12, 0.8) 0%, rgba(12, 12, 18, 0.7) 100%);
+                  border-radius: 10px;
+                  border: 1px solid ${label.color}20;
+                  margin-bottom: 14px;
+                  position: relative;
+                ">
+                  <!-- 印章效果裝飾 -->
+                  <div style="
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 70px;
+                    height: 70px;
+                    border: 1px dashed ${label.color}15;
+                    border-radius: 50%;
+                    pointer-events: none;
+                  "></div>
+                  
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <!-- 天干 -->
+                    <div style="position: relative;">
+                      <span style="
+                        font-size: 36px; 
+                        font-family: ${FONTS.heading};
+                        color: ${COLORS.goldLight}; 
+                        font-weight: 600;
+                        text-shadow: 0 0 20px ${COLORS.gold}30;
+                      ">${pillar.stem}</span>
+                      <span style="
+                        position: absolute;
+                        top: -6px;
+                        right: -12px;
+                        font-size: 8px;
+                        color: ${COLORS.gold};
+                        background: ${COLORS.gold}15;
+                        padding: 1px 4px;
+                        border-radius: 3px;
+                      ">干</span>
+                    </div>
+                    
+                    <!-- 分隔線 -->
+                    <div style="
+                      width: 1px;
+                      height: 40px;
+                      background: linear-gradient(180deg, transparent, ${label.color}40, transparent);
+                      margin: 0 8px;
+                    "></div>
+                    
+                    <!-- 地支 -->
+                    <div style="position: relative;">
+                      <span style="
+                        font-size: 36px; 
+                        font-family: ${FONTS.heading};
+                        color: ${COLORS.textSecondary}; 
+                        font-weight: 600;
+                        text-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+                      ">${pillar.branch}</span>
+                      <span style="
+                        position: absolute;
+                        top: -6px;
+                        right: -12px;
+                        font-size: 8px;
+                        color: ${COLORS.purple};
+                        background: ${COLORS.purple}15;
+                        padding: 1px 4px;
+                        border-radius: 3px;
+                      ">支</span>
+                    </div>
                   </div>
-                ` : ''}
-                ${hidden.length > 0 ? `
-                  <div style="display: flex; align-items: center; gap: 6px;">
-                    <span style="color: ${COLORS.textMuted}; min-width: 32px;">藏干</span>
-                    <span style="color: ${COLORS.textSecondary};">${hidden.join('、')}</span>
+                  
+                  <!-- 納音標籤 -->
+                  <div style="
+                    margin-top: 10px;
+                    padding: 4px 12px;
+                    background: linear-gradient(90deg, transparent, ${label.color}08, transparent);
+                    display: inline-block;
+                    border-radius: 12px;
+                  ">
+                    <span style="font-size: 11px; color: ${label.color}; letter-spacing: 2px;">${nayin}</span>
                   </div>
-                ` : ''}
+                </div>
+                
+                <!-- 詳細資訊網格 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 10px;">
+                  ${tenGod ? `
+                    <div style="
+                      padding: 8px 10px;
+                      background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0.02) 100%);
+                      border-radius: 8px;
+                      border: 1px solid rgba(168, 85, 247, 0.15);
+                    ">
+                      <span style="color: ${COLORS.textMuted}; display: block; margin-bottom: 3px; font-size: 9px;">十神</span>
+                      <span style="color: ${COLORS.purple}; font-weight: 500;">${tenGod.stem}</span>
+                      <span style="color: ${COLORS.textMuted};"> / </span>
+                      <span style="color: ${COLORS.blue};">${tenGod.branch}</span>
+                    </div>
+                  ` : ''}
+                  ${hidden.length > 0 ? `
+                    <div style="
+                      padding: 8px 10px;
+                      background: linear-gradient(135deg, rgba(200, 170, 100, 0.08) 0%, rgba(200, 170, 100, 0.02) 100%);
+                      border-radius: 8px;
+                      border: 1px solid rgba(200, 170, 100, 0.15);
+                    ">
+                      <span style="color: ${COLORS.textMuted}; display: block; margin-bottom: 3px; font-size: 9px;">藏干</span>
+                      <span style="color: ${COLORS.goldLight}; font-weight: 500; letter-spacing: 1px;">${hidden.join(' · ')}</span>
+                    </div>
+                  ` : ''}
+                </div>
               </div>
             </div>
           `;
         }).join('')}
       </div>
       
-      <!-- 五行與陰陽並排 -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+      <!-- 五行與陰陽分析區 - 增強版 -->
+      <div style="display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 14px;">
         ${reportData.wuxing ? `
-          <div style="background: ${COLORS.bgCard}; border: 1px solid ${COLORS.border}; padding: 22px;">
-            <h4 style="font-size: 13px; color: ${COLORS.gold}; margin: 0 0 18px 0; letter-spacing: 2px; display: flex; align-items: center; gap: 8px;">
-              <span style="width: 3px; height: 14px; background: ${COLORS.gold};"></span>
-              五行分布
+          <div style="
+            background: linear-gradient(145deg, rgba(25, 25, 38, 0.95) 0%, rgba(18, 18, 28, 0.9) 100%);
+            border: 1px solid ${COLORS.border};
+            border-radius: 12px;
+            padding: 18px 20px;
+            position: relative;
+            overflow: hidden;
+          ">
+            <!-- 頂部發光邊 -->
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, ${COLORS.gold}60, transparent);"></div>
+            
+            <h4 style="
+              font-size: 14px; 
+              font-family: ${FONTS.heading};
+              color: ${COLORS.gold}; 
+              margin: 0 0 16px 0; 
+              letter-spacing: 3px; 
+              display: flex; 
+              align-items: center; 
+              gap: 10px;
+            ">
+              <span style="
+                width: 4px; 
+                height: 18px; 
+                background: linear-gradient(180deg, ${COLORS.gold}, ${COLORS.goldDark});
+                border-radius: 2px;
+              "></span>
+              五行能量分布
+              <span style="font-size: 9px; color: ${COLORS.textMuted}; margin-left: auto; letter-spacing: 1px;">WUXING ENERGY</span>
             </h4>
-            <div style="display: flex; gap: 8px;">
-              ${[
-                { key: 'wood', name: '木', color: '#4ade80' },
-                { key: 'fire', name: '火', color: '#f87171' },
-                { key: 'earth', name: '土', color: '#fbbf24' },
-                { key: 'metal', name: '金', color: '#e5e5e5' },
-                { key: 'water', name: '水', color: '#60a5fa' }
-              ].map(el => {
+            
+            <!-- 五行圖表區 -->
+            <div style="display: flex; gap: 6px; margin-bottom: 14px;">
+              ${wuxingConfig.map(el => {
+                const total = Object.values(reportData.wuxing!).reduce((a, b) => a + b, 0);
+                const value = reportData.wuxing![el.key as keyof typeof reportData.wuxing];
+                const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+                const barHeight = Math.max(15, pct * 0.8);
+                return `
+                  <div style="flex: 1; text-align: center;">
+                    <!-- 圓形能量圖 -->
+                    <div style="
+                      width: 52px;
+                      height: 52px;
+                      border-radius: 50%;
+                      background: linear-gradient(135deg, ${el.color}18 0%, ${el.color}05 100%);
+                      border: 3px solid ${el.color}50;
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                      margin: 0 auto 8px;
+                      position: relative;
+                      box-shadow: 
+                        0 4px 15px ${el.color}20,
+                        inset 0 2px 10px ${el.color}10;
+                    ">
+                      <!-- 外環進度 -->
+                      <div style="
+                        position: absolute;
+                        inset: -6px;
+                        border-radius: 50%;
+                        background: conic-gradient(${el.color}40 0deg ${pct * 3.6}deg, ${el.color}10 ${pct * 3.6}deg 360deg);
+                        z-index: -1;
+                      "></div>
+                      <span style="font-size: 18px;">${el.icon}</span>
+                    </div>
+                    <p style="
+                      font-size: 15px; 
+                      color: ${el.color}; 
+                      margin: 0; 
+                      font-weight: 700;
+                      text-shadow: 0 0 10px ${el.color}30;
+                    ">${el.name}</p>
+                    <p style="
+                      font-size: 12px; 
+                      color: ${COLORS.textSecondary}; 
+                      margin: 2px 0;
+                      font-weight: 600;
+                    ">${value}</p>
+                    <p style="font-size: 9px; color: ${COLORS.textMuted}; margin: 0;">${pct}%</p>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            
+            <!-- 五行長條圖 -->
+            <div style="
+              background: rgba(10, 10, 15, 0.5);
+              border-radius: 8px;
+              padding: 12px;
+              border: 1px solid ${COLORS.border};
+            ">
+              ${wuxingConfig.map(el => {
                 const total = Object.values(reportData.wuxing!).reduce((a, b) => a + b, 0);
                 const value = reportData.wuxing![el.key as keyof typeof reportData.wuxing];
                 const pct = total > 0 ? Math.round((value / total) * 100) : 0;
                 return `
-                  <div style="flex: 1; text-align: center;">
-                    <div style="
-                      width: 38px;
-                      height: 38px;
-                      border-radius: 50%;
-                      background: ${el.color}15;
-                      border: 2px solid ${el.color}50;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      margin: 0 auto 6px;
-                    ">
-                      <span style="font-size: 15px; color: ${el.color}; font-weight: 600;">${el.name}</span>
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                    <span style="font-size: 10px; color: ${el.color}; width: 20px; text-align: center;">${el.name}</span>
+                    <div style="flex: 1; height: 8px; background: rgba(30, 30, 45, 0.8); border-radius: 4px; overflow: hidden;">
+                      <div style="
+                        width: ${pct}%;
+                        height: 100%;
+                        background: linear-gradient(90deg, ${el.color}80, ${el.color});
+                        border-radius: 4px;
+                        box-shadow: 0 0 8px ${el.color}40;
+                      "></div>
                     </div>
-                    <p style="font-size: 13px; color: ${el.color}; margin: 0; font-weight: 600;">${value}</p>
-                    <p style="font-size: 9px; color: ${COLORS.textMuted}; margin: 2px 0 0 0;">${pct}%</p>
+                    <span style="font-size: 9px; color: ${COLORS.textMuted}; width: 28px; text-align: right;">${pct}%</span>
                   </div>
                 `;
               }).join('')}
@@ -697,31 +1013,138 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
         ` : ''}
         
         ${reportData.yinyang ? `
-          <div style="background: ${COLORS.bgCard}; border: 1px solid ${COLORS.border}; padding: 22px;">
-            <h4 style="font-size: 13px; color: ${COLORS.gold}; margin: 0 0 18px 0; letter-spacing: 2px; display: flex; align-items: center; gap: 8px;">
-              <span style="width: 3px; height: 14px; background: ${COLORS.gold};"></span>
-              陰陽比例
+          <div style="
+            background: linear-gradient(145deg, rgba(25, 25, 38, 0.95) 0%, rgba(18, 18, 28, 0.9) 100%);
+            border: 1px solid ${COLORS.border};
+            border-radius: 12px;
+            padding: 18px 16px;
+            position: relative;
+            overflow: hidden;
+          ">
+            <!-- 頂部發光邊 -->
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, ${COLORS.purple}60, transparent);"></div>
+            
+            <h4 style="
+              font-size: 14px; 
+              font-family: ${FONTS.heading};
+              color: ${COLORS.gold}; 
+              margin: 0 0 16px 0; 
+              letter-spacing: 3px; 
+              display: flex; 
+              align-items: center; 
+              gap: 10px;
+            ">
+              <span style="
+                width: 4px; 
+                height: 18px; 
+                background: linear-gradient(180deg, ${COLORS.purple}, ${COLORS.blue});
+                border-radius: 2px;
+              "></span>
+              陰陽平衡
             </h4>
-            <div style="height: 32px; border-radius: 4px; overflow: hidden; display: flex; background: #1a1a24;">
+            
+            <!-- 太極圖示意 -->
+            <div style="
+              width: 90px;
+              height: 90px;
+              margin: 0 auto 16px;
+              border-radius: 50%;
+              background: linear-gradient(180deg, #dcc88c 50%, #4a4a8a 50%);
+              position: relative;
+              box-shadow: 
+                0 4px 20px rgba(0, 0, 0, 0.3),
+                inset 0 2px 10px rgba(255, 255, 255, 0.1);
+              border: 2px solid ${COLORS.gold}30;
+            ">
+              <div style="
+                position: absolute;
+                top: 22px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 18px;
+                height: 18px;
+                background: #4a4a8a;
+                border-radius: 50%;
+              "></div>
+              <div style="
+                position: absolute;
+                bottom: 22px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 18px;
+                height: 18px;
+                background: #dcc88c;
+                border-radius: 50%;
+              "></div>
+            </div>
+            
+            <!-- 陰陽比例條 -->
+            <div style="
+              height: 28px; 
+              border-radius: 14px; 
+              overflow: hidden; 
+              display: flex; 
+              background: #1a1a24;
+              margin-bottom: 12px;
+              box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+            ">
               <div style="
                 width: ${(reportData.yinyang.yang / (reportData.yinyang.yang + reportData.yinyang.yin)) * 100}%;
-                background: linear-gradient(90deg, #c8b464, #dcc88c);
+                background: linear-gradient(90deg, #b8a454, #dcc88c);
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                box-shadow: 2px 0 10px rgba(200, 170, 100, 0.3);
               ">
-                <span style="font-size: 11px; color: #1a1a1a; font-weight: 600;">☀ 陽 ${reportData.yinyang.yang}</span>
+                <span style="font-size: 11px; color: #1a1a1a; font-weight: 700;">☀ ${reportData.yinyang.yang}</span>
               </div>
-              <div style="flex: 1; background: linear-gradient(90deg, #4a4a8a, #6464c8); display: flex; align-items: center; justify-content: center;">
-                <span style="font-size: 11px; color: #e0e0e0; font-weight: 600;">☽ 陰 ${reportData.yinyang.yin}</span>
+              <div style="
+                flex: 1; 
+                background: linear-gradient(90deg, #4a4a8a, #6464c8); 
+                display: flex; 
+                align-items: center; 
+                justify-content: center;
+              ">
+                <span style="font-size: 11px; color: #e0e0e0; font-weight: 700;">☽ ${reportData.yinyang.yin}</span>
               </div>
             </div>
-            <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 10px 0 0 0; text-align: center;">
-              ${reportData.yinyang.yang > reportData.yinyang.yin ? '陽氣較旺，性格偏外向積極' : 
-                reportData.yinyang.yang < reportData.yinyang.yin ? '陰氣較重，性格偏內斂沉穩' : '陰陽平衡，性格較為中和'}
-            </p>
+            
+            <!-- 分析說明 -->
+            <div style="
+              padding: 10px 12px;
+              background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(96, 165, 250, 0.05) 100%);
+              border-radius: 8px;
+              border: 1px solid rgba(168, 85, 247, 0.15);
+            ">
+              <p style="
+                font-size: 10px; 
+                color: ${COLORS.textSecondary}; 
+                margin: 0; 
+                text-align: center;
+                line-height: 1.6;
+              ">
+                ${reportData.yinyang.yang > reportData.yinyang.yin 
+                  ? '☀ 陽氣較旺<br><span style="color: ' + COLORS.textMuted + ';">性格外向積極、行動力強</span>' 
+                  : reportData.yinyang.yang < reportData.yinyang.yin 
+                    ? '☽ 陰氣較重<br><span style="color: ' + COLORS.textMuted + ';">性格內斂沉穩、思慮周全</span>' 
+                    : '☯ 陰陽平衡<br><span style="color: ' + COLORS.textMuted + ';">性格中和、動靜皆宜</span>'}
+              </p>
+            </div>
           </div>
         ` : ''}
+      </div>
+      
+      <!-- 底部裝飾 -->
+      <div style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 18px;
+        gap: 15px;
+      ">
+        <div style="width: 80px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.border});"></div>
+        <span style="font-size: 9px; color: ${COLORS.textMuted}; letter-spacing: 2px;">天干地支 · 命理根基</span>
+        <div style="width: 80px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.border});"></div>
       </div>
       
       ${createFooter(dateStr, '第 2 頁')}

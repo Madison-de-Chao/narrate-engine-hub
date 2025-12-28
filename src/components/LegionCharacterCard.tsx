@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Shield, Swords, Sparkles, TrendingUp, TrendingDown, Users } from "lucide-react";
 import { getCommanderAvatar } from "@/assets/commanders";
 import { getAdvisorAvatar } from "@/assets/advisors";
+import { AvatarWithPreview, getWuxingColors } from "@/components/AvatarWithPreview";
 import type { GanCharacter, ZhiCharacter, CharacterRole, LegionMember } from "@/lib/legionTranslator/types";
 
 // 支援所有角色類型
@@ -33,8 +33,6 @@ export const LegionCharacterCard = ({
   legionColor,
   index = 0
 }: LegionCharacterCardProps) => {
-  const [imageLoading, setImageLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
   const isGeneral = type === 'general';
   const isStrategist = type === 'strategist';
   const isLieutenant = type === 'lieutenant';
@@ -47,24 +45,20 @@ export const LegionCharacterCard = ({
       : character.id;
   
   // 取得角色頭像
-  // - 主將(general)：天干角色，使用 commanderAvatar
-  // - 軍師(strategist)：地支角色，使用 advisorAvatar  
-  // - 副將(lieutenant)：藏干，都是天干，使用 commanderAvatar
-  // - 專家(specialist)：藏干，都是天干，使用 commanderAvatar
   const getAvatarSrc = () => {
     if (isGeneral || isLieutenant || type === 'specialist') {
-      // 天干角色
       return getCommanderAvatar(characterId);
     } else if (isStrategist) {
-      // 地支角色
       return getAdvisorAvatar(characterId);
     }
-    return null;
+    return undefined;
   };
   
   const avatarSrc = getAvatarSrc();
 
-  const accentColor = character.color || '#8B5CF6';
+  // 使用五行顏色
+  const wuxingColors = getWuxingColors(characterId, character.color);
+  const accentColor = character.color || wuxingColors.primary;
   
   // 根據角色類型確定標籤
   const roleLabel = {
@@ -125,104 +119,16 @@ export const LegionCharacterCard = ({
         {/* 角色頭像與名稱 */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            {/* 頭像 - 帶有載入動畫與失敗 fallback */}
-            <div 
-              className="w-16 h-16 rounded-lg overflow-hidden border-2 shadow-lg relative"
-              style={{ borderColor: `${accentColor}60` }}
-            >
-              <AnimatePresence mode="wait">
-                {avatarSrc && !imageError ? (
-                  <>
-                    {/* 載入骨架動畫 */}
-                    {imageLoading && (
-                      <motion.div
-                        key="skeleton"
-                        initial={{ opacity: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.3 }}
-                        className="absolute inset-0 rounded-lg"
-                        style={{
-                          background: `linear-gradient(135deg, ${accentColor}30, ${accentColor}10)`,
-                        }}
-                      >
-                        {/* 脈動光暈效果 */}
-                        <motion.div
-                          className="absolute inset-0 rounded-lg"
-                          style={{ background: `radial-gradient(circle, ${accentColor}40 0%, transparent 70%)` }}
-                          animate={{ 
-                            scale: [1, 1.2, 1],
-                            opacity: [0.5, 0.8, 0.5]
-                          }}
-                          transition={{ 
-                            duration: 1.5, 
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                        />
-                        {/* 掃描線動畫 */}
-                        <motion.div
-                          className="absolute inset-0"
-                          style={{
-                            background: `linear-gradient(90deg, transparent, ${accentColor}50, transparent)`,
-                          }}
-                          animate={{ x: ['-100%', '100%'] }}
-                          transition={{ 
-                            duration: 1.2, 
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                        />
-                      </motion.div>
-                    )}
-                    {/* 實際頭像 */}
-                    <motion.img 
-                      key="avatar"
-                      src={avatarSrc} 
-                      alt={`${characterId} ${roleLabel.subtitle}`}
-                      className="w-full h-full object-cover"
-                      initial={{ opacity: 0, scale: 1.1 }}
-                      animate={{ 
-                        opacity: imageLoading ? 0 : 1, 
-                        scale: imageLoading ? 1.1 : 1 
-                      }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
-                      onLoad={() => setImageLoading(false)}
-                      onError={() => {
-                        setImageLoading(false);
-                        setImageError(true);
-                      }}
-                    />
-                  </>
-                ) : (
-                  <motion.div 
-                    key="fallback"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="w-full h-full flex items-center justify-center"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${accentColor}20, ${accentColor}05)`
-                    }}
-                  >
-                    <motion.span 
-                      className="text-3xl font-bold"
-                      style={{ color: accentColor }}
-                      animate={{ 
-                        textShadow: [
-                          `0 0 10px ${accentColor}40`,
-                          `0 0 20px ${accentColor}60`,
-                          `0 0 10px ${accentColor}40`
-                        ]
-                      }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      {characterId}
-                    </motion.span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            {/* 頭像 - 使用 AvatarWithPreview 組件 */}
+            <AvatarWithPreview
+              src={avatarSrc}
+              alt={`${characterId} ${roleLabel.subtitle}`}
+              character={characterId}
+              title={character.title}
+              element={character.element}
+              accentColor={accentColor}
+              size="md"
+            />
             <div>
               <p className="text-2xl font-bold" style={{ color: accentColor }}>
                 {characterId}

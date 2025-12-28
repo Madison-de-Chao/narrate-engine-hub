@@ -8,12 +8,15 @@ import {
   Loader2,
   MessageCircle,
   Minimize2,
-  Maximize2
+  Maximize2,
+  LogIn
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { BaziResult } from '@/pages/Index';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -41,12 +44,29 @@ export const AiFortuneConsult: React.FC<AiFortuneConsultProps> = ({
   baziResult
 }) => {
   const { theme } = useTheme();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // 自動滾動到底部
   useEffect(() => {
@@ -72,11 +92,18 @@ export const AiFortuneConsult: React.FC<AiFortuneConsultProps> = ({
   }, [isOpen, baziResult]);
 
   const streamChat = async (userMessages: Message[]) => {
+    // Get current session token
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      toast.error('請先登入');
+      throw new Error('Not authenticated');
+    }
+
     const response = await fetch(CHAT_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        Authorization: `Bearer ${session.access_token}`,
       },
       body: JSON.stringify({ 
         messages: userMessages,
@@ -88,7 +115,7 @@ export const AiFortuneConsult: React.FC<AiFortuneConsultProps> = ({
           wuxing: baziResult.wuxing,
           yinyang: baziResult.yinyang,
           tenGods: baziResult.tenGods,
-          shensha: baziResult.shensha?.slice(0, 10) // 只傳前10個神煞避免太長
+          shensha: baziResult.shensha?.slice(0, 10)
         } : null
       }),
     });
@@ -155,6 +182,11 @@ export const AiFortuneConsult: React.FC<AiFortuneConsultProps> = ({
     const messageText = text || input.trim();
     if (!messageText || isLoading) return;
 
+    if (!isAuthenticated) {
+      toast.error('請先登入以使用 AI 命理大師');
+      return;
+    }
+
     const userMessage: Message = { role: 'user', content: messageText };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
@@ -164,7 +196,9 @@ export const AiFortuneConsult: React.FC<AiFortuneConsultProps> = ({
       await streamChat([...messages, userMessage]);
     } catch (error) {
       console.error('Chat error:', error);
-      if (!(error instanceof Error && (error.message === 'Rate limited' || error.message === 'Payment required'))) {
+      if (error instanceof Error && error.message === 'Not authenticated') {
+        toast.error('請先登入');
+      } else if (!(error instanceof Error && (error.message === 'Rate limited' || error.message === 'Payment required'))) {
         toast.error('發送失敗，請稍後再試');
       }
     } finally {
@@ -332,46 +366,70 @@ export const AiFortuneConsult: React.FC<AiFortuneConsultProps> = ({
             )}
 
             {/* 輸入區域 */}
-            <div className={`
-              flex items-center gap-2 p-3 border-t
-              ${theme === 'dark' ? 'bg-card border-gold/20' : 'bg-white border-gray-200'}
-            `}>
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="請輸入您的問題..."
-                disabled={isLoading}
-                className={`
-                  flex-1 px-4 py-2 rounded-full text-sm
-                  focus:outline-none focus:ring-2
-                  ${theme === 'dark' 
-                    ? 'bg-void border border-gold/20 text-paper placeholder:text-paper/40 focus:ring-gold/30' 
-                    : 'bg-gray-100 border border-gray-200 text-void placeholder:text-void/40 focus:ring-amber-300'
-                  }
-                `}
-              />
-              <Button
-                size="sm"
-                onClick={() => handleSend()}
-                disabled={!input.trim() || isLoading}
-                className={`
-                  rounded-full w-10 h-10 p-0
-                  ${theme === 'dark'
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-void hover:from-amber-400 hover:to-amber-300'
-                    : 'bg-gradient-to-r from-amber-500 to-amber-400 text-white hover:from-amber-400 hover:to-amber-300'
-                  }
-                `}
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
+            {isAuthenticated ? (
+              <div className={`
+                flex items-center gap-2 p-3 border-t
+                ${theme === 'dark' ? 'bg-card border-gold/20' : 'bg-white border-gray-200'}
+              `}>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="請輸入您的問題..."
+                  disabled={isLoading}
+                  className={`
+                    flex-1 px-4 py-2 rounded-full text-sm
+                    focus:outline-none focus:ring-2
+                    ${theme === 'dark' 
+                      ? 'bg-void border border-gold/20 text-paper placeholder:text-paper/40 focus:ring-gold/30' 
+                      : 'bg-gray-100 border border-gray-200 text-void placeholder:text-void/40 focus:ring-amber-300'
+                    }
+                  `}
+                />
+                <Button
+                  size="sm"
+                  onClick={() => handleSend()}
+                  disabled={!input.trim() || isLoading}
+                  className={`
+                    rounded-full w-10 h-10 p-0
+                    ${theme === 'dark'
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-void hover:from-amber-400 hover:to-amber-300'
+                      : 'bg-gradient-to-r from-amber-500 to-amber-400 text-white hover:from-amber-400 hover:to-amber-300'
+                    }
+                  `}
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className={`
+                flex items-center justify-center gap-3 p-4 border-t
+                ${theme === 'dark' ? 'bg-card border-gold/20' : 'bg-white border-gray-200'}
+              `}>
+                <p className={`text-sm ${theme === 'dark' ? 'text-paper/60' : 'text-void/60'}`}>
+                  請先登入以使用 AI 命理大師
+                </p>
+                <Button
+                  size="sm"
+                  onClick={() => navigate('/auth')}
+                  className={`
+                    ${theme === 'dark'
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-void hover:from-amber-400 hover:to-amber-300'
+                      : 'bg-gradient-to-r from-amber-500 to-amber-400 text-white hover:from-amber-400 hover:to-amber-300'
+                    }
+                  `}
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  登入
+                </Button>
+              </div>
+            )}
           </>
         )}
 

@@ -526,17 +526,45 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
   return container;
 };
 
-// 創建軍團詳解頁面 - 包含角色頭像與 Buff/Debuff
+// 創建軍團詳解頁面 - 優化專業設計
 const createLegionDetailsPages = (
   pillars: ReportData['pillars'],
   tenGods: ReportData['tenGods'],
   dateStr: string
 ): string => {
   const legionConfig = {
-    year: { name: '祖源軍團', icon: '👑', color: '#fbbf24', description: '家族傳承・童年根基' },
-    month: { name: '關係軍團', icon: '🤝', color: '#22c55e', description: '社交人脈・事業發展' },
-    day: { name: '核心軍團', icon: '⭐', color: '#a855f7', description: '核心自我・婚姻感情' },
-    hour: { name: '未來軍團', icon: '🚀', color: '#f97316', description: '未來規劃・子女傳承' },
+    year: { 
+      name: '祖源軍團', 
+      icon: '👑', 
+      color: '#fbbf24', 
+      description: '家族傳承 · 童年根基',
+      gradient: 'linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(251, 191, 36, 0.02) 100%)',
+      borderGradient: 'linear-gradient(180deg, #fbbf24, #f59e0b)'
+    },
+    month: { 
+      name: '關係軍團', 
+      icon: '🤝', 
+      color: '#4ade80', 
+      description: '社交人脈 · 事業發展',
+      gradient: 'linear-gradient(135deg, rgba(74, 222, 128, 0.12) 0%, rgba(74, 222, 128, 0.02) 100%)',
+      borderGradient: 'linear-gradient(180deg, #4ade80, #22c55e)'
+    },
+    day: { 
+      name: '核心軍團', 
+      icon: '⭐', 
+      color: '#c084fc', 
+      description: '核心自我 · 婚姻感情',
+      gradient: 'linear-gradient(135deg, rgba(192, 132, 252, 0.12) 0%, rgba(192, 132, 252, 0.02) 100%)',
+      borderGradient: 'linear-gradient(180deg, #c084fc, #a855f7)'
+    },
+    hour: { 
+      name: '未來軍團', 
+      icon: '🚀', 
+      color: '#f97316', 
+      description: '未來規劃 · 子女傳承',
+      gradient: 'linear-gradient(135deg, rgba(249, 115, 22, 0.12) 0%, rgba(249, 115, 22, 0.02) 100%)',
+      borderGradient: 'linear-gradient(180deg, #f97316, #ea580c)'
+    },
   };
 
   // 將四柱分成兩頁，每頁兩個軍團
@@ -549,42 +577,50 @@ const createLegionDetailsPages = (
     <div style="
       width: 794px;
       min-height: 1123px;
-      background: linear-gradient(180deg, #0f0f14 0%, #141420 100%);
+      background: linear-gradient(180deg, ${COLORS.bgPrimary} 0%, ${COLORS.bgSecondary} 100%);
       position: relative;
       padding: 40px 50px;
       box-sizing: border-box;
       page-break-after: always;
       overflow: hidden;
     ">
-      <!-- 背景裝飾 -->
+      <!-- 背景裝飾光暈 -->
       <div style="
         position: absolute;
         inset: 0;
         background: 
-          radial-gradient(circle at 30% 20%, rgba(180, 140, 80, 0.03) 0%, transparent 30%),
-          radial-gradient(circle at 70% 80%, rgba(180, 140, 80, 0.03) 0%, transparent 30%);
+          radial-gradient(ellipse 50% 35% at 25% 15%, ${group[0] ? legionConfig[group[0]].color : COLORS.gold}08 0%, transparent 60%),
+          radial-gradient(ellipse 50% 35% at 75% 85%, ${group[1] ? legionConfig[group[1]].color : COLORS.gold}08 0%, transparent 60%);
         pointer-events: none;
       "></div>
       
-      <!-- 邊框 -->
-      <div style="position: absolute; inset: 15px; border: 1px solid rgba(180, 140, 80, 0.25); pointer-events: none;"></div>
+      <!-- 精緻邊框 -->
+      <div style="position: absolute; inset: 15px; border: 1px solid ${COLORS.border}; pointer-events: none;"></div>
+      <div style="position: absolute; inset: 20px; border: 1px solid ${COLORS.gold}10; pointer-events: none;"></div>
       
-      <!-- 頁眉 -->
-      <div style="text-align: center; margin-bottom: 25px;">
+      ${createHeader('四時軍團戰略命理系統')}
+      
+      <!-- 頁面標題 -->
+      <div style="text-align: center; margin: 10px 0 25px 0; position: relative;">
+        <div style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 220px;
+          height: 50px;
+          background: radial-gradient(ellipse, ${COLORS.gold}08 0%, transparent 70%);
+        "></div>
         <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
-          <div style="width: 50px; height: 1px; background: linear-gradient(90deg, transparent, #a08050);"></div>
-          <h2 style="font-size: 20px; color: #c8aa64; margin: 0; letter-spacing: 4px;">虹靈御所八字人生兵法</h2>
-          <div style="width: 50px; height: 1px; background: linear-gradient(270deg, transparent, #a08050);"></div>
+          <div style="width: 40px; height: 2px; background: linear-gradient(90deg, transparent, ${COLORS.goldDark});"></div>
+          <h3 style="font-size: 24px; color: ${COLORS.goldLight}; margin: 0; letter-spacing: 6px; font-weight: 500;">
+            軍團角色詳解
+          </h3>
+          <div style="width: 40px; height: 2px; background: linear-gradient(270deg, transparent, ${COLORS.goldDark});"></div>
         </div>
-        <p style="font-size: 12px; color: #8c8c8c; margin: 8px 0 0 0; letter-spacing: 2px;">四時軍團戰略命理系統</p>
-        <div style="width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #a08050, transparent); margin-top: 15px;"></div>
-      </div>
-      
-      <!-- 標題 -->
-      <div style="text-align: center; margin: 15px 0 25px 0;">
-        <h3 style="font-size: 22px; color: #dcc88c; margin: 0; letter-spacing: 4px;">
-          ⚔️ 軍團角色詳解 ${pageIdx === 0 ? '(上)' : '(下)'}
-        </h3>
+        <p style="font-size: 11px; color: ${COLORS.textMuted}; margin: 8px 0 0 0; letter-spacing: 2px;">
+          ${pageIdx === 0 ? '祖源軍團 · 關係軍團' : '核心軍團 · 未來軍團'}
+        </p>
       </div>
       
       <!-- 兩個軍團卡片 -->
@@ -599,71 +635,215 @@ const createLegionDetailsPages = (
         
         return `
           <div style="
-            background: linear-gradient(135deg, rgba(28, 28, 38, 0.9) 0%, rgba(22, 22, 30, 0.9) 100%);
-            border: 2px solid ${config.color}40;
-            border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 20px;
+            background: ${config.gradient};
+            border: 1px solid ${config.color}30;
+            border-radius: 14px;
+            padding: 22px 25px;
+            margin-bottom: 18px;
             position: relative;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
           ">
             <!-- 頂部發光線 -->
-            <div style="position: absolute; top: 0; left: 30px; right: 30px; height: 2px; background: linear-gradient(90deg, transparent, ${config.color}80, transparent);"></div>
+            <div style="
+              position: absolute; 
+              top: 0; 
+              left: 40px; 
+              right: 40px; 
+              height: 2px; 
+              background: linear-gradient(90deg, transparent, ${config.color}80, transparent);
+            "></div>
             
-            <!-- 軍團標題 -->
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-              <span style="font-size: 36px; filter: drop-shadow(0 0 8px ${config.color}40);">${config.icon}</span>
-              <div>
-                <h4 style="font-size: 22px; color: ${config.color}; margin: 0; font-weight: bold; letter-spacing: 3px;">${config.name}</h4>
-                <p style="font-size: 12px; color: #8c8c8c; margin: 4px 0 0 0;">${config.description}</p>
+            <!-- 左側色條 -->
+            <div style="
+              position: absolute;
+              left: 0;
+              top: 20px;
+              bottom: 20px;
+              width: 4px;
+              background: ${config.borderGradient};
+              border-radius: 0 2px 2px 0;
+            "></div>
+            
+            <!-- 軍團標題區 -->
+            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 18px; padding-left: 8px;">
+              <span style="
+                font-size: 38px; 
+                filter: drop-shadow(0 0 10px ${config.color}50);
+              ">${config.icon}</span>
+              <div style="flex: 1;">
+                <h4 style="
+                  font-size: 20px; 
+                  color: ${config.color}; 
+                  margin: 0; 
+                  font-weight: 600; 
+                  letter-spacing: 4px;
+                  text-shadow: 0 0 15px ${config.color}30;
+                ">${config.name}</h4>
+                <p style="font-size: 11px; color: ${COLORS.textMuted}; margin: 4px 0 0 0; letter-spacing: 2px;">${config.description}</p>
               </div>
-              <div style="margin-left: auto; padding: 10px 20px; background: rgba(15, 15, 20, 0.6); border-radius: 12px; border: 1px solid ${config.color}30;">
-                <span style="font-size: 24px; color: #dcc88c; letter-spacing: 4px;">${pillar.stem}${pillar.branch}</span>
+              <div style="
+                padding: 12px 22px; 
+                background: rgba(10, 10, 15, 0.5); 
+                border-radius: 10px; 
+                border: 1px solid ${config.color}25;
+              ">
+                <span style="
+                  font-size: 24px; 
+                  color: ${COLORS.goldLight}; 
+                  letter-spacing: 5px;
+                  font-family: ${FONTS.heading};
+                  text-shadow: 0 0 10px ${COLORS.gold}30;
+                ">${pillar.stem}${pillar.branch}</span>
               </div>
             </div>
             
             <!-- 角色卡片區 -->
-            <div style="display: flex; gap: 20px;">
+            <div style="display: flex; gap: 16px;">
               <!-- 主將卡 -->
-              <div style="flex: 1; background: rgba(15, 15, 22, 0.7); border-radius: 12px; padding: 18px; border: 1px solid rgba(200, 170, 100, 0.2);">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                  ${commanderAvatar ? `<img src="${commanderAvatar}" alt="${ganChar?.title || pillar.stem}" style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid ${config.color}60; object-fit: cover; background: #1a1a24;" crossorigin="anonymous" />` : `<div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, ${config.color}30, ${config.color}10); border: 2px solid ${config.color}60; display: flex; align-items: center; justify-content: center; font-size: 24px; color: ${config.color};">${pillar.stem}</div>`}
+              <div style="
+                flex: 1; 
+                background: linear-gradient(135deg, rgba(15, 15, 22, 0.8) 0%, rgba(12, 12, 18, 0.8) 100%); 
+                border-radius: 10px; 
+                padding: 16px 18px; 
+                border: 1px solid ${COLORS.gold}15;
+                position: relative;
+              ">
+                <!-- 卡片角落裝飾 -->
+                <div style="position: absolute; top: 0; left: 0; width: 12px; height: 12px; border-left: 2px solid ${config.color}60; border-top: 2px solid ${config.color}60;"></div>
+                
+                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 14px;">
+                  ${commanderAvatar ? `
+                    <div style="position: relative;">
+                      <img src="${commanderAvatar}" alt="${ganChar?.title || pillar.stem}" style="
+                        width: 58px; 
+                        height: 58px; 
+                        border-radius: 50%; 
+                        border: 2px solid ${config.color}50; 
+                        object-fit: cover; 
+                        background: #1a1a24;
+                        box-shadow: 0 4px 15px ${config.color}30;
+                      " crossorigin="anonymous" />
+                      <div style="
+                        position: absolute;
+                        inset: -3px;
+                        border-radius: 50%;
+                        border: 1px solid ${config.color}30;
+                      "></div>
+                    </div>
+                  ` : `
+                    <div style="
+                      width: 58px; 
+                      height: 58px; 
+                      border-radius: 50%; 
+                      background: linear-gradient(135deg, ${config.color}25, ${config.color}08); 
+                      border: 2px solid ${config.color}50; 
+                      display: flex; 
+                      align-items: center; 
+                      justify-content: center; 
+                      font-size: 22px; 
+                      color: ${config.color};
+                      box-shadow: 0 4px 15px ${config.color}20;
+                    ">${pillar.stem}</div>
+                  `}
                   <div>
-                    <p style="font-size: 11px; color: #787878; margin: 0;">🗡️ 主將・天干</p>
-                    <p style="font-size: 18px; color: #dcc88c; margin: 4px 0 0 0; font-weight: bold;">${ganChar?.title || pillar.stem}</p>
-                    ${tenGod?.stem ? `<p style="font-size: 11px; color: #a0967a; margin: 4px 0 0 0;">十神：${tenGod.stem}</p>` : ''}
+                    <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 0; letter-spacing: 1px;">🗡️ 主將 · 天干</p>
+                    <p style="font-size: 17px; color: ${COLORS.goldLight}; margin: 5px 0 0 0; font-weight: 600; letter-spacing: 1px;">${ganChar?.title || pillar.stem}</p>
+                    ${tenGod?.stem ? `<p style="font-size: 10px; color: ${COLORS.textSecondary}; margin: 4px 0 0 0;">十神：<span style="color: ${config.color};">${tenGod.stem}</span></p>` : ''}
                   </div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                  <div style="padding: 10px; background: rgba(74, 222, 128, 0.08); border-radius: 8px; border-left: 3px solid #4ade80;">
-                    <p style="font-size: 10px; color: #4ade80; margin: 0 0 4px 0;">✨ BUFF</p>
-                    <p style="font-size: 12px; color: #a8d8b8; margin: 0; line-height: 1.5;">${ganChar?.buff || '待查詢'}</p>
+                  <div style="
+                    padding: 10px 12px; 
+                    background: linear-gradient(135deg, rgba(74, 222, 128, 0.1) 0%, rgba(74, 222, 128, 0.03) 100%); 
+                    border-radius: 8px; 
+                    border-left: 3px solid ${COLORS.green};
+                  ">
+                    <p style="font-size: 9px; color: ${COLORS.green}; margin: 0 0 4px 0; letter-spacing: 1px;">✨ BUFF 增益</p>
+                    <p style="font-size: 11px; color: #a8d8b8; margin: 0; line-height: 1.6;">${ganChar?.buff || '待查詢'}</p>
                   </div>
-                  <div style="padding: 10px; background: rgba(248, 113, 113, 0.08); border-radius: 8px; border-left: 3px solid #f87171;">
-                    <p style="font-size: 10px; color: #f87171; margin: 0 0 4px 0;">⚠️ DEBUFF</p>
-                    <p style="font-size: 12px; color: #dca8a8; margin: 0; line-height: 1.5;">${ganChar?.debuff || '待查詢'}</p>
+                  <div style="
+                    padding: 10px 12px; 
+                    background: linear-gradient(135deg, rgba(248, 113, 113, 0.1) 0%, rgba(248, 113, 113, 0.03) 100%); 
+                    border-radius: 8px; 
+                    border-left: 3px solid ${COLORS.red};
+                  ">
+                    <p style="font-size: 9px; color: ${COLORS.red}; margin: 0 0 4px 0; letter-spacing: 1px;">⚠️ DEBUFF 減益</p>
+                    <p style="font-size: 11px; color: #dca8a8; margin: 0; line-height: 1.6;">${ganChar?.debuff || '待查詢'}</p>
                   </div>
                 </div>
               </div>
               
               <!-- 軍師卡 -->
-              <div style="flex: 1; background: rgba(15, 15, 22, 0.7); border-radius: 12px; padding: 18px; border: 1px solid rgba(200, 170, 100, 0.2);">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                  ${advisorAvatar ? `<img src="${advisorAvatar}" alt="${zhiChar?.title || pillar.branch}" style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid ${config.color}60; object-fit: cover; background: #1a1a24;" crossorigin="anonymous" />` : `<div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, ${config.color}30, ${config.color}10); border: 2px solid ${config.color}60; display: flex; align-items: center; justify-content: center; font-size: 24px; color: ${config.color};">${pillar.branch}</div>`}
+              <div style="
+                flex: 1; 
+                background: linear-gradient(135deg, rgba(15, 15, 22, 0.8) 0%, rgba(12, 12, 18, 0.8) 100%); 
+                border-radius: 10px; 
+                padding: 16px 18px; 
+                border: 1px solid ${COLORS.gold}15;
+                position: relative;
+              ">
+                <!-- 卡片角落裝飾 -->
+                <div style="position: absolute; top: 0; right: 0; width: 12px; height: 12px; border-right: 2px solid ${config.color}60; border-top: 2px solid ${config.color}60;"></div>
+                
+                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 14px;">
+                  ${advisorAvatar ? `
+                    <div style="position: relative;">
+                      <img src="${advisorAvatar}" alt="${zhiChar?.title || pillar.branch}" style="
+                        width: 58px; 
+                        height: 58px; 
+                        border-radius: 50%; 
+                        border: 2px solid ${config.color}50; 
+                        object-fit: cover; 
+                        background: #1a1a24;
+                        box-shadow: 0 4px 15px ${config.color}30;
+                      " crossorigin="anonymous" />
+                      <div style="
+                        position: absolute;
+                        inset: -3px;
+                        border-radius: 50%;
+                        border: 1px solid ${config.color}30;
+                      "></div>
+                    </div>
+                  ` : `
+                    <div style="
+                      width: 58px; 
+                      height: 58px; 
+                      border-radius: 50%; 
+                      background: linear-gradient(135deg, ${config.color}25, ${config.color}08); 
+                      border: 2px solid ${config.color}50; 
+                      display: flex; 
+                      align-items: center; 
+                      justify-content: center; 
+                      font-size: 22px; 
+                      color: ${config.color};
+                      box-shadow: 0 4px 15px ${config.color}20;
+                    ">${pillar.branch}</div>
+                  `}
                   <div>
-                    <p style="font-size: 11px; color: #787878; margin: 0;">🔮 軍師・地支</p>
-                    <p style="font-size: 18px; color: #dcc88c; margin: 4px 0 0 0; font-weight: bold;">${zhiChar?.title || pillar.branch}</p>
-                    ${tenGod?.branch ? `<p style="font-size: 11px; color: #a0967a; margin: 4px 0 0 0;">十神：${tenGod.branch}</p>` : ''}
+                    <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 0; letter-spacing: 1px;">🔮 軍師 · 地支</p>
+                    <p style="font-size: 17px; color: ${COLORS.goldLight}; margin: 5px 0 0 0; font-weight: 600; letter-spacing: 1px;">${zhiChar?.title || pillar.branch}</p>
+                    ${tenGod?.branch ? `<p style="font-size: 10px; color: ${COLORS.textSecondary}; margin: 4px 0 0 0;">十神：<span style="color: ${config.color};">${tenGod.branch}</span></p>` : ''}
                   </div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                  <div style="padding: 10px; background: rgba(74, 222, 128, 0.08); border-radius: 8px; border-left: 3px solid #4ade80;">
-                    <p style="font-size: 10px; color: #4ade80; margin: 0 0 4px 0;">✨ BUFF</p>
-                    <p style="font-size: 12px; color: #a8d8b8; margin: 0; line-height: 1.5;">${zhiChar?.buff || '待查詢'}</p>
+                  <div style="
+                    padding: 10px 12px; 
+                    background: linear-gradient(135deg, rgba(74, 222, 128, 0.1) 0%, rgba(74, 222, 128, 0.03) 100%); 
+                    border-radius: 8px; 
+                    border-left: 3px solid ${COLORS.green};
+                  ">
+                    <p style="font-size: 9px; color: ${COLORS.green}; margin: 0 0 4px 0; letter-spacing: 1px;">✨ BUFF 增益</p>
+                    <p style="font-size: 11px; color: #a8d8b8; margin: 0; line-height: 1.6;">${zhiChar?.buff || '待查詢'}</p>
                   </div>
-                  <div style="padding: 10px; background: rgba(248, 113, 113, 0.08); border-radius: 8px; border-left: 3px solid #f87171;">
-                    <p style="font-size: 10px; color: #f87171; margin: 0 0 4px 0;">⚠️ DEBUFF</p>
-                    <p style="font-size: 12px; color: #dca8a8; margin: 0; line-height: 1.5;">${zhiChar?.debuff || '待查詢'}</p>
+                  <div style="
+                    padding: 10px 12px; 
+                    background: linear-gradient(135deg, rgba(248, 113, 113, 0.1) 0%, rgba(248, 113, 113, 0.03) 100%); 
+                    border-radius: 8px; 
+                    border-left: 3px solid ${COLORS.red};
+                  ">
+                    <p style="font-size: 9px; color: ${COLORS.red}; margin: 0 0 4px 0; letter-spacing: 1px;">⚠️ DEBUFF 減益</p>
+                    <p style="font-size: 11px; color: #dca8a8; margin: 0; line-height: 1.6;">${zhiChar?.debuff || '待查詢'}</p>
                   </div>
                 </div>
               </div>
@@ -672,15 +852,7 @@ const createLegionDetailsPages = (
         `;
       }).join('')}
       
-      <!-- 頁腳 -->
-      <div style="position: absolute; bottom: 25px; left: 50px; right: 50px;">
-        <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(140, 110, 70, 0.5), transparent); margin-bottom: 12px;"></div>
-        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #646464;">
-          <span>${dateStr}</span>
-          <span>虹靈御所｜超烜創意</span>
-          <span>軍團詳解 ${pageIdx + 1}/2</span>
-        </div>
-      </div>
+      ${createFooter(dateStr, `軍團詳解 ${pageIdx + 1}/2`)}
     </div>
   `).join('');
 };

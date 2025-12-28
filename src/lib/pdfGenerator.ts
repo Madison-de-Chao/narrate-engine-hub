@@ -130,9 +130,39 @@ const COLORS = {
   blue: '#60a5fa',
 };
 
+// 中文字體配置 - 確保 PDF 渲染正確
 const FONTS = {
-  base: '"Noto Serif TC", "Noto Sans TC", "Microsoft JhengHei", serif',
-  heading: '"Noto Serif TC", "Source Han Serif TC", serif',
+  // 標題用字體：思源宋體為主，多層 fallback 確保相容性
+  heading: '"Noto Serif TC", "ZCOOL XiaoWei", "Source Han Serif TC", "Source Han Serif", "SimSun", "PMingLiU", serif',
+  // 內文用字體：思源黑體為主，確保可讀性
+  base: '"Noto Sans TC", "Noto Serif TC", "Microsoft JhengHei", "PingFang TC", "Heiti TC", sans-serif',
+  // 數字與英文：搭配無襯線字體
+  mono: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+};
+
+// 字體預載入函數 - 確保 PDF 生成前字體已載入
+const ensureFontsLoaded = async (): Promise<void> => {
+  if (typeof document === 'undefined') return;
+  
+  // 檢查字體是否已載入
+  if (document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
+    
+    // 額外等待確保中文字體完全載入
+    const testElement = document.createElement('span');
+    testElement.style.cssText = `
+      font-family: ${FONTS.heading};
+      position: absolute;
+      visibility: hidden;
+      font-size: 72px;
+    `;
+    testElement.textContent = '虹靈御所測試字體載入';
+    document.body.appendChild(testElement);
+    
+    // 短暫延遲確保渲染
+    await new Promise(resolve => setTimeout(resolve, 100));
+    document.body.removeChild(testElement);
+  }
 };
 
 // 創建共用頁眉組件
@@ -1277,25 +1307,61 @@ const createStoryPage = (
 };
 
 // ========================
-// 字體載入檢測
+// 字體載入檢測 - 優化中文字體支援
 // ========================
-const waitForFonts = async (timeout = 3000): Promise<boolean> => {
+const waitForFonts = async (timeout = 5000): Promise<boolean> => {
   console.log('[PDF] Waiting for fonts to load...');
+  
   try {
+    // Step 1: 等待瀏覽器字體 API ready
     if (document.fonts && typeof document.fonts.ready !== 'undefined') {
       await Promise.race([
         document.fonts.ready,
         new Promise(resolve => setTimeout(resolve, timeout))
       ]);
-      console.log('[PDF] Fonts loaded or timeout reached');
-      return true;
+      console.log('[PDF] Browser fonts API ready');
     }
+    
+    // Step 2: 預載入中文字體 - 創建測試元素強制載入
+    const fontTestContainer = document.createElement('div');
+    fontTestContainer.style.cssText = `
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      visibility: hidden;
+      font-size: 72px;
+    `;
+    
+    // 測試所有使用的字體
+    const fontTests = [
+      { family: FONTS.heading, text: '虹靈御所八字命理' },
+      { family: FONTS.base, text: '四時軍團戰略系統' },
+    ];
+    
+    fontTests.forEach(({ family, text }) => {
+      const span = document.createElement('span');
+      span.style.fontFamily = family;
+      span.textContent = text;
+      fontTestContainer.appendChild(span);
+    });
+    
+    document.body.appendChild(fontTestContainer);
+    
+    // Step 3: 等待字體渲染
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Step 4: 清理測試元素
+    document.body.removeChild(fontTestContainer);
+    
+    console.log('[PDF] Chinese fonts preloaded successfully');
+    return true;
+    
   } catch (e) {
     console.warn('[PDF] Font loading check failed:', e);
+    // Fallback: 等待固定時間
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    return true;
   }
-  // Fallback: 等待固定時間
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  return true;
 };
 
 // ========================

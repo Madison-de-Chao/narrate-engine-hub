@@ -3,10 +3,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Download, FileText, Users, Sparkles, Scroll, BookOpen } from "lucide-react";
+import { Download, FileText, Users, Sparkles, Scroll, BookOpen, List } from "lucide-react";
 
 export interface PdfOptions {
   includeCover: boolean;
+  includeTableOfContents: boolean;
   includePillars: boolean;
   includeShensha: boolean;
   includeLegionDetails: boolean;
@@ -31,6 +32,7 @@ interface PdfOptionsDialogProps {
 
 const defaultOptions: PdfOptions = {
   includeCover: true,
+  includeTableOfContents: true,
   includePillars: true,
   includeShensha: true,
   includeLegionDetails: true,
@@ -56,6 +58,7 @@ export function PdfOptionsDialog({
   const handleSelectAll = () => {
     setOptions({
       includeCover: true,
+      includeTableOfContents: true,
       includePillars: true,
       includeShensha: true,
       includeLegionDetails: true,
@@ -69,6 +72,7 @@ export function PdfOptionsDialog({
   const handleDeselectAll = () => {
     setOptions({
       includeCover: true, // 封面永遠包含
+      includeTableOfContents: false,
       includePillars: false,
       includeShensha: false,
       includeLegionDetails: false,
@@ -130,6 +134,19 @@ export function PdfOptionsDialog({
                 <BookOpen className="h-4 w-4 text-primary" />
                 <span>封面頁</span>
                 <span className="text-xs text-muted-foreground ml-auto">(必須包含)</span>
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-primary/30 transition-colors">
+              <Checkbox
+                id="toc"
+                checked={options.includeTableOfContents}
+                onCheckedChange={(checked) => handleOptionChange("includeTableOfContents", checked as boolean)}
+              />
+              <Label htmlFor="toc" className="flex items-center gap-2 flex-1 cursor-pointer">
+                <List className="h-4 w-4 text-amber-400" />
+                <span>目錄頁</span>
+                <span className="text-xs text-muted-foreground ml-auto">章節導覽</span>
               </Label>
             </div>
 

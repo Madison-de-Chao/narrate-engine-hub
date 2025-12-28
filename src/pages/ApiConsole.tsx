@@ -35,7 +35,9 @@ import { zhTW } from "date-fns/locale";
 interface ApiKey {
   id: string;
   name: string;
-  api_key: string;
+  api_key: string | null;
+  api_key_hash: string | null;
+  api_key_prefix: string | null;
   is_active: boolean;
   requests_count: number;
   last_used_at: string | null;
@@ -51,6 +53,17 @@ const ApiConsole = () => {
   const [newKeyName, setNewKeyName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
+  const [showNewKeyDialog, setShowNewKeyDialog] = useState(false);
+
+  // SHA-256 hash function for API key
+  const hashApiKey = async (apiKey: string): Promise<string> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(apiKey);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -108,22 +121,27 @@ const ApiConsole = () => {
 
     setIsCreating(true);
     const apiKey = generateApiKey();
+    const apiKeyHash = await hashApiKey(apiKey);
+    const apiKeyPrefix = apiKey.substring(0, 7);
 
     const { error } = await supabase
       .from('api_keys')
       .insert({
         user_id: session.user.id,
         name: newKeyName.trim(),
-        api_key: apiKey,
+        api_key: null, // No longer store plaintext
+        api_key_hash: apiKeyHash,
+        api_key_prefix: apiKeyPrefix,
       });
 
     if (error) {
       toast.error("建立 API Key 失敗");
       console.error(error);
     } else {
-      toast.success("API Key 已建立");
       setNewKeyName("");
       setDialogOpen(false);
+      setNewlyCreatedKey(apiKey);
+      setShowNewKeyDialog(true);
       fetchApiKeys();
     }
 
@@ -177,8 +195,27 @@ const ApiConsole = () => {
     }
   };
 
-  const maskApiKey = (key: string) => {
-    return key.substring(0, 7) + '•'.repeat(20) + key.substring(key.length - 4);
+  const getDisplayKey = (key: ApiKey) => {
+    // If we have the full key (legacy), show it masked
+    if (key.api_key) {
+      return key.api_key.substring(0, 7) + '•'.repeat(20) + key.api_key.substring(key.api_key.length - 4);
+    }
+    // For hashed keys, only show prefix
+    if (key.api_key_prefix) {
+      return key.api_key_prefix + '•'.repeat(28);
+    }
+    return '•'.repeat(35);
+  };
+
+  const isLegacyKey = (key: ApiKey) => !!key.api_key;
+
+  const handleCopyKey = (key: ApiKey) => {
+    if (key.api_key) {
+      navigator.clipboard.writeText(key.api_key);
+      toast.success("已複製到剪貼簿");
+    } else {
+      toast.error("此金鑰已加密儲存，無法複製。如需使用請重新產生新金鑰。");
+    }
   };
 
   if (loading) {
@@ -321,6 +358,46 @@ const ApiConsole = () => {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+
+                {/* New Key Created Dialog */}
+                <Dialog open={showNewKeyDialog} onOpenChange={setShowNewKeyDialog}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle className="text-green-600">🔑 API Key 已建立</DialogTitle>
+                      <DialogDescription>
+                        請立即複製並妥善保存您的 API Key。<strong className="text-destructive">此金鑰只會顯示一次，關閉後將無法再次查看！</strong>
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="bg-muted p-4 rounded-lg">
+                        <code className="text-sm break-all font-mono">{newlyCreatedKey}</code>
+                      </div>
+                      <Button 
+                        className="w-full" 
+                        onClick={() => {
+                          if (newlyCreatedKey) {
+                            navigator.clipboard.writeText(newlyCreatedKey);
+                            toast.success("API Key 已複製到剪貼簿");
+                          }
+                        }}
+                      >
+                        <Copy className="h-4 w-4 mr-2" />
+                        複製 API Key
+                      </Button>
+                    </div>
+                    <DialogFooter>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setShowNewKeyDialog(false);
+                          setNewlyCreatedKey(null);
+                        }}
+                      >
+                        我已保存，關閉
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </CardHeader>
@@ -356,28 +433,34 @@ const ApiConsole = () => {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <code className="text-sm bg-muted px-2 py-1 rounded">
-                            {visibleKeys.has(key.id) ? key.api_key : maskApiKey(key.api_key)}
+                            {isLegacyKey(key) && visibleKeys.has(key.id) ? key.api_key : getDisplayKey(key)}
                           </code>
+                          {isLegacyKey(key) && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => toggleKeyVisibility(key.id)}
+                            >
+                              {visibleKeys.has(key.id) ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => toggleKeyVisibility(key.id)}
-                          >
-                            {visibleKeys.has(key.id) ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => copyToClipboard(key.api_key)}
+                            onClick={() => handleCopyKey(key)}
+                            title={isLegacyKey(key) ? "複製金鑰" : "此金鑰已加密，無法複製"}
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
+                          {!isLegacyKey(key) && (
+                            <Badge variant="secondary" className="text-xs">已加密</Badge>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
@@ -422,7 +505,7 @@ const ApiConsole = () => {
             <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
               <code>{`curl -X POST "https://ncpqlfwllxkwkxcqmrdi.supabase.co/functions/v1/bazi-api" \\
   -H "Content-Type: application/json" \\
-  -H "x-api-key: ${apiKeys[0]?.api_key || 'YOUR_API_KEY'}" \\
+  -H "x-api-key: YOUR_API_KEY" \\
   -d '{
     "name": "張三",
     "gender": "男",
@@ -430,6 +513,9 @@ const ApiConsole = () => {
     "birthTime": "14:30"
   }'`}</code>
             </pre>
+            <p className="text-sm text-muted-foreground mt-3">
+              ⚠️ 建立新金鑰後請立即複製保存，金鑰只會在建立時顯示一次。
+            </p>
           </CardContent>
         </Card>
       </div>

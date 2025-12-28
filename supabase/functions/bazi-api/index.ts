@@ -48,12 +48,22 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 interface ApiKeyRecord {
   id: string;
   user_id: string;
-  api_key: string;
+  api_key: string | null;
+  api_key_hash: string | null;
   is_active: boolean;
   requests_count: number;
 }
 
-// Verify API key and update usage
+// SHA-256 hash function for API key verification
+async function hashApiKey(apiKey: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(apiKey);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Verify API key and update usage (supports both hashed and legacy plaintext keys)
 async function verifyApiKey(apiKey: string): Promise<{ valid: boolean; keyId?: string; error?: string }> {
   if (!apiKey) {
     return { valid: false, error: 'API key is required. Include X-API-Key header.' };
@@ -62,16 +72,44 @@ async function verifyApiKey(apiKey: string): Promise<{ valid: boolean; keyId?: s
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Check if API key exists and is active
-    const { data: keyData, error: fetchError } = await supabase
+    // First, try to find by hash (new secure method)
+    const apiKeyHash = await hashApiKey(apiKey);
+    let { data: keyData, error: fetchError } = await supabase
       .from('api_keys')
-      .select('id, user_id, api_key, is_active, requests_count')
-      .eq('api_key', apiKey)
+      .select('id, user_id, api_key, api_key_hash, is_active, requests_count')
+      .eq('api_key_hash', apiKeyHash)
+      .eq('is_active', true)
       .single();
 
+    // If not found by hash, try legacy plaintext lookup (for migration period)
     if (fetchError || !keyData) {
-      console.log('[bazi-api] API key not found:', apiKey.substring(0, 8) + '...');
-      return { valid: false, error: 'Invalid API key.' };
+      const { data: legacyData, error: legacyError } = await supabase
+        .from('api_keys')
+        .select('id, user_id, api_key, api_key_hash, is_active, requests_count')
+        .eq('api_key', apiKey)
+        .single();
+      
+      if (legacyError || !legacyData) {
+        console.log('[bazi-api] API key not found:', apiKey.substring(0, 8) + '...');
+        return { valid: false, error: 'Invalid API key.' };
+      }
+      
+      keyData = legacyData;
+      
+      // Migrate legacy key to hashed storage
+      console.log('[bazi-api] Migrating legacy API key to hashed storage:', keyData.id);
+      const { error: migrateError } = await supabase
+        .from('api_keys')
+        .update({ 
+          api_key_hash: apiKeyHash,
+          api_key_prefix: apiKey.substring(0, 7),
+          api_key: null // Clear plaintext after migration
+        })
+        .eq('id', keyData.id);
+      
+      if (migrateError) {
+        console.error('[bazi-api] Failed to migrate API key:', migrateError);
+      }
     }
 
     const key = keyData as ApiKeyRecord;

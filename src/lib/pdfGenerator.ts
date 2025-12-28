@@ -167,29 +167,291 @@ const ensureFontsLoaded = async (): Promise<void> => {
   }
 };
 
-// 創建共用頁眉組件
-const createHeader = (subtitle?: string) => `
-  <div style="text-align: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid ${COLORS.border};">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
-      <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.goldDark});"></div>
-      <h2 style="font-size: 18px; color: ${COLORS.gold}; margin: 0; letter-spacing: 6px; font-weight: 500;">虹靈御所</h2>
-      <div style="width: 60px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.goldDark});"></div>
-    </div>
-    ${subtitle ? `<p style="font-size: 11px; color: ${COLORS.textMuted}; margin: 8px 0 0 0; letter-spacing: 3px;">${subtitle}</p>` : ''}
-  </div>
-`;
+// 章節配置 - 用於頁眉頁腳動態顯示
+interface ChapterConfig {
+  id: string;
+  name: string;
+  subtitle: string;
+  icon: string;
+  color: string;
+}
 
-// 創建共用頁腳組件
-const createFooter = (dateStr: string, pageInfo: string) => `
-  <div style="position: absolute; bottom: 30px; left: 50px; right: 50px;">
-    <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.border}, transparent); margin-bottom: 15px;"></div>
-    <div style="display: flex; justify-content: space-between; font-size: 10px; color: ${COLORS.textMuted}; letter-spacing: 1px;">
-      <span>${dateStr}</span>
-      <span style="color: ${COLORS.goldDark};">虹靈御所 · 超烜創意</span>
-      <span>${pageInfo}</span>
+const CHAPTERS: Record<string, ChapterConfig> = {
+  cover: { id: 'cover', name: '封面', subtitle: 'COVER', icon: '📕', color: COLORS.gold },
+  toc: { id: 'toc', name: '目錄', subtitle: 'CONTENTS', icon: '📑', color: COLORS.gold },
+  pillars: { id: 'pillars', name: '四柱命盤', subtitle: 'FOUR PILLARS', icon: '📜', color: COLORS.gold },
+  shensha: { id: 'shensha', name: '神煞分析', subtitle: 'DIVINE STARS', icon: '✨', color: COLORS.purple },
+  legion: { id: 'legion', name: '軍團詳解', subtitle: 'LEGION ANALYSIS', icon: '⚔️', color: COLORS.blue },
+  storyYear: { id: 'storyYear', name: '祖源軍團', subtitle: 'ANCESTRAL LEGION', icon: '👑', color: COLORS.gold },
+  storyMonth: { id: 'storyMonth', name: '關係軍團', subtitle: 'SOCIAL LEGION', icon: '🤝', color: COLORS.green },
+  storyDay: { id: 'storyDay', name: '核心軍團', subtitle: 'CORE LEGION', icon: '⭐', color: COLORS.purple },
+  storyHour: { id: 'storyHour', name: '未來軍團', subtitle: 'FUTURE LEGION', icon: '🚀', color: COLORS.orange },
+};
+
+// 創建增強版頁眉組件 - 帶章節標示與動態樣式
+const createHeader = (subtitle?: string, chapter?: ChapterConfig, pageNum?: number, totalPages?: number) => {
+  const chapterIndicator = chapter ? `
+    <div style="
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    ">
+      <div style="
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, ${chapter.color}15 0%, ${chapter.color}05 100%);
+        border: 1px solid ${chapter.color}30;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+      ">${chapter.icon}</div>
+      <div>
+        <p style="
+          font-size: 9px;
+          color: ${chapter.color};
+          margin: 0;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          opacity: 0.8;
+        ">${chapter.subtitle}</p>
+        <p style="
+          font-size: 11px;
+          color: ${COLORS.textSecondary};
+          margin: 2px 0 0 0;
+          letter-spacing: 2px;
+          font-family: ${FONTS.heading};
+        ">${chapter.name}</p>
+      </div>
     </div>
-  </div>
-`;
+  ` : '';
+
+  const pageIndicator = (pageNum && totalPages) ? `
+    <div style="
+      position: absolute;
+      top: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    ">
+      <div style="
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+      ">
+        <span style="
+          font-size: 18px;
+          font-family: ${FONTS.mono};
+          color: ${COLORS.gold};
+          font-weight: 600;
+        ">${String(pageNum).padStart(2, '0')}</span>
+        <span style="
+          font-size: 10px;
+          color: ${COLORS.textMuted};
+        ">/</span>
+        <span style="
+          font-size: 11px;
+          font-family: ${FONTS.mono};
+          color: ${COLORS.textMuted};
+        ">${String(totalPages).padStart(2, '0')}</span>
+      </div>
+    </div>
+  ` : '';
+
+  return `
+    <div style="
+      position: relative;
+      margin-bottom: 22px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid ${COLORS.border};
+    ">
+      ${chapterIndicator}
+      ${pageIndicator}
+      
+      <!-- 中央品牌標誌 -->
+      <div style="text-align: center; padding-top: ${chapter ? '8px' : '0'};">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 16px;">
+          <div style="
+            width: 50px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, ${COLORS.goldDark});
+          "></div>
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          ">
+            <h2 style="
+              font-size: 16px;
+              font-family: ${FONTS.heading};
+              color: ${COLORS.gold};
+              margin: 0;
+              letter-spacing: 5px;
+              font-weight: 500;
+            ">虹靈御所</h2>
+            ${subtitle ? `
+              <p style="
+                font-size: 9px;
+                color: ${COLORS.textMuted};
+                margin: 5px 0 0 0;
+                letter-spacing: 2px;
+              ">${subtitle}</p>
+            ` : ''}
+          </div>
+          <div style="
+            width: 50px;
+            height: 1px;
+            background: linear-gradient(270deg, transparent, ${COLORS.goldDark});
+          "></div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+// 創建增強版頁腳組件 - 帶動態頁碼與章節進度
+const createFooter = (dateStr: string, pageInfo: string, chapter?: ChapterConfig, pageNum?: number, totalPages?: number) => {
+  const progressPercent = (pageNum && totalPages) ? Math.round((pageNum / totalPages) * 100) : 0;
+  
+  return `
+    <div style="position: absolute; bottom: 25px; left: 45px; right: 45px;">
+      <!-- 進度條 -->
+      ${(pageNum && totalPages) ? `
+        <div style="
+          width: 100%;
+          height: 2px;
+          background: ${COLORS.bgSecondary};
+          border-radius: 1px;
+          margin-bottom: 12px;
+          overflow: hidden;
+        ">
+          <div style="
+            width: ${progressPercent}%;
+            height: 100%;
+            background: linear-gradient(90deg, ${chapter?.color || COLORS.gold}60, ${chapter?.color || COLORS.gold});
+            border-radius: 1px;
+            transition: width 0.3s ease;
+          "></div>
+        </div>
+      ` : `
+        <div style="
+          width: 100%;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, ${COLORS.border}, transparent);
+          margin-bottom: 12px;
+        "></div>
+      `}
+      
+      <!-- 頁腳內容 -->
+      <div style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 9px;
+        color: ${COLORS.textMuted};
+        letter-spacing: 0.5px;
+      ">
+        <!-- 左側：日期 -->
+        <div style="
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 140px;
+        ">
+          <span style="
+            width: 4px;
+            height: 4px;
+            background: ${COLORS.gold}40;
+            border-radius: 50%;
+          "></span>
+          <span>${dateStr}</span>
+        </div>
+        
+        <!-- 中央：品牌與章節 -->
+        <div style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 3px;
+        ">
+          <span style="
+            color: ${COLORS.goldDark};
+            font-size: 10px;
+            letter-spacing: 2px;
+          ">虹靈御所 · 超烜創意</span>
+          ${chapter ? `
+            <span style="
+              font-size: 8px;
+              color: ${chapter.color}80;
+              letter-spacing: 1px;
+            ">${chapter.icon} ${chapter.name}</span>
+          ` : ''}
+        </div>
+        
+        <!-- 右側：頁碼 -->
+        <div style="
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 140px;
+          justify-content: flex-end;
+        ">
+          ${(pageNum && totalPages) ? `
+            <div style="
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            ">
+              <span style="
+                font-size: 8px;
+                color: ${COLORS.textMuted};
+                letter-spacing: 1px;
+              ">PAGE</span>
+              <div style="
+                display: flex;
+                align-items: center;
+                background: ${chapter?.color || COLORS.gold}10;
+                border: 1px solid ${chapter?.color || COLORS.gold}20;
+                border-radius: 4px;
+                padding: 2px 8px;
+              ">
+                <span style="
+                  font-size: 11px;
+                  font-family: ${FONTS.mono};
+                  color: ${chapter?.color || COLORS.gold};
+                  font-weight: 600;
+                ">${String(pageNum).padStart(2, '0')}</span>
+                <span style="
+                  font-size: 9px;
+                  color: ${COLORS.textMuted};
+                  margin: 0 3px;
+                ">/</span>
+                <span style="
+                  font-size: 10px;
+                  font-family: ${FONTS.mono};
+                  color: ${COLORS.textMuted};
+                ">${String(totalPages).padStart(2, '0')}</span>
+              </div>
+            </div>
+          ` : `
+            <span>${pageInfo}</span>
+          `}
+          <span style="
+            width: 4px;
+            height: 4px;
+            background: ${COLORS.gold}40;
+            border-radius: 50%;
+          "></span>
+        </div>
+      </div>
+    </div>
+  `;
+};
 
 // 創建目錄頁
 interface TocEntry {
@@ -201,7 +463,7 @@ interface TocEntry {
   summary: string; // 新增：章節摘要
 }
 
-const createTableOfContentsPage = (entries: TocEntry[], dateStr: string): string => {
+const createTableOfContentsPage = (entries: TocEntry[], dateStr: string, totalPages: number): string => {
   const tocRows = entries.map((entry, idx) => `
     <div style="
       display: flex;
@@ -403,7 +665,7 @@ const createTableOfContentsPage = (entries: TocEntry[], dateStr: string): string
         opacity: 0.7;
       ">本報告基於傳統八字命理學與現代心理學分析</p>
       
-      ${createFooter(dateStr, '第 2 頁')}
+      ${createFooter(dateStr, '第 2 頁', CHAPTERS.toc, 2, totalPages)}
     </div>
   `;
 }
@@ -432,6 +694,33 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
   });
 
   const genderText = reportData.gender === 'male' ? '乾造（男）' : '坤造（女）';
+
+  // ========================
+  // 計算總頁數 - 必須在所有頁面生成之前計算
+  // ========================
+  const tocPageCount = options.includeTableOfContents ? 1 : 0;
+  const pillarsPageCount = options.includePillars ? 1 : 0;
+  const shenshaPageCount = options.includeShensha && reportData.shensha ? Math.ceil(reportData.shensha.length / 4) : 0;
+  const legionDetailsPageCount = options.includeLegionDetails ? 2 : 0;
+  
+  const storyTypeOptions: Record<'year' | 'month' | 'day' | 'hour', boolean> = {
+    year: options.includeYearStory,
+    month: options.includeMonthStory,
+    day: options.includeDayStory,
+    hour: options.includeHourStory,
+  };
+  
+  const storyPageCount = (['year', 'month', 'day', 'hour'] as const)
+    .filter(type => storyTypeOptions[type] && reportData.legionStories?.[type]).length;
+  
+  // 總頁數 = 封面 + 目錄 + 四柱 + 神煞 + 軍團詳解 + 故事頁
+  const totalPages = 1 + tocPageCount + pillarsPageCount + shenshaPageCount + legionDetailsPageCount + storyPageCount;
+  
+  // 各章節起始頁碼
+  const pillarsStartPage = 1 + tocPageCount + 1;
+  const shenshaStartPage = pillarsStartPage + pillarsPageCount;
+  const legionStartPage = shenshaStartPage + shenshaPageCount;
+  const storyStartPage = legionStartPage + legionDetailsPageCount;
 
   // 封面頁 - 精緻專業設計
   const coverPage = `
@@ -1147,34 +1436,17 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
         <div style="width: 80px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.border});"></div>
       </div>
       
-      ${createFooter(dateStr, '第 2 頁')}
+      ${createFooter(dateStr, '第 3 頁', CHAPTERS.pillars, pillarsStartPage, totalPages)}
     </div>
   `;
 
   // 神煞分析頁 - 根據選項決定是否包含
   const shenshaPages = (options.includeShensha && reportData.shensha && reportData.shensha.length > 0) ? 
-    createShenshaPages(reportData.shensha, dateStr) : '';
+    createShenshaPages(reportData.shensha, dateStr, shenshaStartPage, totalPages) : '';
 
   // 軍團詳解頁 - 根據選項決定是否包含
   const legionDetailsPages = options.includeLegionDetails ? 
-    createLegionDetailsPages(reportData.pillars, reportData.tenGods, dateStr) : '';
-
-  // 計算各章節頁數
-  const tocPageCount = options.includeTableOfContents ? 1 : 0;
-  const pillarsPageCount = options.includePillars ? 1 : 0;
-  const shenshaPageCount = options.includeShensha && reportData.shensha ? Math.ceil(reportData.shensha.length / 6) : 0;
-  const legionDetailsPageCount = options.includeLegionDetails ? 2 : 0;
-  
-  // 軍團故事頁 - 根據選項決定是否包含每個故事
-  const storyTypeOptions: Record<'year' | 'month' | 'day' | 'hour', boolean> = {
-    year: options.includeYearStory,
-    month: options.includeMonthStory,
-    day: options.includeDayStory,
-    hour: options.includeHourStory,
-  };
-  
-  // 計算故事頁的起始頁碼
-  const storyStartPage = 1 + tocPageCount + pillarsPageCount + shenshaPageCount + legionDetailsPageCount + 1;
+    createLegionDetailsPages(reportData.pillars, reportData.tenGods, dateStr, legionStartPage, totalPages) : '';
   
   const storyPages = (['year', 'month', 'day', 'hour'] as const)
     .filter(type => storyTypeOptions[type] && reportData.legionStories?.[type])
@@ -1184,7 +1456,8 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
       reportData.pillars[type],
       reportData.nayin[type],
       dateStr,
-      storyStartPage + idx
+      storyStartPage + idx,
+      totalPages
     ))
     .join('');
 
@@ -1274,7 +1547,7 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
       }
     });
     
-    tableOfContentsPage = createTableOfContentsPage(tocEntries, dateStr);
+    tableOfContentsPage = createTableOfContentsPage(tocEntries, dateStr, totalPages);
   }
 
   // 組合頁面 - 根據選項決定包含哪些
@@ -1295,7 +1568,9 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
 const createLegionDetailsPages = (
   pillars: ReportData['pillars'],
   tenGods: ReportData['tenGods'],
-  dateStr: string
+  dateStr: string,
+  startPage: number = 1,
+  totalPages: number = 1
 ): string => {
   const legionConfig = {
     year: { 
@@ -1923,13 +2198,13 @@ const createLegionDetailsPages = (
         <div style="width: 80px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.border});"></div>
       </div>
       
-      ${createFooter(dateStr, `軍團詳解 ${pageIdx + 1}/2`)}
+      ${createFooter(dateStr, `軍團詳解 ${pageIdx + 1}/2`, CHAPTERS.legion, startPage + pageIdx, totalPages)}
     </div>
   `).join('');
 };
 
 // 創建神煞分析頁 - 精緻專業設計（增強分類展示與卡片效果）
-const createShenshaPages = (shensha: ShenshaItem[], dateStr: string): string => {
+const createShenshaPages = (shensha: ShenshaItem[], dateStr: string, startPage: number = 1, totalPages: number = 1): string => {
   const itemsPerPage = 4; // 減少每頁數量以留出更多精緻空間
   const pages: string[] = [];
   
@@ -2044,10 +2319,11 @@ const createShenshaPages = (shensha: ShenshaItem[], dateStr: string): string => 
     categoryStats[cat] = (categoryStats[cat] || 0) + 1;
   });
   
+  const shenshaPageCount = Math.ceil(shensha.length / itemsPerPage);
+  
   for (let i = 0; i < shensha.length; i += itemsPerPage) {
     const pageItems = shensha.slice(i, i + itemsPerPage);
     const pageNum = Math.floor(i / itemsPerPage) + 1;
-    const totalPages = Math.ceil(shensha.length / itemsPerPage);
     const isFirstPage = pageNum === 1;
     
     pages.push(`
@@ -2428,7 +2704,7 @@ const createShenshaPages = (shensha: ShenshaItem[], dateStr: string): string => 
           <div style="width: 80px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.border});"></div>
         </div>
         
-        ${createFooter(dateStr, `神煞分析 ${pageNum}/${totalPages}`)}
+        ${createFooter(dateStr, `神煞分析 ${pageNum}/${shenshaPageCount}`, CHAPTERS.shensha, startPage + pageNum - 1, totalPages)}
       </div>
     `);
   }
@@ -2443,7 +2719,8 @@ const createStoryPage = (
   pillar: { stem: string; branch: string },
   nayin: string,
   dateStr: string,
-  pageNum: number
+  pageNum: number,
+  totalPages: number = 1
 ): string => {
   const legionConfig = {
     year: { 
@@ -2806,7 +3083,7 @@ const createStoryPage = (
         </div>
       </div>
       
-      ${createFooter(dateStr, `${config.name}敘事`)}
+      ${createFooter(dateStr, `${config.name}敘事`, CHAPTERS[`story${type.charAt(0).toUpperCase() + type.slice(1)}` as keyof typeof CHAPTERS], pageNum, totalPages)}
     </div>
   `;
 };

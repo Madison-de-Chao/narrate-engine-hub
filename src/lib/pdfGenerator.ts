@@ -685,157 +685,178 @@ const createLegionDetailsPages = (
   `).join('');
 };
 
-// 創建神煞分析頁
+// 創建神煞分析頁 - 優化專業設計
 const createShenshaPages = (shensha: ShenshaItem[], dateStr: string): string => {
-  const itemsPerPage = 6;
+  const itemsPerPage = 5; // 減少每頁數量以留出更多空間
   const pages: string[] = [];
   
-  const categoryColors: Record<string, string> = {
-    '吉神': '#4ade80',
-    '凶神': '#f87171',
-    '貴人': '#c084fc',
-    '桃花': '#f472b6',
-    '學堂': '#60a5fa',
-    '特殊': '#fbbf24'
+  const categoryConfig: Record<string, { color: string; icon: string; gradient: string }> = {
+    '吉神': { color: '#4ade80', icon: '🌟', gradient: 'linear-gradient(135deg, rgba(74, 222, 128, 0.12) 0%, rgba(74, 222, 128, 0.03) 100%)' },
+    '凶神': { color: '#f87171', icon: '⚡', gradient: 'linear-gradient(135deg, rgba(248, 113, 113, 0.12) 0%, rgba(248, 113, 113, 0.03) 100%)' },
+    '貴人': { color: '#c084fc', icon: '👑', gradient: 'linear-gradient(135deg, rgba(192, 132, 252, 0.12) 0%, rgba(192, 132, 252, 0.03) 100%)' },
+    '桃花': { color: '#f472b6', icon: '🌸', gradient: 'linear-gradient(135deg, rgba(244, 114, 182, 0.12) 0%, rgba(244, 114, 182, 0.03) 100%)' },
+    '學堂': { color: '#60a5fa', icon: '📚', gradient: 'linear-gradient(135deg, rgba(96, 165, 250, 0.12) 0%, rgba(96, 165, 250, 0.03) 100%)' },
+    '特殊': { color: '#fbbf24', icon: '✨', gradient: 'linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(251, 191, 36, 0.03) 100%)' }
   };
 
-  const rarityConfig: Record<string, { text: string; color: string }> = {
-    'SSR': { text: '傳說', color: '#fbbf24' },
-    'SR': { text: '稀有', color: '#c084fc' },
-    'R': { text: '精良', color: '#60a5fa' },
-    'N': { text: '普通', color: '#9ca3af' }
+  const rarityConfig: Record<string, { text: string; color: string; bgGradient: string }> = {
+    'SSR': { text: '傳說', color: '#fbbf24', bgGradient: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' },
+    'SR': { text: '稀有', color: '#c084fc', bgGradient: 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)' },
+    'R': { text: '精良', color: '#60a5fa', bgGradient: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)' },
+    'N': { text: '普通', color: '#9ca3af', bgGradient: 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)' }
   };
   
   for (let i = 0; i < shensha.length; i += itemsPerPage) {
     const pageItems = shensha.slice(i, i + itemsPerPage);
-    const pageNum = Math.floor(i / itemsPerPage) + 3;
+    const pageNum = Math.floor(i / itemsPerPage) + 1;
+    const totalPages = Math.ceil(shensha.length / itemsPerPage);
     
     pages.push(`
       <div style="
         width: 794px;
         min-height: 1123px;
-        background: linear-gradient(180deg, #0f0f14 0%, #141420 100%);
+        background: linear-gradient(180deg, ${COLORS.bgPrimary} 0%, ${COLORS.bgSecondary} 100%);
         position: relative;
         padding: 40px 50px;
         box-sizing: border-box;
         page-break-after: always;
         overflow: hidden;
       ">
-        <!-- 背景裝飾 -->
+        <!-- 背景裝飾光暈 -->
         <div style="
           position: absolute;
           inset: 0;
           background: 
-            radial-gradient(circle at 85% 15%, rgba(180, 140, 80, 0.03) 0%, transparent 25%),
-            radial-gradient(circle at 15% 85%, rgba(180, 140, 80, 0.03) 0%, transparent 25%);
+            radial-gradient(ellipse 50% 30% at 80% 10%, ${COLORS.gold}08 0%, transparent 60%),
+            radial-gradient(ellipse 40% 25% at 20% 90%, ${COLORS.gold}05 0%, transparent 60%);
           pointer-events: none;
         "></div>
         
-        <!-- 邊框 -->
-        <div style="position: absolute; inset: 15px; border: 1px solid rgba(180, 140, 80, 0.25); pointer-events: none;"></div>
+        <!-- 精緻邊框 -->
+        <div style="position: absolute; inset: 15px; border: 1px solid ${COLORS.border}; pointer-events: none;"></div>
+        <div style="position: absolute; inset: 20px; border: 1px solid ${COLORS.gold}15; pointer-events: none;"></div>
         
-        <!-- 頁眉 -->
-        <div style="text-align: center; margin-bottom: 30px;">
-          <div style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-          ">
-            <div style="width: 50px; height: 1px; background: linear-gradient(90deg, transparent, #a08050);"></div>
-            <h2 style="font-size: 20px; color: #c8aa64; margin: 0; letter-spacing: 4px;">虹靈御所八字人生兵法</h2>
-            <div style="width: 50px; height: 1px; background: linear-gradient(270deg, transparent, #a08050);"></div>
-          </div>
-          <p style="font-size: 12px; color: #8c8c8c; margin: 8px 0 0 0; letter-spacing: 2px;">四時軍團戰略命理系統</p>
-          <div style="width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #a08050, transparent); margin-top: 20px;"></div>
-        </div>
+        ${createHeader('四時軍團戰略命理系統')}
         
-        <!-- 標題 -->
-        <div style="text-align: center; margin: 20px 0 30px 0; position: relative;">
+        <!-- 頁面標題 -->
+        <div style="text-align: center; margin: 10px 0 28px 0; position: relative;">
           <div style="
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 180px;
-            height: 40px;
-            background: radial-gradient(ellipse, rgba(200, 170, 100, 0.08) 0%, transparent 70%);
+            width: 200px;
+            height: 50px;
+            background: radial-gradient(ellipse, ${COLORS.gold}08 0%, transparent 70%);
           "></div>
-          <h3 style="font-size: 22px; color: #dcc88c; margin: 0; letter-spacing: 4px;">
-            ✨ 神煞分析 ${i > 0 ? `(續 ${Math.floor(i / itemsPerPage) + 1})` : ''}
-          </h3>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+            <div style="width: 40px; height: 2px; background: linear-gradient(90deg, transparent, ${COLORS.goldDark});"></div>
+            <h3 style="font-size: 24px; color: ${COLORS.goldLight}; margin: 0; letter-spacing: 6px; font-weight: 500;">
+              神煞分析
+            </h3>
+            <div style="width: 40px; height: 2px; background: linear-gradient(270deg, transparent, ${COLORS.goldDark});"></div>
+          </div>
+          <p style="font-size: 11px; color: ${COLORS.textMuted}; margin: 8px 0 0 0; letter-spacing: 2px;">
+            命盤神煞星曜解析 · 共 ${shensha.length} 顆星
+          </p>
         </div>
         
-        <!-- 神煞卡片 -->
-        <div style="display: flex; flex-direction: column; gap: 15px;">
+        <!-- 神煞卡片列表 -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
           ${pageItems.map(item => {
             const category = item.category || '特殊';
-            const catColor = categoryColors[category] || categoryColors['特殊'];
+            const catConfig = categoryConfig[category] || categoryConfig['特殊'];
             const rarity = item.rarity && rarityConfig[item.rarity] ? rarityConfig[item.rarity] : null;
             return `
               <div style="
-                background: linear-gradient(135deg, rgba(28, 28, 38, 0.85) 0%, rgba(22, 22, 30, 0.85) 100%);
-                border: 1px solid ${catColor}30;
-                border-left: 4px solid ${catColor};
-                border-radius: 10px;
-                padding: 18px 22px;
+                background: ${catConfig.gradient};
+                border: 1px solid ${catConfig.color}25;
+                border-radius: 12px;
+                padding: 20px 24px;
                 position: relative;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                overflow: hidden;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
               ">
-                <!-- 右上角光暈 -->
+                <!-- 左側色條 -->
                 <div style="
                   position: absolute;
+                  left: 0;
                   top: 0;
-                  right: 0;
-                  width: 80px;
-                  height: 80px;
-                  background: radial-gradient(circle at 100% 0%, ${catColor}08 0%, transparent 70%);
+                  bottom: 0;
+                  width: 4px;
+                  background: linear-gradient(180deg, ${catConfig.color}, ${catConfig.color}60);
+                "></div>
+                
+                <!-- 右上角裝飾光暈 -->
+                <div style="
+                  position: absolute;
+                  top: -20px;
+                  right: -20px;
+                  width: 100px;
+                  height: 100px;
+                  background: radial-gradient(circle, ${catConfig.color}10 0%, transparent 70%);
                   pointer-events: none;
                 "></div>
                 
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
-                  <span style="font-size: 18px; color: #dcc88c; font-weight: bold;">${item.name}</span>
+                <!-- 標題行 -->
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                  <span style="font-size: 20px; filter: drop-shadow(0 0 6px ${catConfig.color}40);">${catConfig.icon}</span>
+                  <span style="font-size: 18px; color: ${COLORS.goldLight}; font-weight: 600; letter-spacing: 2px;">${item.name}</span>
                   ${rarity ? `
                     <span style="
                       font-size: 10px;
-                      color: ${rarity.color};
-                      background: linear-gradient(135deg, ${rarity.color}15 0%, ${rarity.color}08 100%);
-                      padding: 3px 10px;
-                      border-radius: 12px;
-                      border: 1px solid ${rarity.color}30;
+                      color: #0a0a0f;
+                      background: ${rarity.bgGradient};
+                      padding: 3px 12px;
+                      border-radius: 20px;
+                      font-weight: 600;
+                      letter-spacing: 1px;
+                      box-shadow: 0 2px 8px ${rarity.color}40;
                     ">${rarity.text}</span>
                   ` : ''}
                   <span style="
                     font-size: 11px;
-                    color: ${catColor};
+                    color: ${catConfig.color};
                     margin-left: auto;
-                    padding: 2px 10px;
-                    background: ${catColor}10;
-                    border-radius: 4px;
+                    padding: 4px 14px;
+                    background: ${catConfig.color}15;
+                    border-radius: 20px;
+                    border: 1px solid ${catConfig.color}30;
                   ">${category}</span>
                 </div>
-                ${item.position ? `<p style="font-size: 12px; color: #a0967a; margin: 0 0 8px 0;">📍 落於：${item.position}</p>` : ''}
-                ${item.effect ? `<p style="font-size: 13px; color: #a09890; margin: 0 0 8px 0; line-height: 1.6;">${item.effect}</p>` : ''}
-                ${item.modernMeaning ? `<p style="font-size: 12px; color: #787872; margin: 0; line-height: 1.5; padding-left: 10px; border-left: 2px solid ${catColor}40;">💡 ${item.modernMeaning}</p>` : ''}
+                
+                ${item.position ? `
+                  <p style="font-size: 12px; color: ${COLORS.gold}; margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">
+                    <span style="opacity: 0.7;">📍</span>
+                    <span>落於：${item.position}</span>
+                  </p>
+                ` : ''}
+                
+                ${item.effect ? `
+                  <p style="font-size: 13px; color: ${COLORS.textSecondary}; margin: 0 0 10px 0; line-height: 1.7;">${item.effect}</p>
+                ` : ''}
+                
+                ${item.modernMeaning ? `
+                  <div style="
+                    margin-top: 12px;
+                    padding: 12px 16px;
+                    background: rgba(10, 10, 15, 0.4);
+                    border-radius: 8px;
+                    border-left: 3px solid ${catConfig.color}60;
+                  ">
+                    <p style="font-size: 11px; color: ${COLORS.textMuted}; margin: 0 0 6px 0; display: flex; align-items: center; gap: 6px;">
+                      <span>💡</span>
+                      <span style="letter-spacing: 2px;">現代解讀</span>
+                    </p>
+                    <p style="font-size: 12px; color: ${COLORS.textSecondary}; margin: 0; line-height: 1.6;">${item.modernMeaning}</p>
+                  </div>
+                ` : ''}
               </div>
             `;
           }).join('')}
         </div>
         
-        <!-- 頁腳 -->
-        <div style="
-          position: absolute;
-          bottom: 25px;
-          left: 50px;
-          right: 50px;
-        ">
-          <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(140, 110, 70, 0.5), transparent); margin-bottom: 12px;"></div>
-          <div style="display: flex; justify-content: space-between; font-size: 11px; color: #646464;">
-            <span>${dateStr}</span>
-            <span>虹靈御所｜超烜創意</span>
-            <span>第 ${pageNum} 頁</span>
-          </div>
-        </div>
+        ${createFooter(dateStr, `神煞分析 ${pageNum}/${totalPages}`)}
       </div>
     `);
   }
@@ -843,7 +864,7 @@ const createShenshaPages = (shensha: ShenshaItem[], dateStr: string): string => 
   return pages.join('');
 };
 
-// 創建軍團故事頁
+// 創建軍團故事頁 - 優化專業設計
 const createStoryPage = (
   type: 'year' | 'month' | 'day' | 'hour',
   story: string,
@@ -853,68 +874,103 @@ const createStoryPage = (
   pageNum: number
 ): string => {
   const legionConfig = {
-    year: { name: '祖源軍團', icon: '👑', color: '#fbbf24', bgColor: 'rgba(251, 191, 36, 0.1)' },
-    month: { name: '關係軍團', icon: '🤝', color: '#4ade80', bgColor: 'rgba(74, 222, 128, 0.1)' },
-    day: { name: '核心軍團', icon: '⭐', color: '#c084fc', bgColor: 'rgba(192, 132, 252, 0.1)' },
-    hour: { name: '未來軍團', icon: '🚀', color: '#f97316', bgColor: 'rgba(249, 115, 22, 0.1)' }
+    year: { 
+      name: '祖源軍團', 
+      subtitle: '家族傳承 · 童年根基',
+      icon: '👑', 
+      color: '#fbbf24',
+      gradient: 'linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.03) 100%)',
+      borderGradient: 'linear-gradient(180deg, #fbbf24, #f59e0b)'
+    },
+    month: { 
+      name: '關係軍團', 
+      subtitle: '社交人脈 · 事業發展',
+      icon: '🤝', 
+      color: '#4ade80',
+      gradient: 'linear-gradient(135deg, rgba(74, 222, 128, 0.15) 0%, rgba(74, 222, 128, 0.03) 100%)',
+      borderGradient: 'linear-gradient(180deg, #4ade80, #22c55e)'
+    },
+    day: { 
+      name: '核心軍團', 
+      subtitle: '核心自我 · 婚姻感情',
+      icon: '⭐', 
+      color: '#c084fc',
+      gradient: 'linear-gradient(135deg, rgba(192, 132, 252, 0.15) 0%, rgba(192, 132, 252, 0.03) 100%)',
+      borderGradient: 'linear-gradient(180deg, #c084fc, #a855f7)'
+    },
+    hour: { 
+      name: '未來軍團', 
+      subtitle: '未來規劃 · 子女傳承',
+      icon: '🚀', 
+      color: '#f97316',
+      gradient: 'linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(249, 115, 22, 0.03) 100%)',
+      borderGradient: 'linear-gradient(180deg, #f97316, #ea580c)'
+    }
   };
   
   const config = legionConfig[type];
+  const pillarLabels = { year: '年柱', month: '月柱', day: '日柱', hour: '時柱' };
+  
+  // 處理故事內容，分段顯示
+  const storyParagraphs = story.split('\n').filter(p => p.trim());
   
   return `
     <div style="
       width: 794px;
       min-height: 1123px;
-      background: linear-gradient(180deg, #0f0f14 0%, #141420 100%);
+      background: linear-gradient(180deg, ${COLORS.bgPrimary} 0%, ${COLORS.bgSecondary} 100%);
       position: relative;
       padding: 40px 50px;
       box-sizing: border-box;
       page-break-after: always;
       overflow: hidden;
     ">
-      <!-- 背景裝飾 -->
+      <!-- 背景裝飾光暈 -->
       <div style="
         position: absolute;
         inset: 0;
         background: 
-          radial-gradient(circle at 50% 30%, ${config.color}05 0%, transparent 40%),
-          radial-gradient(circle at 20% 80%, rgba(180, 140, 80, 0.02) 0%, transparent 30%);
+          radial-gradient(ellipse 60% 40% at 50% 20%, ${config.color}08 0%, transparent 50%),
+          radial-gradient(ellipse 40% 30% at 20% 80%, ${COLORS.gold}05 0%, transparent 50%),
+          radial-gradient(ellipse 40% 30% at 80% 80%, ${config.color}05 0%, transparent 50%);
         pointer-events: none;
       "></div>
       
-      <!-- 邊框 -->
-      <div style="position: absolute; inset: 15px; border: 1px solid rgba(180, 140, 80, 0.25); pointer-events: none;"></div>
-      <div style="position: absolute; top: 15px; left: 15px; width: 20px; height: 20px; border-left: 2px solid ${config.color}; border-top: 2px solid ${config.color};"></div>
-      <div style="position: absolute; top: 15px; right: 15px; width: 20px; height: 20px; border-right: 2px solid ${config.color}; border-top: 2px solid ${config.color};"></div>
-      <div style="position: absolute; bottom: 15px; left: 15px; width: 20px; height: 20px; border-left: 2px solid ${config.color}; border-bottom: 2px solid ${config.color};"></div>
-      <div style="position: absolute; bottom: 15px; right: 15px; width: 20px; height: 20px; border-right: 2px solid ${config.color}; border-bottom: 2px solid ${config.color};"></div>
+      <!-- 精緻邊框 -->
+      <div style="position: absolute; inset: 15px; border: 1px solid ${COLORS.border}; pointer-events: none;"></div>
       
-      <!-- 頁眉 -->
-      <div style="text-align: center; margin-bottom: 30px;">
-        <div style="
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 15px;
-        ">
-          <div style="width: 50px; height: 1px; background: linear-gradient(90deg, transparent, #a08050);"></div>
-          <h2 style="font-size: 20px; color: #c8aa64; margin: 0; letter-spacing: 4px;">虹靈御所八字人生兵法</h2>
-          <div style="width: 50px; height: 1px; background: linear-gradient(270deg, transparent, #a08050);"></div>
-        </div>
-        <p style="font-size: 12px; color: #8c8c8c; margin: 8px 0 0 0; letter-spacing: 2px;">四時軍團戰略命理系統</p>
-        <div style="width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #a08050, transparent); margin-top: 20px;"></div>
+      <!-- 角落彩色裝飾 -->
+      <div style="position: absolute; top: 15px; left: 15px; width: 25px; height: 25px;">
+        <div style="position: absolute; top: 0; left: 0; width: 20px; height: 3px; background: ${config.borderGradient};"></div>
+        <div style="position: absolute; top: 0; left: 0; width: 3px; height: 20px; background: ${config.borderGradient};"></div>
+      </div>
+      <div style="position: absolute; top: 15px; right: 15px; width: 25px; height: 25px;">
+        <div style="position: absolute; top: 0; right: 0; width: 20px; height: 3px; background: ${config.borderGradient};"></div>
+        <div style="position: absolute; top: 0; right: 0; width: 3px; height: 20px; background: ${config.borderGradient};"></div>
+      </div>
+      <div style="position: absolute; bottom: 15px; left: 15px; width: 25px; height: 25px;">
+        <div style="position: absolute; bottom: 0; left: 0; width: 20px; height: 3px; background: ${config.borderGradient};"></div>
+        <div style="position: absolute; bottom: 0; left: 0; width: 3px; height: 20px; background: ${config.borderGradient};"></div>
+      </div>
+      <div style="position: absolute; bottom: 15px; right: 15px; width: 25px; height: 25px;">
+        <div style="position: absolute; bottom: 0; right: 0; width: 20px; height: 3px; background: ${config.borderGradient};"></div>
+        <div style="position: absolute; bottom: 0; right: 0; width: 3px; height: 20px; background: ${config.borderGradient};"></div>
       </div>
       
-      <!-- 軍團標題 -->
+      ${createHeader('四時軍團戰略命理系統')}
+      
+      <!-- 軍團標題卡片 -->
       <div style="
         text-align: center;
-        padding: 35px;
-        background: linear-gradient(135deg, ${config.bgColor} 0%, transparent 100%);
-        border: 2px solid ${config.color}30;
-        border-radius: 20px;
-        margin-bottom: 30px;
+        padding: 35px 40px;
+        background: ${config.gradient};
+        border: 1px solid ${config.color}30;
+        border-radius: 16px;
+        margin-bottom: 25px;
         position: relative;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), inset 0 0 60px ${config.color}05;
+        box-shadow: 
+          0 10px 40px rgba(0, 0, 0, 0.25),
+          inset 0 1px 0 ${config.color}20;
       ">
         <!-- 頂部發光線 -->
         <div style="
@@ -922,81 +978,128 @@ const createStoryPage = (
           top: 0;
           left: 50%;
           transform: translateX(-50%);
-          width: 60%;
+          width: 50%;
           height: 2px;
           background: linear-gradient(90deg, transparent, ${config.color}, transparent);
         "></div>
         
-        <span style="font-size: 56px; display: block; margin-bottom: 15px; filter: drop-shadow(0 0 10px ${config.color}40);">${config.icon}</span>
+        <!-- 圖標與標題 -->
+        <span style="
+          font-size: 52px; 
+          display: block; 
+          margin-bottom: 12px; 
+          filter: drop-shadow(0 0 15px ${config.color}50);
+        ">${config.icon}</span>
+        
         <h3 style="
-          font-size: 32px;
+          font-size: 30px;
           color: ${config.color};
-          margin: 0 0 15px 0;
-          font-weight: bold;
-          letter-spacing: 6px;
-          text-shadow: 0 0 20px ${config.color}40;
+          margin: 0 0 8px 0;
+          font-weight: 600;
+          letter-spacing: 8px;
+          text-shadow: 0 0 25px ${config.color}30;
         ">${config.name}</h3>
         
+        <p style="font-size: 12px; color: ${COLORS.textMuted}; margin: 0 0 20px 0; letter-spacing: 3px;">${config.subtitle}</p>
+        
+        <!-- 柱位資訊 -->
         <div style="
           display: inline-flex;
           align-items: center;
           gap: 20px;
-          padding: 12px 30px;
-          background: rgba(15, 15, 20, 0.6);
+          padding: 14px 35px;
+          background: rgba(10, 10, 15, 0.5);
           border-radius: 30px;
-          border: 1px solid ${config.color}30;
+          border: 1px solid ${config.color}25;
         ">
-          <span style="font-size: 28px; color: #dcc88c; letter-spacing: 4px; text-shadow: 0 0 10px rgba(220, 200, 140, 0.3);">${pillar.stem}${pillar.branch}</span>
-          <div style="width: 1px; height: 25px; background: ${config.color}40;"></div>
-          <span style="font-size: 16px; color: #a0967a;">${nayin}</span>
+          <div style="text-align: center;">
+            <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 0 0 4px 0; letter-spacing: 2px;">${pillarLabels[type]}</p>
+            <span style="
+              font-size: 28px; 
+              color: ${COLORS.goldLight}; 
+              letter-spacing: 6px; 
+              font-family: ${FONTS.heading};
+              text-shadow: 0 0 10px ${COLORS.gold}30;
+            ">${pillar.stem}${pillar.branch}</span>
+          </div>
+          <div style="width: 1px; height: 35px; background: linear-gradient(180deg, transparent, ${config.color}50, transparent);"></div>
+          <div style="text-align: center;">
+            <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 0 0 4px 0; letter-spacing: 2px;">納音</p>
+            <span style="font-size: 16px; color: ${COLORS.textSecondary};">${nayin}</span>
+          </div>
         </div>
       </div>
       
-      <!-- 故事內容 -->
+      <!-- 故事內容區 -->
       <div style="
-        background: linear-gradient(135deg, rgba(22, 22, 30, 0.8) 0%, rgba(18, 18, 25, 0.8) 100%);
-        border: 1px solid ${config.color}25;
-        border-radius: 16px;
-        padding: 30px;
+        background: linear-gradient(135deg, rgba(25, 25, 35, 0.8) 0%, rgba(20, 20, 28, 0.8) 100%);
+        border: 1px solid ${config.color}20;
+        border-radius: 12px;
+        padding: 28px 32px;
         position: relative;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
       ">
-        <!-- 左上角裝飾 -->
-        <div style="position: absolute; top: -1px; left: 20px; width: 60px; height: 3px; background: linear-gradient(90deg, ${config.color}, transparent);"></div>
-        
-        <h4 style="font-size: 18px; color: #c8aa64; margin: 0 0 20px 0; display: flex; align-items: center; gap: 12px;">
-          <span style="
-            width: 5px;
-            height: 24px;
-            background: linear-gradient(180deg, ${config.color}, ${config.color}50);
-            border-radius: 3px;
-            box-shadow: 0 0 10px ${config.color}40;
-          "></span>
-          軍團故事
-        </h4>
+        <!-- 左上角裝飾線 -->
         <div style="
-          font-size: 15px;
-          color: #b8b4a8;
-          line-height: 2;
+          position: absolute; 
+          top: 0; 
+          left: 25px; 
+          width: 80px; 
+          height: 3px; 
+          background: linear-gradient(90deg, ${config.color}, transparent);
+          border-radius: 0 0 2px 2px;
+        "></div>
+        
+        <!-- 標題 -->
+        <h4 style="
+          font-size: 16px; 
+          color: ${COLORS.gold}; 
+          margin: 0 0 20px 0; 
+          display: flex; 
+          align-items: center; 
+          gap: 12px;
+          letter-spacing: 2px;
+        ">
+          <span style="
+            width: 4px;
+            height: 20px;
+            background: ${config.borderGradient};
+            border-radius: 2px;
+            box-shadow: 0 0 8px ${config.color}50;
+          "></span>
+          <span>軍團故事</span>
+          <span style="
+            font-size: 11px;
+            color: ${COLORS.textMuted};
+            font-weight: normal;
+            margin-left: auto;
+          ">AI 命理敘事</span>
+        </h4>
+        
+        <!-- 故事文字 -->
+        <div style="
+          font-size: 14px;
+          color: ${COLORS.textSecondary};
+          line-height: 2.1;
           white-space: pre-wrap;
           text-align: justify;
+          letter-spacing: 0.5px;
         ">${story}</div>
-      </div>
-      
-      <!-- 頁腳 -->
-      <div style="
-        position: absolute;
-        bottom: 25px;
-        left: 50px;
-        right: 50px;
-      ">
-        <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(140, 110, 70, 0.5), transparent); margin-bottom: 12px;"></div>
-        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #646464;">
-          <span>${dateStr}</span>
-          <span>虹靈御所｜超烜創意</span>
-          <span>第 ${pageNum} 頁</span>
+        
+        <!-- 底部裝飾 -->
+        <div style="
+          margin-top: 25px;
+          padding-top: 15px;
+          border-top: 1px solid ${COLORS.border};
+          text-align: center;
+        ">
+          <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 0; font-style: italic; letter-spacing: 1px;">
+            「此故事根據命盤特徵生成，僅供參考與啟發」
+          </p>
         </div>
       </div>
+      
+      ${createFooter(dateStr, `${config.name}敘事`)}
     </div>
   `;
 };

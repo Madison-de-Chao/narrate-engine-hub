@@ -516,6 +516,7 @@ const Index = () => {
         includeCover: options.includeCover,
         includePillars: options.includePillars,
         includeShensha: options.includeShensha,
+        includeLegionDetails: options.includeLegionDetails,
         includeYearStory: options.includeYearStory,
         includeMonthStory: options.includeMonthStory,
         includeDayStory: options.includeDayStory,

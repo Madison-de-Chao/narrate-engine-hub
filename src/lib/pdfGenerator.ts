@@ -1,5 +1,8 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { commanderAvatars } from "@/assets/commanders";
+import { advisorAvatars } from "@/assets/advisors";
+import { GAN_CHARACTERS, ZHI_CHARACTERS } from "@/lib/legionTranslator/characterData";
 
 // 封面資料介面
 export interface CoverPageData {
@@ -23,10 +26,25 @@ export interface ShenshaItem {
   rarity?: string;
 }
 
+// 軍團角色資料介面
+export interface LegionCharacterData {
+  stem: string;
+  branch: string;
+  commanderTitle: string;
+  commanderBuff: string;
+  commanderDebuff: string;
+  advisorTitle: string;
+  advisorBuff: string;
+  advisorDebuff: string;
+  tenGodStem?: string;
+  tenGodBranch?: string;
+}
+
 export interface PdfOptions {
   includeCover: boolean;
   includePillars: boolean;
   includeShensha: boolean;
+  includeLegionDetails: boolean; // 新增：軍團詳解頁
   includeYearStory: boolean;
   includeMonthStory: boolean;
   includeDayStory: boolean;
@@ -86,6 +104,7 @@ const defaultPdfOptions: PdfOptions = {
   includeCover: true,
   includePillars: true,
   includeShensha: true,
+  includeLegionDetails: true,
   includeYearStory: true,
   includeMonthStory: true,
   includeDayStory: true,
@@ -683,12 +702,17 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
   const shenshaPages = (options.includeShensha && reportData.shensha && reportData.shensha.length > 0) ? 
     createShenshaPages(reportData.shensha, dateStr) : '';
 
+  // 軍團詳解頁 - 根據選項決定是否包含
+  const legionDetailsPages = options.includeLegionDetails ? 
+    createLegionDetailsPages(reportData.pillars, reportData.tenGods, dateStr) : '';
+
   // 計算頁數
   let pageNum = 2; // 封面是第1頁，四柱是第2頁
   if (options.includePillars) {
     pageNum = 2;
   }
   const shenshaPageCount = options.includeShensha && reportData.shensha ? Math.ceil(reportData.shensha.length / 6) : 0;
+  const legionDetailsPageCount = options.includeLegionDetails ? 2 : 0; // 軍團詳解固定2頁（每頁2個軍團）
 
   // 軍團故事頁 - 根據選項決定是否包含每個故事
   const storyTypeOptions: Record<'year' | 'month' | 'day' | 'hour', boolean> = {
@@ -706,7 +730,7 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
       reportData.pillars[type],
       reportData.nayin[type],
       dateStr,
-      (options.includePillars ? 2 : 1) + shenshaPageCount + idx + 1
+      (options.includePillars ? 2 : 1) + shenshaPageCount + legionDetailsPageCount + idx + 1
     ))
     .join('');
 
@@ -715,10 +739,169 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
   if (options.includePillars) {
     content += pillarsPage;
   }
-  content += shenshaPages + storyPages;
+  content += shenshaPages + legionDetailsPages + storyPages;
 
   container.innerHTML = content;
   return container;
+};
+
+// 創建軍團詳解頁面 - 包含角色頭像與 Buff/Debuff
+const createLegionDetailsPages = (
+  pillars: ReportData['pillars'],
+  tenGods: ReportData['tenGods'],
+  dateStr: string
+): string => {
+  const legionConfig = {
+    year: { name: '祖源軍團', icon: '👑', color: '#fbbf24', description: '家族傳承・童年根基' },
+    month: { name: '關係軍團', icon: '🤝', color: '#22c55e', description: '社交人脈・事業發展' },
+    day: { name: '核心軍團', icon: '⭐', color: '#a855f7', description: '核心自我・婚姻感情' },
+    hour: { name: '未來軍團', icon: '🚀', color: '#f97316', description: '未來規劃・子女傳承' },
+  };
+
+  // 將四柱分成兩頁，每頁兩個軍團
+  const legionGroups: Array<Array<'year' | 'month' | 'day' | 'hour'>> = [
+    ['year', 'month'],
+    ['day', 'hour']
+  ];
+
+  return legionGroups.map((group, pageIdx) => `
+    <div style="
+      width: 794px;
+      min-height: 1123px;
+      background: linear-gradient(180deg, #0f0f14 0%, #141420 100%);
+      position: relative;
+      padding: 40px 50px;
+      box-sizing: border-box;
+      page-break-after: always;
+      overflow: hidden;
+    ">
+      <!-- 背景裝飾 -->
+      <div style="
+        position: absolute;
+        inset: 0;
+        background: 
+          radial-gradient(circle at 30% 20%, rgba(180, 140, 80, 0.03) 0%, transparent 30%),
+          radial-gradient(circle at 70% 80%, rgba(180, 140, 80, 0.03) 0%, transparent 30%);
+        pointer-events: none;
+      "></div>
+      
+      <!-- 邊框 -->
+      <div style="position: absolute; inset: 15px; border: 1px solid rgba(180, 140, 80, 0.25); pointer-events: none;"></div>
+      
+      <!-- 頁眉 -->
+      <div style="text-align: center; margin-bottom: 25px;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+          <div style="width: 50px; height: 1px; background: linear-gradient(90deg, transparent, #a08050);"></div>
+          <h2 style="font-size: 20px; color: #c8aa64; margin: 0; letter-spacing: 4px;">虹靈御所八字人生兵法</h2>
+          <div style="width: 50px; height: 1px; background: linear-gradient(270deg, transparent, #a08050);"></div>
+        </div>
+        <p style="font-size: 12px; color: #8c8c8c; margin: 8px 0 0 0; letter-spacing: 2px;">四時軍團戰略命理系統</p>
+        <div style="width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #a08050, transparent); margin-top: 15px;"></div>
+      </div>
+      
+      <!-- 標題 -->
+      <div style="text-align: center; margin: 15px 0 25px 0;">
+        <h3 style="font-size: 22px; color: #dcc88c; margin: 0; letter-spacing: 4px;">
+          ⚔️ 軍團角色詳解 ${pageIdx === 0 ? '(上)' : '(下)'}
+        </h3>
+      </div>
+      
+      <!-- 兩個軍團卡片 -->
+      ${group.map(pillarKey => {
+        const config = legionConfig[pillarKey];
+        const pillar = pillars[pillarKey];
+        const tenGod = tenGods?.[pillarKey];
+        const ganChar = GAN_CHARACTERS[pillar.stem];
+        const zhiChar = ZHI_CHARACTERS[pillar.branch];
+        const commanderAvatar = commanderAvatars[pillar.stem] || '';
+        const advisorAvatar = advisorAvatars[pillar.branch] || '';
+        
+        return `
+          <div style="
+            background: linear-gradient(135deg, rgba(28, 28, 38, 0.9) 0%, rgba(22, 22, 30, 0.9) 100%);
+            border: 2px solid ${config.color}40;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            position: relative;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+          ">
+            <!-- 頂部發光線 -->
+            <div style="position: absolute; top: 0; left: 30px; right: 30px; height: 2px; background: linear-gradient(90deg, transparent, ${config.color}80, transparent);"></div>
+            
+            <!-- 軍團標題 -->
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+              <span style="font-size: 36px; filter: drop-shadow(0 0 8px ${config.color}40);">${config.icon}</span>
+              <div>
+                <h4 style="font-size: 22px; color: ${config.color}; margin: 0; font-weight: bold; letter-spacing: 3px;">${config.name}</h4>
+                <p style="font-size: 12px; color: #8c8c8c; margin: 4px 0 0 0;">${config.description}</p>
+              </div>
+              <div style="margin-left: auto; padding: 10px 20px; background: rgba(15, 15, 20, 0.6); border-radius: 12px; border: 1px solid ${config.color}30;">
+                <span style="font-size: 24px; color: #dcc88c; letter-spacing: 4px;">${pillar.stem}${pillar.branch}</span>
+              </div>
+            </div>
+            
+            <!-- 角色卡片區 -->
+            <div style="display: flex; gap: 20px;">
+              <!-- 主將卡 -->
+              <div style="flex: 1; background: rgba(15, 15, 22, 0.7); border-radius: 12px; padding: 18px; border: 1px solid rgba(200, 170, 100, 0.2);">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                  ${commanderAvatar ? `<img src="${commanderAvatar}" alt="${ganChar?.title || pillar.stem}" style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid ${config.color}60; object-fit: cover; background: #1a1a24;" crossorigin="anonymous" />` : `<div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, ${config.color}30, ${config.color}10); border: 2px solid ${config.color}60; display: flex; align-items: center; justify-content: center; font-size: 24px; color: ${config.color};">${pillar.stem}</div>`}
+                  <div>
+                    <p style="font-size: 11px; color: #787878; margin: 0;">🗡️ 主將・天干</p>
+                    <p style="font-size: 18px; color: #dcc88c; margin: 4px 0 0 0; font-weight: bold;">${ganChar?.title || pillar.stem}</p>
+                    ${tenGod?.stem ? `<p style="font-size: 11px; color: #a0967a; margin: 4px 0 0 0;">十神：${tenGod.stem}</p>` : ''}
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="padding: 10px; background: rgba(74, 222, 128, 0.08); border-radius: 8px; border-left: 3px solid #4ade80;">
+                    <p style="font-size: 10px; color: #4ade80; margin: 0 0 4px 0;">✨ BUFF</p>
+                    <p style="font-size: 12px; color: #a8d8b8; margin: 0; line-height: 1.5;">${ganChar?.buff || '待查詢'}</p>
+                  </div>
+                  <div style="padding: 10px; background: rgba(248, 113, 113, 0.08); border-radius: 8px; border-left: 3px solid #f87171;">
+                    <p style="font-size: 10px; color: #f87171; margin: 0 0 4px 0;">⚠️ DEBUFF</p>
+                    <p style="font-size: 12px; color: #dca8a8; margin: 0; line-height: 1.5;">${ganChar?.debuff || '待查詢'}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 軍師卡 -->
+              <div style="flex: 1; background: rgba(15, 15, 22, 0.7); border-radius: 12px; padding: 18px; border: 1px solid rgba(200, 170, 100, 0.2);">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                  ${advisorAvatar ? `<img src="${advisorAvatar}" alt="${zhiChar?.title || pillar.branch}" style="width: 64px; height: 64px; border-radius: 50%; border: 2px solid ${config.color}60; object-fit: cover; background: #1a1a24;" crossorigin="anonymous" />` : `<div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, ${config.color}30, ${config.color}10); border: 2px solid ${config.color}60; display: flex; align-items: center; justify-content: center; font-size: 24px; color: ${config.color};">${pillar.branch}</div>`}
+                  <div>
+                    <p style="font-size: 11px; color: #787878; margin: 0;">🔮 軍師・地支</p>
+                    <p style="font-size: 18px; color: #dcc88c; margin: 4px 0 0 0; font-weight: bold;">${zhiChar?.title || pillar.branch}</p>
+                    ${tenGod?.branch ? `<p style="font-size: 11px; color: #a0967a; margin: 4px 0 0 0;">十神：${tenGod.branch}</p>` : ''}
+                  </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="padding: 10px; background: rgba(74, 222, 128, 0.08); border-radius: 8px; border-left: 3px solid #4ade80;">
+                    <p style="font-size: 10px; color: #4ade80; margin: 0 0 4px 0;">✨ BUFF</p>
+                    <p style="font-size: 12px; color: #a8d8b8; margin: 0; line-height: 1.5;">${zhiChar?.buff || '待查詢'}</p>
+                  </div>
+                  <div style="padding: 10px; background: rgba(248, 113, 113, 0.08); border-radius: 8px; border-left: 3px solid #f87171;">
+                    <p style="font-size: 10px; color: #f87171; margin: 0 0 4px 0;">⚠️ DEBUFF</p>
+                    <p style="font-size: 12px; color: #dca8a8; margin: 0; line-height: 1.5;">${zhiChar?.debuff || '待查詢'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+      
+      <!-- 頁腳 -->
+      <div style="position: absolute; bottom: 25px; left: 50px; right: 50px;">
+        <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(140, 110, 70, 0.5), transparent); margin-bottom: 12px;"></div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #646464;">
+          <span>${dateStr}</span>
+          <span>虹靈御所｜超烜創意</span>
+          <span>軍團詳解 ${pageIdx + 1}/2</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
 };
 
 // 創建神煞分析頁

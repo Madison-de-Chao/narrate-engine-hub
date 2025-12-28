@@ -198,58 +198,95 @@ interface TocEntry {
   icon: string;
   page: number;
   color: string;
+  summary: string; // 新增：章節摘要
 }
 
 const createTableOfContentsPage = (entries: TocEntry[], dateStr: string): string => {
   const tocRows = entries.map((entry, idx) => `
     <div style="
       display: flex;
-      align-items: center;
-      padding: 16px 20px;
-      background: ${idx % 2 === 0 ? COLORS.bgCard : 'transparent'};
-      border-left: 3px solid ${entry.color};
-      margin-bottom: 2px;
+      align-items: flex-start;
+      padding: 18px 22px;
+      background: ${idx % 2 === 0 ? 'rgba(30, 30, 45, 0.6)' : 'rgba(20, 20, 32, 0.4)'};
+      border-left: 4px solid ${entry.color};
+      margin-bottom: 3px;
+      border-radius: 0 8px 8px 0;
       transition: all 0.3s ease;
     ">
-      <span style="
-        font-size: 24px;
-        margin-right: 16px;
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-      ">${entry.icon}</span>
-      
-      <div style="flex: 1;">
-        <div style="
-          font-size: 16px;
-          color: ${COLORS.textPrimary};
-          font-weight: 500;
-          letter-spacing: 1px;
-          margin-bottom: 4px;
-        ">${entry.title}</div>
-        <div style="
-          font-size: 11px;
-          color: ${COLORS.textMuted};
-          letter-spacing: 0.5px;
-        ">${entry.subtitle}</div>
-      </div>
-      
+      <!-- 圖標區域 -->
       <div style="
+        width: 52px;
+        height: 52px;
+        background: linear-gradient(135deg, ${entry.color}20 0%, ${entry.color}08 100%);
+        border: 1px solid ${entry.color}40;
+        border-radius: 10px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        justify-content: center;
+        margin-right: 18px;
+        flex-shrink: 0;
       ">
-        <div style="
-          width: 80px;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, ${entry.color}40);
-        "></div>
         <span style="
-          font-size: 18px;
-          color: ${entry.color};
-          font-weight: 600;
-          font-family: ${FONTS.mono};
-          min-width: 30px;
-          text-align: right;
-        ">${entry.page}</span>
+          font-size: 26px;
+          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        ">${entry.icon}</span>
+      </div>
+      
+      <!-- 內容區域 -->
+      <div style="flex: 1; min-width: 0;">
+        <!-- 標題行 -->
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+          <span style="
+            font-size: 17px;
+            font-family: ${FONTS.heading};
+            color: ${COLORS.textPrimary};
+            font-weight: 500;
+            letter-spacing: 1.5px;
+          ">${entry.title}</span>
+          <span style="
+            font-size: 10px;
+            color: ${entry.color};
+            margin-left: 10px;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+          ">${entry.subtitle}</span>
+          
+          <!-- 點線連接 -->
+          <div style="
+            flex: 1;
+            height: 1px;
+            margin: 0 16px;
+            background: repeating-linear-gradient(
+              90deg,
+              ${entry.color}30 0px,
+              ${entry.color}30 4px,
+              transparent 4px,
+              transparent 8px
+            );
+          "></div>
+          
+          <!-- 頁碼 -->
+          <span style="
+            font-size: 20px;
+            color: ${entry.color};
+            font-weight: 700;
+            font-family: ${FONTS.mono};
+            min-width: 36px;
+            text-align: right;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px ${entry.color}40;
+          ">${String(entry.page).padStart(2, '0')}</span>
+        </div>
+        
+        <!-- 摘要預覽 -->
+        <p style="
+          font-size: 11px;
+          color: ${COLORS.textMuted};
+          margin: 0;
+          line-height: 1.7;
+          letter-spacing: 0.3px;
+          padding-right: 50px;
+        ">${entry.summary}</p>
       </div>
     </div>
   `).join('');
@@ -270,9 +307,10 @@ const createTableOfContentsPage = (entries: TocEntry[], dateStr: string): string
         position: absolute;
         inset: 0;
         background: 
-          radial-gradient(ellipse 50% 30% at 50% 10%, ${COLORS.gold}08 0%, transparent 50%),
-          radial-gradient(ellipse 40% 40% at 10% 90%, ${COLORS.purple}05 0%, transparent 50%),
-          radial-gradient(ellipse 40% 40% at 90% 90%, ${COLORS.gold}05 0%, transparent 50%);
+          radial-gradient(ellipse 60% 35% at 50% 5%, ${COLORS.gold}06 0%, transparent 60%),
+          radial-gradient(ellipse 45% 45% at 5% 95%, ${COLORS.purple}04 0%, transparent 50%),
+          radial-gradient(ellipse 45% 45% at 95% 95%, ${COLORS.gold}04 0%, transparent 50%),
+          radial-gradient(circle at 50% 50%, ${COLORS.bgSecondary}80 0%, transparent 70%);
         pointer-events: none;
       "></div>
       
@@ -299,46 +337,71 @@ const createTableOfContentsPage = (entries: TocEntry[], dateStr: string): string
       
       ${createHeader('四時軍團戰略命理系統')}
       
-      <!-- 目錄標題 -->
-      <div style="text-align: center; margin: 20px 0 40px 0;">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 15px;">
-          <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.goldDark});"></div>
-          <span style="font-size: 14px; color: ${COLORS.goldDark}; letter-spacing: 6px;">CONTENTS</span>
-          <div style="width: 60px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.goldDark});"></div>
+      <!-- 目錄標題區域 -->
+      <div style="text-align: center; margin: 15px 0 35px 0;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 25px; margin-bottom: 18px;">
+          <div style="width: 70px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.goldDark});"></div>
+          <span style="font-size: 12px; color: ${COLORS.goldDark}; letter-spacing: 8px; text-transform: uppercase;">Contents</span>
+          <div style="width: 70px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.goldDark});"></div>
         </div>
         <h3 style="
-          font-size: 32px;
+          font-size: 36px;
           font-family: ${FONTS.heading};
           color: ${COLORS.goldLight};
-          margin: 0;
+          margin: 0 0 12px 0;
           font-weight: 600;
-          letter-spacing: 12px;
+          letter-spacing: 14px;
+          text-shadow: 0 2px 15px rgba(200, 170, 100, 0.2);
         ">目 錄</h3>
+        <p style="
+          font-size: 11px;
+          color: ${COLORS.textMuted};
+          margin: 0;
+          letter-spacing: 2px;
+        ">點擊章節快速定位 · 探索您的命理全貌</p>
       </div>
       
-      <!-- 目錄列表 -->
+      <!-- 目錄列表容器 -->
       <div style="
-        background: ${COLORS.bgCard};
+        background: linear-gradient(135deg, rgba(25, 25, 40, 0.95) 0%, rgba(20, 20, 35, 0.9) 100%);
         border: 1px solid ${COLORS.border};
-        border-radius: 8px;
+        border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        box-shadow: 
+          0 15px 50px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.03);
       ">
         ${tocRows}
       </div>
       
-      <!-- 裝飾分隔線 -->
+      <!-- 底部裝飾 -->
       <div style="
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-top: 40px;
-        gap: 15px;
+        margin-top: 35px;
+        gap: 20px;
       ">
-        <div style="width: 80px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.border});"></div>
-        <div style="width: 6px; height: 6px; border: 1px solid ${COLORS.goldDark}; transform: rotate(45deg);"></div>
-        <div style="width: 80px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.border});"></div>
+        <div style="width: 100px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.border});"></div>
+        <div style="
+          width: 8px; 
+          height: 8px; 
+          border: 1px solid ${COLORS.goldDark}; 
+          transform: rotate(45deg);
+          background: ${COLORS.gold}20;
+        "></div>
+        <div style="width: 100px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.border});"></div>
       </div>
+      
+      <!-- 提示文字 -->
+      <p style="
+        text-align: center;
+        font-size: 10px;
+        color: ${COLORS.textMuted};
+        margin: 20px 0 0 0;
+        letter-spacing: 1.5px;
+        opacity: 0.7;
+      ">本報告基於傳統八字命理學與現代心理學分析</p>
       
       ${createFooter(dateStr, '第 2 頁')}
     </div>
@@ -715,7 +778,8 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
         subtitle: '天干地支・納音・十神・藏干分析',
         icon: '📜',
         page: currentPage,
-        color: COLORS.gold
+        color: COLORS.gold,
+        summary: '深入解析年、月、日、時四柱的天干地支組合，揭示命格根基與人生架構。'
       });
       currentPage++;
     }
@@ -726,7 +790,8 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
         subtitle: `共 ${reportData.shensha.length} 個神煞・吉凶解讀`,
         icon: '✨',
         page: currentPage,
-        color: COLORS.purple
+        color: COLORS.purple,
+        summary: '詳述命盤中各神煞的意涵與影響，助您掌握命運中的吉凶機遇。'
       });
       currentPage += shenshaPageCount;
     }
@@ -737,17 +802,38 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
         subtitle: '主將・軍師・增益減益分析',
         icon: '⚔️',
         page: currentPage,
-        color: COLORS.blue
+        color: COLORS.blue,
+        summary: '以軍團隱喻呈現命格特質，包含統帥、謀士與各軍成員的能力解析。'
       });
       currentPage += legionDetailsPageCount;
     }
     
-    // 軍團故事
+    // 軍團故事配置（含摘要）
     const storyConfig = {
-      year: { title: '👑 祖源軍團故事', subtitle: '家族傳承・童年根基', color: COLORS.gold },
-      month: { title: '🤝 關係軍團故事', subtitle: '社交人脈・事業發展', color: COLORS.green },
-      day: { title: '⭐ 核心軍團故事', subtitle: '核心自我・婚姻感情', color: COLORS.purple },
-      hour: { title: '🚀 未來軍團故事', subtitle: '未來規劃・子女傳承', color: COLORS.orange }
+      year: { 
+        title: '👑 祖源軍團故事', 
+        subtitle: '家族傳承・童年根基', 
+        color: COLORS.gold,
+        summary: '探索家族血脈的傳承力量，解讀童年經歷如何塑造您的人生基調。'
+      },
+      month: { 
+        title: '🤝 關係軍團故事', 
+        subtitle: '社交人脈・事業發展', 
+        color: COLORS.green,
+        summary: '揭示人際互動的模式與職場發展的潛能，助您建立成功的社交網絡。'
+      },
+      day: { 
+        title: '⭐ 核心軍團故事', 
+        subtitle: '核心自我・婚姻感情', 
+        color: COLORS.purple,
+        summary: '深入剖析內在自我與情感世界，理解真正的您以及理想的伴侶關係。'
+      },
+      hour: { 
+        title: '🚀 未來軍團故事', 
+        subtitle: '未來規劃・子女傳承', 
+        color: COLORS.orange,
+        summary: '展望人生下半場的發展方向，以及與後代之間的緣分與傳承。'
+      }
     };
     
     (['year', 'month', 'day', 'hour'] as const).forEach(type => {
@@ -758,7 +844,8 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
           subtitle: config.subtitle,
           icon: type === 'year' ? '👑' : type === 'month' ? '🤝' : type === 'day' ? '⭐' : '🚀',
           page: currentPage,
-          color: config.color
+          color: config.color,
+          summary: config.summary
         });
         currentPage++;
       }

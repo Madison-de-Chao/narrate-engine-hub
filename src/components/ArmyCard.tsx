@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Shield, Swords, Sparkles } from "lucide-react";
 import { getCommanderAvatar } from "@/assets/commanders";
 import { getAdvisorAvatar } from "@/assets/advisors";
+import { AvatarWithPreview, getWuxingColors } from "@/components/AvatarWithPreview";
 
 interface CommanderRole {
   role: string;
@@ -32,28 +31,38 @@ interface ArmyCardProps {
   characterColor?: string;
 }
 
+// 天干對應五行
+const GAN_TO_ELEMENT: Record<string, string> = {
+  '甲': '木', '乙': '木', '丙': '火', '丁': '火',
+  '戊': '土', '己': '土', '庚': '金', '辛': '金',
+  '壬': '水', '癸': '水',
+};
+
+// 地支對應五行
+const ZHI_TO_ELEMENT: Record<string, string> = {
+  '子': '水', '丑': '土', '寅': '木', '卯': '木',
+  '辰': '土', '巳': '火', '午': '火', '未': '土',
+  '申': '金', '酉': '金', '戌': '土', '亥': '水',
+};
+
 export const ArmyCard = ({ type, character, role, legionColor, characterColor }: ArmyCardProps) => {
-  const [imageLoading, setImageLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
   const isCommander = type === 'commander';
   const commanderRole = role as CommanderRole;
   const advisorRole = role as AdvisorRole;
   
-  // 取得角色頭像 - 與 LegionCharacterCard 一致的邏輯
-  const getAvatarSrc = () => {
-    if (isCommander) {
-      // 天干角色（指揮官）
-      return getCommanderAvatar(character);
-    } else {
-      // 地支角色（軍師）
-      return getAdvisorAvatar(character);
-    }
-  };
+  // 取得角色頭像
+  const avatarSrc = isCommander 
+    ? getCommanderAvatar(character) 
+    : getAdvisorAvatar(character);
   
-  const avatarSrc = getAvatarSrc();
+  // 獲取五行屬性
+  const element = isCommander 
+    ? GAN_TO_ELEMENT[character] 
+    : ZHI_TO_ELEMENT[character];
 
-  // 使用角色專屬顏色或預設
-  const accentColor = characterColor || (isCommander ? '#8B5CF6' : '#22C55E');
+  // 使用五行顏色或角色專屬顏色
+  const wuxingColors = getWuxingColors(character, characterColor);
+  const accentColor = characterColor || wuxingColors.primary;
 
   return (
     <div className={`
@@ -99,104 +108,16 @@ export const ArmyCard = ({ type, character, role, legionColor, characterColor }:
         {/* 角色頭像與名稱 */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            {/* 頭像 - 帶有載入動畫與失敗 fallback */}
-            <div 
-              className="w-16 h-16 rounded-lg overflow-hidden border-2 shadow-lg relative"
-              style={{ borderColor: `${accentColor}60` }}
-            >
-              <AnimatePresence mode="wait">
-                {avatarSrc && !imageError ? (
-                  <>
-                    {/* 載入骨架動畫 */}
-                    {imageLoading && (
-                      <motion.div
-                        key="skeleton"
-                        initial={{ opacity: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.3 }}
-                        className="absolute inset-0 rounded-lg"
-                        style={{
-                          background: `linear-gradient(135deg, ${accentColor}30, ${accentColor}10)`,
-                        }}
-                      >
-                        {/* 脈動光暈效果 */}
-                        <motion.div
-                          className="absolute inset-0 rounded-lg"
-                          style={{ background: `radial-gradient(circle, ${accentColor}40 0%, transparent 70%)` }}
-                          animate={{ 
-                            scale: [1, 1.2, 1],
-                            opacity: [0.5, 0.8, 0.5]
-                          }}
-                          transition={{ 
-                            duration: 1.5, 
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                        />
-                        {/* 掃描線動畫 */}
-                        <motion.div
-                          className="absolute inset-0"
-                          style={{
-                            background: `linear-gradient(90deg, transparent, ${accentColor}50, transparent)`,
-                          }}
-                          animate={{ x: ['-100%', '100%'] }}
-                          transition={{ 
-                            duration: 1.2, 
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                        />
-                      </motion.div>
-                    )}
-                    {/* 實際頭像 */}
-                    <motion.img 
-                      key="avatar"
-                      src={avatarSrc} 
-                      alt={`${character} ${isCommander ? '指揮官' : '軍師'}`}
-                      className="w-full h-full object-cover"
-                      initial={{ opacity: 0, scale: 1.1 }}
-                      animate={{ 
-                        opacity: imageLoading ? 0 : 1, 
-                        scale: imageLoading ? 1.1 : 1 
-                      }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
-                      onLoad={() => setImageLoading(false)}
-                      onError={() => {
-                        setImageLoading(false);
-                        setImageError(true);
-                      }}
-                    />
-                  </>
-                ) : (
-                  <motion.div 
-                    key="fallback"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="w-full h-full flex items-center justify-center"
-                    style={{ 
-                      background: `linear-gradient(135deg, ${accentColor}20, ${accentColor}05)`
-                    }}
-                  >
-                    <motion.span 
-                      className="text-3xl font-bold"
-                      style={{ color: accentColor }}
-                      animate={{ 
-                        textShadow: [
-                          `0 0 10px ${accentColor}40`,
-                          `0 0 20px ${accentColor}60`,
-                          `0 0 10px ${accentColor}40`
-                        ]
-                      }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      {character}
-                    </motion.span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            {/* 頭像 - 使用 AvatarWithPreview 組件 */}
+            <AvatarWithPreview
+              src={avatarSrc}
+              alt={`${character} ${isCommander ? '指揮官' : '軍師'}`}
+              character={character}
+              title={isCommander ? commanderRole.role : advisorRole.role}
+              element={element}
+              accentColor={accentColor}
+              size="md"
+            />
             <div>
               <p className="text-2xl font-bold" style={{ color: accentColor }}>
                 {character}

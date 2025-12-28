@@ -111,14 +111,62 @@ const defaultPdfOptions: PdfOptions = {
   includeHourStory: true,
 };
 
+// 共用樣式常量 - 提升一致性與專業感
+const COLORS = {
+  gold: '#c8aa64',
+  goldLight: '#dcc88c',
+  goldDark: '#a08050',
+  bgPrimary: '#0a0a0f',
+  bgSecondary: '#141420',
+  bgCard: 'rgba(25, 25, 35, 0.9)',
+  textPrimary: '#e8e8e8',
+  textSecondary: '#a0a0a0',
+  textMuted: '#707070',
+  border: 'rgba(180, 140, 80, 0.3)',
+  green: '#4ade80',
+  red: '#f87171',
+  purple: '#a855f7',
+  orange: '#f97316',
+  blue: '#60a5fa',
+};
+
+const FONTS = {
+  base: '"Noto Serif TC", "Noto Sans TC", "Microsoft JhengHei", serif',
+  heading: '"Noto Serif TC", "Source Han Serif TC", serif',
+};
+
+// 創建共用頁眉組件
+const createHeader = (subtitle?: string) => `
+  <div style="text-align: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid ${COLORS.border};">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+      <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.goldDark});"></div>
+      <h2 style="font-size: 18px; color: ${COLORS.gold}; margin: 0; letter-spacing: 6px; font-weight: 500;">虹靈御所</h2>
+      <div style="width: 60px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.goldDark});"></div>
+    </div>
+    ${subtitle ? `<p style="font-size: 11px; color: ${COLORS.textMuted}; margin: 8px 0 0 0; letter-spacing: 3px;">${subtitle}</p>` : ''}
+  </div>
+`;
+
+// 創建共用頁腳組件
+const createFooter = (dateStr: string, pageInfo: string) => `
+  <div style="position: absolute; bottom: 30px; left: 50px; right: 50px;">
+    <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.border}, transparent); margin-bottom: 15px;"></div>
+    <div style="display: flex; justify-content: space-between; font-size: 10px; color: ${COLORS.textMuted}; letter-spacing: 1px;">
+      <span>${dateStr}</span>
+      <span style="color: ${COLORS.goldDark};">虹靈御所 · 超烜創意</span>
+      <span>${pageInfo}</span>
+    </div>
+  </div>
+`;
+
 // 創建報告 HTML 容器
 const createReportContainer = (reportData: ReportData, coverData?: CoverPageData, options: PdfOptions = defaultPdfOptions): HTMLDivElement => {
   const container = document.createElement('div');
   container.style.cssText = `
     width: 794px;
-    background: linear-gradient(135deg, #0f0f14 0%, #1a1a24 50%, #0f0f14 100%);
-    color: #e5e5e5;
-    font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    background: ${COLORS.bgPrimary};
+    color: ${COLORS.textPrimary};
+    font-family: ${FONTS.base};
     padding: 0;
     position: absolute;
     left: -9999px;
@@ -136,450 +184,218 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
 
   const genderText = reportData.gender === 'male' ? '乾造（男）' : '坤造（女）';
 
-  // 封面頁
+  // 封面頁 - 精緻專業設計
   const coverPage = `
     <div style="
       width: 794px;
       min-height: 1123px;
-      background: linear-gradient(180deg, #0a0a0f 0%, #141420 50%, #0a0a0f 100%);
+      background: linear-gradient(180deg, ${COLORS.bgPrimary} 0%, ${COLORS.bgSecondary} 50%, ${COLORS.bgPrimary} 100%);
       position: relative;
-      padding: 60px 50px;
+      padding: 0;
       box-sizing: border-box;
       page-break-after: always;
       overflow: hidden;
     ">
-      <!-- 背景紋理 -->
-      <div style="
-        position: absolute;
-        inset: 0;
-        background: 
-          radial-gradient(circle at 20% 20%, rgba(180, 140, 80, 0.03) 0%, transparent 40%),
-          radial-gradient(circle at 80% 80%, rgba(180, 140, 80, 0.03) 0%, transparent 40%),
-          radial-gradient(circle at 50% 50%, rgba(100, 80, 60, 0.02) 0%, transparent 60%);
-        pointer-events: none;
-      "></div>
+      <!-- 精緻邊框 -->
+      <div style="position: absolute; inset: 20px; border: 2px solid ${COLORS.gold}; pointer-events: none;"></div>
+      <div style="position: absolute; inset: 28px; border: 1px solid ${COLORS.border}; pointer-events: none;"></div>
       
-      <!-- 水印圖案 -->
-      <div style="
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 500px;
-        height: 500px;
-        background: radial-gradient(circle, rgba(180, 140, 80, 0.02) 0%, transparent 70%);
-        border-radius: 50%;
-        pointer-events: none;
-      "></div>
-      
-      <!-- 八卦水印 -->
-      <div style="
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(22.5deg);
-        width: 400px;
-        height: 400px;
-        border: 1px dashed rgba(180, 140, 80, 0.05);
-        border-radius: 50%;
-        pointer-events: none;
-      "></div>
-      <div style="
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(45deg);
-        width: 350px;
-        height: 350px;
-        border: 1px dashed rgba(180, 140, 80, 0.04);
-        border-radius: 50%;
-        pointer-events: none;
-      "></div>
-      
-      <!-- 外層邊框 -->
-      <div style="
-        position: absolute;
-        inset: 15px;
-        border: 3px solid rgba(180, 140, 80, 0.6);
-        pointer-events: none;
-        box-shadow: 0 0 30px rgba(180, 140, 80, 0.15) inset;
-      "></div>
-      <!-- 內層邊框 -->
-      <div style="
-        position: absolute;
-        inset: 22px;
-        border: 1px solid rgba(180, 140, 80, 0.4);
-        pointer-events: none;
-      "></div>
-      <div style="
-        position: absolute;
-        inset: 28px;
-        border: 1px solid rgba(180, 140, 80, 0.2);
-        pointer-events: none;
-      "></div>
-      
-      <!-- 角落裝飾 - 左上 -->
-      <div style="position: absolute; top: 20px; left: 20px; width: 60px; height: 60px;">
-        <div style="position: absolute; top: 0; left: 0; width: 40px; height: 3px; background: linear-gradient(90deg, #c8aa64, transparent);"></div>
-        <div style="position: absolute; top: 0; left: 0; width: 3px; height: 40px; background: linear-gradient(180deg, #c8aa64, transparent);"></div>
-        <div style="position: absolute; top: 5px; left: 5px; width: 20px; height: 20px; border-left: 2px solid #a08050; border-top: 2px solid #a08050;"></div>
-        <div style="position: absolute; top: 8px; left: 8px; width: 6px; height: 6px; background: #c8aa64; transform: rotate(45deg);"></div>
+      <!-- 角落裝飾 -->
+      <div style="position: absolute; top: 20px; left: 20px; width: 40px; height: 40px;">
+        <div style="position: absolute; top: 0; left: 0; width: 25px; height: 2px; background: ${COLORS.gold};"></div>
+        <div style="position: absolute; top: 0; left: 0; width: 2px; height: 25px; background: ${COLORS.gold};"></div>
       </div>
-      <!-- 角落裝飾 - 右上 -->
-      <div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 60px;">
-        <div style="position: absolute; top: 0; right: 0; width: 40px; height: 3px; background: linear-gradient(270deg, #c8aa64, transparent);"></div>
-        <div style="position: absolute; top: 0; right: 0; width: 3px; height: 40px; background: linear-gradient(180deg, #c8aa64, transparent);"></div>
-        <div style="position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; border-right: 2px solid #a08050; border-top: 2px solid #a08050;"></div>
-        <div style="position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; background: #c8aa64; transform: rotate(45deg);"></div>
+      <div style="position: absolute; top: 20px; right: 20px; width: 40px; height: 40px;">
+        <div style="position: absolute; top: 0; right: 0; width: 25px; height: 2px; background: ${COLORS.gold};"></div>
+        <div style="position: absolute; top: 0; right: 0; width: 2px; height: 25px; background: ${COLORS.gold};"></div>
       </div>
-      <!-- 角落裝飾 - 左下 -->
-      <div style="position: absolute; bottom: 20px; left: 20px; width: 60px; height: 60px;">
-        <div style="position: absolute; bottom: 0; left: 0; width: 40px; height: 3px; background: linear-gradient(90deg, #c8aa64, transparent);"></div>
-        <div style="position: absolute; bottom: 0; left: 0; width: 3px; height: 40px; background: linear-gradient(0deg, #c8aa64, transparent);"></div>
-        <div style="position: absolute; bottom: 5px; left: 5px; width: 20px; height: 20px; border-left: 2px solid #a08050; border-bottom: 2px solid #a08050;"></div>
-        <div style="position: absolute; bottom: 8px; left: 8px; width: 6px; height: 6px; background: #c8aa64; transform: rotate(45deg);"></div>
+      <div style="position: absolute; bottom: 20px; left: 20px; width: 40px; height: 40px;">
+        <div style="position: absolute; bottom: 0; left: 0; width: 25px; height: 2px; background: ${COLORS.gold};"></div>
+        <div style="position: absolute; bottom: 0; left: 0; width: 2px; height: 25px; background: ${COLORS.gold};"></div>
       </div>
-      <!-- 角落裝飾 - 右下 -->
-      <div style="position: absolute; bottom: 20px; right: 20px; width: 60px; height: 60px;">
-        <div style="position: absolute; bottom: 0; right: 0; width: 40px; height: 3px; background: linear-gradient(270deg, #c8aa64, transparent);"></div>
-        <div style="position: absolute; bottom: 0; right: 0; width: 3px; height: 40px; background: linear-gradient(0deg, #c8aa64, transparent);"></div>
-        <div style="position: absolute; bottom: 5px; right: 5px; width: 20px; height: 20px; border-right: 2px solid #a08050; border-bottom: 2px solid #a08050;"></div>
-        <div style="position: absolute; bottom: 8px; right: 8px; width: 6px; height: 6px; background: #c8aa64; transform: rotate(45deg);"></div>
+      <div style="position: absolute; bottom: 20px; right: 20px; width: 40px; height: 40px;">
+        <div style="position: absolute; bottom: 0; right: 0; width: 25px; height: 2px; background: ${COLORS.gold};"></div>
+        <div style="position: absolute; bottom: 0; right: 0; width: 2px; height: 25px; background: ${COLORS.gold};"></div>
       </div>
       
-      <!-- 頂部裝飾線 -->
-      <div style="
-        position: absolute;
-        top: 50px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 200px;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #b48c50, #c8aa64, #b48c50, transparent);
-      "></div>
-      
-      <!-- 主標題區域 -->
-      <div style="text-align: center; margin-top: 70px; position: relative;">
-        <!-- 發光背景 -->
-        <div style="
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 300px;
-          height: 100px;
-          background: radial-gradient(ellipse, rgba(200, 170, 100, 0.1) 0%, transparent 70%);
-          filter: blur(20px);
-        "></div>
-        <h1 style="
-          font-size: 52px;
-          color: #c8aa64;
-          margin: 0 0 15px 0;
-          font-weight: bold;
-          letter-spacing: 12px;
-          text-shadow: 0 0 20px rgba(200, 170, 100, 0.4), 0 2px 10px rgba(0, 0, 0, 0.5);
-          position: relative;
-        ">虹靈御所</h1>
-        <p style="
-          font-size: 26px;
-          color: #a08c5a;
-          margin: 0;
-          letter-spacing: 6px;
-          text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
-        ">八字人生兵法命盤</p>
+      <!-- 主內容區 -->
+      <div style="padding: 80px 60px; height: calc(100% - 160px); display: flex; flex-direction: column;">
         
-        <!-- 裝飾分隔線 -->
-        <div style="
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 35px auto;
-          width: 350px;
-        ">
-          <div style="flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #b48c50);"></div>
-          <div style="width: 8px; height: 8px; background: #c8aa64; transform: rotate(45deg); margin: 0 15px;"></div>
-          <div style="width: 12px; height: 12px; border: 2px solid #c8aa64; transform: rotate(45deg); margin: 0 5px;"></div>
-          <div style="width: 8px; height: 8px; background: #c8aa64; transform: rotate(45deg); margin: 0 15px;"></div>
-          <div style="flex: 1; height: 1px; background: linear-gradient(270deg, transparent, #b48c50);"></div>
-        </div>
-      </div>
-      
-      <!-- 命主資訊卡片 -->
-      <div style="
-        text-align: center;
-        margin-top: 40px;
-        padding: 30px 40px;
-        background: linear-gradient(135deg, rgba(30, 28, 25, 0.9) 0%, rgba(25, 22, 20, 0.9) 100%);
-        border: 1px solid rgba(180, 140, 80, 0.4);
-        border-radius: 12px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        position: relative;
-      ">
-        <!-- 卡片角落裝飾 -->
-        <div style="position: absolute; top: -3px; left: -3px; width: 15px; height: 15px; border-left: 2px solid #c8aa64; border-top: 2px solid #c8aa64;"></div>
-        <div style="position: absolute; top: -3px; right: -3px; width: 15px; height: 15px; border-right: 2px solid #c8aa64; border-top: 2px solid #c8aa64;"></div>
-        <div style="position: absolute; bottom: -3px; left: -3px; width: 15px; height: 15px; border-left: 2px solid #c8aa64; border-bottom: 2px solid #c8aa64;"></div>
-        <div style="position: absolute; bottom: -3px; right: -3px; width: 15px; height: 15px; border-right: 2px solid #c8aa64; border-bottom: 2px solid #c8aa64;"></div>
-        
-        <p style="font-size: 14px; color: #8c8270; margin: 0 0 10px 0; letter-spacing: 4px;">命主</p>
-        <h2 style="
-          font-size: 48px;
-          color: #dcc88c;
-          margin: 0 0 10px 0;
-          font-weight: bold;
-          letter-spacing: 8px;
-          text-shadow: 0 2px 10px rgba(220, 200, 140, 0.3);
-        ">${reportData.name}</h2>
-        <p style="font-size: 16px; color: #a09080; margin: 0;">${genderText}</p>
-        
-        <div style="
-          width: 100px;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, #645032, transparent);
-          margin: 20px auto;
-        "></div>
-        <p style="font-size: 12px; color: #787878; margin: 0 0 8px 0;">出生時間</p>
-        <p style="font-size: 20px; color: #b4aa8c; margin: 0; letter-spacing: 2px;">${reportData.birthDate}</p>
-      </div>
-      
-      <!-- 四柱展示區 -->
-      <div style="margin-top: 50px; position: relative;">
-        <div style="
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 25px;
-        ">
-          <div style="flex: 1; max-width: 150px; height: 1px; background: linear-gradient(90deg, transparent, #a08050);"></div>
-          <p style="font-size: 16px; color: #a08c5a; margin: 0 20px; letter-spacing: 4px;">四柱八字</p>
-          <div style="flex: 1; max-width: 150px; height: 1px; background: linear-gradient(270deg, transparent, #a08050);"></div>
+        <!-- 品牌標題 -->
+        <div style="text-align: center; margin-bottom: 50px;">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 25px; margin-bottom: 20px;">
+            <div style="width: 80px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.gold});"></div>
+            <span style="font-size: 14px; color: ${COLORS.goldDark}; letter-spacing: 8px;">八字人生兵法</span>
+            <div style="width: 80px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.gold});"></div>
+          </div>
+          <h1 style="
+            font-size: 56px;
+            font-family: ${FONTS.heading};
+            color: ${COLORS.gold};
+            margin: 0;
+            font-weight: 600;
+            letter-spacing: 16px;
+            text-shadow: 0 4px 20px rgba(200, 170, 100, 0.3);
+          ">虹靈御所</h1>
+          <p style="font-size: 16px; color: ${COLORS.textMuted}; margin: 15px 0 0 0; letter-spacing: 4px;">個人命理研究報告</p>
         </div>
         
-        <div style="display: flex; justify-content: center; gap: 25px;">
-          ${['year', 'month', 'day', 'hour'].map((key, idx) => {
-            const pillar = reportData.pillars[key as keyof typeof reportData.pillars];
-            const labels = ['年柱', '月柱', '日柱', '時柱'];
-            const icons = ['👑', '🤝', '⭐', '🚀'];
-            return `
-              <div style="text-align: center; position: relative;">
-                <p style="font-size: 12px; color: #646464; margin: 0 0 8px 0;">${icons[idx]} ${labels[idx]}</p>
-                <div style="
-                  background: linear-gradient(180deg, rgba(35, 32, 28, 0.95) 0%, rgba(25, 22, 18, 0.95) 100%);
-                  border: 2px solid rgba(180, 140, 80, 0.5);
-                  border-radius: 12px;
-                  padding: 20px 25px;
-                  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-                  position: relative;
-                ">
-                  <!-- 頂部發光 -->
-                  <div style="
-                    position: absolute;
-                    top: 0;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    width: 60%;
-                    height: 2px;
-                    background: linear-gradient(90deg, transparent, #c8aa64, transparent);
-                  "></div>
-                  <p style="font-size: 32px; color: #dcc88c; margin: 0; text-shadow: 0 0 10px rgba(220, 200, 140, 0.3);">${pillar.stem}</p>
-                  <div style="width: 40px; height: 2px; background: linear-gradient(90deg, transparent, rgba(180, 140, 80, 0.5), transparent); margin: 10px auto;"></div>
-                  <p style="font-size: 32px; color: #b4a078; margin: 0;">${pillar.branch}</p>
-                </div>
-                <p style="font-size: 11px; color: #787864; margin: 10px 0 0 0;">${reportData.nayin[key as keyof typeof reportData.nayin]}</p>
-              </div>
-            `;
-          }).join('')}
+        <!-- 命主資訊卡片 -->
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <div style="
+            text-align: center;
+            padding: 50px 80px;
+            background: ${COLORS.bgCard};
+            border: 1px solid ${COLORS.border};
+            border-radius: 4px;
+          ">
+            <p style="font-size: 12px; color: ${COLORS.textMuted}; margin: 0 0 15px 0; letter-spacing: 6px;">命主</p>
+            <h2 style="
+              font-size: 52px;
+              font-family: ${FONTS.heading};
+              color: ${COLORS.goldLight};
+              margin: 0 0 15px 0;
+              font-weight: 600;
+              letter-spacing: 10px;
+            ">${reportData.name}</h2>
+            <p style="font-size: 15px; color: ${COLORS.textSecondary}; margin: 0 0 30px 0; letter-spacing: 2px;">${genderText}</p>
+            
+            <div style="width: 120px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.goldDark}, transparent); margin: 0 auto 25px;"></div>
+            
+            <p style="font-size: 11px; color: ${COLORS.textMuted}; margin: 0 0 8px 0; letter-spacing: 3px;">出生時間</p>
+            <p style="font-size: 18px; color: ${COLORS.textSecondary}; margin: 0; letter-spacing: 2px;">${reportData.birthDate}</p>
+          </div>
+          
+          <!-- 四柱展示 -->
+          <div style="margin-top: 50px;">
+            <div style="display: flex; justify-content: center; gap: 20px;">
+              ${['year', 'month', 'day', 'hour'].map((key, idx) => {
+                const pillar = reportData.pillars[key as keyof typeof reportData.pillars];
+                const labels = ['年柱', '月柱', '日柱', '時柱'];
+                const pillarColors = [COLORS.gold, COLORS.green, COLORS.purple, COLORS.orange];
+                return `
+                  <div style="text-align: center;">
+                    <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 0 0 8px 0; letter-spacing: 2px;">${labels[idx]}</p>
+                    <div style="
+                      background: ${COLORS.bgCard};
+                      border: 1px solid ${pillarColors[idx]}40;
+                      border-top: 3px solid ${pillarColors[idx]};
+                      padding: 18px 22px;
+                      min-width: 70px;
+                    ">
+                      <p style="font-size: 28px; color: ${COLORS.goldLight}; margin: 0; font-family: ${FONTS.heading};">${pillar.stem}</p>
+                      <div style="width: 30px; height: 1px; background: ${pillarColors[idx]}40; margin: 8px auto;"></div>
+                      <p style="font-size: 28px; color: ${COLORS.textSecondary}; margin: 0; font-family: ${FONTS.heading};">${pillar.branch}</p>
+                    </div>
+                    <p style="font-size: 9px; color: ${COLORS.textMuted}; margin: 8px 0 0 0;">${reportData.nayin[key as keyof typeof reportData.nayin]}</p>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+        
+        <!-- 底部資訊 -->
+        <div style="text-align: center; margin-top: auto;">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
+            <div style="width: 100px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.border});"></div>
+            <div style="width: 6px; height: 6px; border: 1px solid ${COLORS.goldDark}; transform: rotate(45deg);"></div>
+            <div style="width: 100px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.border});"></div>
+          </div>
+          <p style="font-size: 11px; color: ${COLORS.textMuted}; margin: 0 0 8px 0; font-style: italic; letter-spacing: 1px;">「命理展示的是一條相對好走但不一定是你要走的路，選擇權在於你」</p>
+          <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 0; letter-spacing: 2px;">${dateStr} 製表</p>
         </div>
       </div>
       
       <!-- 印章 -->
       <div style="
         position: absolute;
-        right: 70px;
-        bottom: 130px;
-        width: 90px;
-        height: 90px;
-        border: 3px solid #c84040;
-        transform: rotate(-5deg);
-        box-shadow: 0 4px 15px rgba(200, 64, 64, 0.3);
+        right: 60px;
+        bottom: 100px;
+        width: 70px;
+        height: 70px;
+        border: 2px solid #c84040;
+        transform: rotate(-8deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
       ">
-        <div style="
-          position: absolute;
-          inset: 4px;
-          border: 2px solid #c84040;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <span style="
-            font-size: 28px;
-            color: #c84040;
-            font-weight: bold;
-            letter-spacing: 4px;
-            text-shadow: 0 0 5px rgba(200, 64, 64, 0.5);
-          ">御所</span>
-        </div>
-      </div>
-      
-      <!-- 底部區域 -->
-      <div style="
-        position: absolute;
-        bottom: 45px;
-        left: 50px;
-        right: 50px;
-        text-align: center;
-      ">
-        <!-- 裝飾分隔線 -->
-        <div style="
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 20px;
-        ">
-          <div style="flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #8c6e3c);"></div>
-          <div style="width: 6px; height: 6px; border: 1px solid #8c6e3c; transform: rotate(45deg); margin: 0 10px;"></div>
-          <div style="flex: 1; height: 1px; background: linear-gradient(270deg, transparent, #8c6e3c);"></div>
-        </div>
-        <p style="font-size: 12px; color: #787878; margin: 0 0 5px 0; font-style: italic;">「命理展示的是一條相對好走但不一定是你要走的路」</p>
-        <p style="font-size: 12px; color: #646464; margin: 0 0 15px 0;">選擇權在於你</p>
-        <p style="font-size: 10px; color: #505050; margin: 0;">${dateStr} 製表 ｜ 虹靈御所・超烜創意</p>
+        <span style="font-size: 22px; color: #c84040; font-weight: bold; letter-spacing: 2px;">御所</span>
       </div>
     </div>
   `;
 
-  // 四柱詳解頁
+  // 四柱詳解頁 - 優化版
   const pillarLabels = {
-    year: { name: '年柱', legion: '祖源軍團', icon: '👑' },
-    month: { name: '月柱', legion: '關係軍團', icon: '🤝' },
-    day: { name: '日柱', legion: '核心軍團', icon: '⭐' },
-    hour: { name: '時柱', legion: '未來軍團', icon: '🚀' }
+    year: { name: '年柱', legion: '祖源軍團', icon: '👑', color: COLORS.gold },
+    month: { name: '月柱', legion: '關係軍團', icon: '🤝', color: COLORS.green },
+    day: { name: '日柱', legion: '核心軍團', icon: '⭐', color: COLORS.purple },
+    hour: { name: '時柱', legion: '未來軍團', icon: '🚀', color: COLORS.orange }
   };
 
   const pillarsPage = `
     <div style="
       width: 794px;
       min-height: 1123px;
-      background: linear-gradient(180deg, #0f0f14 0%, #141420 100%);
+      background: linear-gradient(180deg, ${COLORS.bgPrimary} 0%, ${COLORS.bgSecondary} 100%);
       position: relative;
       padding: 40px 50px;
       box-sizing: border-box;
       page-break-after: always;
       overflow: hidden;
     ">
-      <!-- 背景裝飾 -->
-      <div style="
-        position: absolute;
-        inset: 0;
-        background: 
-          radial-gradient(circle at 10% 90%, rgba(180, 140, 80, 0.02) 0%, transparent 30%),
-          radial-gradient(circle at 90% 10%, rgba(180, 140, 80, 0.02) 0%, transparent 30%);
-        pointer-events: none;
-      "></div>
-      
       <!-- 邊框 -->
-      <div style="position: absolute; inset: 15px; border: 1px solid rgba(180, 140, 80, 0.3); pointer-events: none;"></div>
+      <div style="position: absolute; inset: 15px; border: 1px solid ${COLORS.border}; pointer-events: none;"></div>
       
-      <!-- 頁眉 -->
-      <div style="text-align: center; margin-bottom: 30px; position: relative;">
-        <div style="
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 15px;
-        ">
-          <div style="width: 50px; height: 1px; background: linear-gradient(90deg, transparent, #a08050);"></div>
-          <h2 style="font-size: 20px; color: #c8aa64; margin: 0; letter-spacing: 4px;">虹靈御所八字人生兵法</h2>
-          <div style="width: 50px; height: 1px; background: linear-gradient(270deg, transparent, #a08050);"></div>
-        </div>
-        <p style="font-size: 12px; color: #8c8c8c; margin: 8px 0 0 0; letter-spacing: 2px;">四時軍團戰略命理系統</p>
-        <div style="width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #a08050, transparent); margin-top: 20px;"></div>
-      </div>
+      ${createHeader('四時軍團戰略命理系統')}
       
       <!-- 標題 -->
-      <div style="text-align: center; margin: 25px 0 35px 0; position: relative;">
-        <div style="
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 200px;
-          height: 50px;
-          background: radial-gradient(ellipse, rgba(200, 170, 100, 0.08) 0%, transparent 70%);
-        "></div>
-        <h3 style="font-size: 24px; color: #dcc88c; margin: 0; letter-spacing: 6px; text-shadow: 0 0 15px rgba(200, 170, 100, 0.2);">四柱命盤詳解</h3>
+      <div style="text-align: center; margin: 15px 0 30px 0;">
+        <h3 style="font-size: 22px; color: ${COLORS.goldLight}; margin: 0; letter-spacing: 5px; font-weight: 500;">四柱命盤詳解</h3>
       </div>
       
-      <!-- 四柱卡片 -->
-      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 35px;">
+      <!-- 四柱卡片網格 -->
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-bottom: 25px;">
         ${(['year', 'month', 'day', 'hour'] as const).map(key => {
           const pillar = reportData.pillars[key];
           const nayin = reportData.nayin[key];
           const tenGod = reportData.tenGods?.[key];
           const hidden = reportData.hiddenStems?.[key] || [];
           const label = pillarLabels[key];
-          const colors = {
-            year: '#fbbf24',
-            month: '#4ade80',
-            day: '#c084fc',
-            hour: '#f97316'
-          };
-          const color = colors[key];
           return `
             <div style="
-              background: linear-gradient(135deg, rgba(28, 28, 38, 0.9) 0%, rgba(22, 22, 30, 0.9) 100%);
-              border: 1px solid ${color}40;
-              border-radius: 12px;
+              background: ${COLORS.bgCard};
+              border: 1px solid ${label.color}30;
+              border-left: 4px solid ${label.color};
               padding: 20px;
-              position: relative;
-              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             ">
-              <!-- 頂部發光條 -->
-              <div style="
-                position: absolute;
-                top: 0;
-                left: 20px;
-                right: 20px;
-                height: 2px;
-                background: linear-gradient(90deg, transparent, ${color}80, transparent);
-              "></div>
-              
               <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-                <span style="font-size: 24px;">${label.icon}</span>
+                <span style="font-size: 22px;">${label.icon}</span>
                 <div>
-                  <span style="font-size: 16px; color: ${color}; font-weight: bold;">${label.name}</span>
-                  <span style="font-size: 12px; color: #787878; margin-left: 8px;">${label.legion}</span>
+                  <span style="font-size: 15px; color: ${label.color}; font-weight: 600;">${label.name}</span>
+                  <span style="font-size: 10px; color: ${COLORS.textMuted}; margin-left: 8px;">${label.legion}</span>
                 </div>
               </div>
               
-              <div style="
-                text-align: center;
-                padding: 15px;
-                background: rgba(15, 15, 20, 0.5);
-                border-radius: 8px;
-                margin-bottom: 15px;
-                border: 1px solid rgba(255, 255, 255, 0.05);
-              ">
-                <span style="font-size: 36px; color: #dcc88c; letter-spacing: 8px; text-shadow: 0 0 10px rgba(220, 200, 140, 0.2);">${pillar.stem}${pillar.branch}</span>
+              <div style="text-align: center; padding: 15px; background: rgba(10, 10, 15, 0.5); margin-bottom: 15px;">
+                <span style="font-size: 32px; color: ${COLORS.goldLight}; letter-spacing: 6px; font-family: ${FONTS.heading};">${pillar.stem}${pillar.branch}</span>
               </div>
               
-              <div style="display: flex; flex-direction: column; gap: 8px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <div style="width: 4px; height: 4px; background: ${color}; border-radius: 50%;"></div>
-                  <span style="font-size: 12px; color: #787864;">納音：</span>
-                  <span style="font-size: 12px; color: #a0967a;">${nayin}</span>
+              <div style="display: flex; flex-direction: column; gap: 6px; font-size: 11px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="color: ${COLORS.textMuted}; min-width: 32px;">納音</span>
+                  <span style="color: ${COLORS.textSecondary};">${nayin}</span>
                 </div>
                 ${tenGod ? `
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 4px; height: 4px; background: ${color}; border-radius: 50%;"></div>
-                    <span style="font-size: 12px; color: #787864;">十神：</span>
-                    <span style="font-size: 12px; color: #a0967a;">${tenGod.stem} / ${tenGod.branch}</span>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="color: ${COLORS.textMuted}; min-width: 32px;">十神</span>
+                    <span style="color: ${COLORS.textSecondary};">${tenGod.stem} / ${tenGod.branch}</span>
                   </div>
                 ` : ''}
                 ${hidden.length > 0 ? `
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="width: 4px; height: 4px; background: ${color}; border-radius: 50%;"></div>
-                    <span style="font-size: 12px; color: #787864;">藏干：</span>
-                    <span style="font-size: 12px; color: #a0967a;">${hidden.join('、')}</span>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="color: ${COLORS.textMuted}; min-width: 32px;">藏干</span>
+                    <span style="color: ${COLORS.textSecondary};">${hidden.join('、')}</span>
                   </div>
                 ` : ''}
               </div>
@@ -588,113 +404,78 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
         }).join('')}
       </div>
       
-      <!-- 五行分布 -->
-      ${reportData.wuxing ? `
-        <div style="
-          margin-bottom: 30px;
-          background: rgba(20, 20, 28, 0.6);
-          border: 1px solid rgba(140, 110, 70, 0.3);
-          border-radius: 12px;
-          padding: 25px;
-        ">
-          <h4 style="font-size: 18px; color: #c8aa64; margin: 0 0 20px 0; display: flex; align-items: center; gap: 10px;">
-            <span style="width: 4px; height: 20px; background: linear-gradient(180deg, #c8aa64, #a08050); border-radius: 2px;"></span>
-            五行分布
-          </h4>
-          <div style="display: flex; gap: 15px;">
-            ${[
-              { key: 'wood', name: '木', color: '#4ade80' },
-              { key: 'fire', name: '火', color: '#f87171' },
-              { key: 'earth', name: '土', color: '#fbbf24' },
-              { key: 'metal', name: '金', color: '#e5e5e5' },
-              { key: 'water', name: '水', color: '#60a5fa' }
-            ].map(el => {
-              const total = Object.values(reportData.wuxing!).reduce((a, b) => a + b, 0);
-              const value = reportData.wuxing![el.key as keyof typeof reportData.wuxing];
-              const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-              return `
-                <div style="flex: 1; text-align: center;">
-                  <div style="
-                    width: 60px;
-                    height: 60px;
-                    border-radius: 50%;
-                    background: linear-gradient(135deg, ${el.color}15 0%, ${el.color}05 100%);
-                    border: 2px solid ${el.color}50;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    margin: 0 auto 10px;
-                    box-shadow: 0 0 15px ${el.color}20;
-                  ">
-                    <span style="font-size: 22px; color: ${el.color}; font-weight: bold; text-shadow: 0 0 5px ${el.color}40;">${el.name}</span>
+      <!-- 五行與陰陽並排 -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+        ${reportData.wuxing ? `
+          <div style="background: ${COLORS.bgCard}; border: 1px solid ${COLORS.border}; padding: 22px;">
+            <h4 style="font-size: 13px; color: ${COLORS.gold}; margin: 0 0 18px 0; letter-spacing: 2px; display: flex; align-items: center; gap: 8px;">
+              <span style="width: 3px; height: 14px; background: ${COLORS.gold};"></span>
+              五行分布
+            </h4>
+            <div style="display: flex; gap: 8px;">
+              ${[
+                { key: 'wood', name: '木', color: '#4ade80' },
+                { key: 'fire', name: '火', color: '#f87171' },
+                { key: 'earth', name: '土', color: '#fbbf24' },
+                { key: 'metal', name: '金', color: '#e5e5e5' },
+                { key: 'water', name: '水', color: '#60a5fa' }
+              ].map(el => {
+                const total = Object.values(reportData.wuxing!).reduce((a, b) => a + b, 0);
+                const value = reportData.wuxing![el.key as keyof typeof reportData.wuxing];
+                const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+                return `
+                  <div style="flex: 1; text-align: center;">
+                    <div style="
+                      width: 38px;
+                      height: 38px;
+                      border-radius: 50%;
+                      background: ${el.color}15;
+                      border: 2px solid ${el.color}50;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      margin: 0 auto 6px;
+                    ">
+                      <span style="font-size: 15px; color: ${el.color}; font-weight: 600;">${el.name}</span>
+                    </div>
+                    <p style="font-size: 13px; color: ${el.color}; margin: 0; font-weight: 600;">${value}</p>
+                    <p style="font-size: 9px; color: ${COLORS.textMuted}; margin: 2px 0 0 0;">${pct}%</p>
                   </div>
-                  <p style="font-size: 16px; color: ${el.color}; margin: 0; font-weight: bold;">${value}</p>
-                  <p style="font-size: 12px; color: #787878; margin: 4px 0 0 0;">${pct}%</p>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      ` : ''}
-      
-      <!-- 陰陽比例 -->
-      ${reportData.yinyang ? `
-        <div style="
-          margin-bottom: 30px;
-          background: rgba(20, 20, 28, 0.6);
-          border: 1px solid rgba(140, 110, 70, 0.3);
-          border-radius: 12px;
-          padding: 25px;
-        ">
-          <h4 style="font-size: 18px; color: #c8aa64; margin: 0 0 20px 0; display: flex; align-items: center; gap: 10px;">
-            <span style="width: 4px; height: 20px; background: linear-gradient(180deg, #c8aa64, #a08050); border-radius: 2px;"></span>
-            陰陽比例
-          </h4>
-          <div style="
-            height: 40px;
-            border-radius: 20px;
-            overflow: hidden;
-            display: flex;
-            background: #1a1a24;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
-          ">
-            <div style="
-              width: ${(reportData.yinyang.yang / (reportData.yinyang.yang + reportData.yinyang.yin)) * 100}%;
-              background: linear-gradient(90deg, #c8b464, #dcc88c);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 2px 0 10px rgba(200, 180, 100, 0.3);
-            ">
-              <span style="font-size: 14px; color: #1a1a1a; font-weight: bold;">☀ 陽 ${reportData.yinyang.yang}</span>
-            </div>
-            <div style="
-              flex: 1;
-              background: linear-gradient(90deg, #4a4a8a, #6464c8);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            ">
-              <span style="font-size: 14px; color: #e0e0e0; font-weight: bold;">☽ 陰 ${reportData.yinyang.yin}</span>
+                `;
+              }).join('')}
             </div>
           </div>
-        </div>
-      ` : ''}
-      
-      <!-- 頁腳 -->
-      <div style="
-        position: absolute;
-        bottom: 25px;
-        left: 50px;
-        right: 50px;
-      ">
-        <div style="width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(140, 110, 70, 0.5), transparent); margin-bottom: 12px;"></div>
-        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #646464;">
-          <span>${dateStr}</span>
-          <span>虹靈御所｜超烜創意</span>
-          <span>第 2 頁</span>
-        </div>
+        ` : ''}
+        
+        ${reportData.yinyang ? `
+          <div style="background: ${COLORS.bgCard}; border: 1px solid ${COLORS.border}; padding: 22px;">
+            <h4 style="font-size: 13px; color: ${COLORS.gold}; margin: 0 0 18px 0; letter-spacing: 2px; display: flex; align-items: center; gap: 8px;">
+              <span style="width: 3px; height: 14px; background: ${COLORS.gold};"></span>
+              陰陽比例
+            </h4>
+            <div style="height: 32px; border-radius: 4px; overflow: hidden; display: flex; background: #1a1a24;">
+              <div style="
+                width: ${(reportData.yinyang.yang / (reportData.yinyang.yang + reportData.yinyang.yin)) * 100}%;
+                background: linear-gradient(90deg, #c8b464, #dcc88c);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              ">
+                <span style="font-size: 11px; color: #1a1a1a; font-weight: 600;">☀ 陽 ${reportData.yinyang.yang}</span>
+              </div>
+              <div style="flex: 1; background: linear-gradient(90deg, #4a4a8a, #6464c8); display: flex; align-items: center; justify-content: center;">
+                <span style="font-size: 11px; color: #e0e0e0; font-weight: 600;">☽ 陰 ${reportData.yinyang.yin}</span>
+              </div>
+            </div>
+            <p style="font-size: 10px; color: ${COLORS.textMuted}; margin: 10px 0 0 0; text-align: center;">
+              ${reportData.yinyang.yang > reportData.yinyang.yin ? '陽氣較旺，性格偏外向積極' : 
+                reportData.yinyang.yang < reportData.yinyang.yin ? '陰氣較重，性格偏內斂沉穩' : '陰陽平衡，性格較為中和'}
+            </p>
+          </div>
+        ` : ''}
       </div>
+      
+      ${createFooter(dateStr, '第 2 頁')}
     </div>
   `;
 

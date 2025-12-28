@@ -43,12 +43,23 @@ export const LegionCharacterCard = ({
       ? character.zhi 
       : character.id;
   
-  // 取得角色頭像（只有主將和軍師有頭像）
-  const avatarSrc = isGeneral || isLieutenant
-    ? getCommanderAvatar(characterId) 
-    : isStrategist 
-      ? getAdvisorAvatar(characterId)
-      : null;
+  // 取得角色頭像
+  // - 主將(general)：天干角色，使用 commanderAvatar
+  // - 軍師(strategist)：地支角色，使用 advisorAvatar  
+  // - 副將(lieutenant)：藏干，都是天干，使用 commanderAvatar
+  // - 專家(specialist)：藏干，都是天干，使用 commanderAvatar
+  const getAvatarSrc = () => {
+    if (isGeneral || isLieutenant || type === 'specialist') {
+      // 天干角色
+      return getCommanderAvatar(characterId);
+    } else if (isStrategist) {
+      // 地支角色
+      return getAdvisorAvatar(characterId);
+    }
+    return null;
+  };
+  
+  const avatarSrc = getAvatarSrc();
 
   const accentColor = character.color || '#8B5CF6';
   

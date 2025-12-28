@@ -1505,175 +1505,504 @@ const createLegionDetailsPages = (
   `).join('');
 };
 
-// 創建神煞分析頁 - 優化專業設計
+// 創建神煞分析頁 - 精緻專業設計（增強分類展示與卡片效果）
 const createShenshaPages = (shensha: ShenshaItem[], dateStr: string): string => {
-  const itemsPerPage = 5; // 減少每頁數量以留出更多空間
+  const itemsPerPage = 4; // 減少每頁數量以留出更多精緻空間
   const pages: string[] = [];
   
-  const categoryConfig: Record<string, { color: string; icon: string; gradient: string }> = {
-    '吉神': { color: '#4ade80', icon: '🌟', gradient: 'linear-gradient(135deg, rgba(74, 222, 128, 0.12) 0%, rgba(74, 222, 128, 0.03) 100%)' },
-    '凶神': { color: '#f87171', icon: '⚡', gradient: 'linear-gradient(135deg, rgba(248, 113, 113, 0.12) 0%, rgba(248, 113, 113, 0.03) 100%)' },
-    '貴人': { color: '#c084fc', icon: '👑', gradient: 'linear-gradient(135deg, rgba(192, 132, 252, 0.12) 0%, rgba(192, 132, 252, 0.03) 100%)' },
-    '桃花': { color: '#f472b6', icon: '🌸', gradient: 'linear-gradient(135deg, rgba(244, 114, 182, 0.12) 0%, rgba(244, 114, 182, 0.03) 100%)' },
-    '學堂': { color: '#60a5fa', icon: '📚', gradient: 'linear-gradient(135deg, rgba(96, 165, 250, 0.12) 0%, rgba(96, 165, 250, 0.03) 100%)' },
-    '特殊': { color: '#fbbf24', icon: '✨', gradient: 'linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(251, 191, 36, 0.03) 100%)' }
+  // 增強的分類配置 - 更豐富的視覺效果
+  const categoryConfig: Record<string, { 
+    color: string; 
+    colorLight: string;
+    icon: string; 
+    gradient: string;
+    bgPattern: string;
+    description: string;
+    borderGlow: string;
+  }> = {
+    '吉神': { 
+      color: '#4ade80', 
+      colorLight: '#86efac',
+      icon: '🌟', 
+      gradient: 'linear-gradient(135deg, rgba(74, 222, 128, 0.18) 0%, rgba(74, 222, 128, 0.03) 100%)',
+      bgPattern: 'radial-gradient(circle at 95% 5%, rgba(74, 222, 128, 0.15) 0%, transparent 40%)',
+      description: '福運守護',
+      borderGlow: '0 0 20px rgba(74, 222, 128, 0.15)'
+    },
+    '凶神': { 
+      color: '#f87171', 
+      colorLight: '#fca5a5',
+      icon: '⚡', 
+      gradient: 'linear-gradient(135deg, rgba(248, 113, 113, 0.18) 0%, rgba(248, 113, 113, 0.03) 100%)',
+      bgPattern: 'radial-gradient(circle at 95% 5%, rgba(248, 113, 113, 0.15) 0%, transparent 40%)',
+      description: '化煞為權',
+      borderGlow: '0 0 20px rgba(248, 113, 113, 0.15)'
+    },
+    '貴人': { 
+      color: '#c084fc', 
+      colorLight: '#d8b4fe',
+      icon: '👑', 
+      gradient: 'linear-gradient(135deg, rgba(192, 132, 252, 0.18) 0%, rgba(192, 132, 252, 0.03) 100%)',
+      bgPattern: 'radial-gradient(circle at 95% 5%, rgba(192, 132, 252, 0.15) 0%, transparent 40%)',
+      description: '貴助提攜',
+      borderGlow: '0 0 20px rgba(192, 132, 252, 0.15)'
+    },
+    '桃花': { 
+      color: '#f472b6', 
+      colorLight: '#f9a8d4',
+      icon: '🌸', 
+      gradient: 'linear-gradient(135deg, rgba(244, 114, 182, 0.18) 0%, rgba(244, 114, 182, 0.03) 100%)',
+      bgPattern: 'radial-gradient(circle at 95% 5%, rgba(244, 114, 182, 0.15) 0%, transparent 40%)',
+      description: '情緣魅力',
+      borderGlow: '0 0 20px rgba(244, 114, 182, 0.15)'
+    },
+    '學堂': { 
+      color: '#60a5fa', 
+      colorLight: '#93c5fd',
+      icon: '📚', 
+      gradient: 'linear-gradient(135deg, rgba(96, 165, 250, 0.18) 0%, rgba(96, 165, 250, 0.03) 100%)',
+      bgPattern: 'radial-gradient(circle at 95% 5%, rgba(96, 165, 250, 0.15) 0%, transparent 40%)',
+      description: '文昌智慧',
+      borderGlow: '0 0 20px rgba(96, 165, 250, 0.15)'
+    },
+    '特殊': { 
+      color: '#fbbf24', 
+      colorLight: '#fcd34d',
+      icon: '✨', 
+      gradient: 'linear-gradient(135deg, rgba(251, 191, 36, 0.18) 0%, rgba(251, 191, 36, 0.03) 100%)',
+      bgPattern: 'radial-gradient(circle at 95% 5%, rgba(251, 191, 36, 0.15) 0%, transparent 40%)',
+      description: '獨特稀有',
+      borderGlow: '0 0 20px rgba(251, 191, 36, 0.15)'
+    }
   };
 
-  const rarityConfig: Record<string, { text: string; color: string; bgGradient: string }> = {
-    'SSR': { text: '傳說', color: '#fbbf24', bgGradient: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)' },
-    'SR': { text: '稀有', color: '#c084fc', bgGradient: 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)' },
-    'R': { text: '精良', color: '#60a5fa', bgGradient: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)' },
-    'N': { text: '普通', color: '#9ca3af', bgGradient: 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)' }
+  // 增強的稀有度配置
+  const rarityConfig: Record<string, { 
+    text: string; 
+    color: string; 
+    bgGradient: string;
+    glowColor: string;
+    badge: string;
+  }> = {
+    'SSR': { 
+      text: '傳說', 
+      color: '#fbbf24', 
+      bgGradient: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%)',
+      glowColor: 'rgba(251, 191, 36, 0.5)',
+      badge: '★★★'
+    },
+    'SR': { 
+      text: '稀有', 
+      color: '#c084fc', 
+      bgGradient: 'linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #c084fc 100%)',
+      glowColor: 'rgba(192, 132, 252, 0.5)',
+      badge: '★★'
+    },
+    'R': { 
+      text: '精良', 
+      color: '#60a5fa', 
+      bgGradient: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #60a5fa 100%)',
+      glowColor: 'rgba(96, 165, 250, 0.5)',
+      badge: '★'
+    },
+    'N': { 
+      text: '普通', 
+      color: '#9ca3af', 
+      bgGradient: 'linear-gradient(135deg, #9ca3af 0%, #6b7280 50%, #9ca3af 100%)',
+      glowColor: 'rgba(156, 163, 175, 0.3)',
+      badge: ''
+    }
   };
+
+  // 統計各分類數量
+  const categoryStats: Record<string, number> = {};
+  shensha.forEach(item => {
+    const cat = item.category || '特殊';
+    categoryStats[cat] = (categoryStats[cat] || 0) + 1;
+  });
   
   for (let i = 0; i < shensha.length; i += itemsPerPage) {
     const pageItems = shensha.slice(i, i + itemsPerPage);
     const pageNum = Math.floor(i / itemsPerPage) + 1;
     const totalPages = Math.ceil(shensha.length / itemsPerPage);
+    const isFirstPage = pageNum === 1;
     
     pages.push(`
       <div style="
         width: 794px;
         min-height: 1123px;
-        background: linear-gradient(180deg, ${COLORS.bgPrimary} 0%, ${COLORS.bgSecondary} 100%);
+        background: linear-gradient(180deg, ${COLORS.bgPrimary} 0%, ${COLORS.bgSecondary} 50%, ${COLORS.bgPrimary} 100%);
         position: relative;
         padding: 40px 50px;
         box-sizing: border-box;
         page-break-after: always;
         overflow: hidden;
       ">
-        <!-- 背景裝飾光暈 -->
+        <!-- 多層動態背景 -->
         <div style="
           position: absolute;
           inset: 0;
           background: 
-            radial-gradient(ellipse 50% 30% at 80% 10%, ${COLORS.gold}08 0%, transparent 60%),
-            radial-gradient(ellipse 40% 25% at 20% 90%, ${COLORS.gold}05 0%, transparent 60%);
+            radial-gradient(ellipse 70% 40% at 80% 5%, ${COLORS.purple}08 0%, transparent 55%),
+            radial-gradient(ellipse 50% 35% at 10% 95%, ${COLORS.gold}06 0%, transparent 50%),
+            radial-gradient(ellipse 60% 40% at 50% 50%, rgba(20, 20, 35, 0.5) 0%, transparent 70%);
           pointer-events: none;
         "></div>
         
-        <!-- 精緻邊框 -->
-        <div style="position: absolute; inset: 15px; border: 1px solid ${COLORS.border}; pointer-events: none;"></div>
-        <div style="position: absolute; inset: 20px; border: 1px solid ${COLORS.gold}15; pointer-events: none;"></div>
+        <!-- 星辰背景點綴 -->
+        <div style="
+          position: absolute;
+          inset: 0;
+          background-image: 
+            radial-gradient(circle at 15% 20%, ${COLORS.gold}15 1px, transparent 1px),
+            radial-gradient(circle at 85% 30%, ${COLORS.purple}15 1px, transparent 1px),
+            radial-gradient(circle at 25% 70%, ${COLORS.blue}10 1px, transparent 1px),
+            radial-gradient(circle at 75% 80%, ${COLORS.gold}10 1px, transparent 1px),
+            radial-gradient(circle at 50% 15%, ${COLORS.purple}12 1px, transparent 1px);
+          background-size: 100% 100%;
+          pointer-events: none;
+          opacity: 0.6;
+        "></div>
+        
+        <!-- 精緻雙層邊框 -->
+        <div style="position: absolute; inset: 12px; border: 2px solid ${COLORS.gold}30; border-radius: 4px; pointer-events: none;"></div>
+        <div style="position: absolute; inset: 18px; border: 1px solid ${COLORS.border}; pointer-events: none;"></div>
+        
+        <!-- 角落裝飾徽章 -->
+        <div style="position: absolute; top: 12px; left: 12px; width: 45px; height: 45px;">
+          <div style="position: absolute; top: 0; left: 0; width: 28px; height: 3px; background: linear-gradient(90deg, ${COLORS.gold}, transparent);"></div>
+          <div style="position: absolute; top: 0; left: 0; width: 3px; height: 28px; background: linear-gradient(180deg, ${COLORS.gold}, transparent);"></div>
+          <div style="position: absolute; top: 8px; left: 8px; width: 8px; height: 8px; background: ${COLORS.gold}; transform: rotate(45deg);"></div>
+        </div>
+        <div style="position: absolute; top: 12px; right: 12px; width: 45px; height: 45px;">
+          <div style="position: absolute; top: 0; right: 0; width: 28px; height: 3px; background: linear-gradient(270deg, ${COLORS.gold}, transparent);"></div>
+          <div style="position: absolute; top: 0; right: 0; width: 3px; height: 28px; background: linear-gradient(180deg, ${COLORS.gold}, transparent);"></div>
+          <div style="position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: ${COLORS.gold}; transform: rotate(45deg);"></div>
+        </div>
+        <div style="position: absolute; bottom: 12px; left: 12px; width: 45px; height: 45px;">
+          <div style="position: absolute; bottom: 0; left: 0; width: 28px; height: 3px; background: linear-gradient(90deg, ${COLORS.gold}, transparent);"></div>
+          <div style="position: absolute; bottom: 0; left: 0; width: 3px; height: 28px; background: linear-gradient(0deg, ${COLORS.gold}, transparent);"></div>
+          <div style="position: absolute; bottom: 8px; left: 8px; width: 8px; height: 8px; background: ${COLORS.gold}; transform: rotate(45deg);"></div>
+        </div>
+        <div style="position: absolute; bottom: 12px; right: 12px; width: 45px; height: 45px;">
+          <div style="position: absolute; bottom: 0; right: 0; width: 28px; height: 3px; background: linear-gradient(270deg, ${COLORS.gold}, transparent);"></div>
+          <div style="position: absolute; bottom: 0; right: 0; width: 3px; height: 28px; background: linear-gradient(0deg, ${COLORS.gold}, transparent);"></div>
+          <div style="position: absolute; bottom: 8px; right: 8px; width: 8px; height: 8px; background: ${COLORS.gold}; transform: rotate(45deg);"></div>
+        </div>
         
         ${createHeader('四時軍團戰略命理系統')}
         
-        <!-- 頁面標題 -->
-        <div style="text-align: center; margin: 10px 0 28px 0; position: relative;">
+        <!-- 頁面標題區域 - 增強設計 -->
+        <div style="text-align: center; margin: 8px 0 ${isFirstPage ? '20px' : '24px'} 0; position: relative;">
           <div style="
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 200px;
-            height: 50px;
-            background: radial-gradient(ellipse, ${COLORS.gold}08 0%, transparent 70%);
+            width: 280px;
+            height: 70px;
+            background: radial-gradient(ellipse, ${COLORS.purple}12 0%, transparent 70%);
           "></div>
-          <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
-            <div style="width: 40px; height: 2px; background: linear-gradient(90deg, transparent, ${COLORS.goldDark});"></div>
-            <h3 style="font-size: 24px; color: ${COLORS.goldLight}; margin: 0; letter-spacing: 6px; font-weight: 500;">
-              神煞分析
-            </h3>
-            <div style="width: 40px; height: 2px; background: linear-gradient(270deg, transparent, ${COLORS.goldDark});"></div>
+          
+          <!-- 標題裝飾線 -->
+          <div style="display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 50px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.goldDark});"></div>
+              <div style="width: 6px; height: 6px; border: 1px solid ${COLORS.purple}; transform: rotate(45deg);"></div>
+            </div>
+            <span style="font-size: 11px; color: ${COLORS.purple}; letter-spacing: 6px; text-transform: uppercase;">DIVINE STARS</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 6px; height: 6px; border: 1px solid ${COLORS.purple}; transform: rotate(45deg);"></div>
+              <div style="width: 50px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.goldDark});"></div>
+            </div>
           </div>
-          <p style="font-size: 11px; color: ${COLORS.textMuted}; margin: 8px 0 0 0; letter-spacing: 2px;">
-            命盤神煞星曜解析 · 共 ${shensha.length} 顆星
+          
+          <h3 style="
+            font-size: 30px; 
+            font-family: ${FONTS.heading};
+            color: ${COLORS.goldLight}; 
+            margin: 0; 
+            letter-spacing: 10px; 
+            font-weight: 600;
+            text-shadow: 0 2px 20px rgba(200, 170, 100, 0.25);
+          ">
+            神煞命格分析
+          </h3>
+          <p style="font-size: 12px; color: ${COLORS.textSecondary}; margin: 10px 0 0 0; letter-spacing: 2px;">
+            命盤星曜詳解 · 共 ${shensha.length} 顆神煞星
           </p>
         </div>
         
-        <!-- 神煞卡片列表 -->
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          ${pageItems.map(item => {
+        ${isFirstPage ? `
+          <!-- 首頁：分類統計概覽 -->
+          <div style="
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+          ">
+            ${Object.entries(categoryStats).map(([cat, count]) => {
+              const config = categoryConfig[cat] || categoryConfig['特殊'];
+              return `
+                <div style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 8px 16px;
+                  background: linear-gradient(135deg, ${config.color}12 0%, ${config.color}05 100%);
+                  border: 1px solid ${config.color}30;
+                  border-radius: 25px;
+                  box-shadow: ${config.borderGlow};
+                ">
+                  <span style="font-size: 14px;">${config.icon}</span>
+                  <span style="font-size: 11px; color: ${config.colorLight}; font-weight: 500; letter-spacing: 1px;">${cat}</span>
+                  <span style="
+                    font-size: 12px;
+                    color: ${COLORS.bgPrimary};
+                    background: ${config.color};
+                    padding: 2px 8px;
+                    border-radius: 12px;
+                    font-weight: 700;
+                    min-width: 20px;
+                    text-align: center;
+                  ">${count}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : ''}
+        
+        <!-- 神煞卡片列表 - 增強設計 -->
+        <div style="display: flex; flex-direction: column; gap: 18px;">
+          ${pageItems.map((item, idx) => {
             const category = item.category || '特殊';
             const catConfig = categoryConfig[category] || categoryConfig['特殊'];
             const rarity = item.rarity && rarityConfig[item.rarity] ? rarityConfig[item.rarity] : null;
             return `
               <div style="
                 background: ${catConfig.gradient};
-                border: 1px solid ${catConfig.color}25;
-                border-radius: 12px;
-                padding: 20px 24px;
+                border: 1px solid ${catConfig.color}30;
+                border-radius: 16px;
+                padding: 0;
                 position: relative;
                 overflow: hidden;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                box-shadow: 
+                  0 8px 32px rgba(0, 0, 0, 0.2),
+                  ${catConfig.borderGlow},
+                  inset 0 1px 0 rgba(255, 255, 255, 0.04);
               ">
-                <!-- 左側色條 -->
+                <!-- 背景圖案 -->
+                <div style="
+                  position: absolute;
+                  inset: 0;
+                  ${catConfig.bgPattern};
+                  pointer-events: none;
+                "></div>
+                
+                <!-- 頂部發光邊條 -->
+                <div style="
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  height: 3px;
+                  background: linear-gradient(90deg, transparent 5%, ${catConfig.color}80 50%, transparent 95%);
+                "></div>
+                
+                <!-- 左側漸層色帶 -->
                 <div style="
                   position: absolute;
                   left: 0;
                   top: 0;
                   bottom: 0;
-                  width: 4px;
-                  background: linear-gradient(180deg, ${catConfig.color}, ${catConfig.color}60);
+                  width: 5px;
+                  background: linear-gradient(180deg, ${catConfig.colorLight}, ${catConfig.color}, ${catConfig.color}60);
                 "></div>
                 
-                <!-- 右上角裝飾光暈 -->
+                <!-- 右上角大圖標裝飾 -->
                 <div style="
                   position: absolute;
-                  top: -20px;
-                  right: -20px;
-                  width: 100px;
-                  height: 100px;
-                  background: radial-gradient(circle, ${catConfig.color}10 0%, transparent 70%);
+                  top: -15px;
+                  right: -10px;
+                  font-size: 80px;
+                  opacity: 0.06;
+                  transform: rotate(15deg);
                   pointer-events: none;
-                "></div>
+                ">${catConfig.icon}</div>
                 
-                <!-- 標題行 -->
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                  <span style="font-size: 20px; filter: drop-shadow(0 0 6px ${catConfig.color}40);">${catConfig.icon}</span>
-                  <span style="font-size: 18px; color: ${COLORS.goldLight}; font-weight: 600; letter-spacing: 2px;">${item.name}</span>
-                  ${rarity ? `
-                    <span style="
-                      font-size: 10px;
-                      color: #0a0a0f;
-                      background: ${rarity.bgGradient};
-                      padding: 3px 12px;
-                      border-radius: 20px;
-                      font-weight: 600;
-                      letter-spacing: 1px;
-                      box-shadow: 0 2px 8px ${rarity.color}40;
-                    ">${rarity.text}</span>
-                  ` : ''}
-                  <span style="
-                    font-size: 11px;
-                    color: ${catConfig.color};
-                    margin-left: auto;
-                    padding: 4px 14px;
-                    background: ${catConfig.color}15;
-                    border-radius: 20px;
-                    border: 1px solid ${catConfig.color}30;
-                  ">${category}</span>
-                </div>
-                
-                ${item.position ? `
-                  <p style="font-size: 12px; color: ${COLORS.gold}; margin: 0 0 10px 0; display: flex; align-items: center; gap: 6px;">
-                    <span style="opacity: 0.7;">📍</span>
-                    <span>落於：${item.position}</span>
-                  </p>
-                ` : ''}
-                
-                ${item.effect ? `
-                  <p style="font-size: 13px; color: ${COLORS.textSecondary}; margin: 0 0 10px 0; line-height: 1.7;">${item.effect}</p>
-                ` : ''}
-                
-                ${item.modernMeaning ? `
-                  <div style="
-                    margin-top: 12px;
-                    padding: 12px 16px;
-                    background: rgba(10, 10, 15, 0.4);
-                    border-radius: 8px;
-                    border-left: 3px solid ${catConfig.color}60;
-                  ">
-                    <p style="font-size: 11px; color: ${COLORS.textMuted}; margin: 0 0 6px 0; display: flex; align-items: center; gap: 6px;">
-                      <span>💡</span>
-                      <span style="letter-spacing: 2px;">現代解讀</span>
-                    </p>
-                    <p style="font-size: 12px; color: ${COLORS.textSecondary}; margin: 0; line-height: 1.6;">${item.modernMeaning}</p>
+                <!-- 卡片內容 -->
+                <div style="padding: 20px 24px 18px 28px; position: relative;">
+                  <!-- 標題區 -->
+                  <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 14px;">
+                    <!-- 圖標容器 -->
+                    <div style="
+                      width: 48px;
+                      height: 48px;
+                      background: linear-gradient(135deg, ${catConfig.color}25 0%, ${catConfig.color}08 100%);
+                      border: 2px solid ${catConfig.color}40;
+                      border-radius: 12px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      box-shadow: 0 4px 15px ${catConfig.color}20;
+                      flex-shrink: 0;
+                    ">
+                      <span style="font-size: 24px; filter: drop-shadow(0 2px 6px ${catConfig.color}50);">${catConfig.icon}</span>
+                    </div>
+                    
+                    <!-- 名稱與標籤 -->
+                    <div style="flex: 1;">
+                      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                        <span style="
+                          font-size: 20px;
+                          font-family: ${FONTS.heading};
+                          color: ${COLORS.goldLight}; 
+                          font-weight: 600; 
+                          letter-spacing: 2px;
+                          text-shadow: 0 1px 10px rgba(200, 170, 100, 0.2);
+                        ">${item.name}</span>
+                        
+                        ${rarity ? `
+                          <span style="
+                            font-size: 9px;
+                            color: ${COLORS.bgPrimary};
+                            background: ${rarity.bgGradient};
+                            padding: 3px 10px;
+                            border-radius: 12px;
+                            font-weight: 700;
+                            letter-spacing: 0.5px;
+                            box-shadow: 0 2px 10px ${rarity.glowColor};
+                            display: flex;
+                            align-items: center;
+                            gap: 4px;
+                          ">
+                            <span>${rarity.badge}</span>
+                            <span>${rarity.text}</span>
+                          </span>
+                        ` : ''}
+                      </div>
+                      
+                      <div style="display: flex; align-items: center; gap: 10px;">
+                        <!-- 分類標籤 -->
+                        <span style="
+                          font-size: 10px;
+                          color: ${catConfig.colorLight};
+                          padding: 3px 12px;
+                          background: ${catConfig.color}15;
+                          border-radius: 15px;
+                          border: 1px solid ${catConfig.color}35;
+                          letter-spacing: 1px;
+                        ">${catConfig.description}</span>
+                        
+                        ${item.position ? `
+                          <span style="
+                            font-size: 10px;
+                            color: ${COLORS.gold};
+                            display: flex;
+                            align-items: center;
+                            gap: 4px;
+                          ">
+                            <span style="opacity: 0.7;">📍</span>
+                            <span>${item.position}</span>
+                          </span>
+                        ` : ''}
+                      </div>
+                    </div>
+                    
+                    <!-- 右側分類徽章 -->
+                    <div style="
+                      padding: 8px 14px;
+                      background: linear-gradient(135deg, ${catConfig.color}20 0%, ${catConfig.color}08 100%);
+                      border: 1px solid ${catConfig.color}40;
+                      border-radius: 10px;
+                      text-align: center;
+                    ">
+                      <div style="font-size: 10px; color: ${COLORS.textMuted}; margin-bottom: 2px; letter-spacing: 1px;">類別</div>
+                      <div style="font-size: 13px; color: ${catConfig.colorLight}; font-weight: 600; letter-spacing: 2px;">${category}</div>
+                    </div>
                   </div>
-                ` : ''}
+                  
+                  ${item.effect ? `
+                    <!-- 傳統意涵 -->
+                    <div style="
+                      padding: 14px 18px;
+                      background: linear-gradient(135deg, rgba(10, 10, 18, 0.5) 0%, rgba(15, 15, 25, 0.3) 100%);
+                      border-radius: 10px;
+                      border-left: 3px solid ${catConfig.color}50;
+                      margin-bottom: 12px;
+                    ">
+                      <p style="
+                        font-size: 13px; 
+                        color: ${COLORS.textSecondary}; 
+                        margin: 0; 
+                        line-height: 1.8;
+                        letter-spacing: 0.5px;
+                      ">${item.effect}</p>
+                    </div>
+                  ` : ''}
+                  
+                  ${item.modernMeaning ? `
+                    <!-- 現代解讀區塊 - 增強設計 -->
+                    <div style="
+                      padding: 14px 18px;
+                      background: linear-gradient(135deg, rgba(96, 165, 250, 0.08) 0%, rgba(96, 165, 250, 0.02) 100%);
+                      border-radius: 10px;
+                      border: 1px solid rgba(96, 165, 250, 0.2);
+                      position: relative;
+                      overflow: hidden;
+                    ">
+                      <!-- 裝飾背景 -->
+                      <div style="
+                        position: absolute;
+                        top: -20px;
+                        right: -20px;
+                        width: 60px;
+                        height: 60px;
+                        background: radial-gradient(circle, rgba(96, 165, 250, 0.1) 0%, transparent 70%);
+                        pointer-events: none;
+                      "></div>
+                      
+                      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <div style="
+                          width: 22px;
+                          height: 22px;
+                          background: linear-gradient(135deg, rgba(96, 165, 250, 0.3) 0%, rgba(96, 165, 250, 0.1) 100%);
+                          border-radius: 6px;
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                        ">
+                          <span style="font-size: 12px;">💡</span>
+                        </div>
+                        <span style="font-size: 11px; color: ${COLORS.blue}; letter-spacing: 2px; font-weight: 500;">現代解讀</span>
+                      </div>
+                      <p style="
+                        font-size: 12px; 
+                        color: ${COLORS.textSecondary}; 
+                        margin: 0; 
+                        line-height: 1.7;
+                        letter-spacing: 0.3px;
+                      ">${item.modernMeaning}</p>
+                    </div>
+                  ` : ''}
+                </div>
               </div>
             `;
           }).join('')}
+        </div>
+        
+        <!-- 頁面裝飾底部 -->
+        <div style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 25px;
+          gap: 15px;
+        ">
+          <div style="width: 80px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.border});"></div>
+          <span style="font-size: 10px; color: ${COLORS.textMuted}; letter-spacing: 3px;">星曜指引 · 趨吉避凶</span>
+          <div style="width: 80px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.border});"></div>
         </div>
         
         ${createFooter(dateStr, `神煞分析 ${pageNum}/${totalPages}`)}

@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Crown, Shield, Swords, Sparkles } from "lucide-react";
 import { getCommanderAvatar } from "@/assets/commanders";
 import { getAdvisorAvatar } from "@/assets/advisors";
@@ -100,41 +100,103 @@ export const ArmyCard = ({ type, character, role, legionColor, characterColor }:
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             {/* 頭像 - 帶有載入動畫與失敗 fallback */}
-            {avatarSrc && !imageError ? (
-              <div 
-                className="w-16 h-16 rounded-lg overflow-hidden border-2 shadow-lg relative"
-                style={{ borderColor: `${accentColor}60` }}
-              >
-                {imageLoading && (
-                  <Skeleton className="absolute inset-0 w-full h-full rounded-lg animate-pulse" />
+            <div 
+              className="w-16 h-16 rounded-lg overflow-hidden border-2 shadow-lg relative"
+              style={{ borderColor: `${accentColor}60` }}
+            >
+              <AnimatePresence mode="wait">
+                {avatarSrc && !imageError ? (
+                  <>
+                    {/* 載入骨架動畫 */}
+                    {imageLoading && (
+                      <motion.div
+                        key="skeleton"
+                        initial={{ opacity: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.3 }}
+                        className="absolute inset-0 rounded-lg"
+                        style={{
+                          background: `linear-gradient(135deg, ${accentColor}30, ${accentColor}10)`,
+                        }}
+                      >
+                        {/* 脈動光暈效果 */}
+                        <motion.div
+                          className="absolute inset-0 rounded-lg"
+                          style={{ background: `radial-gradient(circle, ${accentColor}40 0%, transparent 70%)` }}
+                          animate={{ 
+                            scale: [1, 1.2, 1],
+                            opacity: [0.5, 0.8, 0.5]
+                          }}
+                          transition={{ 
+                            duration: 1.5, 
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+                        {/* 掃描線動畫 */}
+                        <motion.div
+                          className="absolute inset-0"
+                          style={{
+                            background: `linear-gradient(90deg, transparent, ${accentColor}50, transparent)`,
+                          }}
+                          animate={{ x: ['-100%', '100%'] }}
+                          transition={{ 
+                            duration: 1.2, 
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+                      </motion.div>
+                    )}
+                    {/* 實際頭像 */}
+                    <motion.img 
+                      key="avatar"
+                      src={avatarSrc} 
+                      alt={`${character} ${isCommander ? '指揮官' : '軍師'}`}
+                      className="w-full h-full object-cover"
+                      initial={{ opacity: 0, scale: 1.1 }}
+                      animate={{ 
+                        opacity: imageLoading ? 0 : 1, 
+                        scale: imageLoading ? 1.1 : 1 
+                      }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      onLoad={() => setImageLoading(false)}
+                      onError={() => {
+                        setImageLoading(false);
+                        setImageError(true);
+                      }}
+                    />
+                  </>
+                ) : (
+                  <motion.div 
+                    key="fallback"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="w-full h-full flex items-center justify-center"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${accentColor}20, ${accentColor}05)`
+                    }}
+                  >
+                    <motion.span 
+                      className="text-3xl font-bold"
+                      style={{ color: accentColor }}
+                      animate={{ 
+                        textShadow: [
+                          `0 0 10px ${accentColor}40`,
+                          `0 0 20px ${accentColor}60`,
+                          `0 0 10px ${accentColor}40`
+                        ]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      {character}
+                    </motion.span>
+                  </motion.div>
                 )}
-                <img 
-                  src={avatarSrc} 
-                  alt={`${character} ${isCommander ? '指揮官' : '軍師'}`}
-                  className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
-                  onLoad={() => setImageLoading(false)}
-                  onError={() => {
-                    setImageLoading(false);
-                    setImageError(true);
-                  }}
-                />
-              </div>
-            ) : (
-              <div 
-                className="w-16 h-16 rounded-lg flex items-center justify-center border-2"
-                style={{ 
-                  borderColor: `${accentColor}60`,
-                  background: `linear-gradient(135deg, ${accentColor}20, ${accentColor}05)`
-                }}
-              >
-                <span 
-                  className="text-3xl font-bold"
-                  style={{ color: accentColor }}
-                >
-                  {character}
-                </span>
-              </div>
-            )}
+              </AnimatePresence>
+            </div>
             <div>
               <p className="text-2xl font-bold" style={{ color: accentColor }}>
                 {character}

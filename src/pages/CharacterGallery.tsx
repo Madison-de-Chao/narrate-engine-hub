@@ -5,10 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Users, ArrowLeftRight, Plus, Check, X } from "lucide-react";
+import { Search, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Users, ArrowLeftRight, Plus, Check, X, Heart, Star } from "lucide-react";
 import { GAN_CHARACTERS, ZHI_CHARACTERS } from "@/lib/legionTranslator/characterData";
 import { CharacterDetailDialog } from "@/components/CharacterDetailDialog";
 import { CharacterCompareDialog } from "@/components/CharacterCompareDialog";
+import { useCharacterFavorites } from "@/hooks/useCharacterFavorites";
 import type { GanCharacter, ZhiCharacter } from "@/lib/legionTranslator/types";
 import { commanderAvatars } from "@/assets/commanders";
 import { advisorAvatars } from "@/assets/advisors";
@@ -26,7 +27,7 @@ type ElementType = keyof typeof ELEMENT_CONFIG;
 type CharacterType = GanCharacter | ZhiCharacter;
 
 const CharacterGallery = () => {
-  const [activeTab, setActiveTab] = useState<'gan' | 'zhi'>('gan');
+  const [activeTab, setActiveTab] = useState<'gan' | 'zhi' | 'favorites'>('gan');
   const [selectedElement, setSelectedElement] = useState<ElementType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCharacter, setSelectedCharacter] = useState<CharacterType | null>(null);
@@ -37,9 +38,23 @@ const CharacterGallery = () => {
   const [compareCharacters, setCompareCharacters] = useState<[CharacterType | null, CharacterType | null]>([null, null]);
   const [compareDialogOpen, setCompareDialogOpen] = useState(false);
 
+  // 收藏功能
+  const { favorites, loading: favoritesLoading, isLoggedIn, isFavorite, toggleFavorite, getFavoriteIds } = useCharacterFavorites();
+
   // 獲取當前顯示的角色列表
   const characters = useMemo(() => {
-    const source = activeTab === 'gan' ? Object.values(GAN_CHARACTERS) : Object.values(ZHI_CHARACTERS);
+    let source: CharacterType[];
+    
+    if (activeTab === 'favorites') {
+      // 獲取收藏的角色
+      const ganFavoriteIds = getFavoriteIds('gan');
+      const zhiFavoriteIds = getFavoriteIds('zhi');
+      const ganFavorites = Object.values(GAN_CHARACTERS).filter(c => ganFavoriteIds.includes(c.id));
+      const zhiFavorites = Object.values(ZHI_CHARACTERS).filter(c => zhiFavoriteIds.includes(c.id));
+      source = [...ganFavorites, ...zhiFavorites];
+    } else {
+      source = activeTab === 'gan' ? Object.values(GAN_CHARACTERS) : Object.values(ZHI_CHARACTERS);
+    }
     
     return source.filter(char => {
       if (selectedElement !== 'all' && char.element !== selectedElement) {
@@ -56,7 +71,7 @@ const CharacterGallery = () => {
       }
       return true;
     });
-  }, [activeTab, selectedElement, searchQuery]);
+  }, [activeTab, selectedElement, searchQuery, getFavoriteIds]);
 
   // 獲取頭像
   const getAvatarSrc = (char: CharacterType) => {
@@ -64,6 +79,11 @@ const CharacterGallery = () => {
       return commanderAvatars[char.gan as keyof typeof commanderAvatars];
     }
     return advisorAvatars[char.id as keyof typeof advisorAvatars];
+  };
+
+  // 獲取角色類型
+  const getCharacterType = (char: CharacterType): 'gan' | 'zhi' => {
+    return 'gan' in char ? 'gan' : 'zhi';
   };
 
   // 打開角色詳情
@@ -76,24 +96,28 @@ const CharacterGallery = () => {
     }
   };
 
+  // 處理收藏點擊
+  const handleFavoriteClick = (e: React.MouseEvent, char: CharacterType) => {
+    e.stopPropagation();
+    const type = getCharacterType(char);
+    toggleFavorite(char.id, type, `${char.id} ${char.title}`);
+  };
+
   // 添加到比較
   const handleAddToCompare = (char: CharacterType) => {
     const isAlreadySelected = compareCharacters.some(c => c?.id === char.id);
     
     if (isAlreadySelected) {
-      // 移除已選擇的角色
       setCompareCharacters(prev => [
         prev[0]?.id === char.id ? null : prev[0],
         prev[1]?.id === char.id ? null : prev[1]
       ]);
     } else {
-      // 添加新角色
       if (!compareCharacters[0]) {
         setCompareCharacters([char, compareCharacters[1]]);
       } else if (!compareCharacters[1]) {
         setCompareCharacters([compareCharacters[0], char]);
       } else {
-        // 替換第一個
         setCompareCharacters([char, compareCharacters[1]]);
       }
     }
@@ -122,15 +146,20 @@ const CharacterGallery = () => {
 
   // 統計數據
   const stats = useMemo(() => {
-    const source = activeTab === 'gan' ? Object.values(GAN_CHARACTERS) : Object.values(ZHI_CHARACTERS);
+    const source = activeTab === 'gan' 
+      ? Object.values(GAN_CHARACTERS) 
+      : activeTab === 'zhi'
+        ? Object.values(ZHI_CHARACTERS)
+        : characters;
     const elementCounts: Record<string, number> = {};
     source.forEach(char => {
       elementCounts[char.element] = (elementCounts[char.element] || 0) + 1;
     });
     return elementCounts;
-  }, [activeTab]);
+  }, [activeTab, characters]);
 
   const compareCount = compareCharacters.filter(Boolean).length;
+  const favoritesCount = favorites.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95 py-8">
@@ -150,16 +179,28 @@ const CharacterGallery = () => {
         </motion.div>
 
         {/* 主選項卡 */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'gan' | 'zhi')} className="mb-6">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'gan' | 'zhi' | 'favorites')} className="mb-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className="grid w-full max-w-lg grid-cols-3">
               <TabsTrigger value="gan" className="gap-2">
                 <Shield className="w-4 h-4" />
-                天干主將
+                <span className="hidden sm:inline">天干主將</span>
+                <span className="sm:hidden">天干</span>
               </TabsTrigger>
               <TabsTrigger value="zhi" className="gap-2">
                 <Users className="w-4 h-4" />
-                地支軍師
+                <span className="hidden sm:inline">地支軍師</span>
+                <span className="sm:hidden">地支</span>
+              </TabsTrigger>
+              <TabsTrigger value="favorites" className="gap-2">
+                <Star className="w-4 h-4" />
+                <span className="hidden sm:inline">我的收藏</span>
+                <span className="sm:hidden">收藏</span>
+                {favoritesCount > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                    {favoritesCount}
+                  </Badge>
+                )}
               </TabsTrigger>
             </TabsList>
             
@@ -274,6 +315,7 @@ const CharacterGallery = () => {
                 const config = ELEMENT_CONFIG[element];
                 const ElementIcon = config.icon;
                 const count = stats[element] || 0;
+                if (count === 0 && activeTab !== 'favorites') return null;
                 if (count === 0) return null;
                 
                 return (
@@ -302,7 +344,10 @@ const CharacterGallery = () => {
               characters={characters as GanCharacter[]} 
               getAvatarSrc={getAvatarSrc}
               onCharacterClick={handleCharacterClick}
-              type="gan"
+              onFavoriteClick={handleFavoriteClick}
+              getCharacterType={getCharacterType}
+              isFavorite={isFavorite}
+              isLoggedIn={isLoggedIn}
               compareMode={compareMode}
               isInCompareList={isInCompareList}
               getComparePosition={getComparePosition}
@@ -313,16 +358,62 @@ const CharacterGallery = () => {
               characters={characters as ZhiCharacter[]} 
               getAvatarSrc={getAvatarSrc}
               onCharacterClick={handleCharacterClick}
-              type="zhi"
+              onFavoriteClick={handleFavoriteClick}
+              getCharacterType={getCharacterType}
+              isFavorite={isFavorite}
+              isLoggedIn={isLoggedIn}
               compareMode={compareMode}
               isInCompareList={isInCompareList}
               getComparePosition={getComparePosition}
             />
           </TabsContent>
+          <TabsContent value="favorites" className="mt-0">
+            {!isLoggedIn ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12"
+              >
+                <Heart className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
+                <p className="text-muted-foreground mb-2">請先登入以使用收藏功能</p>
+                <Button variant="outline" onClick={() => window.location.href = '/auth'}>
+                  前往登入
+                </Button>
+              </motion.div>
+            ) : favoritesLoading ? (
+              <div className="text-center py-12">
+                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-muted-foreground">載入收藏中...</p>
+              </div>
+            ) : characters.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12"
+              >
+                <Star className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
+                <p className="text-muted-foreground mb-2">還沒有收藏任何角色</p>
+                <p className="text-sm text-muted-foreground">點擊角色卡片上的愛心圖標即可收藏</p>
+              </motion.div>
+            ) : (
+              <CharacterGrid 
+                characters={characters} 
+                getAvatarSrc={getAvatarSrc}
+                onCharacterClick={handleCharacterClick}
+                onFavoriteClick={handleFavoriteClick}
+                getCharacterType={getCharacterType}
+                isFavorite={isFavorite}
+                isLoggedIn={isLoggedIn}
+                compareMode={compareMode}
+                isInCompareList={isInCompareList}
+                getComparePosition={getComparePosition}
+              />
+            )}
+          </TabsContent>
         </Tabs>
 
         {/* 空狀態 */}
-        {characters.length === 0 && (
+        {characters.length === 0 && activeTab !== 'favorites' && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -358,7 +449,10 @@ interface CharacterGridProps {
   characters: (GanCharacter | ZhiCharacter)[];
   getAvatarSrc: (char: GanCharacter | ZhiCharacter) => string | undefined;
   onCharacterClick: (char: GanCharacter | ZhiCharacter) => void;
-  type: 'gan' | 'zhi';
+  onFavoriteClick: (e: React.MouseEvent, char: GanCharacter | ZhiCharacter) => void;
+  getCharacterType: (char: GanCharacter | ZhiCharacter) => 'gan' | 'zhi';
+  isFavorite: (id: string, type: 'gan' | 'zhi') => boolean;
+  isLoggedIn: boolean;
   compareMode: boolean;
   isInCompareList: (char: GanCharacter | ZhiCharacter) => boolean;
   getComparePosition: (char: GanCharacter | ZhiCharacter) => number | null;
@@ -367,8 +461,11 @@ interface CharacterGridProps {
 const CharacterGrid = ({ 
   characters, 
   getAvatarSrc, 
-  onCharacterClick, 
-  type,
+  onCharacterClick,
+  onFavoriteClick,
+  getCharacterType,
+  isFavorite,
+  isLoggedIn,
   compareMode,
   isInCompareList,
   getComparePosition
@@ -385,6 +482,8 @@ const CharacterGrid = ({
           const avatarSrc = getAvatarSrc(char);
           const inCompare = isInCompareList(char);
           const comparePosition = getComparePosition(char);
+          const charType = getCharacterType(char);
+          const isFav = isFavorite(char.id, charType);
           
           return (
             <motion.div
@@ -463,6 +562,23 @@ const CharacterGrid = ({
                           查看詳情
                         </motion.span>
                       </div>
+                    )}
+
+                    {/* 收藏按鈕 */}
+                    {!compareMode && (
+                      <motion.button
+                        onClick={(e) => onFavoriteClick(e, char)}
+                        className={`absolute bottom-2 right-2 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                          isFav 
+                            ? 'bg-red-500 text-white shadow-lg' 
+                            : 'bg-black/50 text-white/80 opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white'
+                        }`}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        title={isLoggedIn ? (isFav ? "取消收藏" : "加入收藏") : "請先登入"}
+                      >
+                        <Heart className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
+                      </motion.button>
                     )}
 
                     {/* 五行標籤 */}

@@ -42,9 +42,10 @@ export interface LegionCharacterData {
 
 export interface PdfOptions {
   includeCover: boolean;
+  includeTableOfContents: boolean; // 目錄頁
   includePillars: boolean;
   includeShensha: boolean;
-  includeLegionDetails: boolean; // 新增：軍團詳解頁
+  includeLegionDetails: boolean; // 軍團詳解頁
   includeYearStory: boolean;
   includeMonthStory: boolean;
   includeDayStory: boolean;
@@ -102,6 +103,7 @@ export interface ReportData {
 // 默認選項
 const defaultPdfOptions: PdfOptions = {
   includeCover: true,
+  includeTableOfContents: true,
   includePillars: true,
   includeShensha: true,
   includeLegionDetails: true,
@@ -188,6 +190,160 @@ const createFooter = (dateStr: string, pageInfo: string) => `
     </div>
   </div>
 `;
+
+// 創建目錄頁
+interface TocEntry {
+  title: string;
+  subtitle: string;
+  icon: string;
+  page: number;
+  color: string;
+}
+
+const createTableOfContentsPage = (entries: TocEntry[], dateStr: string): string => {
+  const tocRows = entries.map((entry, idx) => `
+    <div style="
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      background: ${idx % 2 === 0 ? COLORS.bgCard : 'transparent'};
+      border-left: 3px solid ${entry.color};
+      margin-bottom: 2px;
+      transition: all 0.3s ease;
+    ">
+      <span style="
+        font-size: 24px;
+        margin-right: 16px;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+      ">${entry.icon}</span>
+      
+      <div style="flex: 1;">
+        <div style="
+          font-size: 16px;
+          color: ${COLORS.textPrimary};
+          font-weight: 500;
+          letter-spacing: 1px;
+          margin-bottom: 4px;
+        ">${entry.title}</div>
+        <div style="
+          font-size: 11px;
+          color: ${COLORS.textMuted};
+          letter-spacing: 0.5px;
+        ">${entry.subtitle}</div>
+      </div>
+      
+      <div style="
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      ">
+        <div style="
+          width: 80px;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, ${entry.color}40);
+        "></div>
+        <span style="
+          font-size: 18px;
+          color: ${entry.color};
+          font-weight: 600;
+          font-family: ${FONTS.mono};
+          min-width: 30px;
+          text-align: right;
+        ">${entry.page}</span>
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <div style="
+      width: 794px;
+      min-height: 1123px;
+      background: linear-gradient(180deg, ${COLORS.bgPrimary} 0%, ${COLORS.bgSecondary} 100%);
+      position: relative;
+      padding: 40px 50px;
+      box-sizing: border-box;
+      page-break-after: always;
+      overflow: hidden;
+    ">
+      <!-- 背景裝飾 -->
+      <div style="
+        position: absolute;
+        inset: 0;
+        background: 
+          radial-gradient(ellipse 50% 30% at 50% 10%, ${COLORS.gold}08 0%, transparent 50%),
+          radial-gradient(ellipse 40% 40% at 10% 90%, ${COLORS.purple}05 0%, transparent 50%),
+          radial-gradient(ellipse 40% 40% at 90% 90%, ${COLORS.gold}05 0%, transparent 50%);
+        pointer-events: none;
+      "></div>
+      
+      <!-- 精緻邊框 -->
+      <div style="position: absolute; inset: 15px; border: 1px solid ${COLORS.border}; pointer-events: none;"></div>
+      
+      <!-- 角落裝飾 -->
+      <div style="position: absolute; top: 15px; left: 15px; width: 30px; height: 30px;">
+        <div style="position: absolute; top: 0; left: 0; width: 20px; height: 2px; background: ${COLORS.gold};"></div>
+        <div style="position: absolute; top: 0; left: 0; width: 2px; height: 20px; background: ${COLORS.gold};"></div>
+      </div>
+      <div style="position: absolute; top: 15px; right: 15px; width: 30px; height: 30px;">
+        <div style="position: absolute; top: 0; right: 0; width: 20px; height: 2px; background: ${COLORS.gold};"></div>
+        <div style="position: absolute; top: 0; right: 0; width: 2px; height: 20px; background: ${COLORS.gold};"></div>
+      </div>
+      <div style="position: absolute; bottom: 15px; left: 15px; width: 30px; height: 30px;">
+        <div style="position: absolute; bottom: 0; left: 0; width: 20px; height: 2px; background: ${COLORS.gold};"></div>
+        <div style="position: absolute; bottom: 0; left: 0; width: 2px; height: 20px; background: ${COLORS.gold};"></div>
+      </div>
+      <div style="position: absolute; bottom: 15px; right: 15px; width: 30px; height: 30px;">
+        <div style="position: absolute; bottom: 0; right: 0; width: 20px; height: 2px; background: ${COLORS.gold};"></div>
+        <div style="position: absolute; bottom: 0; right: 0; width: 2px; height: 20px; background: ${COLORS.gold};"></div>
+      </div>
+      
+      ${createHeader('四時軍團戰略命理系統')}
+      
+      <!-- 目錄標題 -->
+      <div style="text-align: center; margin: 20px 0 40px 0;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 15px;">
+          <div style="width: 60px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.goldDark});"></div>
+          <span style="font-size: 14px; color: ${COLORS.goldDark}; letter-spacing: 6px;">CONTENTS</span>
+          <div style="width: 60px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.goldDark});"></div>
+        </div>
+        <h3 style="
+          font-size: 32px;
+          font-family: ${FONTS.heading};
+          color: ${COLORS.goldLight};
+          margin: 0;
+          font-weight: 600;
+          letter-spacing: 12px;
+        ">目 錄</h3>
+      </div>
+      
+      <!-- 目錄列表 -->
+      <div style="
+        background: ${COLORS.bgCard};
+        border: 1px solid ${COLORS.border};
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      ">
+        ${tocRows}
+      </div>
+      
+      <!-- 裝飾分隔線 -->
+      <div style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 40px;
+        gap: 15px;
+      ">
+        <div style="width: 80px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.border});"></div>
+        <div style="width: 6px; height: 6px; border: 1px solid ${COLORS.goldDark}; transform: rotate(45deg);"></div>
+        <div style="width: 80px; height: 1px; background: linear-gradient(270deg, transparent, ${COLORS.border});"></div>
+      </div>
+      
+      ${createFooter(dateStr, '第 2 頁')}
+    </div>
+  `;
+}
 
 // 創建報告 HTML 容器
 const createReportContainer = (reportData: ReportData, coverData?: CoverPageData, options: PdfOptions = defaultPdfOptions): HTMLDivElement => {
@@ -517,14 +673,12 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
   const legionDetailsPages = options.includeLegionDetails ? 
     createLegionDetailsPages(reportData.pillars, reportData.tenGods, dateStr) : '';
 
-  // 計算頁數
-  let pageNum = 2; // 封面是第1頁，四柱是第2頁
-  if (options.includePillars) {
-    pageNum = 2;
-  }
+  // 計算各章節頁數
+  const tocPageCount = options.includeTableOfContents ? 1 : 0;
+  const pillarsPageCount = options.includePillars ? 1 : 0;
   const shenshaPageCount = options.includeShensha && reportData.shensha ? Math.ceil(reportData.shensha.length / 6) : 0;
-  const legionDetailsPageCount = options.includeLegionDetails ? 2 : 0; // 軍團詳解固定2頁（每頁2個軍團）
-
+  const legionDetailsPageCount = options.includeLegionDetails ? 2 : 0;
+  
   // 軍團故事頁 - 根據選項決定是否包含每個故事
   const storyTypeOptions: Record<'year' | 'month' | 'day' | 'hour', boolean> = {
     year: options.includeYearStory,
@@ -532,6 +686,9 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
     day: options.includeDayStory,
     hour: options.includeHourStory,
   };
+  
+  // 計算故事頁的起始頁碼
+  const storyStartPage = 1 + tocPageCount + pillarsPageCount + shenshaPageCount + legionDetailsPageCount + 1;
   
   const storyPages = (['year', 'month', 'day', 'hour'] as const)
     .filter(type => storyTypeOptions[type] && reportData.legionStories?.[type])
@@ -541,12 +698,80 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
       reportData.pillars[type],
       reportData.nayin[type],
       dateStr,
-      (options.includePillars ? 2 : 1) + shenshaPageCount + legionDetailsPageCount + idx + 1
+      storyStartPage + idx
     ))
     .join('');
 
+  // 生成目錄頁 - 動態計算頁碼
+  let tableOfContentsPage = '';
+  if (options.includeTableOfContents) {
+    const tocEntries: TocEntry[] = [];
+    let currentPage = 2; // 目錄頁本身是第2頁
+    currentPage++; // 目錄頁後的第一頁
+    
+    if (options.includePillars) {
+      tocEntries.push({
+        title: '四柱命盤詳解',
+        subtitle: '天干地支・納音・十神・藏干分析',
+        icon: '📜',
+        page: currentPage,
+        color: COLORS.gold
+      });
+      currentPage++;
+    }
+    
+    if (options.includeShensha && reportData.shensha && reportData.shensha.length > 0) {
+      tocEntries.push({
+        title: '神煞命格分析',
+        subtitle: `共 ${reportData.shensha.length} 個神煞・吉凶解讀`,
+        icon: '✨',
+        page: currentPage,
+        color: COLORS.purple
+      });
+      currentPage += shenshaPageCount;
+    }
+    
+    if (options.includeLegionDetails) {
+      tocEntries.push({
+        title: '軍團角色詳解',
+        subtitle: '主將・軍師・增益減益分析',
+        icon: '⚔️',
+        page: currentPage,
+        color: COLORS.blue
+      });
+      currentPage += legionDetailsPageCount;
+    }
+    
+    // 軍團故事
+    const storyConfig = {
+      year: { title: '👑 祖源軍團故事', subtitle: '家族傳承・童年根基', color: COLORS.gold },
+      month: { title: '🤝 關係軍團故事', subtitle: '社交人脈・事業發展', color: COLORS.green },
+      day: { title: '⭐ 核心軍團故事', subtitle: '核心自我・婚姻感情', color: COLORS.purple },
+      hour: { title: '🚀 未來軍團故事', subtitle: '未來規劃・子女傳承', color: COLORS.orange }
+    };
+    
+    (['year', 'month', 'day', 'hour'] as const).forEach(type => {
+      if (storyTypeOptions[type] && reportData.legionStories?.[type]) {
+        const config = storyConfig[type];
+        tocEntries.push({
+          title: config.title,
+          subtitle: config.subtitle,
+          icon: type === 'year' ? '👑' : type === 'month' ? '🤝' : type === 'day' ? '⭐' : '🚀',
+          page: currentPage,
+          color: config.color
+        });
+        currentPage++;
+      }
+    });
+    
+    tableOfContentsPage = createTableOfContentsPage(tocEntries, dateStr);
+  }
+
   // 組合頁面 - 根據選項決定包含哪些
   let content = coverPage;
+  if (options.includeTableOfContents) {
+    content += tableOfContentsPage;
+  }
   if (options.includePillars) {
     content += pillarsPage;
   }

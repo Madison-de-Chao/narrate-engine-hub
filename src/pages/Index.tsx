@@ -514,6 +514,7 @@ const Index = () => {
       // 轉換選項格式
       const pdfOptions: PdfOptions = {
         includeCover: options.includeCover,
+        includeTableOfContents: options.includeTableOfContents,
         includePillars: options.includePillars,
         includeShensha: options.includeShensha,
         includeLegionDetails: options.includeLegionDetails,

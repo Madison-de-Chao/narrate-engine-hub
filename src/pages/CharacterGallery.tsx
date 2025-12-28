@@ -3,10 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, Shield, Zap, Droplets, Mountain, Flame, TreeDeciduous, Users } from "lucide-react";
+import { Search, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Users, ArrowLeftRight, Plus, Check, X } from "lucide-react";
 import { GAN_CHARACTERS, ZHI_CHARACTERS } from "@/lib/legionTranslator/characterData";
 import { CharacterDetailDialog } from "@/components/CharacterDetailDialog";
+import { CharacterCompareDialog } from "@/components/CharacterCompareDialog";
 import type { GanCharacter, ZhiCharacter } from "@/lib/legionTranslator/types";
 import { commanderAvatars } from "@/assets/commanders";
 import { advisorAvatars } from "@/assets/advisors";
@@ -21,24 +23,28 @@ const ELEMENT_CONFIG = {
 } as const;
 
 type ElementType = keyof typeof ELEMENT_CONFIG;
+type CharacterType = GanCharacter | ZhiCharacter;
 
 const CharacterGallery = () => {
   const [activeTab, setActiveTab] = useState<'gan' | 'zhi'>('gan');
   const [selectedElement, setSelectedElement] = useState<ElementType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCharacter, setSelectedCharacter] = useState<GanCharacter | ZhiCharacter | null>(null);
+  const [selectedCharacter, setSelectedCharacter] = useState<CharacterType | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // 比較功能狀態
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareCharacters, setCompareCharacters] = useState<[CharacterType | null, CharacterType | null]>([null, null]);
+  const [compareDialogOpen, setCompareDialogOpen] = useState(false);
 
   // 獲取當前顯示的角色列表
   const characters = useMemo(() => {
     const source = activeTab === 'gan' ? Object.values(GAN_CHARACTERS) : Object.values(ZHI_CHARACTERS);
     
     return source.filter(char => {
-      // 元素過濾
       if (selectedElement !== 'all' && char.element !== selectedElement) {
         return false;
       }
-      // 搜索過濾
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         return (
@@ -53,7 +59,7 @@ const CharacterGallery = () => {
   }, [activeTab, selectedElement, searchQuery]);
 
   // 獲取頭像
-  const getAvatarSrc = (char: GanCharacter | ZhiCharacter) => {
+  const getAvatarSrc = (char: CharacterType) => {
     if ('gan' in char) {
       return commanderAvatars[char.gan as keyof typeof commanderAvatars];
     }
@@ -61,9 +67,57 @@ const CharacterGallery = () => {
   };
 
   // 打開角色詳情
-  const handleCharacterClick = (char: GanCharacter | ZhiCharacter) => {
-    setSelectedCharacter(char);
-    setDialogOpen(true);
+  const handleCharacterClick = (char: CharacterType) => {
+    if (compareMode) {
+      handleAddToCompare(char);
+    } else {
+      setSelectedCharacter(char);
+      setDialogOpen(true);
+    }
+  };
+
+  // 添加到比較
+  const handleAddToCompare = (char: CharacterType) => {
+    const isAlreadySelected = compareCharacters.some(c => c?.id === char.id);
+    
+    if (isAlreadySelected) {
+      // 移除已選擇的角色
+      setCompareCharacters(prev => [
+        prev[0]?.id === char.id ? null : prev[0],
+        prev[1]?.id === char.id ? null : prev[1]
+      ]);
+    } else {
+      // 添加新角色
+      if (!compareCharacters[0]) {
+        setCompareCharacters([char, compareCharacters[1]]);
+      } else if (!compareCharacters[1]) {
+        setCompareCharacters([compareCharacters[0], char]);
+      } else {
+        // 替換第一個
+        setCompareCharacters([char, compareCharacters[1]]);
+      }
+    }
+  };
+
+  // 移除比較角色
+  const handleRemoveFromCompare = (index: 0 | 1) => {
+    setCompareCharacters(prev => {
+      const newCompare: [CharacterType | null, CharacterType | null] = [...prev];
+      newCompare[index] = null;
+      return newCompare;
+    });
+  };
+
+  // 檢查角色是否在比較列表中
+  const isInCompareList = (char: CharacterType) => {
+    return compareCharacters.some(c => c?.id === char.id);
+  };
+
+  // 獲取比較位置
+  const getComparePosition = (char: CharacterType): number | null => {
+    if (compareCharacters[0]?.id === char.id) return 1;
+    if (compareCharacters[1]?.id === char.id) return 2;
+    return null;
   };
 
   // 統計數據
@@ -75,6 +129,8 @@ const CharacterGallery = () => {
     });
     return elementCounts;
   }, [activeTab]);
+
+  const compareCount = compareCharacters.filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95 py-8">
@@ -95,16 +151,99 @@ const CharacterGallery = () => {
 
         {/* 主選項卡 */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'gan' | 'zhi')} className="mb-6">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
-            <TabsTrigger value="gan" className="gap-2">
-              <Shield className="w-4 h-4" />
-              天干主將
-            </TabsTrigger>
-            <TabsTrigger value="zhi" className="gap-2">
-              <Users className="w-4 h-4" />
-              地支軍師
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="gan" className="gap-2">
+                <Shield className="w-4 h-4" />
+                天干主將
+              </TabsTrigger>
+              <TabsTrigger value="zhi" className="gap-2">
+                <Users className="w-4 h-4" />
+                地支軍師
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* 比較模式按鈕 */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant={compareMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCompareMode(!compareMode)}
+                className="gap-2"
+              >
+                <ArrowLeftRight className="w-4 h-4" />
+                {compareMode ? "退出比較" : "角色比較"}
+              </Button>
+              
+              {compareMode && compareCount > 0 && (
+                <Button
+                  size="sm"
+                  onClick={() => setCompareDialogOpen(true)}
+                  className="gap-2"
+                  disabled={compareCount < 2}
+                >
+                  <Check className="w-4 h-4" />
+                  比較 ({compareCount}/2)
+                </Button>
+              )}
+              
+              {compareMode && compareCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCompareCharacters([null, null])}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* 比較模式提示 */}
+          <AnimatePresence>
+            {compareMode && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-4"
+              >
+                <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <ArrowLeftRight className="w-5 h-5 text-primary" />
+                    <span className="text-sm">
+                      點擊角色卡片選擇要比較的角色（最多2個）
+                    </span>
+                  </div>
+                  
+                  {/* 已選角色預覽 */}
+                  <div className="flex items-center gap-2">
+                    {compareCharacters.map((char, idx) => (
+                      <div 
+                        key={idx}
+                        className="w-10 h-10 rounded-lg border-2 flex items-center justify-center overflow-hidden"
+                        style={{ 
+                          borderColor: char 
+                            ? ELEMENT_CONFIG[char.element as ElementType]?.color 
+                            : 'hsl(var(--border))'
+                        }}
+                      >
+                        {char ? (
+                          <img 
+                            src={getAvatarSrc(char)} 
+                            alt={char.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">{idx + 1}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* 過濾器區域 */}
           <motion.div 
@@ -133,7 +272,7 @@ const CharacterGallery = () => {
               </Badge>
               {(Object.keys(ELEMENT_CONFIG) as ElementType[]).map(element => {
                 const config = ELEMENT_CONFIG[element];
-                const Icon = config.icon;
+                const ElementIcon = config.icon;
                 const count = stats[element] || 0;
                 if (count === 0) return null;
                 
@@ -149,7 +288,7 @@ const CharacterGallery = () => {
                     }}
                     onClick={() => setSelectedElement(element)}
                   >
-                    <Icon className="w-3 h-3" />
+                    <ElementIcon className="w-3 h-3" />
                     {element} ({count})
                   </Badge>
                 );
@@ -164,6 +303,9 @@ const CharacterGallery = () => {
               getAvatarSrc={getAvatarSrc}
               onCharacterClick={handleCharacterClick}
               type="gan"
+              compareMode={compareMode}
+              isInCompareList={isInCompareList}
+              getComparePosition={getComparePosition}
             />
           </TabsContent>
           <TabsContent value="zhi" className="mt-0">
@@ -172,6 +314,9 @@ const CharacterGallery = () => {
               getAvatarSrc={getAvatarSrc}
               onCharacterClick={handleCharacterClick}
               type="zhi"
+              compareMode={compareMode}
+              isInCompareList={isInCompareList}
+              getComparePosition={getComparePosition}
             />
           </TabsContent>
         </Tabs>
@@ -196,6 +341,14 @@ const CharacterGallery = () => {
         onOpenChange={setDialogOpen}
         avatarSrc={selectedCharacter ? getAvatarSrc(selectedCharacter) : undefined}
       />
+      
+      {/* 角色比較彈窗 */}
+      <CharacterCompareDialog
+        characters={compareCharacters}
+        open={compareDialogOpen}
+        onOpenChange={setCompareDialogOpen}
+        onRemoveCharacter={handleRemoveFromCompare}
+      />
     </div>
   );
 };
@@ -206,9 +359,20 @@ interface CharacterGridProps {
   getAvatarSrc: (char: GanCharacter | ZhiCharacter) => string | undefined;
   onCharacterClick: (char: GanCharacter | ZhiCharacter) => void;
   type: 'gan' | 'zhi';
+  compareMode: boolean;
+  isInCompareList: (char: GanCharacter | ZhiCharacter) => boolean;
+  getComparePosition: (char: GanCharacter | ZhiCharacter) => number | null;
 }
 
-const CharacterGrid = ({ characters, getAvatarSrc, onCharacterClick, type }: CharacterGridProps) => {
+const CharacterGrid = ({ 
+  characters, 
+  getAvatarSrc, 
+  onCharacterClick, 
+  type,
+  compareMode,
+  isInCompareList,
+  getComparePosition
+}: CharacterGridProps) => {
   return (
     <motion.div 
       layout
@@ -217,8 +381,10 @@ const CharacterGrid = ({ characters, getAvatarSrc, onCharacterClick, type }: Cha
       <AnimatePresence mode="popLayout">
         {characters.map((char, index) => {
           const elementConfig = ELEMENT_CONFIG[char.element as ElementType];
-          const Icon = elementConfig?.icon || Sparkles;
+          const ElementIcon = elementConfig?.icon || Sparkles;
           const avatarSrc = getAvatarSrc(char);
+          const inCompare = isInCompareList(char);
+          const comparePosition = getComparePosition(char);
           
           return (
             <motion.div
@@ -230,10 +396,40 @@ const CharacterGrid = ({ characters, getAvatarSrc, onCharacterClick, type }: Cha
               transition={{ delay: index * 0.05, duration: 0.3 }}
             >
               <Card 
-                className="group cursor-pointer overflow-hidden hover:shadow-xl transition-all duration-300 border-2"
+                className={`group cursor-pointer overflow-hidden hover:shadow-xl transition-all duration-300 border-2 relative ${
+                  compareMode && inCompare ? 'ring-2 ring-primary ring-offset-2' : ''
+                }`}
                 style={{ borderColor: `${elementConfig?.color}30` }}
                 onClick={() => onCharacterClick(char)}
               >
+                {/* 比較模式標記 */}
+                {compareMode && inCompare && (
+                  <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shadow-lg">
+                    {comparePosition}
+                  </div>
+                )}
+                
+                {/* 比較模式遮罩 */}
+                {compareMode && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className={`absolute inset-0 z-10 flex items-center justify-center transition-colors ${
+                      inCompare 
+                        ? 'bg-primary/20' 
+                        : 'bg-transparent hover:bg-primary/10'
+                    }`}
+                  >
+                    {!inCompare && (
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="w-8 h-8 rounded-full bg-primary/80 flex items-center justify-center">
+                          <Plus className="w-4 h-4 text-primary-foreground" />
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+                
                 <CardContent className="p-0">
                   {/* 頭像區域 */}
                   <div 
@@ -256,16 +452,18 @@ const CharacterGrid = ({ characters, getAvatarSrc, onCharacterClick, type }: Cha
                       </div>
                     )}
                     
-                    {/* 懸停遮罩 */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
-                      <motion.span
-                        initial={{ opacity: 0, y: 10 }}
-                        whileHover={{ opacity: 1, y: 0 }}
-                        className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        查看詳情
-                      </motion.span>
-                    </div>
+                    {/* 懸停遮罩（非比較模式） */}
+                    {!compareMode && (
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+                        <motion.span
+                          initial={{ opacity: 0, y: 10 }}
+                          whileHover={{ opacity: 1, y: 0 }}
+                          className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          查看詳情
+                        </motion.span>
+                      </div>
+                    )}
 
                     {/* 五行標籤 */}
                     <div 
@@ -275,7 +473,7 @@ const CharacterGrid = ({ characters, getAvatarSrc, onCharacterClick, type }: Cha
                         color: char.element === '金' ? '#1a1a24' : '#fff'
                       }}
                     >
-                      <Icon className="w-3 h-3" />
+                      <ElementIcon className="w-3 h-3" />
                       {char.element}
                     </div>
 

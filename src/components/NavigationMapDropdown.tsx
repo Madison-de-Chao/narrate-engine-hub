@@ -6,7 +6,8 @@ import {
   GraduationCap,
   Map,
   ChevronDown,
-  ExternalLink
+  ExternalLink,
+  Users
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,14 @@ const ZONES: MapZone[] = [
     icon: <Swords className="w-4 h-4" />,
     color: 'from-red-600 to-amber-500',
     route: '/'
+  },
+  {
+    id: 'gallery',
+    name: '角色圖鑑',
+    subtitle: '天干地支角色大全',
+    icon: <Users className="w-4 h-4" />,
+    color: 'from-emerald-600 to-teal-500',
+    route: '/gallery'
   },
   {
     id: 'academy',

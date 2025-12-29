@@ -1,9 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, Sun, Moon } from 'lucide-react';
+import { ChevronLeft, Sun, Moon, User, LogOut } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { NavigationMapDropdown } from '@/components/NavigationMapDropdown';
+import { MemberLoginWidget, useMember } from '@/lib/member';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface MuseumLayoutProps {
   children: React.ReactNode;
@@ -22,6 +34,9 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { user, profile, signOut, loading } = useMember();
+  const { toast } = useToast();
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
   
   const isHome = location.pathname === '/';
   const isExcludedRoute = EXCLUDED_ROUTES.some(route => location.pathname.startsWith(route));
@@ -36,6 +51,18 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
     } else {
       navigate('/');
     }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: '已登出',
+      description: '期待您的再次造訪！',
+    });
+  };
+
+  const handleToast = (options: { title: string; description: string; variant?: 'default' | 'destructive' }) => {
+    toast(options);
   };
 
   return (
@@ -74,6 +101,53 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
             </div>
             
             <div className="flex items-center gap-2 sm:gap-3">
+              {/* 會員登入按鈕 */}
+              {!loading && (
+                user ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`rounded-lg transition-colors ${
+                          theme === 'dark' 
+                            ? 'hover:bg-gold/10 text-paper/70 hover:text-paper' 
+                            : 'hover:bg-ink/10 text-void/70 hover:text-void'
+                        }`}
+                      >
+                        <User className="w-4 h-4 mr-1.5" />
+                        <span className="text-xs hidden sm:inline">
+                          {profile?.display_name || user.email?.split('@')[0] || '會員'}
+                        </span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem 
+                        onClick={handleSignOut}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        登出
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Button
+                    onClick={() => setShowLoginDialog(true)}
+                    variant="ghost"
+                    size="sm"
+                    className={`rounded-lg transition-colors ${
+                      theme === 'dark' 
+                        ? 'hover:bg-gold/10 text-paper/70 hover:text-paper' 
+                        : 'hover:bg-ink/10 text-void/70 hover:text-void'
+                    }`}
+                  >
+                    <User className="w-4 h-4 mr-1.5" />
+                    <span className="text-xs">登入</span>
+                  </Button>
+                )
+              )}
+
               {/* 主題切換按鈕 */}
               <Button
                 onClick={toggleTheme}
@@ -125,6 +199,18 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
 
         {children}
       </div>
+
+      {/* 登入彈窗 */}
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent className="sm:max-w-md p-0 border-0 bg-transparent shadow-none">
+          <MemberLoginWidget
+            onClose={() => setShowLoginDialog(false)}
+            onSuccess={() => setShowLoginDialog(false)}
+            onToast={handleToast}
+            showGoogleLogin={true}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

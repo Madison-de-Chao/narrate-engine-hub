@@ -1,0 +1,321 @@
+/**
+ * 虹靈御所會員登入小工具樣式
+ */
+
+/* 基礎變數 */
+.hlw-widget {
+  --hlw-primary: #f59e0b;
+  --hlw-primary-dark: #d97706;
+  --hlw-bg: rgba(15, 23, 42, 0.8);
+  --hlw-bg-secondary: rgba(30, 41, 59, 0.5);
+  --hlw-border: rgba(71, 85, 105, 0.5);
+  --hlw-text: #f1f5f9;
+  --hlw-text-muted: #94a3b8;
+  --hlw-text-placeholder: #64748b;
+  --hlw-radius: 1rem;
+  --hlw-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* 主容器 */
+.hlw-widget {
+  position: relative;
+  background: var(--hlw-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--hlw-border);
+  border-radius: var(--hlw-radius);
+  padding: 1.5rem;
+  box-shadow: var(--hlw-shadow);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.hlw-logged-in {
+  text-align: center;
+}
+
+/* 關閉按鈕 */
+.hlw-close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: var(--hlw-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: color 0.2s;
+}
+
+.hlw-close-button:hover {
+  color: var(--hlw-text);
+}
+
+.hlw-close-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* 標題區 */
+.hlw-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.hlw-icon-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(234, 88, 12, 0.2));
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.hlw-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--hlw-primary);
+}
+
+.hlw-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--hlw-text);
+  margin: 0 0 0.25rem;
+}
+
+.hlw-subtitle {
+  font-size: 0.875rem;
+  color: var(--hlw-text-muted);
+  margin: 0;
+}
+
+/* Tab 切換 */
+.hlw-tabs {
+  display: flex;
+  background: var(--hlw-bg-secondary);
+  border-radius: 0.75rem;
+  padding: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.hlw-tabs-compact {
+  margin-bottom: 1rem;
+}
+
+.hlw-tab {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: var(--hlw-text-muted);
+  background: transparent;
+}
+
+.hlw-tab:hover {
+  color: var(--hlw-text);
+}
+
+.hlw-tab-active {
+  background: linear-gradient(135deg, var(--hlw-primary), var(--hlw-primary-dark));
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.25);
+}
+
+/* 表單 */
+.hlw-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hlw-form-compact {
+  gap: 0.75rem;
+}
+
+/* 欄位 */
+.hlw-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  transition: all 0.3s;
+}
+
+.hlw-field-hidden {
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin: 0;
+}
+
+.hlw-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--hlw-text-muted);
+}
+
+.hlw-label-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--hlw-primary);
+}
+
+.hlw-input {
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  background: var(--hlw-bg-secondary);
+  border: 1px solid var(--hlw-border);
+  border-radius: 0.5rem;
+  color: var(--hlw-text);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.hlw-input::placeholder {
+  color: var(--hlw-text-placeholder);
+}
+
+.hlw-input:focus {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.hlw-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 密碼欄位 */
+.hlw-password-container {
+  position: relative;
+}
+
+.hlw-input-password {
+  padding-right: 2.5rem;
+}
+
+.hlw-password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: var(--hlw-text-placeholder);
+  transition: color 0.2s;
+}
+
+.hlw-password-toggle:hover {
+  color: var(--hlw-text-muted);
+}
+
+.hlw-password-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* 按鈕 */
+.hlw-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hlw-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hlw-button-full {
+  width: 100%;
+}
+
+.hlw-button-primary {
+  background: linear-gradient(135deg, var(--hlw-primary), var(--hlw-primary-dark));
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.25);
+}
+
+.hlw-button-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.hlw-button-outline {
+  background: var(--hlw-bg-secondary);
+  border: 1px solid var(--hlw-border);
+  color: var(--hlw-text);
+}
+
+.hlw-button-outline:hover:not(:disabled) {
+  background: rgba(51, 65, 85, 0.5);
+  border-color: rgba(100, 116, 139, 0.5);
+}
+
+.hlw-button-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.hlw-button-text {
+  margin-left: 0.5rem;
+}
+
+/* 分隔線 */
+.hlw-divider {
+  position: relative;
+  margin: 1rem 0;
+}
+
+.hlw-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--hlw-border);
+}
+
+.hlw-divider-text {
+  position: relative;
+  display: inline-block;
+  padding: 0 0.5rem;
+  background: var(--hlw-bg);
+  color: var(--hlw-text-placeholder);
+  font-size: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 動畫 */
+.hlw-spin {
+  animation: hlw-spin 1s linear infinite;
+}
+
+@keyframes hlw-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

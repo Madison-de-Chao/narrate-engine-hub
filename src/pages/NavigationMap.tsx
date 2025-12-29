@@ -13,11 +13,11 @@ import {
   MessageCircle,
   ChevronRight,
   ExternalLink,
-  GraduationCap,
-  ArrowLeft
+  GraduationCap
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/PageHeader';
 
 interface MapZone {
   id: string;
@@ -85,6 +85,9 @@ const NavigationMap: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20">
+      {/* 頂部導航欄 */}
+      <PageHeader title="八字命理導覽地圖" />
+
       {/* 頂部裝飾 */}
       <div className={`relative overflow-hidden ${
         theme === 'dark' 
@@ -95,35 +98,13 @@ const NavigationMap: React.FC = () => {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full blur-3xl opacity-20 bg-gradient-to-br from-amber-500 to-yellow-400" />
         </div>
 
-        {/* 返回按鈕 */}
-        <div className="relative z-10 p-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/')}
-            className={`gap-2 ${
-              theme === 'dark' ? 'text-paper/70 hover:text-paper' : 'text-void/70 hover:text-void'
-            }`}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            返回首頁
-          </Button>
-        </div>
-
         {/* 頁面標題 */}
         <motion.div 
-          className="relative z-10 text-center px-4 pb-8"
+          className="relative z-10 text-center px-4 py-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className={`text-3xl md:text-4xl font-bold mb-2 ${
-            theme === 'dark' ? 'text-paper' : 'text-void'
-          }`}>
-            <span className="bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 bg-clip-text text-transparent">
-              八字命理導覽地圖
-            </span>
-          </h1>
-          <p className={`mt-2 text-sm ${
+          <p className={`text-sm ${
             theme === 'dark' ? 'text-paper/60' : 'text-void/60'
           }`}>
             點擊區域探索不同的命理知識殿堂

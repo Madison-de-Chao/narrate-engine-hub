@@ -18,7 +18,7 @@ import { PremiumGate } from "@/components/PremiumGate";
 import { AiFortuneConsult } from "@/components/AiFortuneConsult";
 import { LegionSummoningOverlay } from "@/components/LegionSummoningOverlay";
 import { PageHeader } from "@/components/PageHeader";
-import { ReportSection, ReportDivider, ReportProgress } from "@/components/report";
+import { ReportSection, ReportDivider, ReportProgress, ReportControls } from "@/components/report";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, Shield, Share2, MessageCircle, Facebook, LayoutDashboard, Scroll, BarChart3, FileText, User } from "lucide-react";
@@ -104,8 +104,44 @@ const Index = () => {
   const [shenshaRuleset, setShenshaRuleset] = useState<'trad' | 'legion'>('trad');
   const [isAiConsultOpen, setIsAiConsultOpen] = useState(false);
   const [isPdfOptionsOpen, setIsPdfOptionsOpen] = useState(false);
+  
+  // 章節展開狀態管理
+  const [sectionExpandedState, setSectionExpandedState] = useState<Record<string, boolean>>({
+    summary: true,
+    bazi: true,
+    legion: true,
+    tenGods: true,
+    shensha: true,
+    personality: true,
+    nayin: true,
+    analysis: true,
+    logs: true,
+  });
+  
   const { hasAccess, source: membershipSource, tier, loading: membershipLoading } = useUnifiedMembership('bazi-premium');
   const { isAdmin } = useAdminStatus(user?.id);
+
+  // 計算展開章節數量
+  const expandedCount = Object.values(sectionExpandedState).filter(Boolean).length;
+  const totalSections = Object.keys(sectionExpandedState).length;
+
+  // 全部展開/收合
+  const handleExpandAll = () => {
+    setSectionExpandedState(prev => 
+      Object.fromEntries(Object.keys(prev).map(k => [k, true]))
+    );
+  };
+
+  const handleCollapseAll = () => {
+    setSectionExpandedState(prev => 
+      Object.fromEntries(Object.keys(prev).map(k => [k, false]))
+    );
+  };
+
+  // 單個章節展開狀態變化
+  const handleSectionExpandedChange = (sectionId: string, expanded: boolean) => {
+    setSectionExpandedState(prev => ({ ...prev, [sectionId]: expanded }));
+  };
 
   // 升級處理函數
   const handleUpgrade = () => {
@@ -767,6 +803,14 @@ const Index = () => {
                 />
               </section>
 
+              {/* 章節控制面板 */}
+              <ReportControls
+                expandedCount={expandedCount}
+                totalCount={totalSections}
+                onExpandAll={handleExpandAll}
+                onCollapseAll={handleCollapseAll}
+              />
+
               {/* 命盤總覽 */}
               <ReportSection
                 ref={sectionRefs.summary}
@@ -778,6 +822,8 @@ const Index = () => {
                 bgGradient="from-report-card via-report-card to-report-bg"
                 borderColor="border-indigo-500/30"
                 order={1}
+                expanded={sectionExpandedState.summary}
+                onExpandedChange={(expanded) => handleSectionExpandedChange('summary', expanded)}
               >
                 <ReportSummary baziResult={baziResult} />
               </ReportSection>
@@ -795,6 +841,8 @@ const Index = () => {
                 bgGradient="from-report-card via-report-card to-report-bg"
                 borderColor="border-amber-500/30"
                 order={2}
+                expanded={sectionExpandedState.bazi}
+                onExpandedChange={(expanded) => handleSectionExpandedChange('bazi', expanded)}
               >
                 <TraditionalBaziDisplay baziResult={baziResult} />
               </ReportSection>
@@ -812,6 +860,8 @@ const Index = () => {
                 bgGradient="from-report-card via-report-card to-report-bg"
                 borderColor="border-orange-500/30"
                 order={3}
+                expanded={sectionExpandedState.legion}
+                onExpandedChange={(expanded) => handleSectionExpandedChange('legion', expanded)}
               >
                 <LegionCards baziResult={baziResult} shenshaRuleset={shenshaRuleset} isPremium={hasAccess} onUpgrade={handleUpgrade} />
               </ReportSection>
@@ -831,6 +881,8 @@ const Index = () => {
                 bgGradient="from-report-card via-report-card to-report-bg"
                 borderColor="border-purple-500/30"
                 order={4}
+                expanded={sectionExpandedState.tenGods}
+                onExpandedChange={(expanded) => handleSectionExpandedChange('tenGods', expanded)}
               >
                 <PremiumGate isPremium={hasAccess} title="十神深度分析" description="升級收費版解鎖完整十神關係解讀" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                   <TenGodsAnalysis baziResult={baziResult} />
@@ -849,6 +901,8 @@ const Index = () => {
                   bgGradient="from-report-card via-report-card to-report-bg"
                   borderColor="border-fuchsia-500/30"
                   order={5}
+                  expanded={sectionExpandedState.shensha}
+                  onExpandedChange={(expanded) => handleSectionExpandedChange('shensha', expanded)}
                 >
                   <PremiumGate isPremium={hasAccess} title="神煞統計分析" description="升級收費版查看完整神煞統計與解讀" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                     <ShenshaStats shenshaList={baziResult.shensha.filter((s): s is ShenshaMatch => typeof s === 'object' && 'evidence' in s)} />
@@ -867,6 +921,8 @@ const Index = () => {
                 bgGradient="from-report-card via-report-card to-report-bg"
                 borderColor="border-teal-500/30"
                 order={6}
+                expanded={sectionExpandedState.personality}
+                onExpandedChange={(expanded) => handleSectionExpandedChange('personality', expanded)}
               >
                 <PremiumGate isPremium={hasAccess} title="性格深度剖析" description="升級收費版獲取完整性格分析報告" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                   <PersonalityAnalysis baziResult={baziResult} />
@@ -883,6 +939,8 @@ const Index = () => {
                 bgGradient="from-report-card via-report-card to-report-bg"
                 borderColor="border-cyan-500/30"
                 order={7}
+                expanded={sectionExpandedState.nayin}
+                onExpandedChange={(expanded) => handleSectionExpandedChange('nayin', expanded)}
               >
                 <PremiumGate isPremium={hasAccess} title="納音五行詳解" description="升級收費版了解納音深層含義" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                   <NayinAnalysis nayin={baziResult.nayin} />
@@ -900,6 +958,8 @@ const Index = () => {
                 bgGradient="from-report-card via-report-card to-report-bg"
                 borderColor="border-emerald-500/30"
                 order={8}
+                expanded={sectionExpandedState.analysis}
+                onExpandedChange={(expanded) => handleSectionExpandedChange('analysis', expanded)}
               >
                 <PremiumGate isPremium={hasAccess} title="五行陰陽圖表" description="升級收費版查看完整五行平衡分析" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                   <AnalysisCharts baziResult={baziResult} />
@@ -919,6 +979,8 @@ const Index = () => {
                   borderColor="border-slate-500/30"
                   decorative={false}
                   order={9}
+                  expanded={sectionExpandedState.logs}
+                  onExpandedChange={(expanded) => handleSectionExpandedChange('logs', expanded)}
                 >
                   <CalculationLogs logs={baziResult.calculationLogs} />
                 </ReportSection>

@@ -279,6 +279,17 @@
   margin-left: 0.5rem;
 }
 
+/* Ghost button */
+.hlw-button-ghost {
+  background: transparent;
+  color: var(--hlw-text-muted);
+}
+
+.hlw-button-ghost:hover:not(:disabled) {
+  color: var(--hlw-text);
+  background: var(--hlw-bg-secondary);
+}
+
 /* 分隔線 */
 .hlw-divider {
   position: relative;
@@ -304,6 +315,54 @@
   font-size: 0.75rem;
   left: 50%;
   transform: translateX(-50%);
+}
+
+/* 忘記密碼連結 */
+.hlw-forgot-password {
+  text-align: right;
+  margin-top: -0.5rem;
+}
+
+.hlw-forgot-link {
+  background: none;
+  border: none;
+  color: var(--hlw-primary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.hlw-forgot-link:hover {
+  color: var(--hlw-primary-dark);
+  text-decoration: underline;
+}
+
+/* 重設密碼成功提示 */
+.hlw-reset-info {
+  background: var(--hlw-bg-secondary);
+  border: 1px solid var(--hlw-border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.hlw-reset-info p {
+  color: var(--hlw-text-muted);
+  font-size: 0.875rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* 成功圖標樣式 */
+.hlw-icon-success {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.2));
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.hlw-icon-success .hlw-icon {
+  color: #22c55e;
 }
 
 /* 動畫 */

@@ -1,5 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+/**
+ * @deprecated 請使用 useUnifiedMembership 替代
+ * 此檔案保留向後相容性
+ */
+
+import { useUnifiedMembership } from './useUnifiedMembership';
+import type { Entitlement } from '@/lib/unified-member-sdk';
 
 interface EntitlementResult {
   hasAccess: boolean;
@@ -24,181 +29,25 @@ interface UseEntitlementReturn {
   refetch: () => Promise<void>;
 }
 
-const CACHE_KEY = 'entitlement_cache';
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-interface CachedEntitlement {
-  data: EntitlementResult;
-  timestamp: number;
-}
-
+/**
+ * @deprecated 請使用 useUnifiedMembership 替代
+ */
 export function useEntitlement(productId?: string): UseEntitlementReturn {
-  const [hasAccess, setHasAccess] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [entitlements, setEntitlements] = useState<EntitlementResult['entitlements']>([]);
-  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const membership = useUnifiedMembership(productId);
 
-  const getCachedEntitlement = useCallback((): EntitlementResult | null => {
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (!cached) return null;
-
-      const parsed: CachedEntitlement = JSON.parse(cached);
-      const isExpired = Date.now() - parsed.timestamp > CACHE_DURATION;
-
-      if (isExpired) {
-        localStorage.removeItem(CACHE_KEY);
-        return null;
-      }
-
-      // If this hook is called with a specific productId, make sure the cached
-      // value was for the same product to avoid cross-product cache leaks.
-      if (productId && parsed.data.productId && parsed.data.productId !== productId) {
-        return null;
-      }
-
-      return parsed.data;
-    } catch {
-      return null;
-    }
-  }, [productId]);
-
-  const setCachedEntitlement = useCallback((data: EntitlementResult) => {
-    try {
-      const cacheData: CachedEntitlement = {
-        data,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-    } catch {
-      // Ignore cache errors
-    }
-  }, []);
-
-  const checkEntitlement = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Check if user is logged in
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setHasAccess(false);
-        setLoading(false);
-        return;
-      }
-
-      // Check cache first
-      const cached = getCachedEntitlement();
-      if (cached) {
-        setHasAccess(cached.hasAccess);
-        setEntitlements(cached.entitlements || []);
-        setExpiresAt(cached.expiresAt || null);
-        setLoading(false);
-        return;
-      }
-
-      const applyLocalPremiumFallback = async () => {
-        const userId = session.user.id;
-        const { data: isPremium, error: premiumError } = await supabase.rpc('is_premium', {
-          check_user_id: userId,
-        });
-
-        if (premiumError) {
-          console.error('Local premium check error:', premiumError);
-          return false;
-        }
-
-        if (isPremium) {
-          const fallbackData: EntitlementResult = {
-            hasAccess: true,
-            email: session.user.email ?? undefined,
-            productId,
-            entitlements: [],
-            expiresAt: null,
-          };
-
-          setHasAccess(true);
-          setEntitlements([]);
-          setExpiresAt(null);
-          setError(null);
-          setCachedEntitlement(fallbackData);
-          return true;
-        }
-
-        return false;
-      };
-
-      // Call edge function
-      const queryParams = productId ? `?product_id=${encodeURIComponent(productId)}` : '';
-      const { data, error: fnError } = await supabase.functions.invoke<EntitlementResult>(
-        `check-entitlement${queryParams}`,
-        {
-          method: 'GET',
-        }
-      );
-
-      // If the central entitlement service is temporarily failing, fall back to local
-      // subscription status so premium users are not incorrectly blocked.
-      if (fnError) {
-        const fallbackApplied = await applyLocalPremiumFallback();
-        if (!fallbackApplied) {
-          console.error('Entitlement check error:', fnError);
-          setError(fnError.message);
-          setHasAccess(false);
-        }
-      } else if (data) {
-        const centralFailed = Boolean(data.error) ||
-          (typeof data.details === 'string' &&
-            (data.details.includes('Invalid JWT') || data.details.includes('Missing authorization header')));
-
-        if (centralFailed) {
-          const fallbackApplied = await applyLocalPremiumFallback();
-          if (!fallbackApplied) {
-            setHasAccess(false);
-            setError(data.error ?? data.details ?? 'Central API error');
-          }
-          return;
-        }
-
-        setHasAccess(data.hasAccess);
-        setEntitlements(data.entitlements || []);
-        setExpiresAt(data.expiresAt || null);
-        setCachedEntitlement(data);
-      }
-    } catch (err) {
-      console.error('Unexpected error checking entitlement:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      setHasAccess(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [productId, getCachedEntitlement, setCachedEntitlement]);
-
-  useEffect(() => {
-    checkEntitlement();
-  }, [checkEntitlement]);
-
-  // Listen for auth changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-        localStorage.removeItem(CACHE_KEY);
-        checkEntitlement();
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [checkEntitlement]);
+  // 轉換 entitlements 格式以保持向後相容
+  const legacyEntitlements = membership.entitlements.map((e: Entitlement) => ({
+    id: e.id,
+    product_id: e.product_id,
+    expires_at: e.ends_at || undefined,
+  }));
 
   return {
-    hasAccess,
-    loading,
-    error,
-    entitlements,
-    expiresAt,
-    refetch: checkEntitlement,
+    hasAccess: membership.hasAccess,
+    loading: membership.loading,
+    error: membership.error,
+    entitlements: legacyEntitlements,
+    expiresAt: membership.expiresAt,
+    refetch: membership.refetch,
   };
 }

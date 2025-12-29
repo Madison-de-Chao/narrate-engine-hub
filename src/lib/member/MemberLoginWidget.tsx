@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, User, Sparkles, ArrowRight, Loader2, X } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Sparkles, ArrowRight, Loader2, X, ArrowLeft, KeyRound, CheckCircle } from 'lucide-react';
 import { z } from 'zod';
 import { useMember } from './MemberContext';
 
@@ -27,6 +27,8 @@ const GoogleIcon = () => (
     />
   </svg>
 );
+
+type ViewState = 'login' | 'signup' | 'forgot-password' | 'reset-sent';
 
 export interface MemberLoginWidgetProps {
   /** 關閉按鈕回調 */
@@ -63,14 +65,19 @@ export function MemberLoginWidget({
   onNavigate,
   onToast,
 }: MemberLoginWidgetProps) {
-  const { signIn, signUp, signInWithGoogle, user } = useMember();
-  const [isLogin, setIsLogin] = useState(true);
+  const { signIn, signUp, signInWithGoogle, resetPassword, user } = useMember();
+  const [viewState, setViewState] = useState<ViewState>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const isLogin = viewState === 'login';
+  const isSignup = viewState === 'signup';
+  const isForgotPassword = viewState === 'forgot-password';
+  const isResetSent = viewState === 'reset-sent';
 
   const navigate = (path: string) => {
     if (onNavigate) {
@@ -93,9 +100,10 @@ export function MemberLoginWidget({
     }
   };
 
-  const validateForm = () => {
+  const validateEmail = () => {
     try {
       emailSchema.parse(email);
+      return true;
     } catch {
       toast({
         title: 'Email 格式錯誤',
@@ -104,6 +112,10 @@ export function MemberLoginWidget({
       });
       return false;
     }
+  };
+
+  const validateForm = () => {
+    if (!validateEmail()) return false;
 
     try {
       passwordSchema.parse(password);
@@ -144,7 +156,7 @@ export function MemberLoginWidget({
         onSuccess?.();
         navigate(redirectTo);
       }
-    } else {
+    } else if (isSignup) {
       const { error } = await signUp(email, password, displayName);
       if (error) {
         toast({
@@ -167,6 +179,28 @@ export function MemberLoginWidget({
     setIsSubmitting(false);
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateEmail()) return;
+
+    setIsSubmitting(true);
+    
+    const { error } = await resetPassword(email);
+    
+    if (error) {
+      toast({
+        title: '發送失敗',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      setViewState('reset-sent');
+    }
+
+    setIsSubmitting(false);
+  };
+
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     const { error } = await signInWithGoogle();
@@ -178,6 +212,10 @@ export function MemberLoginWidget({
       });
       setIsGoogleLoading(false);
     }
+  };
+
+  const goBackToLogin = () => {
+    setViewState('login');
   };
 
   // If user is already logged in
@@ -200,6 +238,116 @@ export function MemberLoginWidget({
     );
   }
 
+  // Reset email sent success view
+  if (isResetSent) {
+    return (
+      <div className={`hlw-widget ${className}`}>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="hlw-close-button"
+            aria-label="關閉"
+          >
+            <X className="hlw-close-icon" />
+          </button>
+        )}
+
+        <div className="hlw-header">
+          <div className="hlw-icon-container hlw-icon-success">
+            <CheckCircle className="hlw-icon" />
+          </div>
+          <h3 className="hlw-title">重設信件已發送</h3>
+          <p className="hlw-subtitle">
+            我們已將密碼重設連結發送到<br />
+            <strong>{email}</strong>
+          </p>
+        </div>
+
+        <div className="hlw-reset-info">
+          <p>請檢查您的收件匣（包括垃圾郵件資料夾），點擊連結重設密碼。</p>
+        </div>
+
+        <button
+          type="button"
+          onClick={goBackToLogin}
+          className="hlw-button hlw-button-outline hlw-button-full"
+        >
+          <ArrowLeft className="hlw-button-icon" />
+          返回登入
+        </button>
+      </div>
+    );
+  }
+
+  // Forgot password view
+  if (isForgotPassword) {
+    return (
+      <div className={`hlw-widget ${className}`}>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="hlw-close-button"
+            aria-label="關閉"
+          >
+            <X className="hlw-close-icon" />
+          </button>
+        )}
+
+        <div className="hlw-header">
+          <div className="hlw-icon-container">
+            <KeyRound className="hlw-icon" />
+          </div>
+          <h3 className="hlw-title">忘記密碼</h3>
+          <p className="hlw-subtitle">輸入您的 Email，我們將發送重設連結</p>
+        </div>
+
+        <form onSubmit={handleForgotPassword} className={`hlw-form ${compact ? 'hlw-form-compact' : ''}`}>
+          <div className="hlw-field">
+            <label htmlFor="hlw-reset-email" className="hlw-label">
+              <Mail className="hlw-label-icon" />
+              Email
+            </label>
+            <input
+              id="hlw-reset-email"
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="hlw-input"
+              disabled={isSubmitting}
+              autoFocus
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="hlw-button hlw-button-primary hlw-button-full"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="hlw-button-icon hlw-spin" />
+                發送中...
+              </>
+            ) : (
+              '發送重設連結'
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={goBackToLogin}
+            className="hlw-button hlw-button-ghost hlw-button-full"
+          >
+            <ArrowLeft className="hlw-button-icon" />
+            返回登入
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  // Login / Signup view
   return (
     <div className={`hlw-widget ${className}`}>
       {/* Close button */}
@@ -228,15 +376,15 @@ export function MemberLoginWidget({
       <div className={`hlw-tabs ${compact ? 'hlw-tabs-compact' : ''}`}>
         <button
           type="button"
-          onClick={() => setIsLogin(true)}
+          onClick={() => setViewState('login')}
           className={`hlw-tab ${isLogin ? 'hlw-tab-active' : ''}`}
         >
           登入
         </button>
         <button
           type="button"
-          onClick={() => setIsLogin(false)}
-          className={`hlw-tab ${!isLogin ? 'hlw-tab-active' : ''}`}
+          onClick={() => setViewState('signup')}
+          className={`hlw-tab ${isSignup ? 'hlw-tab-active' : ''}`}
         >
           註冊
         </button>
@@ -301,6 +449,19 @@ export function MemberLoginWidget({
             </button>
           </div>
         </div>
+
+        {/* Forgot password link - only show on login */}
+        {isLogin && (
+          <div className="hlw-forgot-password">
+            <button
+              type="button"
+              onClick={() => setViewState('forgot-password')}
+              className="hlw-forgot-link"
+            >
+              忘記密碼？
+            </button>
+          </div>
+        )}
 
         <button
           type="submit"

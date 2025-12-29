@@ -394,6 +394,98 @@ export const CharacterDetailDialog = ({
                 </motion.div>
               </>
             )}
+
+            <Separator />
+
+            {/* 相關角色推薦 */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <h3 className="flex items-center gap-2 text-lg font-semibold mb-4">
+                <Sparkles className="w-5 h-5" style={{ color: elementConfig?.color }} />
+                相關角色推薦
+              </h3>
+              
+              <div className="space-y-4">
+                {/* 相生角色 - 生我的 */}
+                {relations?.generatedBy && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-green-500" />
+                      增益夥伴（{relations.generatedBy}行生{character.element}行）
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {getRelatedCharacters(relations.generatedBy).slice(0, 4).map((char) => (
+                        <Badge 
+                          key={char.id}
+                          variant="outline"
+                          className="cursor-pointer hover:scale-105 transition-transform"
+                          style={{ 
+                            borderColor: ELEMENT_CONFIG[relations.generatedBy as ElementType]?.color,
+                            color: ELEMENT_CONFIG[relations.generatedBy as ElementType]?.color
+                          }}
+                        >
+                          {char.id} {char.title}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 互補角色 - 我生的 */}
+                {relations?.generates && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      互補夥伴（{character.element}行生{relations.generates}行）
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {getRelatedCharacters(relations.generates).slice(0, 4).map((char) => (
+                        <Badge 
+                          key={char.id}
+                          variant="outline"
+                          className="cursor-pointer hover:scale-105 transition-transform"
+                          style={{ 
+                            borderColor: ELEMENT_CONFIG[relations.generates as ElementType]?.color,
+                            color: ELEMENT_CONFIG[relations.generates as ElementType]?.color
+                          }}
+                        >
+                          {char.id} {char.title}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 同行角色 */}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full" style={{ background: elementConfig?.color }} />
+                    同行夥伴（{character.element}行）
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {getRelatedCharacters(character.element)
+                      .filter(c => c.id !== character.id)
+                      .slice(0, 4)
+                      .map((char) => (
+                        <Badge 
+                          key={char.id}
+                          variant="outline"
+                          className="cursor-pointer hover:scale-105 transition-transform"
+                          style={{ 
+                            borderColor: elementConfig?.color,
+                            color: elementConfig?.color
+                          }}
+                        >
+                          {char.id} {char.title}
+                        </Badge>
+                      ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </ScrollArea>
       </DialogContent>

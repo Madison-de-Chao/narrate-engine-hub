@@ -6,13 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Users, ArrowLeftRight, Plus, Check, X, Heart, Star, Maximize, Network } from "lucide-react";
+import { Search, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Users, ArrowLeftRight, Plus, Check, X, Heart, Star, Maximize, Network, History, Trash2 } from "lucide-react";
 import { GAN_CHARACTERS, ZHI_CHARACTERS } from "@/lib/legionTranslator/characterData";
 import { CharacterDetailDialog } from "@/components/CharacterDetailDialog";
 import { CharacterCompareDialog } from "@/components/CharacterCompareDialog";
 import { CharacterLightbox } from "@/components/CharacterLightbox";
 import { CharacterRelationshipMap } from "@/components/CharacterRelationshipMap";
 import { useCharacterFavorites } from "@/hooks/useCharacterFavorites";
+import { useCharacterViewHistory } from "@/hooks/useCharacterViewHistory";
 import { PageHeader } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import type { GanCharacter, ZhiCharacter } from "@/lib/legionTranslator/types";
@@ -33,7 +34,7 @@ type CharacterType = GanCharacter | ZhiCharacter;
 
 const CharacterGallery = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'gan' | 'zhi' | 'favorites'>('gan');
+  const [activeTab, setActiveTab] = useState<'gan' | 'zhi' | 'favorites' | 'history'>('gan');
   const [selectedElement, setSelectedElement] = useState<ElementType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCharacter, setSelectedCharacter] = useState<CharacterType | null>(null);
@@ -53,6 +54,9 @@ const CharacterGallery = () => {
 
   // 收藏功能
   const { favorites, loading: favoritesLoading, isLoggedIn, isFavorite, toggleFavorite, getFavoriteIds } = useCharacterFavorites();
+  
+  // 瀏覽歷史功能
+  const { history, addToHistory, clearHistory, removeFromHistory } = useCharacterViewHistory();
 
 
   // 獲取當前顯示的角色列表
@@ -66,6 +70,14 @@ const CharacterGallery = () => {
       const ganFavorites = Object.values(GAN_CHARACTERS).filter(c => ganFavoriteIds.includes(c.id));
       const zhiFavorites = Object.values(ZHI_CHARACTERS).filter(c => zhiFavoriteIds.includes(c.id));
       source = [...ganFavorites, ...zhiFavorites];
+    } else if (activeTab === 'history') {
+      // 獲取瀏覽歷史的角色
+      source = history.map(item => {
+        if (item.characterType === 'gan') {
+          return GAN_CHARACTERS[item.characterId];
+        }
+        return ZHI_CHARACTERS[item.characterId];
+      }).filter(Boolean) as CharacterType[];
     } else {
       source = activeTab === 'gan' ? Object.values(GAN_CHARACTERS) : Object.values(ZHI_CHARACTERS);
     }
@@ -85,7 +97,7 @@ const CharacterGallery = () => {
       }
       return true;
     });
-  }, [activeTab, selectedElement, searchQuery, getFavoriteIds]);
+  }, [activeTab, selectedElement, searchQuery, getFavoriteIds, history]);
 
   // 獲取頭像
   const getAvatarSrc = (char: CharacterType) => {
@@ -108,6 +120,8 @@ const CharacterGallery = () => {
       const charIndex = characters.findIndex(c => c.id === char.id);
       setLightboxIndex(charIndex >= 0 ? charIndex : 0);
       setLightboxOpen(true);
+      // 添加到瀏覽歷史
+      addToHistory(char.id, getCharacterType(char));
     }
   };
 
@@ -181,6 +195,7 @@ const CharacterGallery = () => {
 
   const compareCount = compareCharacters.filter(Boolean).length;
   const favoritesCount = favorites.length;
+  const historyCount = history.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
@@ -203,9 +218,9 @@ const CharacterGallery = () => {
         </motion.div>
 
         {/* 主選項卡 */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'gan' | 'zhi' | 'favorites')} className="mb-6">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'gan' | 'zhi' | 'favorites' | 'history')} className="mb-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
-            <TabsList className="grid w-full max-w-lg grid-cols-3">
+            <TabsList className="grid w-full max-w-2xl grid-cols-4">
               <TabsTrigger value="gan" className="gap-2">
                 <Shield className="w-4 h-4" />
                 <span className="hidden sm:inline">天干主將</span>
@@ -218,11 +233,21 @@ const CharacterGallery = () => {
               </TabsTrigger>
               <TabsTrigger value="favorites" className="gap-2">
                 <Star className="w-4 h-4" />
-                <span className="hidden sm:inline">我的收藏</span>
+                <span className="hidden sm:inline">收藏</span>
                 <span className="sm:hidden">收藏</span>
                 {favoritesCount > 0 && (
                   <Badge variant="secondary" className="ml-1 h-5 px-1.5">
                     {favoritesCount}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="history" className="gap-2">
+                <History className="w-4 h-4" />
+                <span className="hidden sm:inline">歷史</span>
+                <span className="sm:hidden">歷史</span>
+                {historyCount > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                    {historyCount}
                   </Badge>
                 )}
               </TabsTrigger>
@@ -446,10 +471,51 @@ const CharacterGallery = () => {
               />
             )}
           </TabsContent>
+          
+          {/* 瀏覽歷史 */}
+          <TabsContent value="history" className="mt-0">
+            {history.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12"
+              >
+                <History className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
+                <p className="text-muted-foreground mb-2">還沒有瀏覽過任何角色</p>
+                <p className="text-sm text-muted-foreground">點擊角色卡片開始探索</p>
+              </motion.div>
+            ) : (
+              <>
+                <div className="flex justify-end mb-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearHistory}
+                    className="text-muted-foreground hover:text-destructive gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    清除歷史
+                  </Button>
+                </div>
+                <CharacterGrid 
+                  characters={characters} 
+                  getAvatarSrc={getAvatarSrc}
+                  onCharacterClick={handleCharacterClick}
+                  onFavoriteClick={handleFavoriteClick}
+                  getCharacterType={getCharacterType}
+                  isFavorite={isFavorite}
+                  isLoggedIn={isLoggedIn}
+                  compareMode={compareMode}
+                  isInCompareList={isInCompareList}
+                  getComparePosition={getComparePosition}
+                />
+              </>
+            )}
+          </TabsContent>
         </Tabs>
 
         {/* 空狀態 */}
-        {characters.length === 0 && activeTab !== 'favorites' && (
+        {characters.length === 0 && activeTab !== 'favorites' && activeTab !== 'history' && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -475,6 +541,9 @@ const CharacterGallery = () => {
           toggleFavorite(char.id, type, `${char.id} ${char.title}`);
         }}
         isLoggedIn={isLoggedIn}
+        onCharacterView={(char) => {
+          addToHistory(char.id, getCharacterType(char));
+        }}
       />
 
       {/* 角色詳情彈窗 */}

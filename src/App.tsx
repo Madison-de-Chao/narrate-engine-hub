@@ -25,6 +25,7 @@ import PromptTemplates from "./pages/PromptTemplates";
 import VersionInfo from "./pages/VersionInfo";
 import ResearchReport from "./pages/ResearchReport";
 import CharacterGallery from "./pages/CharacterGallery";
+import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,6 +63,7 @@ const App = () => (
                 <Route path="/version" element={<VersionInfo />} />
                 <Route path="/research" element={<ResearchReport />} />
                 <Route path="/gallery" element={<CharacterGallery />} />
+                <Route path="/account" element={<Account />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

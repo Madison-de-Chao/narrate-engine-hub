@@ -122,6 +122,10 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => navigate('/account')}>
+                        <User className="w-4 h-4 mr-2" />
+                        會員中心
+                      </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={handleSignOut}
                         className="text-destructive focus:text-destructive"

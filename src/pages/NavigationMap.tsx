@@ -40,7 +40,7 @@ const ZONES: MapZone[] = [
     icon: <Swords className="w-8 h-8" />,
     color: 'from-red-600 to-amber-500',
     glowColor: 'rgba(239, 68, 68, 0.5)',
-    position: { x: 35, y: 50 },
+    position: { x: 25, y: 50 },
     size: 'lg'
   },
   {
@@ -51,7 +51,18 @@ const ZONES: MapZone[] = [
     icon: <GraduationCap className="w-8 h-8" />,
     color: 'from-purple-600 to-indigo-500',
     glowColor: 'rgba(147, 51, 234, 0.5)',
-    position: { x: 65, y: 50 },
+    position: { x: 50, y: 50 },
+    size: 'lg'
+  },
+  {
+    id: 'subscribe',
+    name: '會員訂閱',
+    subtitle: 'Premium 專屬',
+    description: '解鎖完整軍團故事、進階分析報告與專屬功能，享受尊榮會員體驗',
+    icon: <Star className="w-8 h-8" />,
+    color: 'from-amber-500 to-yellow-400',
+    glowColor: 'rgba(245, 158, 11, 0.5)',
+    position: { x: 75, y: 50 },
     size: 'lg'
   }
 ];
@@ -67,6 +78,8 @@ const NavigationMap: React.FC = () => {
       navigate('/academy');
     } else if (zoneId === 'legion') {
       navigate('/');
+    } else if (zoneId === 'subscribe') {
+      navigate('/subscribe');
     } else {
       navigate(`/guide/${zoneId}`);
     }
@@ -125,7 +138,7 @@ const NavigationMap: React.FC = () => {
               theme === 'dark' ? 'bg-[radial-gradient(circle_at_50%_50%,hsl(45_100%_50%/0.1)_0%,transparent_50%)]' : ''
             }`} />
             
-            {/* 連接線 - 連接兩個主要區域 */}
+            {/* 連接線 - 連接三個主要區域 */}
             <svg className="absolute inset-0 w-full h-full" style={{ minHeight: '500px' }}>
               <defs>
                 <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -134,11 +147,11 @@ const NavigationMap: React.FC = () => {
                   <stop offset="100%" stopColor={theme === 'dark' ? 'hsl(45, 100%, 50%)' : 'hsl(45, 90%, 45%)'} stopOpacity="0.2" />
                 </linearGradient>
               </defs>
-              {/* 連接兩個主區域的線 */}
+              {/* 連接第一和第二區域的線 */}
               <motion.line
-                x1="35%"
+                x1="25%"
                 y1="50%"
-                x2="65%"
+                x2="50%"
                 y2="50%"
                 stroke="url(#lineGradient)"
                 strokeWidth="3"
@@ -149,6 +162,22 @@ const NavigationMap: React.FC = () => {
                   opacity: hoveredZone ? 0.8 : 0.4
                 }}
                 transition={{ duration: 0.8 }}
+              />
+              {/* 連接第二和第三區域的線 */}
+              <motion.line
+                x1="50%"
+                y1="50%"
+                x2="75%"
+                y2="50%"
+                stroke="url(#lineGradient)"
+                strokeWidth="3"
+                strokeDasharray="8 4"
+                initial={{ pathLength: 0 }}
+                animate={{ 
+                  pathLength: 1,
+                  opacity: hoveredZone ? 0.8 : 0.4
+                }}
+                transition={{ duration: 0.8, delay: 0.2 }}
               />
             </svg>
           </div>
@@ -423,6 +452,27 @@ const NavigationMap: React.FC = () => {
           >
             <GraduationCap className="w-5 h-5" />
             <span>八字學堂</span>
+            <ChevronRight className="w-5 h-5" />
+          </motion.button>
+
+          {/* 會員訂閱入口 */}
+          <motion.button
+            onClick={() => navigate('/subscribe')}
+            className={`
+              w-full py-4 px-6 rounded-xl
+              flex items-center justify-center gap-3
+              font-bold text-lg tracking-wider
+              transition-all duration-300
+              ${theme === 'dark'
+                ? 'bg-gradient-to-r from-amber-500/30 via-yellow-400/30 to-amber-500/30 text-amber-300 border border-amber-500/40 hover:border-amber-400/60 hover:bg-amber-500/30'
+                : 'bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-white hover:from-amber-400 hover:via-yellow-300 hover:to-amber-400'
+              }
+            `}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Star className="w-5 h-5" />
+            <span>會員訂閱 · Premium</span>
             <ChevronRight className="w-5 h-5" />
           </motion.button>
         </div>

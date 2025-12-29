@@ -10,6 +10,10 @@ import 辰土_泥雲龍法師_全身動態 from './辰土_泥雲龍法師_全身
 import 巳火_蛇焰術士_全身動態 from './巳火_蛇焰術士_全身動態.png';
 import 午火_日鬃騎兵_全身動態 from './午火_日鬃騎兵_全身動態.png';
 import 未土_牧角調和者_全身動態 from './未土_牧角調和者_全身動態.png';
+import 申金_金杖靈猴戰士_全身動態 from './申金_金杖靈猴戰士_全身動態.png';
+import 酉金_鳳羽判衡者_全身動態 from './酉金_鳳羽判衡者_全身動態.png';
+import 戌土_烽火戰犬統領_全身動態 from './戌土_烽火戰犬統領_全身動態.png';
+import 亥水_潮典海豚智者_全身動態 from './亥水_潮典海豚智者_全身動態.png';
 
 // 地支到全身動態圖的映射
 export const advisorFullbodyAvatars: Record<string, string> = {
@@ -21,6 +25,10 @@ export const advisorFullbodyAvatars: Record<string, string> = {
   '巳': 巳火_蛇焰術士_全身動態,
   '午': 午火_日鬃騎兵_全身動態,
   '未': 未土_牧角調和者_全身動態,
+  '申': 申金_金杖靈猴戰士_全身動態,
+  '酉': 酉金_鳳羽判衡者_全身動態,
+  '戌': 戌土_烽火戰犬統領_全身動態,
+  '亥': 亥水_潮典海豚智者_全身動態,
 };
 
 export function getAdvisorFullbodyAvatar(branch: string): string | undefined {

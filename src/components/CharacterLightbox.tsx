@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, X, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Heart, Maximize2 } from "lucide-react";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ChevronLeft, ChevronRight, X, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Heart, Maximize2, Grid3X3 } from "lucide-react";
 import type { GanCharacter, ZhiCharacter } from "@/lib/legionTranslator/types";
 import { commanderFullbodyAvatars } from "@/assets/commanders-fullbody";
 import { advisorFullbodyAvatars } from "@/assets/advisors-fullbody";
@@ -35,14 +36,16 @@ export function CharacterLightbox({
   characters,
   currentIndex,
   isOpen,
-  onClose,
   onNavigate,
+  onClose,
   getAvatarSrc,
   isFavorite,
   onFavoriteClick,
   isLoggedIn = false,
 }: CharacterLightboxProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [showThumbnails, setShowThumbnails] = useState(true);
+  const thumbnailsRef = useRef<HTMLDivElement>(null);
   const currentChar = characters[currentIndex];
 
   const getCharType = (char: CharacterType): 'gan' | 'zhi' => 'gan' in char ? 'gan' : 'zhi';
@@ -74,6 +77,24 @@ export function CharacterLightbox({
     }
   }, [currentIndex, characters.length, onNavigate]);
 
+  const handleThumbnailClick = useCallback((index: number) => {
+    if (index !== currentIndex) {
+      setImageLoaded(false);
+      onNavigate(index);
+    }
+  }, [currentIndex, onNavigate]);
+
+  // 滾動當前縮圖到可視區域
+  useEffect(() => {
+    if (thumbnailsRef.current && showThumbnails) {
+      const thumbnails = thumbnailsRef.current.querySelectorAll('[data-thumbnail]');
+      const currentThumbnail = thumbnails[currentIndex] as HTMLElement;
+      if (currentThumbnail) {
+        currentThumbnail.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+  }, [currentIndex, showThumbnails]);
+
   // 鍵盤導航
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -81,6 +102,7 @@ export function CharacterLightbox({
       if (e.key === 'ArrowLeft') handlePrev();
       if (e.key === 'ArrowRight') handleNext();
       if (e.key === 'Escape') onClose();
+      if (e.key === 'g' || e.key === 'G') setShowThumbnails(prev => !prev);
     };
     
     window.addEventListener('keydown', handleKeyDown);
@@ -98,59 +120,98 @@ export function CharacterLightbox({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent 
-        className="max-w-6xl w-[95vw] h-[90vh] p-0 overflow-hidden bg-transparent border-0"
+        className="max-w-7xl w-[98vw] h-[95vh] p-0 overflow-hidden bg-transparent border-0"
         onPointerDownOutside={onClose}
       >
-        <div className={`relative w-full h-full bg-gradient-to-br ${config?.gradient || 'from-stone-800 to-stone-950'} rounded-lg overflow-hidden`}>
+        <div className={`relative w-full h-full bg-gradient-to-br ${config?.gradient || 'from-stone-800 to-stone-950'} rounded-lg overflow-hidden flex flex-col`}>
           {/* 背景裝飾 */}
-          <div className="absolute inset-0 opacity-20">
+          <div className="absolute inset-0 opacity-20 pointer-events-none">
             <div className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: config?.color }} />
             <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: config?.color }} />
           </div>
 
-          {/* 關閉按鈕 */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="absolute top-4 right-4 z-50 bg-black/30 hover:bg-black/50 text-white rounded-full"
-          >
-            <X className="w-5 h-5" />
-          </Button>
-
-          {/* 導航按鈕 */}
-          {currentIndex > 0 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handlePrev}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-black/30 hover:bg-black/50 text-white rounded-full w-12 h-12"
-            >
-              <ChevronLeft className="w-8 h-8" />
-            </Button>
-          )}
-          {currentIndex < characters.length - 1 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleNext}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-50 bg-black/30 hover:bg-black/50 text-white rounded-full w-12 h-12"
-            >
-              <ChevronRight className="w-8 h-8" />
-            </Button>
-          )}
+          {/* 頂部工具列 */}
+          <div className="relative z-50 flex items-center justify-between px-4 py-3 bg-black/30 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <Badge 
+                className="gap-1"
+                style={{ 
+                  backgroundColor: `${config?.color}30`,
+                  color: config?.color,
+                  borderColor: config?.color
+                }}
+              >
+                <ElementIcon className="w-3 h-3" />
+                {currentChar.element}
+              </Badge>
+              <span className="text-white font-medium">{currentChar.id}</span>
+              <span className="text-white/60">{currentChar.title}</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowThumbnails(!showThumbnails)}
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-full"
+                title="切換縮圖列 (G)"
+              >
+                <Grid3X3 className="w-5 h-5" />
+              </Button>
+              {isLoggedIn && onFavoriteClick && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onFavoriteClick(currentChar)}
+                  className={`rounded-full ${isFav ? 'text-red-500' : 'text-white/50 hover:text-red-400'}`}
+                >
+                  <Heart className={`w-5 h-5 ${isFav ? 'fill-current' : ''}`} />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
 
           {/* 主要內容區 */}
-          <div className="relative z-10 flex flex-col lg:flex-row h-full">
+          <div className="flex-1 flex flex-col lg:flex-row min-h-0 relative">
+            {/* 導航按鈕 */}
+            {currentIndex > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePrev}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-black/30 hover:bg-black/50 text-white rounded-full w-12 h-12"
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </Button>
+            )}
+            {currentIndex < characters.length - 1 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNext}
+                className="absolute right-4 lg:right-[calc(24rem+1rem)] top-1/2 -translate-y-1/2 z-50 bg-black/30 hover:bg-black/50 text-white rounded-full w-12 h-12"
+              >
+                <ChevronRight className="w-8 h-8" />
+              </Button>
+            )}
+
             {/* 圖像區 */}
-            <div className="flex-1 flex items-center justify-center p-4 lg:p-8 relative">
+            <div className="flex-1 flex items-center justify-center p-4 lg:p-8 relative min-h-0">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentChar.id}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ duration: 0.25 }}
                   className="relative max-h-full flex items-center justify-center"
                 >
                   {/* Loading 骨架 */}
@@ -167,7 +228,7 @@ export function CharacterLightbox({
                     src={displayImage}
                     alt={currentChar.title}
                     onLoad={() => setImageLoaded(true)}
-                    className={`max-h-[70vh] w-auto object-contain drop-shadow-2xl transition-opacity duration-300 ${
+                    className={`max-h-[55vh] lg:max-h-[65vh] w-auto object-contain drop-shadow-2xl transition-opacity duration-300 ${
                       imageLoaded ? 'opacity-100' : 'opacity-0'
                     } ${hasFullbody ? 'rounded-2xl' : 'rounded-full max-w-[300px]'}`}
                     style={{
@@ -187,66 +248,41 @@ export function CharacterLightbox({
             </div>
 
             {/* 資訊區 */}
-            <div className="lg:w-96 p-6 lg:p-8 bg-black/40 backdrop-blur-md overflow-y-auto">
+            <div className="lg:w-96 p-4 lg:p-6 bg-black/40 backdrop-blur-md overflow-y-auto">
               <motion.div
                 key={`info-${currentChar.id}`}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 }}
-                className="space-y-6"
+                className="space-y-4"
               >
                 {/* 頭部 */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge 
-                        className="gap-1"
-                        style={{ 
-                          backgroundColor: `${config?.color}30`,
-                          color: config?.color,
-                          borderColor: config?.color
-                        }}
-                      >
-                        <ElementIcon className="w-3 h-3" />
-                        {currentChar.element}
-                      </Badge>
-                      <Badge variant="outline" className="text-white/70 border-white/20">
-                        {'gan' in currentChar ? '天干主將' : '地支軍師'}
-                      </Badge>
-                    </div>
-                    <h2 className="text-3xl font-bold text-white">
-                      {currentChar.id}
-                    </h2>
-                    <p className="text-xl text-white/80">{currentChar.title}</p>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="outline" className="text-white/70 border-white/20">
+                      {'gan' in currentChar ? '天干主將' : '地支軍師'}
+                    </Badge>
                   </div>
-                  
-                  {/* 收藏按鈕 */}
-                  {isLoggedIn && onFavoriteClick && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onFavoriteClick(currentChar)}
-                      className={`rounded-full ${isFav ? 'text-red-500' : 'text-white/50 hover:text-red-400'}`}
-                    >
-                      <Heart className={`w-6 h-6 ${isFav ? 'fill-current' : ''}`} />
-                    </Button>
-                  )}
+                  <h2 className="text-2xl lg:text-3xl font-bold text-white">
+                    {currentChar.id}
+                  </h2>
+                  <p className="text-lg text-white/80">{currentChar.title}</p>
                 </div>
 
                 {/* 描述 */}
-                <p className="text-white/70 leading-relaxed">
+                <p className="text-sm text-white/70 leading-relaxed">
                   {currentChar.description}
                 </p>
 
                 {/* 性格特質 */}
                 <div>
-                  <h3 className="text-sm font-medium text-white/50 mb-2">性格特質</h3>
-                  <div className="flex flex-wrap gap-2">
+                  <h3 className="text-xs font-medium text-white/50 mb-2">性格特質</h3>
+                  <div className="flex flex-wrap gap-1.5">
                     {currentChar.personality.map((trait, idx) => (
                       <Badge 
                         key={idx}
                         variant="secondary"
-                        className="bg-white/10 text-white/80 border-0"
+                        className="bg-white/10 text-white/80 border-0 text-xs"
                       >
                         {trait}
                       </Badge>
@@ -255,17 +291,17 @@ export function CharacterLightbox({
                 </div>
 
                 {/* Buff/Debuff */}
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="text-sm font-medium text-green-400/70 mb-2">增益效果</h3>
-                    <div className="text-sm text-white/70 flex items-start gap-2">
+                <div className="space-y-2">
+                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <h3 className="text-xs font-medium text-green-400/80 mb-1">增益效果</h3>
+                    <div className="text-sm text-white/80 flex items-start gap-2">
                       <span className="text-green-400 flex-shrink-0">✦</span>
                       <span>{currentChar.buff}</span>
                     </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-red-400/70 mb-2">減益效果</h3>
-                    <div className="text-sm text-white/70 flex items-start gap-2">
+                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                    <h3 className="text-xs font-medium text-red-400/80 mb-1">減益效果</h3>
+                    <div className="text-sm text-white/80 flex items-start gap-2">
                       <span className="text-red-400 flex-shrink-0">✧</span>
                       <span>{currentChar.debuff}</span>
                     </div>
@@ -273,12 +309,73 @@ export function CharacterLightbox({
                 </div>
 
                 {/* 頁碼 */}
-                <div className="text-center text-white/40 text-sm pt-4 border-t border-white/10">
+                <div className="text-center text-white/40 text-xs pt-2 border-t border-white/10">
                   {currentIndex + 1} / {characters.length}
                 </div>
               </motion.div>
             </div>
           </div>
+
+          {/* 縮圖預覽列 */}
+          <AnimatePresence>
+            {showThumbnails && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="relative z-40 bg-black/50 backdrop-blur-sm border-t border-white/10"
+              >
+                <ScrollArea className="w-full" ref={thumbnailsRef}>
+                  <div className="flex gap-2 p-3">
+                    {characters.map((char, idx) => {
+                      const charConfig = ELEMENT_CONFIG[char.element as ElementType];
+                      const isActive = idx === currentIndex;
+                      const thumbnail = getFullbodyAvatar(char) || getAvatarSrc(char);
+                      
+                      return (
+                        <motion.button
+                          key={char.id}
+                          data-thumbnail
+                          onClick={() => handleThumbnailClick(idx)}
+                          className={`relative flex-shrink-0 w-14 h-14 lg:w-16 lg:h-16 rounded-lg overflow-hidden transition-all duration-200 ${
+                            isActive 
+                              ? 'ring-2 ring-offset-2 ring-offset-black/50 scale-110' 
+                              : 'opacity-60 hover:opacity-100 hover:scale-105'
+                          }`}
+                          style={{ 
+                            ['--tw-ring-color' as string]: isActive ? charConfig?.color : undefined,
+                          }}
+                          whileHover={{ y: -2 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <img
+                            src={thumbnail}
+                            alt={char.title}
+                            className="w-full h-full object-cover"
+                          />
+                          {/* 五行標識 */}
+                          <div 
+                            className="absolute bottom-0 left-0 right-0 h-1"
+                            style={{ backgroundColor: charConfig?.color }}
+                          />
+                          {/* 當前指示器 */}
+                          {isActive && (
+                            <motion.div
+                              layoutId="activeThumbnail"
+                              className="absolute inset-0 border-2 rounded-lg pointer-events-none"
+                              style={{ borderColor: charConfig?.color }}
+                            />
+                          )}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </DialogContent>
     </Dialog>

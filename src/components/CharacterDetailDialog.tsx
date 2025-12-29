@@ -1,12 +1,14 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Sparkles, Shield, Zap, Droplets, Mountain, Flame, TreeDeciduous,
-  TrendingUp, TrendingDown, User, Clock, Leaf, ArrowRight, Circle
+  TrendingUp, TrendingDown, User, Clock, Leaf, ArrowRight, Circle,
+  ChevronRight, Home
 } from "lucide-react";
 import type { GanCharacter, ZhiCharacter } from "@/lib/legionTranslator/types";
 import { GAN_CHARACTERS, ZHI_CHARACTERS } from "@/lib/legionTranslator/characterData";
@@ -56,6 +58,7 @@ interface CharacterDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   avatarSrc?: string;
   onCharacterClick?: (char: GanCharacter | ZhiCharacter) => void;
+  getAvatarSrc?: (char: GanCharacter | ZhiCharacter) => string | undefined;
 }
 
 export const CharacterDetailDialog = ({
@@ -64,7 +67,34 @@ export const CharacterDetailDialog = ({
   onOpenChange,
   avatarSrc,
   onCharacterClick,
+  getAvatarSrc,
 }: CharacterDetailDialogProps) => {
+  // 瀏覽路徑追蹤
+  const [breadcrumbs, setBreadcrumbs] = useState<(GanCharacter | ZhiCharacter)[]>([]);
+  
+  // 當對話框關閉時重置麵包屑
+  useEffect(() => {
+    if (!open) {
+      setBreadcrumbs([]);
+    }
+  }, [open]);
+
+  // 當角色變化時更新麵包屑
+  useEffect(() => {
+    if (character && open) {
+      setBreadcrumbs(prev => {
+        // 檢查是否已經在麵包屑中（用戶點擊返回）
+        const existingIndex = prev.findIndex(c => c.id === character.id);
+        if (existingIndex >= 0) {
+          // 回到該位置，移除之後的所有項目
+          return prev.slice(0, existingIndex + 1);
+        }
+        // 添加新角色到麵包屑
+        return [...prev, character];
+      });
+    }
+  }, [character, open]);
+
   if (!character) return null;
 
   const elementConfig = ELEMENT_CONFIG[character.element as ElementType];
@@ -90,10 +120,59 @@ export const CharacterDetailDialog = ({
     return [...ganChars, ...zhiChars];
   };
 
+  // 處理麵包屑點擊
+  const handleBreadcrumbClick = (char: GanCharacter | ZhiCharacter, index: number) => {
+    if (index < breadcrumbs.length - 1) {
+      // 不是當前角色，導航回去
+      onCharacterClick?.(char);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden">
         <ScrollArea className="max-h-[90vh]">
+          {/* 麵包屑導航 */}
+          {breadcrumbs.length > 1 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="sticky top-0 z-10 px-4 py-2 bg-background/95 backdrop-blur-sm border-b flex items-center gap-1 overflow-x-auto"
+            >
+              <Home className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              {breadcrumbs.map((crumb, index) => {
+                const crumbConfig = ELEMENT_CONFIG[crumb.element as ElementType];
+                const isLast = index === breadcrumbs.length - 1;
+                return (
+                  <div key={`${crumb.id}-${index}`} className="flex items-center gap-1 flex-shrink-0">
+                    <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                    <button
+                      onClick={() => handleBreadcrumbClick(crumb, index)}
+                      disabled={isLast}
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                        isLast 
+                          ? 'bg-accent/50 cursor-default' 
+                          : 'hover:bg-accent cursor-pointer'
+                      }`}
+                      style={{ 
+                        color: crumbConfig?.color,
+                        borderColor: isLast ? crumbConfig?.color : undefined,
+                      }}
+                    >
+                      <span 
+                        className="w-4 h-4 rounded-full flex items-center justify-center text-[10px]"
+                        style={{ background: `${crumbConfig?.color}20` }}
+                      >
+                        {crumb.id.charAt(0)}
+                      </span>
+                      <span className="max-w-[60px] truncate">{crumb.id}</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </motion.div>
+          )}
+
           {/* 頭部區域 */}
           <div 
             className={`relative h-48 bg-gradient-to-br ${elementConfig?.gradient} overflow-hidden`}

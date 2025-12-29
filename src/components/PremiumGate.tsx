@@ -1,9 +1,10 @@
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Lock, Crown, Sparkles, Building2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { MembershipSource, getMembershipLabel } from "@/hooks/useMembershipStatus";
+import { getMembershipLabel } from "@/hooks/useUnifiedMembership";
+import type { MembershipSource, MembershipTier } from "@/lib/unified-member-sdk";
 
 interface PremiumGateProps {
   isPremium: boolean;
@@ -14,7 +15,7 @@ interface PremiumGateProps {
   /** 會員來源：central = 中央會員, local = 本地會員 */
   membershipSource?: MembershipSource;
   /** 本地會員等級 */
-  tier?: string;
+  tier?: MembershipTier;
 }
 
 export const PremiumGate = ({
@@ -108,17 +109,17 @@ export const PremiumGate = ({
 // 會員來源指示器
 export const MembershipIndicator = ({ 
   source, 
-  tier,
+  tier = 'free',
   showLabel = true 
 }: { 
   source: MembershipSource; 
-  tier?: string;
+  tier?: MembershipTier;
   showLabel?: boolean;
 }) => {
   if (source === 'none') return null;
 
   const isCentral = source === 'central';
-  const label = getMembershipLabel(source, tier as any);
+  const label = getMembershipLabel(source, tier);
 
   return (
     <Badge 
@@ -153,7 +154,7 @@ export const StoryPreviewGate = ({
   previewStory: string;
   onUpgrade?: () => void;
   membershipSource?: MembershipSource;
-  tier?: string;
+  tier?: MembershipTier;
 }) => {
   if (isPremium) {
     return (

@@ -1,11 +1,12 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { useMembershipStatus, getMembershipLabel } from '@/hooks/useMembershipStatus';
+import { useUnifiedMembership, getMembershipLabel } from '@/hooks/useUnifiedMembership';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Lock, LogIn, ExternalLink, Crown, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import type { MembershipSource, MembershipTier } from '@/lib/unified-member-sdk';
 
 interface EntitlementGuardProps {
   children: ReactNode;
@@ -19,7 +20,7 @@ export function EntitlementGuard({
   fallbackUrl = 'https://momo.maison-de-chao.com'
 }: EntitlementGuardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const { hasAccess, loading, error, source, tier } = useMembershipStatus(productId);
+  const { hasAccess, loading, error, source, tier } = useUnifiedMembership(productId);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -136,13 +137,13 @@ export function MembershipBadge({
   tier, 
   className 
 }: { 
-  source: 'central' | 'local' | 'none'; 
-  tier: string;
+  source: MembershipSource; 
+  tier: MembershipTier;
   className?: string;
 }) {
   if (source === 'none') return null;
 
-  const label = getMembershipLabel(source, tier as any);
+  const label = getMembershipLabel(source, tier);
   const isCentral = source === 'central';
 
   return (

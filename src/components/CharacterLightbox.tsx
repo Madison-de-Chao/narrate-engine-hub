@@ -47,6 +47,13 @@ export function CharacterLightbox({
   const [showThumbnails, setShowThumbnails] = useState(true);
   const thumbnailsRef = useRef<HTMLDivElement>(null);
   const currentChar = characters[currentIndex];
+  
+  // 觸控滑動支援
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const touchMoveRef = useRef<{ x: number; y: number } | null>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
 
   const getCharType = (char: CharacterType): 'gan' | 'zhi' => 'gan' in char ? 'gan' : 'zhi';
 
@@ -83,6 +90,76 @@ export function CharacterLightbox({
       onNavigate(index);
     }
   }, [currentIndex, onNavigate]);
+
+  // 觸控事件處理
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now()
+    };
+    touchMoveRef.current = null;
+    setIsSwiping(true);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    
+    // 如果水平滑動大於垂直滑動，阻止默認行為並更新偏移
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      e.preventDefault();
+      touchMoveRef.current = { x: touch.clientX, y: touch.clientY };
+      
+      // 限制滑動範圍並添加阻尼效果
+      const maxOffset = 150;
+      const dampedOffset = deltaX > 0 
+        ? Math.min(deltaX * 0.5, maxOffset)
+        : Math.max(deltaX * 0.5, -maxOffset);
+      
+      // 邊界阻尼：如果已經是第一個/最後一個，減少偏移
+      if ((currentIndex === 0 && deltaX > 0) || 
+          (currentIndex === characters.length - 1 && deltaX < 0)) {
+        setSwipeOffset(dampedOffset * 0.3);
+      } else {
+        setSwipeOffset(dampedOffset);
+      }
+    }
+  }, [currentIndex, characters.length]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!touchStartRef.current || !touchMoveRef.current) {
+      setSwipeOffset(0);
+      setIsSwiping(false);
+      touchStartRef.current = null;
+      return;
+    }
+    
+    const deltaX = touchMoveRef.current.x - touchStartRef.current.x;
+    const deltaTime = Date.now() - touchStartRef.current.time;
+    const velocity = Math.abs(deltaX) / deltaTime;
+    
+    // 滑動閾值：距離超過 50px 或速度超過 0.3px/ms
+    const threshold = 50;
+    const velocityThreshold = 0.3;
+    
+    if (Math.abs(deltaX) > threshold || velocity > velocityThreshold) {
+      if (deltaX > 0 && currentIndex > 0) {
+        handlePrev();
+      } else if (deltaX < 0 && currentIndex < characters.length - 1) {
+        handleNext();
+      }
+    }
+    
+    setSwipeOffset(0);
+    setIsSwiping(false);
+    touchStartRef.current = null;
+    touchMoveRef.current = null;
+  }, [currentIndex, characters.length, handlePrev, handleNext]);
 
   // 滾動當前縮圖到可視區域
   useEffect(() => {
@@ -203,16 +280,29 @@ export function CharacterLightbox({
               </Button>
             )}
 
-            {/* 圖像區 */}
-            <div className="flex-1 flex items-center justify-center p-4 lg:p-8 relative min-h-0">
+            {/* 圖像區 - 支援觸控滑動 */}
+            <div 
+              ref={imageContainerRef}
+              className="flex-1 flex items-center justify-center p-4 lg:p-8 relative min-h-0 touch-pan-y"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentChar.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, scale: 0.95, x: 0 }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: 1, 
+                    x: isSwiping ? swipeOffset : 0 
+                  }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.25 }}
-                  className="relative max-h-full flex items-center justify-center"
+                  transition={{ 
+                    duration: isSwiping ? 0 : 0.25,
+                    x: { duration: isSwiping ? 0 : 0.2, ease: 'easeOut' }
+                  }}
+                  className="relative max-h-full flex items-center justify-center select-none"
                 >
                   {/* Loading 骨架 */}
                   {!imageLoaded && (
@@ -228,7 +318,8 @@ export function CharacterLightbox({
                     src={displayImage}
                     alt={currentChar.title}
                     onLoad={() => setImageLoaded(true)}
-                    className={`max-h-[55vh] lg:max-h-[65vh] w-auto object-contain drop-shadow-2xl transition-opacity duration-300 ${
+                    draggable={false}
+                    className={`max-h-[55vh] lg:max-h-[65vh] w-auto object-contain drop-shadow-2xl transition-opacity duration-300 pointer-events-none ${
                       imageLoaded ? 'opacity-100' : 'opacity-0'
                     } ${hasFullbody ? 'rounded-2xl' : 'rounded-full max-w-[300px]'}`}
                     style={{
@@ -245,6 +336,13 @@ export function CharacterLightbox({
                   )}
                 </motion.div>
               </AnimatePresence>
+              
+              {/* 滑動提示 - 僅在移動端顯示 */}
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-white/40 text-xs flex items-center gap-2 lg:hidden">
+                <ChevronLeft className="w-4 h-4" />
+                <span>左右滑動切換</span>
+                <ChevronRight className="w-4 h-4" />
+              </div>
             </div>
 
             {/* 資訊區 */}

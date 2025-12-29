@@ -1,11 +1,11 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { TreeDeciduous, Flame, Mountain, Sparkles, Droplets, X, ArrowRight, Zap, Shield, Users } from 'lucide-react';
+import { TreeDeciduous, Flame, Mountain, Sparkles, Droplets, X, ArrowRight, Zap, Shield, Users, Play, Pause } from 'lucide-react';
 import { GAN_CHARACTERS, ZHI_CHARACTERS } from '@/lib/legionTranslator/characterData';
 import type { GanCharacter, ZhiCharacter } from '@/lib/legionTranslator/types';
 import { commanderAvatars } from '@/assets/commanders';
@@ -96,6 +96,45 @@ export function CharacterRelationshipMap({
   const [showMode, setShowMode] = useState<'generate' | 'control'>('generate');
   const [characterType, setCharacterType] = useState<'gan' | 'zhi' | 'all'>('all');
   const [hoveredChar, setHoveredChar] = useState<CharacterType | null>(null);
+  
+  // 動畫演示模式
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [animationIndex, setAnimationIndex] = useState(0);
+  const [animationPhase, setAnimationPhase] = useState<'element' | 'transition'>('element');
+  
+  // 動畫效果 - 自動循環展示五行關係
+  useEffect(() => {
+    if (!isAnimating || !isOpen) return;
+    
+    const interval = setInterval(() => {
+      setAnimationPhase(prev => {
+        if (prev === 'element') {
+          return 'transition';
+        } else {
+          // 切換到下一個元素
+          setAnimationIndex(idx => (idx + 1) % ELEMENT_ORDER.length);
+          return 'element';
+        }
+      });
+    }, 1200);
+    
+    return () => clearInterval(interval);
+  }, [isAnimating, isOpen]);
+  
+  // 動畫時設置當前活動元素
+  useEffect(() => {
+    if (isAnimating) {
+      setActiveElement(ELEMENT_ORDER[animationIndex]);
+    }
+  }, [isAnimating, animationIndex]);
+  
+  // 關閉時重置動畫
+  useEffect(() => {
+    if (!isOpen) {
+      setIsAnimating(false);
+      setAnimationIndex(0);
+    }
+  }, [isOpen]);
 
   // 根據選擇的類型獲取角色
   const characters = useMemo(() => {
@@ -214,6 +253,32 @@ export function CharacterRelationshipMap({
                 相剋
               </Button>
             </div>
+            
+            {/* 動畫演示按鈕 */}
+            <Button
+              size="sm"
+              variant={isAnimating ? 'default' : 'outline'}
+              onClick={() => {
+                setIsAnimating(!isAnimating);
+                if (!isAnimating) {
+                  setAnimationIndex(0);
+                  setActiveElement(ELEMENT_ORDER[0]);
+                }
+              }}
+              className="gap-1.5 text-xs"
+            >
+              {isAnimating ? (
+                <>
+                  <Pause className="w-3 h-3" />
+                  停止演示
+                </>
+              ) : (
+                <>
+                  <Play className="w-3 h-3" />
+                  自動演示
+                </>
+              )}
+            </Button>
           </div>
         </DialogHeader>
 
@@ -272,27 +337,67 @@ export function CharacterRelationshipMap({
                     ? midY * 0.5 
                     : midY * 0.3;
 
+                  // 計算路徑 ID 用於動畫
+                  const pathId = `path-${showMode}-${element}`;
+                  const pathD = `M ${centerX + fromPos.x} ${centerY + fromPos.y} Q ${centerX + controlX} ${centerY + controlY} ${centerX + toPos.x} ${centerY + toPos.y}`;
+                  
                   return (
-                    <motion.path
-                      key={`${showMode}-${element}`}
-                      d={`M ${centerX + fromPos.x} ${centerY + fromPos.y} Q ${centerX + controlX} ${centerY + controlY} ${centerX + toPos.x} ${centerY + toPos.y}`}
-                      stroke={showMode === 'generate' 
-                        ? (isActive ? '#4ade80' : '#22c55e') 
-                        : (isActive ? '#f87171' : '#ef4444')}
-                      strokeWidth={isActive || isTarget ? 3 : 1.5}
-                      strokeOpacity={isActive || isTarget ? 1 : 0.35}
-                      fill="none"
-                      strokeDasharray={isActive || isTarget ? '0' : '6 4'}
-                      markerEnd={isActive 
-                        ? `url(#arrow-${showMode === 'generate' ? 'gen' : 'ctrl'}-active)` 
-                        : `url(#arrow-${showMode === 'generate' ? 'gen' : 'ctrl'})`}
-                      initial={false}
-                      animate={{
-                        strokeOpacity: isActive || isTarget ? 1 : 0.35,
-                        strokeWidth: isActive || isTarget ? 3 : 1.5,
-                      }}
-                      transition={{ duration: 0.2 }}
-                    />
+                    <g key={`${showMode}-${element}`}>
+                      <motion.path
+                        id={pathId}
+                        d={pathD}
+                        stroke={showMode === 'generate' 
+                          ? (isActive ? '#4ade80' : '#22c55e') 
+                          : (isActive ? '#f87171' : '#ef4444')}
+                        strokeWidth={isActive || isTarget ? 3 : 1.5}
+                        strokeOpacity={isActive || isTarget ? 1 : 0.35}
+                        fill="none"
+                        strokeDasharray={isActive || isTarget ? '0' : '6 4'}
+                        markerEnd={isActive 
+                          ? `url(#arrow-${showMode === 'generate' ? 'gen' : 'ctrl'}-active)` 
+                          : `url(#arrow-${showMode === 'generate' ? 'gen' : 'ctrl'})`}
+                        initial={false}
+                        animate={{
+                          strokeOpacity: isActive || isTarget ? 1 : 0.35,
+                          strokeWidth: isActive || isTarget ? 3 : 1.5,
+                        }}
+                        transition={{ duration: 0.2 }}
+                      />
+                      
+                      {/* 流動粒子動畫 - 僅在活動時顯示 */}
+                      {isActive && isAnimating && animationPhase === 'transition' && (
+                        <>
+                          <circle r="6" fill={showMode === 'generate' ? '#4ade80' : '#f87171'}>
+                            <animateMotion
+                              dur="0.8s"
+                              repeatCount="1"
+                              path={pathD}
+                            />
+                            <animate
+                              attributeName="opacity"
+                              values="0;1;1;0"
+                              dur="0.8s"
+                              repeatCount="1"
+                            />
+                          </circle>
+                          <circle r="4" fill="white" opacity="0.8">
+                            <animateMotion
+                              dur="0.8s"
+                              repeatCount="1"
+                              path={pathD}
+                              begin="0.1s"
+                            />
+                            <animate
+                              attributeName="opacity"
+                              values="0;0.8;0.8;0"
+                              dur="0.8s"
+                              repeatCount="1"
+                              begin="0.1s"
+                            />
+                          </circle>
+                        </>
+                      )}
+                    </g>
                   );
                 })}
               </svg>
@@ -316,7 +421,16 @@ export function CharacterRelationshipMap({
                       height: elementNodeSize,
                       zIndex: isActive ? 20 : 10,
                     }}
-                    onMouseEnter={() => setActiveElement(element)}
+                    onMouseEnter={() => {
+                      if (!isAnimating) {
+                        setActiveElement(element);
+                      }
+                    }}
+                    onClick={() => {
+                      // 點擊時停止動畫並選中該元素
+                      setIsAnimating(false);
+                      setActiveElement(element);
+                    }}
                     animate={{ scale: isActive ? 1.15 : 1 }}
                     transition={{ type: 'spring', stiffness: 300 }}
                   >

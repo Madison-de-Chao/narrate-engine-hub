@@ -6,11 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Users, ArrowLeftRight, Plus, Check, X, Heart, Star, Maximize } from "lucide-react";
+import { Search, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Users, ArrowLeftRight, Plus, Check, X, Heart, Star, Maximize, Network } from "lucide-react";
 import { GAN_CHARACTERS, ZHI_CHARACTERS } from "@/lib/legionTranslator/characterData";
 import { CharacterDetailDialog } from "@/components/CharacterDetailDialog";
 import { CharacterCompareDialog } from "@/components/CharacterCompareDialog";
 import { CharacterLightbox } from "@/components/CharacterLightbox";
+import { CharacterRelationshipMap } from "@/components/CharacterRelationshipMap";
 import { useCharacterFavorites } from "@/hooks/useCharacterFavorites";
 import { PageHeader } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +47,9 @@ const CharacterGallery = () => {
   const [compareMode, setCompareMode] = useState(false);
   const [compareCharacters, setCompareCharacters] = useState<[CharacterType | null, CharacterType | null]>([null, null]);
   const [compareDialogOpen, setCompareDialogOpen] = useState(false);
+  
+  // 關係圖譜狀態
+  const [relationshipMapOpen, setRelationshipMapOpen] = useState(false);
 
   // 收藏功能
   const { favorites, loading: favoritesLoading, isLoggedIn, isFavorite, toggleFavorite, getFavoriteIds } = useCharacterFavorites();
@@ -224,8 +228,20 @@ const CharacterGallery = () => {
               </TabsTrigger>
             </TabsList>
             
-            {/* 比較模式按鈕 */}
+            {/* 功能按鈕 */}
             <div className="flex items-center gap-2">
+              {/* 關係圖譜按鈕 */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setRelationshipMapOpen(true)}
+                className="gap-2"
+              >
+                <Network className="w-4 h-4" />
+                <span className="hidden sm:inline">五行圖譜</span>
+              </Button>
+              
+              {/* 比較模式按鈕 */}
               <Button
                 variant={compareMode ? "default" : "outline"}
                 size="sm"
@@ -475,6 +491,28 @@ const CharacterGallery = () => {
         open={compareDialogOpen}
         onOpenChange={setCompareDialogOpen}
         onRemoveCharacter={handleRemoveFromCompare}
+      />
+      
+      {/* 角色關係圖譜 */}
+      <CharacterRelationshipMap
+        isOpen={relationshipMapOpen}
+        onClose={() => setRelationshipMapOpen(false)}
+        onCharacterClick={(char) => {
+          setRelationshipMapOpen(false);
+          const charIndex = characters.findIndex(c => c.id === char.id);
+          if (charIndex >= 0) {
+            setLightboxIndex(charIndex);
+            setLightboxOpen(true);
+          } else {
+            // 如果角色不在當前列表，直接打開燈箱
+            const allChars = [...Object.values(GAN_CHARACTERS), ...Object.values(ZHI_CHARACTERS)];
+            const allIndex = allChars.findIndex(c => c.id === char.id);
+            if (allIndex >= 0) {
+              setLightboxIndex(0);
+              setLightboxOpen(true);
+            }
+          }
+        }}
       />
     </div>
   );

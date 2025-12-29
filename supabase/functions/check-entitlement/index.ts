@@ -7,31 +7,26 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const CENTRAL_API_URL = 'https://yyzcgxnvtprojutnxisz.supabase.co/functions/v1/entitlements-lookup';
+// Central API endpoints
+const CENTRAL_BASE_URL = 'https://yyzcgxnvtprojutnxisz.supabase.co/functions/v1';
+const ENTITLEMENTS_ME_URL = `${CENTRAL_BASE_URL}/entitlements-me`;
+const ENTITLEMENTS_LOOKUP_URL = `${CENTRAL_BASE_URL}/entitlements-lookup`;
 const DEFAULT_PRODUCT_ID = 'bazi-premium';
 
-function safeJwtMeta(token: string) {
-  try {
-    const parts = token.split('.');
-    if (parts.length < 2) return null;
-
-    const payload = parts[1]
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
-
-    // base64 padding
-    const padded = payload.padEnd(Math.ceil(payload.length / 4) * 4, '=');
-    const decoded = atob(padded);
-    const json = JSON.parse(decoded);
-
-    return {
-      ref: json?.ref,
-      role: json?.role,
-      iss: json?.iss,
-    };
-  } catch {
-    return null;
-  }
+interface EntitlementResponse {
+  hasAccess: boolean;
+  source: 'central' | 'central_fallback' | 'local' | 'error';
+  email?: string;
+  productId?: string;
+  tier?: string;
+  entitlements?: Array<{
+    product_id: string;
+    expires_at: string | null;
+    tier?: string;
+  }>;
+  expiresAt?: string | null;
+  error?: string;
+  centralStatus?: number;
 }
 
 serve(async (req) => {
@@ -45,27 +40,12 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const centralServiceRoleKey = Deno.env.get('CENTRAL_SUPABASE_SERVICE_ROLE_KEY');
 
-    if (!centralServiceRoleKey) {
-      console.error('CENTRAL_SUPABASE_SERVICE_ROLE_KEY not configured');
-      return new Response(
-        JSON.stringify({ error: 'Central API key not configured', hasAccess: false }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const centralMeta = safeJwtMeta(centralServiceRoleKey);
-    if (centralMeta) {
-      console.log(`Central key meta: ref=${centralMeta.ref ?? 'unknown'}, role=${centralMeta.role ?? 'unknown'}`);
-    } else {
-      console.log('Central key meta: unable to parse (not a JWT?)');
-    }
-
     // Get authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       console.log('No authorization header provided');
       return new Response(
-        JSON.stringify({ error: 'No authorization header', hasAccess: false }),
+        JSON.stringify({ error: 'No authorization header', hasAccess: false, source: 'error' } as EntitlementResponse),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -80,7 +60,7 @@ serve(async (req) => {
     if (userError || !user) {
       console.error('User verification failed:', userError);
       return new Response(
-        JSON.stringify({ error: 'Invalid user token', hasAccess: false }),
+        JSON.stringify({ error: 'Invalid user token', hasAccess: false, source: 'error' } as EntitlementResponse),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -89,7 +69,7 @@ serve(async (req) => {
     if (!userEmail) {
       console.error('User has no email');
       return new Response(
-        JSON.stringify({ error: 'User email not found', hasAccess: false }),
+        JSON.stringify({ error: 'User email not found', hasAccess: false, source: 'error' } as EntitlementResponse),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -101,16 +81,118 @@ serve(async (req) => {
       return createRateLimitResponse(rateLimitResult, corsHeaders);
     }
 
-    // Get product_id from query params
+    // Get product_id and method from query params
     const url = new URL(req.url);
     const productId = url.searchParams.get('product_id') || DEFAULT_PRODUCT_ID;
+    const method = url.searchParams.get('method') || 'jwt'; // 'jwt' or 'lookup'
 
-    console.log(`Checking entitlement for email: ${userEmail}, product: ${productId}`);
+    console.log(`Checking entitlement for email: ${userEmail}, product: ${productId}, method: ${method}`);
 
-    // Call central API using X-API-Key + email method
-    const centralApiUrl = `${CENTRAL_API_URL}?email=${encodeURIComponent(userEmail)}&product_id=${encodeURIComponent(productId)}`;
+    let response: EntitlementResponse;
 
-    const centralResponse = await fetch(centralApiUrl, {
+    // Try JWT-based entitlements-me endpoint first (preferred method)
+    if (method === 'jwt' && centralServiceRoleKey) {
+      console.log('Using JWT-based entitlements-me endpoint');
+      
+      try {
+        const meResponse = await fetch(`${ENTITLEMENTS_ME_URL}?product_id=${encodeURIComponent(productId)}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': authHeader, // Forward the user's JWT
+            'X-Forwarded-Authorization': authHeader,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (meResponse.ok) {
+          const meData = await meResponse.json();
+          console.log('entitlements-me response:', JSON.stringify(meData));
+
+          const hasAccess = meData.hasAccess === true ||
+            meData.has_access === true ||
+            (Array.isArray(meData.entitlements) && meData.entitlements.length > 0);
+
+          response = {
+            hasAccess,
+            source: 'central',
+            email: userEmail,
+            productId,
+            tier: meData.tier || (hasAccess ? 'premium' : 'free'),
+            entitlements: meData.entitlements || [],
+            expiresAt: meData.expires_at || meData.expiresAt || null,
+          };
+        } else {
+          console.log(`entitlements-me failed with status ${meResponse.status}, falling back to lookup`);
+          // Fall through to lookup method
+          response = await tryLookupMethod(centralServiceRoleKey, userEmail, productId);
+        }
+      } catch (jwtError) {
+        console.error('JWT method error:', jwtError);
+        // Fall through to lookup method
+        response = await tryLookupMethod(centralServiceRoleKey, userEmail, productId);
+      }
+    } else if (centralServiceRoleKey) {
+      // Use lookup method directly
+      response = await tryLookupMethod(centralServiceRoleKey, userEmail, productId);
+    } else {
+      console.error('CENTRAL_SUPABASE_SERVICE_ROLE_KEY not configured');
+      response = {
+        hasAccess: false,
+        source: 'error',
+        error: 'Central API key not configured',
+        email: userEmail,
+        productId,
+      };
+    }
+
+    // If central API failed, try local subscription check
+    if (!response.hasAccess && (response.source === 'error' || response.source === 'central_fallback')) {
+      console.log('Central API unavailable or no access, checking local subscriptions');
+      
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (subscription && (!subscription.expires_at || new Date(subscription.expires_at) > new Date())) {
+        console.log('Found active local subscription:', subscription.plan);
+        response = {
+          hasAccess: true,
+          source: 'local',
+          email: userEmail,
+          productId,
+          tier: subscription.plan,
+          expiresAt: subscription.expires_at,
+        };
+      }
+    }
+
+    return new Response(
+      JSON.stringify(response),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Unexpected error in check-entitlement:', error);
+    return new Response(
+      JSON.stringify({ error: 'Internal server error', hasAccess: false, source: 'error' } as EntitlementResponse),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
+
+// Helper function for lookup method
+async function tryLookupMethod(
+  centralServiceRoleKey: string,
+  userEmail: string,
+  productId: string
+): Promise<EntitlementResponse> {
+  try {
+    const lookupUrl = `${ENTITLEMENTS_LOOKUP_URL}?email=${encodeURIComponent(userEmail)}&product_id=${encodeURIComponent(productId)}`;
+    
+    const lookupResponse = await fetch(lookupUrl, {
       method: 'GET',
       headers: {
         'X-API-Key': centralServiceRoleKey,
@@ -118,47 +200,44 @@ serve(async (req) => {
       },
     });
 
-    if (!centralResponse.ok) {
-      const errorText = await centralResponse.text();
-      console.error('Central API error:', centralResponse.status, errorText);
-
-      // IMPORTANT: return 200 so the frontend can apply a graceful fallback
-      // (we still include the real central status in the payload for debugging).
-      return new Response(
-        JSON.stringify({
-          error: 'Central API request failed',
-          hasAccess: false,
-          centralStatus: centralResponse.status,
-          details: errorText,
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (!lookupResponse.ok) {
+      const errorText = await lookupResponse.text();
+      console.error('Central API lookup error:', lookupResponse.status, errorText);
+      
+      return {
+        hasAccess: false,
+        source: 'central_fallback',
+        error: 'Central API request failed',
+        centralStatus: lookupResponse.status,
+        email: userEmail,
+        productId,
+      };
     }
 
-    const entitlementData = await centralResponse.json();
-    console.log('Entitlement response:', JSON.stringify(entitlementData));
+    const entitlementData = await lookupResponse.json();
+    console.log('Lookup entitlement response:', JSON.stringify(entitlementData));
 
-    // Determine access based on central API response
     const hasAccess = entitlementData.hasAccess === true ||
       entitlementData.has_access === true ||
       (Array.isArray(entitlementData.entitlements) && entitlementData.entitlements.length > 0);
 
-    return new Response(
-      JSON.stringify({
-        hasAccess,
-        email: userEmail,
-        productId,
-        entitlements: entitlementData.entitlements || [],
-        expiresAt: entitlementData.expires_at || entitlementData.expiresAt || null,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
+    return {
+      hasAccess,
+      source: 'central',
+      email: userEmail,
+      productId,
+      tier: entitlementData.tier || (hasAccess ? 'premium' : 'free'),
+      entitlements: entitlementData.entitlements || [],
+      expiresAt: entitlementData.expires_at || entitlementData.expiresAt || null,
+    };
   } catch (error) {
-    console.error('Unexpected error in check-entitlement:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', hasAccess: false }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error('Lookup method error:', error);
+    return {
+      hasAccess: false,
+      source: 'error',
+      error: 'Central API lookup failed',
+      email: userEmail,
+      productId,
+    };
   }
-});
+}

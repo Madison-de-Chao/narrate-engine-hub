@@ -17,9 +17,10 @@ import { ShareImageDialog } from "@/components/ShareImageDialog";
 import { PremiumGate } from "@/components/PremiumGate";
 import { AiFortuneConsult } from "@/components/AiFortuneConsult";
 import { LegionSummoningOverlay } from "@/components/LegionSummoningOverlay";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, BadgeCheck, Shield, Share2, MessageCircle, Facebook } from "lucide-react";
+import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, Shield, Share2, MessageCircle, Facebook } from "lucide-react";
 import { generatePDF, type CoverPageData, type ReportData, type PdfOptions } from "@/lib/pdfGenerator";
 import { PdfOptionsDialog, type PdfOptions as DialogPdfOptions } from "@/components/PdfOptionsDialog";
 import { toast } from "sonner";
@@ -104,6 +105,7 @@ const Index = () => {
   const [isPdfOptionsOpen, setIsPdfOptionsOpen] = useState(false);
   const { hasAccess, source: membershipSource, tier, loading: membershipLoading } = useUnifiedMembership('bazi-premium');
   const { isAdmin } = useAdminStatus(user?.id);
+
   // 升級處理函數
   const handleUpgrade = () => {
     // 跳轉到訂閱頁面
@@ -541,83 +543,61 @@ const Index = () => {
     
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
       {/* 頂部標題 */}
-      <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <img 
-                src={logoSishi}
-                alt="四時系統" 
-                className="h-14 md:h-16 object-contain"
-              />
-              <div className="hidden sm:block">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/version')}
-                  className="text-xs font-mono text-primary/80 bg-primary/10 px-2 py-0.5 rounded hover:bg-primary/20"
-                >
-                  RSBZS v3.0
-                </Button>
-              </div>
-            </div>
-            <div className="flex-1 text-center">
-              <h1 className="text-sm md:text-base font-semibold text-foreground/90">
-                虹靈御所八字人生兵法
-              </h1>
-              <p className="text-xs md:text-sm text-muted-foreground">
-                八字不是宿命，而是靈魂的戰場
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {/* 管理員入口 */}
-              {isAdmin && (
-                <Button
-                  onClick={() => navigate('/admin')}
-                  variant="ghost"
-                  size="sm"
-                  className="text-primary"
-                >
-                  <Shield className="mr-2 h-4 w-4" />
-                  管理後台
-                </Button>
-              )}
-              {/* 訂閱狀態顯示 */}
-              {user && !membershipLoading && (
-                hasAccess ? (
-                  <MembershipBadge source={membershipSource} tier={tier} />
-                ) : (
-                  <Button
-                    onClick={handleUpgrade}
-                    variant="outline"
-                    size="sm"
-                    className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10"
-                  >
-                    <Crown className="mr-2 h-4 w-4" />
-                    升級會員
-                  </Button>
-                )
-              )}
-              {isGuest && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-md">
-                  <UserRound className="h-4 w-4" />
-                  <span>訪客模式</span>
-                </div>
-              )}
-              {(user || isGuest) && (
-                <Button
-                  onClick={handleLogout}
-                  variant="outline"
-                  size="sm"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {isGuest ? "退出訪客" : "登出"}
-                </Button>
-              )}
+      <PageHeader
+        showHomeButton={false}
+        showAdminLink
+        showMembershipBadge
+        className="bg-background/80 py-6"
+        leftSection={
+          <div className="flex items-center gap-3">
+            <img 
+              src={logoSishi}
+              alt="四時系統" 
+              className="h-14 md:h-16 object-contain"
+            />
+            <div className="hidden sm:block">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/version')}
+                className="text-xs font-mono text-primary/80 bg-primary/10 px-2 py-0.5 rounded hover:bg-primary/20"
+              >
+                RSBZS v3.0
+              </Button>
             </div>
           </div>
-        </div>
-      </header>
+        }
+        centerSection={
+          <div className="flex-1 text-center">
+            <h1 className="text-sm md:text-base font-semibold text-foreground/90">
+              虹靈御所八字人生兵法
+            </h1>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              八字不是宿命，而是靈魂的戰場
+            </p>
+          </div>
+        }
+        rightSection={
+          <>
+            {isGuest && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-md">
+                <UserRound className="h-4 w-4" />
+                <span>訪客模式</span>
+              </div>
+            )}
+            {(user || isGuest) && (
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                size="sm"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                {isGuest ? "退出訪客" : "登出"}
+              </Button>
+            )}
+          </>
+        }
+      />
 
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Guest Mode Alert */}

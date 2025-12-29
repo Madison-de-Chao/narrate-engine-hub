@@ -10,12 +10,16 @@ import type { User } from '@supabase/supabase-js';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
 
 interface PageHeaderProps {
-  title: string;
+  title?: string;
   showHomeButton?: boolean;
   showLogout?: boolean;
   showAdminLink?: boolean;
+  showMembershipBadge?: boolean;
   className?: string;
   children?: React.ReactNode;
+  leftSection?: React.ReactNode;
+  centerSection?: React.ReactNode;
+  rightSection?: React.ReactNode;
 }
 
 export function PageHeader({ 
@@ -23,8 +27,12 @@ export function PageHeader({
   showHomeButton = true, 
   showLogout = false,
   showAdminLink = false,
+  showMembershipBadge = true,
   className = '',
-  children 
+  children,
+  leftSection,
+  centerSection,
+  rightSection
 }: PageHeaderProps) {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
@@ -57,7 +65,8 @@ export function PageHeader({
         <div className="flex items-center justify-between">
           {/* 左側 */}
           <div className="flex items-center gap-2">
-            {showHomeButton && (
+            {leftSection}
+            {showHomeButton && !leftSection && (
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -71,13 +80,20 @@ export function PageHeader({
             {children}
           </div>
           
-          {/* 中間標題 */}
-          <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-            {title}
-          </h1>
+          {/* 中間區域 */}
+          {centerSection ? (
+            centerSection
+          ) : title ? (
+            <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              {title}
+            </h1>
+          ) : null}
           
           {/* 右側 */}
           <div className="flex items-center gap-2">
+            {/* 自定義右側區域 */}
+            {rightSection}
+            
             {/* 管理員入口 */}
             {showAdminLink && isAdmin && (
               <Button
@@ -90,7 +106,7 @@ export function PageHeader({
             )}
             
             {/* 會員狀態 */}
-            {user && !membershipLoading && (
+            {showMembershipBadge && user && !membershipLoading && (
               hasAccess ? (
                 <MembershipBadge source={membershipSource} tier={tier} />
               ) : (
@@ -121,4 +137,25 @@ export function PageHeader({
       </div>
     </header>
   );
+}
+
+// Export user state for external components that need it
+export function usePageHeaderAuth() {
+  const [user, setUser] = useState<User | null>(null);
+  
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+  
+  return { user };
 }

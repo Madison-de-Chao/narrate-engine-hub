@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, createRateLimitResponse, addRateLimitHeaders, RATE_LIMITS } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -189,6 +190,13 @@ serve(async (req) => {
     }
 
     console.log(`[ai-fortune-consult] Authenticated user: ${user.id}`);
+
+    // Rate limiting check
+    const rateLimitResult = checkRateLimit(`ai-fortune:${user.id}`, RATE_LIMITS.AI_FORTUNE_CONSULT);
+    if (!rateLimitResult.allowed) {
+      console.log(`[ai-fortune-consult] Rate limit exceeded for user: ${user.id}`);
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
+    }
 
     const { messages, baziContext, role } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");

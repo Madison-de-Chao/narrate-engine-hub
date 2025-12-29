@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, createRateLimitResponse, RATE_LIMITS } from "../_shared/rateLimiter.ts";
 
 /**
  * 八字計算公開 API v2.1 - 完整版（含 API Key 驗證）
@@ -1238,6 +1239,16 @@ serve(async (req) => {
     }
 
     apiKeyId = keyVerification.keyId || null;
+
+    // Rate limiting check (by API key)
+    const rateLimitResult = checkRateLimit(`bazi-api:${apiKeyId}`, RATE_LIMITS.BAZI_API);
+    if (!rateLimitResult.allowed) {
+      console.log(`[bazi-api] Rate limit exceeded for API key: ${apiKeyId}`);
+      const responseTime = Date.now() - startTime;
+      await logApiRequest(apiKeyId, '/bazi-api', null, 429, responseTime, ipAddress);
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
+    }
+
     const body = await req.json();
     requestBody = body;
     const { name, gender, birthDate, birthTime, timezoneOffsetMinutes = 480 } = body;

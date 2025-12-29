@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, createRateLimitResponse, RATE_LIMITS } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -91,6 +92,13 @@ serve(async (req) => {
         JSON.stringify({ error: 'User email not found', hasAccess: false }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Rate limiting check
+    const rateLimitResult = checkRateLimit(`entitlement:${user.id}`, RATE_LIMITS.CHECK_ENTITLEMENT);
+    if (!rateLimitResult.allowed) {
+      console.log(`[check-entitlement] Rate limit exceeded for user: ${user.id}`);
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
     }
 
     // Get product_id from query params

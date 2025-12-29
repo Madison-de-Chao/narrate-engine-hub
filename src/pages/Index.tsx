@@ -18,13 +18,14 @@ import { PremiumGate } from "@/components/PremiumGate";
 import { AiFortuneConsult } from "@/components/AiFortuneConsult";
 import { LegionSummoningOverlay } from "@/components/LegionSummoningOverlay";
 import { PageHeader } from "@/components/PageHeader";
+import { ReportSection, ReportDivider, ReportProgress } from "@/components/report";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, Shield, Share2, MessageCircle, Facebook } from "lucide-react";
+import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, Shield, Share2, MessageCircle, Facebook, LayoutDashboard, Scroll, BarChart3, FileText, User } from "lucide-react";
 import { generatePDF, type CoverPageData, type ReportData, type PdfOptions } from "@/lib/pdfGenerator";
 import { PdfOptionsDialog, type PdfOptions as DialogPdfOptions } from "@/components/PdfOptionsDialog";
 import { toast } from "sonner";
-import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
+import { FunctionsHttpError, type User as SupabaseUser, type Session } from "@supabase/supabase-js";
 import { useGuestMode } from "@/hooks/useGuestMode";
 import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
 import { MembershipBadge } from "@/components/EntitlementGuard";
@@ -93,7 +94,7 @@ export interface BaziResult {
 const Index = () => {
   const navigate = useNavigate();
   const { isGuest, disableGuestMode } = useGuestMode();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [baziResult, setBaziResult] = useState<BaziResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -753,7 +754,7 @@ const Index = () => {
             </section>
 
             {/* 報告內容區 - 用於 PDF 生成 */}
-            <div id="bazi-report-content" className="space-y-8">
+            <div id="bazi-report-content" className="space-y-6 relative">
               {/* 專業報告頭部 */}
               <section className="animate-fade-in">
                 <ProfessionalReportHeader 
@@ -767,65 +768,177 @@ const Index = () => {
               </section>
 
               {/* 命盤總覽 */}
-              <section ref={sectionRefs.summary} className="animate-fade-in scroll-mt-36">
+              <ReportSection
+                ref={sectionRefs.summary}
+                id="summary"
+                title="命盤總覽"
+                subtitle="核心指標與運勢概覽"
+                icon={LayoutDashboard}
+                iconColor="text-indigo-400"
+                bgGradient="from-report-card via-report-card to-report-bg"
+                borderColor="border-indigo-500/30"
+                order={1}
+              >
                 <ReportSummary baziResult={baziResult} />
-              </section>
+              </ReportSection>
+
+              <ReportDivider variant="decorative" />
 
               {/* 傳統八字排盤區 */}
-              <section ref={sectionRefs.bazi} className="animate-fade-in scroll-mt-36">
+              <ReportSection
+                ref={sectionRefs.bazi}
+                id="bazi"
+                title="傳統八字排盤"
+                subtitle="四柱干支與藏干分析"
+                icon={Scroll}
+                iconColor="text-amber-400"
+                bgGradient="from-report-card via-report-card to-report-bg"
+                borderColor="border-amber-500/30"
+                order={2}
+              >
                 <TraditionalBaziDisplay baziResult={baziResult} />
-              </section>
+              </ReportSection>
+
+              <ReportDivider variant="decorative" />
 
               {/* 四時軍團故事區（兵法為重）*/}
-              <section ref={sectionRefs.legion} className="animate-fade-in scroll-mt-36">
+              <ReportSection
+                ref={sectionRefs.legion}
+                id="legion"
+                title="四時軍團傳說"
+                subtitle="軍團敘事與兵法智慧"
+                icon={Shield}
+                iconColor="text-orange-400"
+                bgGradient="from-report-card via-report-card to-report-bg"
+                borderColor="border-orange-500/30"
+                order={3}
+              >
                 <LegionCards baziResult={baziResult} shenshaRuleset={shenshaRuleset} isPremium={hasAccess} onUpgrade={handleUpgrade} />
-              </section>
+              </ReportSection>
+
+              <ReportDivider variant="gradient" />
 
               {/* ===== 詳細分析區開始（收費內容）===== */}
               
               {/* 十神關係分析區 */}
-              <section ref={sectionRefs.tenGods} className="animate-fade-in scroll-mt-36">
+              <ReportSection
+                ref={sectionRefs.tenGods}
+                id="tenGods"
+                title="十神深度分析"
+                subtitle="命理核心關係解讀"
+                icon={Crown}
+                iconColor="text-purple-400"
+                bgGradient="from-report-card via-report-card to-report-bg"
+                borderColor="border-purple-500/30"
+                order={4}
+              >
                 <PremiumGate isPremium={hasAccess} title="十神深度分析" description="升級收費版解鎖完整十神關係解讀" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                   <TenGodsAnalysis baziResult={baziResult} />
                 </PremiumGate>
-              </section>
+              </ReportSection>
 
               {/* 神煞統計分析區 */}
               {baziResult.shensha && baziResult.shensha.length > 0 && (
-                <section ref={sectionRefs.shensha} className="animate-fade-in scroll-mt-36">
+                <ReportSection
+                  ref={sectionRefs.shensha}
+                  id="shensha"
+                  title="神煞統計分析"
+                  subtitle="吉凶星曜與運勢影響"
+                  icon={Sparkles}
+                  iconColor="text-fuchsia-400"
+                  bgGradient="from-report-card via-report-card to-report-bg"
+                  borderColor="border-fuchsia-500/30"
+                  order={5}
+                >
                   <PremiumGate isPremium={hasAccess} title="神煞統計分析" description="升級收費版查看完整神煞統計與解讀" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                     <ShenshaStats shenshaList={baziResult.shensha.filter((s): s is ShenshaMatch => typeof s === 'object' && 'evidence' in s)} />
                   </PremiumGate>
-                </section>
+                </ReportSection>
               )}
 
               {/* 性格深度分析區 */}
-              <section ref={sectionRefs.personality} className="animate-fade-in scroll-mt-36">
+              <ReportSection
+                ref={sectionRefs.personality}
+                id="personality"
+                title="性格深度剖析"
+                subtitle="內在特質與行為模式"
+                icon={User}
+                iconColor="text-teal-400"
+                bgGradient="from-report-card via-report-card to-report-bg"
+                borderColor="border-teal-500/30"
+                order={6}
+              >
                 <PremiumGate isPremium={hasAccess} title="性格深度剖析" description="升級收費版獲取完整性格分析報告" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                   <PersonalityAnalysis baziResult={baziResult} />
                 </PremiumGate>
-              </section>
+              </ReportSection>
 
               {/* 納音五行分析區 */}
-              <section className="animate-fade-in scroll-mt-36">
+              <ReportSection
+                id="nayin"
+                title="納音五行詳解"
+                subtitle="六十甲子納音命理"
+                icon={BookOpen}
+                iconColor="text-cyan-400"
+                bgGradient="from-report-card via-report-card to-report-bg"
+                borderColor="border-cyan-500/30"
+                order={7}
+              >
                 <PremiumGate isPremium={hasAccess} title="納音五行詳解" description="升級收費版了解納音深層含義" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                   <NayinAnalysis nayin={baziResult.nayin} />
                 </PremiumGate>
-              </section>
+              </ReportSection>
 
               {/* 五行陰陽分析區 */}
-              <section ref={sectionRefs.analysis} className="animate-fade-in scroll-mt-36">
+              <ReportSection
+                ref={sectionRefs.analysis}
+                id="analysis"
+                title="五行陰陽圖表"
+                subtitle="命盤能量分布可視化"
+                icon={BarChart3}
+                iconColor="text-emerald-400"
+                bgGradient="from-report-card via-report-card to-report-bg"
+                borderColor="border-emerald-500/30"
+                order={8}
+              >
                 <PremiumGate isPremium={hasAccess} title="五行陰陽圖表" description="升級收費版查看完整五行平衡分析" onUpgrade={handleUpgrade} membershipSource={membershipSource} tier={tier}>
                   <AnalysisCharts baziResult={baziResult} />
                 </PremiumGate>
-              </section>
+              </ReportSection>
 
               {/* 計算日誌區 */}
               {baziResult.calculationLogs && (
-                <section ref={sectionRefs.logs} className="animate-fade-in scroll-mt-36">
+                <ReportSection
+                  ref={sectionRefs.logs}
+                  id="logs"
+                  title="計算日誌"
+                  subtitle="排盤過程與演算紀錄"
+                  icon={FileText}
+                  iconColor="text-slate-400"
+                  bgGradient="from-report-card via-report-card to-report-bg"
+                  borderColor="border-slate-500/30"
+                  decorative={false}
+                  order={9}
+                >
                   <CalculationLogs logs={baziResult.calculationLogs} />
-                </section>
+                </ReportSection>
               )}
+
+              {/* 側邊進度指示器 */}
+              <ReportProgress
+                sections={[
+                  { id: 'summary', label: '總覽' },
+                  { id: 'bazi', label: '八字排盤' },
+                  { id: 'legion', label: '軍團故事' },
+                  { id: 'tenGods', label: '十神分析' },
+                  { id: 'shensha', label: '神煞分析' },
+                  { id: 'personality', label: '性格分析' },
+                  { id: 'analysis', label: '五行分析' },
+                  { id: 'logs', label: '計算日誌' },
+                ]}
+                activeSection={activeSection}
+                onSectionClick={scrollToSection}
+              />
             </div>
           </>
         )}

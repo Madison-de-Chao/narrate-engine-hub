@@ -1,15 +1,19 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Users, ArrowLeftRight, Plus, Check, X, Heart, Star } from "lucide-react";
+import { Search, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Users, ArrowLeftRight, Plus, Check, X, Heart, Star, Home, Crown, LogOut } from "lucide-react";
 import { GAN_CHARACTERS, ZHI_CHARACTERS } from "@/lib/legionTranslator/characterData";
 import { CharacterDetailDialog } from "@/components/CharacterDetailDialog";
 import { CharacterCompareDialog } from "@/components/CharacterCompareDialog";
 import { useCharacterFavorites } from "@/hooks/useCharacterFavorites";
+import { useUnifiedMembership } from "@/hooks/useUnifiedMembership";
+import { MembershipBadge } from "@/components/EntitlementGuard";
+import { supabase } from "@/integrations/supabase/client";
 import type { GanCharacter, ZhiCharacter } from "@/lib/legionTranslator/types";
 import { commanderAvatars } from "@/assets/commanders";
 import { advisorAvatars } from "@/assets/advisors";
@@ -27,11 +31,16 @@ type ElementType = keyof typeof ELEMENT_CONFIG;
 type CharacterType = GanCharacter | ZhiCharacter;
 
 const CharacterGallery = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'gan' | 'zhi' | 'favorites'>('gan');
   const [selectedElement, setSelectedElement] = useState<ElementType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCharacter, setSelectedCharacter] = useState<CharacterType | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  
+  // 會員狀態
+  const { hasAccess, source: membershipSource, tier, loading: membershipLoading } = useUnifiedMembership('bazi-premium');
   
   // 比較功能狀態
   const [compareMode, setCompareMode] = useState(false);
@@ -40,6 +49,21 @@ const CharacterGallery = () => {
 
   // 收藏功能
   const { favorites, loading: favoritesLoading, isLoggedIn, isFavorite, toggleFavorite, getFavoriteIds } = useCharacterFavorites();
+
+  // 獲取用戶資訊
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // 獲取當前顯示的角色列表
   const characters = useMemo(() => {
@@ -162,17 +186,56 @@ const CharacterGallery = () => {
   const favoritesCount = favorites.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/95 py-8">
-      <div className="container max-w-6xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
+      {/* 頂部導航欄 */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
+        <div className="container max-w-6xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/')}
+              className="gap-2"
+            >
+              <Home className="w-4 h-4" />
+              返回首頁
+            </Button>
+            
+            <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              角色圖鑑
+            </h1>
+            
+            <div className="flex items-center gap-2">
+              {user && !membershipLoading && (
+                hasAccess ? (
+                  <MembershipBadge source={membershipSource} tier={tier} />
+                ) : (
+                  <Button
+                    onClick={() => navigate('/subscribe')}
+                    variant="outline"
+                    size="sm"
+                    className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+                  >
+                    <Crown className="mr-1 h-3 w-3" />
+                    升級
+                  </Button>
+                )
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="container max-w-6xl mx-auto px-4 py-8">
         {/* 頁面標題 */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
-            角色圖鑑
-          </h1>
+          <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
+            探索角色
+          </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             探索天干十主將與地支十二軍師的完整資料，了解每位角色的五行屬性、性格特質與增益減益效果
           </p>

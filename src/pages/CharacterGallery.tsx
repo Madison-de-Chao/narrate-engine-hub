@@ -552,6 +552,11 @@ const CharacterGallery = () => {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         avatarSrc={selectedCharacter ? getAvatarSrc(selectedCharacter) : undefined}
+        onCharacterClick={(char) => {
+          // 切換到點擊的角色
+          setSelectedCharacter(char);
+          addToHistory(char.id, getCharacterType(char));
+        }}
       />
       
       {/* 角色比較彈窗 */}

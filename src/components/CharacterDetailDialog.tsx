@@ -55,6 +55,7 @@ interface CharacterDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   avatarSrc?: string;
+  onCharacterClick?: (char: GanCharacter | ZhiCharacter) => void;
 }
 
 export const CharacterDetailDialog = ({
@@ -62,6 +63,7 @@ export const CharacterDetailDialog = ({
   open,
   onOpenChange,
   avatarSrc,
+  onCharacterClick,
 }: CharacterDetailDialogProps) => {
   if (!character) return null;
 
@@ -421,11 +423,12 @@ export const CharacterDetailDialog = ({
                         <Badge 
                           key={char.id}
                           variant="outline"
-                          className="cursor-pointer hover:scale-105 transition-transform"
+                          className="cursor-pointer hover:scale-105 hover:bg-accent/50 transition-all"
                           style={{ 
                             borderColor: ELEMENT_CONFIG[relations.generatedBy as ElementType]?.color,
                             color: ELEMENT_CONFIG[relations.generatedBy as ElementType]?.color
                           }}
+                          onClick={() => onCharacterClick?.(char)}
                         >
                           {char.id} {char.title}
                         </Badge>
@@ -446,11 +449,12 @@ export const CharacterDetailDialog = ({
                         <Badge 
                           key={char.id}
                           variant="outline"
-                          className="cursor-pointer hover:scale-105 transition-transform"
+                          className="cursor-pointer hover:scale-105 hover:bg-accent/50 transition-all"
                           style={{ 
                             borderColor: ELEMENT_CONFIG[relations.generates as ElementType]?.color,
                             color: ELEMENT_CONFIG[relations.generates as ElementType]?.color
                           }}
+                          onClick={() => onCharacterClick?.(char)}
                         >
                           {char.id} {char.title}
                         </Badge>
@@ -473,11 +477,12 @@ export const CharacterDetailDialog = ({
                         <Badge 
                           key={char.id}
                           variant="outline"
-                          className="cursor-pointer hover:scale-105 transition-transform"
+                          className="cursor-pointer hover:scale-105 hover:bg-accent/50 transition-all"
                           style={{ 
                             borderColor: elementConfig?.color,
                             color: elementConfig?.color
                           }}
+                          onClick={() => onCharacterClick?.(char)}
                         >
                           {char.id} {char.title}
                         </Badge>

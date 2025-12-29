@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { forwardRef, ReactNode, useState } from "react";
+import { forwardRef, ReactNode, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { LucideIcon, ChevronDown } from "lucide-react";
 
@@ -17,6 +17,10 @@ interface ReportSectionProps {
   order?: number;
   collapsible?: boolean;
   defaultExpanded?: boolean;
+  /** 外部控制展開狀態 */
+  expanded?: boolean;
+  /** 展開狀態變化回調 */
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
 export const ReportSection = forwardRef<HTMLDivElement, ReportSectionProps>(({
@@ -33,8 +37,26 @@ export const ReportSection = forwardRef<HTMLDivElement, ReportSectionProps>(({
   order = 0,
   collapsible = true,
   defaultExpanded = true,
+  expanded,
+  onExpandedChange,
 }, ref) => {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  // 支援受控與非受控模式
+  const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
+  const isExpanded = expanded !== undefined ? expanded : internalExpanded;
+
+  // 同步外部狀態
+  useEffect(() => {
+    if (expanded !== undefined) {
+      setInternalExpanded(expanded);
+    }
+  }, [expanded]);
+
+  const handleToggle = () => {
+    if (!collapsible) return;
+    const newState = !isExpanded;
+    setInternalExpanded(newState);
+    onExpandedChange?.(newState);
+  };
 
   return (
     <motion.section
@@ -68,7 +90,7 @@ export const ReportSection = forwardRef<HTMLDivElement, ReportSectionProps>(({
 
       {/* 章節標題 */}
       <button
-        onClick={() => collapsible && setIsExpanded(!isExpanded)}
+        onClick={handleToggle}
         disabled={!collapsible}
         className={cn(
           "relative w-full px-6 py-5 border-b border-border/50 bg-gradient-to-r from-muted/50 via-transparent to-muted/50",

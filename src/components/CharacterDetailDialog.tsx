@@ -8,8 +8,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Sparkles, Shield, Zap, Droplets, Mountain, Flame, TreeDeciduous,
   TrendingUp, TrendingDown, User, Clock, Leaf, ArrowRight, Circle,
-  ChevronRight, Home
+  ChevronRight, Home, ArrowLeft, Keyboard
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { GanCharacter, ZhiCharacter } from "@/lib/legionTranslator/types";
 import { GAN_CHARACTERS, ZHI_CHARACTERS } from "@/lib/legionTranslator/characterData";
 import { commanderAvatars } from "@/assets/commanders";
@@ -177,6 +178,27 @@ export const CharacterDetailDialog = ({
               animate={{ opacity: 1, y: 0 }}
               className="sticky top-0 z-10 px-4 py-2 bg-background/95 backdrop-blur-sm border-b flex items-center gap-1 overflow-x-auto"
             >
+              {/* 返回按鈕 */}
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={goBack}
+                      className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-muted hover:bg-accent transition-all hover:scale-105 flex-shrink-0"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">返回</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="flex items-center gap-2">
+                    <span>返回上一個角色</span>
+                    <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-muted rounded border">⌫</kbd>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <div className="w-px h-4 bg-border mx-1 flex-shrink-0" />
+              
               <Home className="w-4 h-4 text-muted-foreground flex-shrink-0" />
               {breadcrumbs.map((crumb, index) => {
                 const crumbConfig = ELEMENT_CONFIG[crumb.element as ElementType];

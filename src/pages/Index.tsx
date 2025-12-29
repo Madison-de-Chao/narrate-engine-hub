@@ -25,8 +25,8 @@ import { PdfOptionsDialog, type PdfOptions as DialogPdfOptions } from "@/compone
 import { toast } from "sonner";
 import { FunctionsHttpError, type User, type Session } from "@supabase/supabase-js";
 import { useGuestMode } from "@/hooks/useGuestMode";
-import { useMembershipStatus, getMembershipLabel } from "@/hooks/useMembershipStatus";
-import { MembershipIndicator } from "@/components/PremiumGate";
+import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
+import { MembershipBadge } from "@/components/EntitlementGuard";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import logoSishi from "@/assets/logo-sishi.png";
@@ -102,7 +102,7 @@ const Index = () => {
   const [shenshaRuleset, setShenshaRuleset] = useState<'trad' | 'legion'>('trad');
   const [isAiConsultOpen, setIsAiConsultOpen] = useState(false);
   const [isPdfOptionsOpen, setIsPdfOptionsOpen] = useState(false);
-  const { hasAccess, source: membershipSource, tier, loading: membershipLoading } = useMembershipStatus('bazi-premium');
+  const { hasAccess, source: membershipSource, tier, loading: membershipLoading } = useUnifiedMembership('bazi-premium');
   const { isAdmin } = useAdminStatus(user?.id);
   // 升級處理函數
   const handleUpgrade = () => {
@@ -585,7 +585,7 @@ const Index = () => {
               {/* 訂閱狀態顯示 */}
               {user && !membershipLoading && (
                 hasAccess ? (
-                  <MembershipIndicator source={membershipSource} tier={tier} />
+                  <MembershipBadge source={membershipSource} tier={tier} />
                 ) : (
                   <Button
                     onClick={handleUpgrade}

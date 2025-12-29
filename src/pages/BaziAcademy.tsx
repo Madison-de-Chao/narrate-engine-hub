@@ -15,9 +15,7 @@ import {
   GraduationCap,
   MessageCircle,
   CheckCircle,
-  ChevronRight,
-  Home,
-  LogOut
+  ChevronRight
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -25,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
-import { MembershipBadge } from '@/components/EntitlementGuard';
+import { PageHeader } from '@/components/PageHeader';
 import { useAcademyProgress } from '@/hooks/useAcademyProgress';
 import { AiTeacher } from '@/components/AiTeacher';
 import { InteractiveLearning } from '@/components/InteractiveLearning';
@@ -119,23 +117,20 @@ const BaziAcademy: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [userId, setUserId] = useState<string | undefined>();
-  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [isAiTeacherOpen, setIsAiTeacherOpen] = useState(false);
   const [activeLesson, setActiveLesson] = useState<{ zoneId: string; lessonId: string } | null>(null);
-  const { hasAccess: isPremium, source: membershipSource, tier, loading } = useUnifiedMembership('bazi-premium');
+  const { hasAccess: isPremium } = useUnifiedMembership('bazi-premium');
   const { progress, getZoneProgress, completeLesson, getZoneLessons, isLessonCompleted } = useAcademyProgress();
 
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUserId(user?.id);
-      setUser(user);
     };
     getUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUserId(session?.user?.id);
-      setUser(session?.user ?? null);
     });
 
     return () => subscription.unsubscribe();
@@ -187,47 +182,7 @@ const BaziAcademy: React.FC = () => {
       theme === 'dark' ? 'bg-background' : 'bg-gray-50'
     }`}>
       {/* 頂部導航欄 */}
-      <header className={`sticky top-0 z-50 backdrop-blur-sm border-b ${
-        theme === 'dark' ? 'bg-background/95 border-border/50' : 'bg-white/95 border-gray-200'
-      }`}>
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/')}
-              className="gap-2"
-            >
-              <Home className="w-4 h-4" />
-              返回首頁
-            </Button>
-            
-            <h1 className={`text-lg font-bold ${
-              theme === 'dark' ? 'text-paper' : 'text-void'
-            }`}>
-              八字學堂
-            </h1>
-            
-            <div className="flex items-center gap-2">
-              {user && !loading && (
-                isPremium ? (
-                  <MembershipBadge source={membershipSource} tier={tier} />
-                ) : (
-                  <Button
-                    onClick={() => navigate('/subscribe')}
-                    variant="outline"
-                    size="sm"
-                    className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
-                  >
-                    <Crown className="mr-1 h-3 w-3" />
-                    升級
-                  </Button>
-                )
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <PageHeader title="八字學堂" />
 
       {/* 頂部橫幅 */}
       <div className={`relative overflow-hidden ${
@@ -369,7 +324,7 @@ const BaziAcademy: React.FC = () => {
             </Badge>
           </div>
 
-          {!isPremium && !loading && (
+          {!isPremium && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

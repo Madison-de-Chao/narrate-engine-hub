@@ -6,13 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Users, ArrowLeftRight, Plus, Check, X, Heart, Star, Home, Crown, LogOut } from "lucide-react";
+import { Search, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Users, ArrowLeftRight, Plus, Check, X, Heart, Star } from "lucide-react";
 import { GAN_CHARACTERS, ZHI_CHARACTERS } from "@/lib/legionTranslator/characterData";
 import { CharacterDetailDialog } from "@/components/CharacterDetailDialog";
 import { CharacterCompareDialog } from "@/components/CharacterCompareDialog";
 import { useCharacterFavorites } from "@/hooks/useCharacterFavorites";
-import { useUnifiedMembership } from "@/hooks/useUnifiedMembership";
-import { MembershipBadge } from "@/components/EntitlementGuard";
+import { PageHeader } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import type { GanCharacter, ZhiCharacter } from "@/lib/legionTranslator/types";
 import { commanderAvatars } from "@/assets/commanders";
@@ -37,10 +36,6 @@ const CharacterGallery = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCharacter, setSelectedCharacter] = useState<CharacterType | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
-  
-  // 會員狀態
-  const { hasAccess, source: membershipSource, tier, loading: membershipLoading } = useUnifiedMembership('bazi-premium');
   
   // 比較功能狀態
   const [compareMode, setCompareMode] = useState(false);
@@ -50,20 +45,6 @@ const CharacterGallery = () => {
   // 收藏功能
   const { favorites, loading: favoritesLoading, isLoggedIn, isFavorite, toggleFavorite, getFavoriteIds } = useCharacterFavorites();
 
-  // 獲取用戶資訊
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    getUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   // 獲取當前顯示的角色列表
   const characters = useMemo(() => {
@@ -188,43 +169,7 @@ const CharacterGallery = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
       {/* 頂部導航欄 */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50">
-        <div className="container max-w-6xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/')}
-              className="gap-2"
-            >
-              <Home className="w-4 h-4" />
-              返回首頁
-            </Button>
-            
-            <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-              角色圖鑑
-            </h1>
-            
-            <div className="flex items-center gap-2">
-              {user && !membershipLoading && (
-                hasAccess ? (
-                  <MembershipBadge source={membershipSource} tier={tier} />
-                ) : (
-                  <Button
-                    onClick={() => navigate('/subscribe')}
-                    variant="outline"
-                    size="sm"
-                    className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
-                  >
-                    <Crown className="mr-1 h-3 w-3" />
-                    升級
-                  </Button>
-                )
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <PageHeader title="角色圖鑑" />
 
       <div className="container max-w-6xl mx-auto px-4 py-8">
         {/* 頁面標題 */}

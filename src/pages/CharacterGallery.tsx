@@ -6,10 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Users, ArrowLeftRight, Plus, Check, X, Heart, Star } from "lucide-react";
+import { Search, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Users, ArrowLeftRight, Plus, Check, X, Heart, Star, Maximize } from "lucide-react";
 import { GAN_CHARACTERS, ZHI_CHARACTERS } from "@/lib/legionTranslator/characterData";
 import { CharacterDetailDialog } from "@/components/CharacterDetailDialog";
 import { CharacterCompareDialog } from "@/components/CharacterCompareDialog";
+import { CharacterLightbox } from "@/components/CharacterLightbox";
 import { useCharacterFavorites } from "@/hooks/useCharacterFavorites";
 import { PageHeader } from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,10 @@ const CharacterGallery = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCharacter, setSelectedCharacter] = useState<CharacterType | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // 燈箱模式狀態
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   
   // 比較功能狀態
   const [compareMode, setCompareMode] = useState(false);
@@ -91,14 +96,21 @@ const CharacterGallery = () => {
     return 'gan' in char ? 'gan' : 'zhi';
   };
 
-  // 打開角色詳情
+  // 打開角色燈箱
   const handleCharacterClick = (char: CharacterType) => {
     if (compareMode) {
       handleAddToCompare(char);
     } else {
-      setSelectedCharacter(char);
-      setDialogOpen(true);
+      const charIndex = characters.findIndex(c => c.id === char.id);
+      setLightboxIndex(charIndex >= 0 ? charIndex : 0);
+      setLightboxOpen(true);
     }
+  };
+
+  // 打開角色詳情（保留備用）
+  const handleOpenDetail = (char: CharacterType) => {
+    setSelectedCharacter(char);
+    setDialogOpen(true);
   };
 
   // 處理收藏點擊
@@ -432,6 +444,22 @@ const CharacterGallery = () => {
           </motion.div>
         )}
       </div>
+
+      {/* 角色燈箱 */}
+      <CharacterLightbox
+        characters={characters}
+        currentIndex={lightboxIndex}
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        onNavigate={setLightboxIndex}
+        getAvatarSrc={(char) => getAvatarSrc(char) || ''}
+        isFavorite={isFavorite}
+        onFavoriteClick={(char) => {
+          const type = getCharacterType(char);
+          toggleFavorite(char.id, type, `${char.id} ${char.title}`);
+        }}
+        isLoggedIn={isLoggedIn}
+      />
 
       {/* 角色詳情彈窗 */}
       <CharacterDetailDialog

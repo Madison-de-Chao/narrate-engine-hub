@@ -18,7 +18,7 @@ import { PremiumGate } from "@/components/PremiumGate";
 import { AiFortuneConsult } from "@/components/AiFortuneConsult";
 import { LegionSummoningOverlay } from "@/components/LegionSummoningOverlay";
 import { PageHeader } from "@/components/PageHeader";
-import { ReportSection, ReportDivider, ReportProgress, ReportControls } from "@/components/report";
+import { ReportSection, ReportDivider, ReportProgress, ReportControls, ReadingProgressBar } from "@/components/report";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, Shield, Share2, MessageCircle, Facebook, LayoutDashboard, Scroll, BarChart3, FileText, User } from "lucide-react";
@@ -575,6 +575,9 @@ const Index = () => {
 
   return (
     <>
+    {/* 頂部閱讀進度條 */}
+    <ReadingProgressBar />
+    
     {/* Loading 動畫覆蓋層 */}
     <LegionSummoningOverlay isVisible={isCalculating} userName={calculatingUserName} />
     

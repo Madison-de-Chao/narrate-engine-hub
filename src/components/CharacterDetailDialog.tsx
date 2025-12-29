@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -137,6 +137,34 @@ export const CharacterDetailDialog = ({
       onCharacterClick?.(char);
     }
   };
+
+  // 返回上一個角色
+  const goBack = useCallback(() => {
+    if (breadcrumbs.length > 1) {
+      const prevChar = breadcrumbs[breadcrumbs.length - 2];
+      onCharacterClick?.(prevChar);
+    }
+  }, [breadcrumbs, onCharacterClick]);
+
+  // 鍵盤快捷鍵支援
+  useEffect(() => {
+    if (!open) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Backspace 返回上一個角色
+      if (e.key === 'Backspace' && breadcrumbs.length > 1) {
+        // 避免在輸入框中觸發
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+          return;
+        }
+        e.preventDefault();
+        goBack();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, breadcrumbs.length, goBack]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

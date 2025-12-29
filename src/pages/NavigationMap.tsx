@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -18,6 +18,23 @@ import {
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
+
+// 觸控漣漪效果類型
+interface TouchRipple {
+  id: number;
+  x: number;
+  y: number;
+  color: string;
+  timestamp: number;
+}
+
+// 觸控軌跡點類型
+interface TouchTrailPoint {
+  id: number;
+  x: number;
+  y: number;
+  timestamp: number;
+}
 
 // 粒子類型定義
 interface Particle {
@@ -199,15 +216,102 @@ const NavigationMap: React.FC = () => {
   const [activeZone, setActiveZone] = useState<string | null>(null);
   const [hoveredZone, setHoveredZone] = useState<string | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
+  
+  // 觸控相關狀態
+  const [touchRipples, setTouchRipples] = useState<TouchRipple[]>([]);
+  const [touchTrail, setTouchTrail] = useState<TouchTrailPoint[]>([]);
+  const [isTouching, setIsTouching] = useState(false);
+  const [touchedZone, setTouchedZone] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rippleIdRef = useRef(0);
+  const trailIdRef = useRef(0);
 
   // 生成粒子和浮動元素
   const particles = useMemo(() => generateParticles(30, theme), [theme]);
   const floatingElements = useMemo(() => generateFloatingElements(12, theme), [theme]);
 
-  // 滑鼠追蹤效果
+
+  // 添加觸控漣漪
+  const addTouchRipple = useCallback((x: number, y: number, color?: string) => {
+    const rippleColors = theme === 'dark'
+      ? ['hsl(45, 100%, 50%)', 'hsl(280, 80%, 60%)', 'hsl(180, 80%, 50%)']
+      : ['hsl(45, 90%, 45%)', 'hsl(280, 70%, 50%)', 'hsl(180, 70%, 40%)'];
+    
+    const newRipple: TouchRipple = {
+      id: rippleIdRef.current++,
+      x,
+      y,
+      color: color || rippleColors[Math.floor(Math.random() * rippleColors.length)],
+      timestamp: Date.now()
+    };
+    
+    setTouchRipples(prev => [...prev, newRipple]);
+    
+    // 自動移除漣漪
+    setTimeout(() => {
+      setTouchRipples(prev => prev.filter(r => r.id !== newRipple.id));
+    }, 1000);
+  }, [theme]);
+
+  // 添加觸控軌跡點
+  const addTrailPoint = useCallback((x: number, y: number) => {
+    const newPoint: TouchTrailPoint = {
+      id: trailIdRef.current++,
+      x,
+      y,
+      timestamp: Date.now()
+    };
+    
+    setTouchTrail(prev => {
+      const now = Date.now();
+      // 只保留最近 500ms 的軌跡點
+      const filtered = prev.filter(p => now - p.timestamp < 500);
+      return [...filtered, newPoint].slice(-20); // 最多保留 20 個點
+    });
+  }, []);
+
+  // 觸控開始
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    setIsTouching(true);
+    const touch = e.touches[0];
+    const container = containerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+    const pos = { x: Math.min(100, Math.max(0, x)), y: Math.min(100, Math.max(0, y)) };
+    setMousePosition(pos);
+    addTouchRipple(pos.x, pos.y);
+    addTrailPoint(pos.x, pos.y);
+  }, [addTouchRipple, addTrailPoint]);
+
+  // 觸控移動
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const container = containerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+    const pos = { x: Math.min(100, Math.max(0, x)), y: Math.min(100, Math.max(0, y)) };
+    setMousePosition(pos);
+    addTrailPoint(pos.x, pos.y);
+  }, [addTrailPoint]);
+
+  // 觸控結束
+  const handleTouchEnd = useCallback(() => {
+    setIsTouching(false);
+    setTouchedZone(null);
+    // 清除軌跡
+    setTimeout(() => {
+      setTouchTrail([]);
+    }, 300);
+  }, []);
+
+  // 滑鼠追蹤效果（桌面端）
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const container = document.getElementById('navigation-map-container');
+      const container = containerRef.current;
       if (container) {
         const rect = container.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -218,6 +322,18 @@ const NavigationMap: React.FC = () => {
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
+
+  // 清理過期的軌跡點
+  useEffect(() => {
+    if (touchTrail.length === 0) return;
+    
+    const cleanup = setInterval(() => {
+      const now = Date.now();
+      setTouchTrail(prev => prev.filter(p => now - p.timestamp < 500));
+    }, 100);
+    
+    return () => clearInterval(cleanup);
+  }, [touchTrail.length]);
 
   const handleZoneNavigate = (zoneId: string) => {
     if (zoneId === 'academy') {
@@ -276,12 +392,16 @@ const NavigationMap: React.FC = () => {
       {/* 地圖區域 */}
       <div className="max-w-4xl mx-auto px-4">
         <div 
+          ref={containerRef}
           id="navigation-map-container"
-          className={`relative w-full rounded-2xl overflow-hidden ${
+          className={`relative w-full rounded-2xl overflow-hidden touch-none ${
             theme === 'dark' 
               ? 'bg-gradient-to-br from-void via-card to-void border border-gold/20' 
               : 'bg-gradient-to-br from-paper via-white to-paper border border-ink/10'
           }`}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {/* 動態背景裝飾 */}
           <div className="absolute inset-0 overflow-hidden">
@@ -337,6 +457,131 @@ const NavigationMap: React.FC = () => {
             {floatingElements.map((element) => (
               <FloatingIcon key={element.id} element={element} />
             ))}
+
+            {/* 觸控漣漪效果 */}
+            <AnimatePresence>
+              {touchRipples.map((ripple) => (
+                <motion.div
+                  key={ripple.id}
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: `${ripple.x}%`,
+                    top: `${ripple.y}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                  initial={{ scale: 0, opacity: 0.8 }}
+                  animate={{ scale: 4, opacity: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                >
+                  <div 
+                    className="w-16 h-16 rounded-full"
+                    style={{
+                      background: `radial-gradient(circle, ${ripple.color} 0%, transparent 70%)`
+                    }}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            {/* 觸控軌跡效果 */}
+            {touchTrail.length > 1 && (
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 5 }}>
+                <defs>
+                  <linearGradient id="trailGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={theme === 'dark' ? 'hsl(45, 100%, 50%)' : 'hsl(45, 90%, 45%)'} stopOpacity="0" />
+                    <stop offset="100%" stopColor={theme === 'dark' ? 'hsl(45, 100%, 50%)' : 'hsl(45, 90%, 45%)'} stopOpacity="0.8" />
+                  </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+                <motion.path
+                  d={touchTrail.reduce((acc, point, i) => {
+                    if (i === 0) return `M ${point.x}% ${point.y}%`;
+                    return `${acc} L ${point.x}% ${point.y}%`;
+                  }, '')}
+                  fill="none"
+                  stroke="url(#trailGradient)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  filter="url(#glow)"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 0.1 }}
+                />
+                {/* 軌跡末端光點 */}
+                {touchTrail.length > 0 && (
+                  <motion.circle
+                    cx={`${touchTrail[touchTrail.length - 1].x}%`}
+                    cy={`${touchTrail[touchTrail.length - 1].y}%`}
+                    r="6"
+                    fill={theme === 'dark' ? 'hsl(45, 100%, 50%)' : 'hsl(45, 90%, 45%)'}
+                    filter="url(#glow)"
+                    animate={{
+                      r: isTouching ? [6, 10, 6] : 6,
+                      opacity: isTouching ? [0.8, 1, 0.8] : 0
+                    }}
+                    transition={{ duration: 0.5, repeat: Infinity }}
+                  />
+                )}
+              </svg>
+            )}
+
+            {/* 觸控時的中心能量場 */}
+            <AnimatePresence>
+              {isTouching && (
+                <motion.div
+                  className="absolute pointer-events-none"
+                  style={{
+                    left: `${mousePosition.x}%`,
+                    top: `${mousePosition.y}%`,
+                    transform: 'translate(-50%, -50%)'
+                  }}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {/* 外層光環 */}
+                  <motion.div
+                    className={`w-32 h-32 rounded-full ${
+                      theme === 'dark' 
+                        ? 'border-2 border-gold/40' 
+                        : 'border-2 border-amber-400/40'
+                    }`}
+                    animate={{ 
+                      scale: [1, 1.3, 1],
+                      opacity: [0.5, 0.2, 0.5]
+                    }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  />
+                  {/* 內層能量核心 */}
+                  <motion.div
+                    className={`absolute inset-0 m-auto w-8 h-8 rounded-full ${
+                      theme === 'dark' 
+                        ? 'bg-gradient-to-br from-gold/60 to-amber-500/40' 
+                        : 'bg-gradient-to-br from-amber-400/60 to-yellow-300/40'
+                    }`}
+                    style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                      boxShadow: [
+                        '0 0 20px rgba(245, 158, 11, 0.4)',
+                        '0 0 40px rgba(245, 158, 11, 0.6)',
+                        '0 0 20px rgba(245, 158, 11, 0.4)'
+                      ]
+                    }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* 徑向漸變背景 */}
             <div className={`absolute inset-0 opacity-30 ${
@@ -465,10 +710,57 @@ const NavigationMap: React.FC = () => {
                   whileTap={{ scale: 0.9 }}
                   onHoverStart={() => setHoveredZone(zone.id)}
                   onHoverEnd={() => setHoveredZone(null)}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    setTouchedZone(zone.id);
+                    setHoveredZone(zone.id);
+                    // 添加區域特定顏色的漣漪
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const container = containerRef.current;
+                    if (container) {
+                      const containerRect = container.getBoundingClientRect();
+                      const x = ((rect.left + rect.width / 2 - containerRect.left) / containerRect.width) * 100;
+                      const y = ((rect.top + rect.height / 2 - containerRect.top) / containerRect.height) * 100;
+                      addTouchRipple(x, y, zone.glowColor);
+                    }
+                  }}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                    if (touchedZone === zone.id) {
+                      setActiveZone(zone.id);
+                    }
+                    setTouchedZone(null);
+                    setHoveredZone(null);
+                  }}
                   onClick={() => {
                     setActiveZone(zone.id);
                   }}
                 >
+                  {/* 觸控時的脈衝光環 */}
+                  <AnimatePresence>
+                    {touchedZone === zone.id && (
+                      <>
+                        {[...Array(3)].map((_, i) => (
+                          <motion.div
+                            key={i}
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                              border: `2px solid ${zone.glowColor}`
+                            }}
+                            initial={{ scale: 1, opacity: 0.8 }}
+                            animate={{ scale: 2 + i * 0.5, opacity: 0 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ 
+                              duration: 0.8,
+                              delay: i * 0.15,
+                              ease: "easeOut"
+                            }}
+                          />
+                        ))}
+                      </>
+                    )}
+                  </AnimatePresence>
+
                   {/* 多層光暈效果 */}
                   <motion.div
                     className="absolute inset-0 rounded-full"

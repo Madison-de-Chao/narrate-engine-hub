@@ -40,7 +40,7 @@ const ZONES: MapZone[] = [
     icon: <Swords className="w-8 h-8" />,
     color: 'from-red-600 to-amber-500',
     glowColor: 'rgba(239, 68, 68, 0.5)',
-    position: { x: 25, y: 50 },
+    position: { x: 15, y: 50 },
     size: 'lg'
   },
   {
@@ -51,7 +51,18 @@ const ZONES: MapZone[] = [
     icon: <GraduationCap className="w-8 h-8" />,
     color: 'from-purple-600 to-indigo-500',
     glowColor: 'rgba(147, 51, 234, 0.5)',
-    position: { x: 50, y: 50 },
+    position: { x: 38, y: 50 },
+    size: 'lg'
+  },
+  {
+    id: 'gallery',
+    name: '角色圖鑑',
+    subtitle: 'Character Gallery',
+    description: '探索十天干將領與十二地支軍師的完整圖鑑，了解每位角色的特質與關係',
+    icon: <Users className="w-8 h-8" />,
+    color: 'from-cyan-500 to-teal-400',
+    glowColor: 'rgba(6, 182, 212, 0.5)',
+    position: { x: 62, y: 50 },
     size: 'lg'
   },
   {
@@ -62,7 +73,7 @@ const ZONES: MapZone[] = [
     icon: <Star className="w-8 h-8" />,
     color: 'from-amber-500 to-yellow-400',
     glowColor: 'rgba(245, 158, 11, 0.5)',
-    position: { x: 75, y: 50 },
+    position: { x: 85, y: 50 },
     size: 'lg'
   }
 ];
@@ -78,6 +89,8 @@ const NavigationMap: React.FC = () => {
       navigate('/academy');
     } else if (zoneId === 'legion') {
       navigate('/');
+    } else if (zoneId === 'gallery') {
+      navigate('/gallery');
     } else if (zoneId === 'subscribe') {
       navigate('/subscribe');
     } else {
@@ -149,9 +162,9 @@ const NavigationMap: React.FC = () => {
               </defs>
               {/* 連接第一和第二區域的線 */}
               <motion.line
-                x1="25%"
+                x1="15%"
                 y1="50%"
-                x2="50%"
+                x2="38%"
                 y2="50%"
                 stroke="url(#lineGradient)"
                 strokeWidth="3"
@@ -165,9 +178,9 @@ const NavigationMap: React.FC = () => {
               />
               {/* 連接第二和第三區域的線 */}
               <motion.line
-                x1="50%"
+                x1="38%"
                 y1="50%"
-                x2="75%"
+                x2="62%"
                 y2="50%"
                 stroke="url(#lineGradient)"
                 strokeWidth="3"
@@ -178,6 +191,22 @@ const NavigationMap: React.FC = () => {
                   opacity: hoveredZone ? 0.8 : 0.4
                 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
+              />
+              {/* 連接第三和第四區域的線 */}
+              <motion.line
+                x1="62%"
+                y1="50%"
+                x2="85%"
+                y2="50%"
+                stroke="url(#lineGradient)"
+                strokeWidth="3"
+                strokeDasharray="8 4"
+                initial={{ pathLength: 0 }}
+                animate={{ 
+                  pathLength: 1,
+                  opacity: hoveredZone ? 0.8 : 0.4
+                }}
+                transition={{ duration: 0.8, delay: 0.4 }}
               />
             </svg>
           </div>
@@ -452,6 +481,27 @@ const NavigationMap: React.FC = () => {
           >
             <GraduationCap className="w-5 h-5" />
             <span>八字學堂</span>
+            <ChevronRight className="w-5 h-5" />
+          </motion.button>
+
+          {/* 角色圖鑑入口 */}
+          <motion.button
+            onClick={() => navigate('/gallery')}
+            className={`
+              w-full py-4 px-6 rounded-xl
+              flex items-center justify-center gap-3
+              font-bold text-lg tracking-wider
+              transition-all duration-300
+              ${theme === 'dark'
+                ? 'bg-gradient-to-r from-cyan-500/30 via-teal-400/30 to-cyan-500/30 text-cyan-300 border border-cyan-500/40 hover:border-cyan-400/60 hover:bg-cyan-500/30'
+                : 'bg-gradient-to-r from-cyan-500 via-teal-400 to-cyan-500 text-white hover:from-cyan-400 hover:via-teal-300 hover:to-cyan-400'
+              }
+            `}
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Users className="w-5 h-5" />
+            <span>角色圖鑑</span>
             <ChevronRight className="w-5 h-5" />
           </motion.button>
 

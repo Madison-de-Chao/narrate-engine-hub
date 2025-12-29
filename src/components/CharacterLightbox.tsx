@@ -30,6 +30,7 @@ interface CharacterLightboxProps {
   isFavorite?: (id: string, type: 'gan' | 'zhi') => boolean;
   onFavoriteClick?: (char: CharacterType) => void;
   isLoggedIn?: boolean;
+  onCharacterView?: (char: CharacterType) => void;
 }
 
 export function CharacterLightbox({
@@ -42,6 +43,7 @@ export function CharacterLightbox({
   isFavorite,
   onFavoriteClick,
   isLoggedIn = false,
+  onCharacterView,
 }: CharacterLightboxProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showThumbnails, setShowThumbnails] = useState(true);
@@ -73,23 +75,37 @@ export function CharacterLightbox({
   const handlePrev = useCallback(() => {
     if (currentIndex > 0) {
       setImageLoaded(false);
-      onNavigate(currentIndex - 1);
+      const newIndex = currentIndex - 1;
+      onNavigate(newIndex);
+      // 記錄瀏覽歷史
+      if (onCharacterView && characters[newIndex]) {
+        onCharacterView(characters[newIndex]);
+      }
     }
-  }, [currentIndex, onNavigate]);
+  }, [currentIndex, onNavigate, onCharacterView, characters]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < characters.length - 1) {
       setImageLoaded(false);
-      onNavigate(currentIndex + 1);
+      const newIndex = currentIndex + 1;
+      onNavigate(newIndex);
+      // 記錄瀏覽歷史
+      if (onCharacterView && characters[newIndex]) {
+        onCharacterView(characters[newIndex]);
+      }
     }
-  }, [currentIndex, characters.length, onNavigate]);
+  }, [currentIndex, characters.length, onNavigate, onCharacterView, characters]);
 
   const handleThumbnailClick = useCallback((index: number) => {
     if (index !== currentIndex) {
       setImageLoaded(false);
       onNavigate(index);
+      // 記錄瀏覽歷史
+      if (onCharacterView && characters[index]) {
+        onCharacterView(characters[index]);
+      }
     }
-  }, [currentIndex, onNavigate]);
+  }, [currentIndex, onNavigate, onCharacterView, characters]);
 
   // 觸控事件處理
   const handleTouchStart = useCallback((e: React.TouchEvent) => {

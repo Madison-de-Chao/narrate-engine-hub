@@ -18,7 +18,7 @@ import { PremiumGate } from "@/components/PremiumGate";
 import { AiFortuneConsult } from "@/components/AiFortuneConsult";
 import { LegionSummoningOverlay } from "@/components/LegionSummoningOverlay";
 import { PageHeader } from "@/components/PageHeader";
-import { ReportSection, ReportDivider, ReportProgress, ReportControls, ReadingProgressBar } from "@/components/report";
+import { ReportSection, ReportDivider, ReportProgress, ReportControls, ReadingProgressBar, ReportTableOfContents } from "@/components/report";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, Shield, Share2, MessageCircle, Facebook, LayoutDashboard, Scroll, BarChart3, FileText, User } from "lucide-react";
@@ -696,6 +696,13 @@ const Index = () => {
           <>
             {/* 報告導航 */}
             <ReportNavigation activeSection={activeSection} onSectionChange={scrollToSection} />
+            
+            {/* 目錄導航 */}
+            <ReportTableOfContents 
+              activeSection={activeSection}
+              onSectionClick={scrollToSection}
+              expandedSections={sectionExpandedState}
+            />
 
             {/* 下載與分享按鈕 */}
             <section className="animate-fade-in space-y-4">

@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Sparkles, Shield, Zap, Droplets, Mountain, Flame, TreeDeciduous,
   TrendingUp, TrendingDown, User, Clock, Leaf, ArrowRight, Circle,
-  ChevronRight, Home, ArrowLeft, Keyboard
+  ChevronRight, Home, ArrowLeft, Keyboard, ChevronLeft
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { GanCharacter, ZhiCharacter } from "@/lib/legionTranslator/types";
@@ -123,6 +123,18 @@ export const CharacterDetailDialog = ({
     return [...ganChars, ...zhiChars];
   };
 
+  // 獲取同五行的所有角色（用於左右箭頭導航）
+  const sameElementCharacters = useMemo(() => {
+    if (!character) return [];
+    return getRelatedCharacters(character.element);
+  }, [character]);
+
+  // 當前角色在同五行中的索引
+  const currentIndex = useMemo(() => {
+    if (!character) return -1;
+    return sameElementCharacters.findIndex(c => c.id === character.id);
+  }, [character, sameElementCharacters]);
+
   // 獲取角色頭像
   const getCharacterAvatar = (char: GanCharacter | ZhiCharacter): string | undefined => {
     if ('gan' in char) {
@@ -147,25 +159,59 @@ export const CharacterDetailDialog = ({
     }
   }, [breadcrumbs, onCharacterClick]);
 
+  // 切換到上一個同五行角色
+  const goPrevSameElement = useCallback(() => {
+    if (sameElementCharacters.length <= 1 || currentIndex < 0) return;
+    const prevIndex = currentIndex === 0 
+      ? sameElementCharacters.length - 1 
+      : currentIndex - 1;
+    onCharacterClick?.(sameElementCharacters[prevIndex]);
+  }, [sameElementCharacters, currentIndex, onCharacterClick]);
+
+  // 切換到下一個同五行角色
+  const goNextSameElement = useCallback(() => {
+    if (sameElementCharacters.length <= 1 || currentIndex < 0) return;
+    const nextIndex = currentIndex === sameElementCharacters.length - 1 
+      ? 0 
+      : currentIndex + 1;
+    onCharacterClick?.(sameElementCharacters[nextIndex]);
+  }, [sameElementCharacters, currentIndex, onCharacterClick]);
+
   // 鍵盤快捷鍵支援
   useEffect(() => {
     if (!open) return;
     
     const handleKeyDown = (e: KeyboardEvent) => {
+      // 避免在輸入框中觸發
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
       // Backspace 返回上一個角色
       if (e.key === 'Backspace' && breadcrumbs.length > 1) {
-        // 避免在輸入框中觸發
-        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-          return;
-        }
         e.preventDefault();
         goBack();
+        return;
+      }
+
+      // 左箭頭：上一個同五行角色
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goPrevSameElement();
+        return;
+      }
+
+      // 右箭頭：下一個同五行角色
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goNextSameElement();
+        return;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, breadcrumbs.length, goBack]);
+  }, [open, breadcrumbs.length, goBack, goPrevSameElement, goNextSameElement]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -262,6 +308,60 @@ export const CharacterDetailDialog = ({
                              radial-gradient(circle at 80% 80%, rgba(0,0,0,0.1) 0%, transparent 40%)`
               }}
             />
+
+            {/* 左右箭頭導航按鈕 */}
+            {sameElementCharacters.length > 1 && (
+              <>
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={goPrevSameElement}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 text-white flex items-center justify-center transition-all hover:scale-110"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="flex items-center gap-2">
+                      <span>上一個{character.element}行角色</span>
+                      <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-muted rounded border">←</kbd>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={goNextSameElement}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 text-white flex items-center justify-center transition-all hover:scale-110"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="left" className="flex items-center gap-2">
+                      <span>下一個{character.element}行角色</span>
+                      <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-muted rounded border">→</kbd>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+
+                {/* 進度指示器 */}
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/30 backdrop-blur-sm">
+                  {sameElementCharacters.map((char, i) => (
+                    <button
+                      key={char.id}
+                      onClick={() => onCharacterClick?.(char)}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        i === currentIndex 
+                          ? 'bg-white scale-125' 
+                          : 'bg-white/40 hover:bg-white/70'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
             
             {/* 頭像 */}
             <div className="absolute bottom-0 left-6 translate-y-1/2">

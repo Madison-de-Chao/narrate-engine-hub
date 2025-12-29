@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import type { GanCharacter, ZhiCharacter } from "@/lib/legionTranslator/types";
 import { GAN_CHARACTERS, ZHI_CHARACTERS } from "@/lib/legionTranslator/characterData";
+import { commanderAvatars } from "@/assets/commanders";
+import { advisorAvatars } from "@/assets/advisors";
 
 // 五行配置
 const ELEMENT_CONFIG = {
@@ -120,6 +122,14 @@ export const CharacterDetailDialog = ({
     return [...ganChars, ...zhiChars];
   };
 
+  // 獲取角色頭像
+  const getCharacterAvatar = (char: GanCharacter | ZhiCharacter): string | undefined => {
+    if ('gan' in char) {
+      return commanderAvatars[char.gan as keyof typeof commanderAvatars];
+    }
+    return advisorAvatars[char.id as keyof typeof advisorAvatars];
+  };
+
   // 處理麵包屑點擊
   const handleBreadcrumbClick = (char: GanCharacter | ZhiCharacter, index: number) => {
     if (index < breadcrumbs.length - 1) {
@@ -143,29 +153,46 @@ export const CharacterDetailDialog = ({
               {breadcrumbs.map((crumb, index) => {
                 const crumbConfig = ELEMENT_CONFIG[crumb.element as ElementType];
                 const isLast = index === breadcrumbs.length - 1;
+                const crumbAvatar = getCharacterAvatar(crumb);
                 return (
                   <div key={`${crumb.id}-${index}`} className="flex items-center gap-1 flex-shrink-0">
                     <ChevronRight className="w-3 h-3 text-muted-foreground" />
                     <button
                       onClick={() => handleBreadcrumbClick(crumb, index)}
                       disabled={isLast}
-                      className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                      className={`flex items-center gap-1.5 px-1.5 py-1 rounded-md text-xs font-medium transition-all ${
                         isLast 
-                          ? 'bg-accent/50 cursor-default' 
-                          : 'hover:bg-accent cursor-pointer'
+                          ? 'bg-accent/50 cursor-default ring-1 ring-inset' 
+                          : 'hover:bg-accent cursor-pointer hover:scale-105'
                       }`}
                       style={{ 
                         color: crumbConfig?.color,
-                        borderColor: isLast ? crumbConfig?.color : undefined,
+                        ['--tw-ring-color' as string]: isLast ? `${crumbConfig?.color}40` : undefined,
                       }}
                     >
-                      <span 
-                        className="w-4 h-4 rounded-full flex items-center justify-center text-[10px]"
-                        style={{ background: `${crumbConfig?.color}20` }}
+                      <div 
+                        className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0 ring-1"
+                        style={{ 
+                          background: `${crumbConfig?.color}20`,
+                          ['--tw-ring-color' as string]: `${crumbConfig?.color}60`
+                        }}
                       >
-                        {crumb.id.charAt(0)}
-                      </span>
-                      <span className="max-w-[60px] truncate">{crumb.id}</span>
+                        {crumbAvatar ? (
+                          <img 
+                            src={crumbAvatar} 
+                            alt={crumb.id} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span 
+                            className="w-full h-full flex items-center justify-center text-[10px] font-bold"
+                            style={{ color: crumbConfig?.color }}
+                          >
+                            {crumb.id.charAt(0)}
+                          </span>
+                        )}
+                      </div>
+                      <span className="max-w-[50px] truncate">{crumb.id}</span>
                     </button>
                   </div>
                 );

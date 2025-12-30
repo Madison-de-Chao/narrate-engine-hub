@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Compass, 
   Users, 
@@ -13,7 +13,10 @@ import {
   Crown,
   Lock,
   GraduationCap,
-  MessageCircle
+  MessageCircle,
+  Trophy,
+  ChevronRight,
+  CheckCircle
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -23,6 +26,15 @@ import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
 import { PageHeader } from '@/components/PageHeader';
 import { AiTeacher } from '@/components/AiTeacher';
 import { ConceptExplorer } from '@/components/ConceptExplorer';
+import { useAcademyAchievements, RARITY_COLORS } from '@/hooks/useAcademyAchievements';
+import { AchievementBadge } from '@/components/AchievementBadge';
+import { AchievementUnlockToast } from '@/components/AchievementUnlockToast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface CourseZone {
   id: string;
@@ -124,7 +136,22 @@ const BaziAcademy: React.FC = () => {
   const [userId, setUserId] = useState<string | undefined>();
   const [isAiTeacherOpen, setIsAiTeacherOpen] = useState(false);
   const [activeZone, setActiveZone] = useState<CourseZone | null>(null);
+  const [achievementsDialogOpen, setAchievementsDialogOpen] = useState(false);
   const { hasAccess: isPremium } = useUnifiedMembership('bazi-premium');
+  
+  // 成就系統
+  const {
+    zoneCompletionStatus,
+    completedZonesCount,
+    totalViewedConcepts,
+    unlockedAchievements,
+    unlockedIds,
+    newlyUnlocked,
+    clearNewlyUnlocked,
+    currentTitle,
+    allAchievements,
+    refreshViewed
+  } = useAcademyAchievements();
 
   useEffect(() => {
     const getUser = async () => {
@@ -148,14 +175,31 @@ const BaziAcademy: React.FC = () => {
     setActiveZone(zone);
   };
 
+  const handleBackFromZone = () => {
+    setActiveZone(null);
+    refreshViewed(); // 返回時刷新進度
+  };
+
+  // 取得區域進度
+  const getZoneProgress = (zoneId: string) => {
+    const status = zoneCompletionStatus[zoneId];
+    return status ? { viewed: status.viewed, total: status.total, completed: status.completed } : { viewed: 0, total: 0, completed: false };
+  };
+
   // 如果正在瀏覽某個區域，顯示概念探索器
   if (activeZone) {
     return (
-      <ConceptExplorer
-        zoneId={activeZone.id}
-        zoneName={activeZone.name}
-        onBack={() => setActiveZone(null)}
-      />
+      <>
+        <ConceptExplorer
+          zoneId={activeZone.id}
+          zoneName={activeZone.name}
+          onBack={handleBackFromZone}
+        />
+        <AchievementUnlockToast
+          achievement={newlyUnlocked}
+          onClose={clearNewlyUnlocked}
+        />
+      </>
     );
   }
 
@@ -209,11 +253,77 @@ const BaziAcademy: React.FC = () => {
             從基礎到進階，循序漸進掌握命理精髓
           </p>
 
+          {/* 成就與進度區 */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4"
+          >
+            {/* 當前稱號 */}
+            <div className={`px-4 py-2 rounded-full ${
+              theme === 'dark' 
+                ? 'bg-amber-500/20 border border-amber-500/30' 
+                : 'bg-amber-100 border border-amber-300'
+            }`}>
+              <span className={`text-sm font-medium ${
+                theme === 'dark' ? 'text-amber-400' : 'text-amber-700'
+              }`}>
+                🏅 {currentTitle}
+              </span>
+            </div>
+
+            {/* 成就按鈕 */}
+            <Button
+              variant="outline"
+              onClick={() => setAchievementsDialogOpen(true)}
+              className={`gap-2 ${
+                theme === 'dark'
+                  ? 'border-gold/30 text-gold hover:bg-gold/10'
+                  : 'border-amber-300 text-amber-700 hover:bg-amber-50'
+              }`}
+            >
+              <Trophy className="w-4 h-4" />
+              成就 {unlockedAchievements.length}/{allAchievements.length}
+            </Button>
+          </motion.div>
+
+          {/* 學習進度 */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-4 max-w-xs mx-auto"
+          >
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className={theme === 'dark' ? 'text-paper/70' : 'text-void/70'}>
+                總進度
+              </span>
+              <span className={theme === 'dark' ? 'text-gold' : 'text-amber-600'}>
+                {totalViewedConcepts}/29 概念 · {completedZonesCount}/8 區域
+              </span>
+            </div>
+            <div className={`h-2 rounded-full overflow-hidden ${
+              theme === 'dark' ? 'bg-muted' : 'bg-gray-200'
+            }`}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.round((totalViewedConcepts / 29) * 100)}%` }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className={`h-full rounded-full ${
+                  theme === 'dark' 
+                    ? 'bg-gradient-to-r from-amber-500 to-yellow-400' 
+                    : 'bg-gradient-to-r from-amber-400 to-yellow-400'
+                }`}
+              />
+            </div>
+          </motion.div>
+
           {/* AI 老師按鈕 */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.4 }}
             className="mt-6"
           >
             <Button
@@ -251,43 +361,73 @@ const BaziAcademy: React.FC = () => {
             </Badge>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {freeZones.map((zone, index) => (
-              <motion.div
-                key={zone.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 + index * 0.05 }}
-                onClick={() => handleZoneClick(zone)}
-                className={`relative p-5 rounded-xl cursor-pointer transition-all duration-300 ${
-                  theme === 'dark' 
-                    ? 'bg-card/80 border border-gold/20 hover:border-gold/50 hover:shadow-lg hover:shadow-gold/10' 
-                    : 'bg-white shadow border border-transparent hover:border-amber-300 hover:shadow-md'
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${zone.color} flex items-center justify-center text-white shadow-md`}>
-                    {zone.icon}
+            {freeZones.map((zone, index) => {
+              const progress = getZoneProgress(zone.id);
+              return (
+                <motion.div
+                  key={zone.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 + index * 0.05 }}
+                  onClick={() => handleZoneClick(zone)}
+                  className={`relative p-5 rounded-xl cursor-pointer transition-all duration-300 ${
+                    theme === 'dark' 
+                      ? 'bg-card/80 border border-gold/20 hover:border-gold/50 hover:shadow-lg hover:shadow-gold/10' 
+                      : 'bg-white shadow border border-transparent hover:border-amber-300 hover:shadow-md'
+                  } ${progress.completed ? 'ring-2 ring-green-500/50' : ''}`}
+                >
+                  {/* 完成標記 */}
+                  {progress.completed && (
+                    <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                  
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${zone.color} flex items-center justify-center text-white shadow-md`}>
+                      {zone.icon}
+                    </div>
+                    <div className="flex-1 pr-6">
+                      <h3 className={`font-bold text-lg ${
+                        theme === 'dark' ? 'text-paper' : 'text-void'
+                      }`}>
+                        {zone.name}
+                      </h3>
+                      <p className={`text-sm mb-1 ${
+                        theme === 'dark' ? 'text-gold' : 'text-amber-600'
+                      }`}>
+                        {zone.subtitle}
+                      </p>
+                      <p className={`text-sm mb-2 ${
+                        theme === 'dark' ? 'text-paper/60' : 'text-void/60'
+                      }`}>
+                        {zone.description}
+                      </p>
+                      {/* 進度條 */}
+                      <div className="flex items-center gap-2">
+                        <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${
+                          theme === 'dark' ? 'bg-muted' : 'bg-gray-200'
+                        }`}>
+                          <div 
+                            className={`h-full rounded-full transition-all ${
+                              progress.completed ? 'bg-green-500' : 'bg-amber-400'
+                            }`}
+                            style={{ width: `${(progress.viewed / progress.total) * 100}%` }}
+                          />
+                        </div>
+                        <span className={`text-xs ${
+                          progress.completed 
+                            ? 'text-green-500' 
+                            : theme === 'dark' ? 'text-paper/50' : 'text-void/50'
+                        }`}>
+                          {progress.viewed}/{progress.total}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className={`font-bold text-lg ${
-                      theme === 'dark' ? 'text-paper' : 'text-void'
-                    }`}>
-                      {zone.name}
-                    </h3>
-                    <p className={`text-sm mb-1 ${
-                      theme === 'dark' ? 'text-gold' : 'text-amber-600'
-                    }`}>
-                      {zone.subtitle}
-                    </p>
-                    <p className={`text-sm ${
-                      theme === 'dark' ? 'text-paper/60' : 'text-void/60'
-                    }`}>
-                      {zone.description}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
 
@@ -336,56 +476,85 @@ const BaziAcademy: React.FC = () => {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {premiumZones.map((zone, index) => (
-              <motion.div
-                key={zone.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 + index * 0.05 }}
-                onClick={() => handleZoneClick(zone)}
-                className={`relative p-5 rounded-xl cursor-pointer transition-all duration-300 ${
-                  theme === 'dark' 
-                    ? 'bg-card/80 border border-gold/20 hover:border-gold/50 hover:shadow-lg hover:shadow-gold/10' 
-                    : 'bg-white shadow border border-transparent hover:border-amber-300 hover:shadow-md'
-                } ${!isPremium ? 'opacity-80' : ''}`}
-              >
-                {/* 鎖定標記 */}
-                {!isPremium && (
-                  <div className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center ${
-                    theme === 'dark' ? 'bg-void/80' : 'bg-gray-100'
-                  }`}>
-                    <Lock className={`w-4 h-4 ${
-                      theme === 'dark' ? 'text-amber-400' : 'text-amber-600'
-                    }`} />
-                  </div>
-                )}
+            {premiumZones.map((zone, index) => {
+              const progress = getZoneProgress(zone.id);
+              return (
+                <motion.div
+                  key={zone.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + index * 0.05 }}
+                  onClick={() => handleZoneClick(zone)}
+                  className={`relative p-5 rounded-xl cursor-pointer transition-all duration-300 ${
+                    theme === 'dark' 
+                      ? 'bg-card/80 border border-gold/20 hover:border-gold/50 hover:shadow-lg hover:shadow-gold/10' 
+                      : 'bg-white shadow border border-transparent hover:border-amber-300 hover:shadow-md'
+                  } ${!isPremium ? 'opacity-80' : ''} ${progress.completed ? 'ring-2 ring-green-500/50' : ''}`}
+                >
+                  {/* 鎖定或完成標記 */}
+                  {!isPremium ? (
+                    <div className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center ${
+                      theme === 'dark' ? 'bg-void/80' : 'bg-gray-100'
+                    }`}>
+                      <Lock className={`w-4 h-4 ${
+                        theme === 'dark' ? 'text-amber-400' : 'text-amber-600'
+                      }`} />
+                    </div>
+                  ) : progress.completed && (
+                    <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-white" />
+                    </div>
+                  )}
 
-                <div className="flex items-start gap-4">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${zone.color} flex items-center justify-center text-white shadow-md ${
-                    !isPremium ? 'opacity-70' : ''
-                  }`}>
-                    {zone.icon}
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${zone.color} flex items-center justify-center text-white shadow-md ${
+                      !isPremium ? 'opacity-70' : ''
+                    }`}>
+                      {zone.icon}
+                    </div>
+                    <div className="flex-1 pr-8">
+                      <h3 className={`font-bold text-lg ${
+                        theme === 'dark' ? 'text-paper' : 'text-void'
+                      }`}>
+                        {zone.name}
+                      </h3>
+                      <p className={`text-sm mb-1 ${
+                        theme === 'dark' ? 'text-gold' : 'text-amber-600'
+                      }`}>
+                        {zone.subtitle}
+                      </p>
+                      <p className={`text-sm mb-2 ${
+                        theme === 'dark' ? 'text-paper/60' : 'text-void/60'
+                      }`}>
+                        {zone.description}
+                      </p>
+                      {/* 進度條 */}
+                      {isPremium && (
+                        <div className="flex items-center gap-2">
+                          <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${
+                            theme === 'dark' ? 'bg-muted' : 'bg-gray-200'
+                          }`}>
+                            <div 
+                              className={`h-full rounded-full transition-all ${
+                                progress.completed ? 'bg-green-500' : 'bg-amber-400'
+                              }`}
+                              style={{ width: `${(progress.viewed / progress.total) * 100}%` }}
+                            />
+                          </div>
+                          <span className={`text-xs ${
+                            progress.completed 
+                              ? 'text-green-500' 
+                              : theme === 'dark' ? 'text-paper/50' : 'text-void/50'
+                          }`}>
+                            {progress.viewed}/{progress.total}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 pr-8">
-                    <h3 className={`font-bold text-lg ${
-                      theme === 'dark' ? 'text-paper' : 'text-void'
-                    }`}>
-                      {zone.name}
-                    </h3>
-                    <p className={`text-sm mb-1 ${
-                      theme === 'dark' ? 'text-gold' : 'text-amber-600'
-                    }`}>
-                      {zone.subtitle}
-                    </p>
-                    <p className={`text-sm ${
-                      theme === 'dark' ? 'text-paper/60' : 'text-void/60'
-                    }`}>
-                      {zone.description}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
 
@@ -410,6 +579,50 @@ const BaziAcademy: React.FC = () => {
       <AiTeacher 
         isOpen={isAiTeacherOpen} 
         onClose={() => setIsAiTeacherOpen(false)} 
+      />
+
+      {/* 成就對話框 */}
+      <Dialog open={achievementsDialogOpen} onOpenChange={setAchievementsDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-amber-500" />
+              學習成就
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* 當前稱號 */}
+            <div className={`p-4 rounded-xl text-center ${
+              theme === 'dark' ? 'bg-muted' : 'bg-amber-50'
+            }`}>
+              <p className="text-sm text-muted-foreground mb-1">當前稱號</p>
+              <p className={`text-xl font-bold ${
+                theme === 'dark' ? 'text-amber-400' : 'text-amber-600'
+              }`}>
+                🏅 {currentTitle}
+              </p>
+            </div>
+
+            {/* 成就列表 */}
+            <div className="space-y-3">
+              {allAchievements.map(achievement => (
+                <AchievementBadge
+                  key={achievement.id}
+                  achievement={achievement}
+                  unlocked={unlockedIds.includes(achievement.id)}
+                  showDetails
+                />
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 成就解鎖提示 */}
+      <AchievementUnlockToast
+        achievement={newlyUnlocked}
+        onClose={clearNewlyUnlocked}
       />
     </div>
   );

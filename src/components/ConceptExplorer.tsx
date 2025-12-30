@@ -8,7 +8,10 @@ import {
   BookOpen,
   X,
   Info,
-  Heart
+  Heart,
+  Share2,
+  CheckCircle,
+  Eye
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -17,9 +20,17 @@ import { WuxingCycleDiagram } from '@/components/WuxingCycleDiagram';
 import { TenGodsDiagram } from '@/components/TenGodsDiagram';
 import { ShenShaDiagram } from '@/components/ShenShaDiagram';
 import { toast } from 'sonner';
+import html2canvas from 'html2canvas';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
-// localStorage key for favorites
+// localStorage keys
 const FAVORITES_STORAGE_KEY = 'bazi-academy-favorites';
+const VIEWED_STORAGE_KEY = 'bazi-academy-viewed';
 
 // Helper functions for favorites
 const getFavorites = (): string[] => {
@@ -36,6 +47,24 @@ const saveFavorites = (favorites: string[]): void => {
     localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
   } catch (e) {
     console.error('Failed to save favorites:', e);
+  }
+};
+
+// Helper functions for viewed concepts
+const getViewed = (): string[] => {
+  try {
+    const stored = localStorage.getItem(VIEWED_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveViewed = (viewed: string[]): void => {
+  try {
+    localStorage.setItem(VIEWED_STORAGE_KEY, JSON.stringify(viewed));
+  } catch (e) {
+    console.error('Failed to save viewed:', e);
   }
 };
 
@@ -500,19 +529,41 @@ export const ConceptExplorer: React.FC<ConceptExplorerProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [viewed, setViewed] = useState<string[]>([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareImageUrl, setShareImageUrl] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
-  // Load favorites from localStorage on mount
+  // Load favorites and viewed from localStorage on mount
   useEffect(() => {
     setFavorites(getFavorites());
+    setViewed(getViewed());
   }, []);
+
+  // Mark current concept as viewed
+  useEffect(() => {
+    if (currentConcept) {
+      const fullId = `${zoneId}-${currentConcept.id}`;
+      if (!viewed.includes(fullId)) {
+        const newViewed = [...viewed, fullId];
+        setViewed(newViewed);
+        saveViewed(newViewed);
+      }
+    }
+  }, [currentIndex, zoneId]);
 
   const allConcepts = ZONE_CONCEPTS[zoneId] || [];
   const concepts = showFavoritesOnly 
     ? allConcepts.filter(c => favorites.includes(`${zoneId}-${c.id}`))
     : allConcepts;
   const currentConcept = concepts[currentIndex];
+
+  // Calculate progress
+  const viewedInZone = allConcepts.filter(c => viewed.includes(`${zoneId}-${c.id}`)).length;
+  const progressPercent = allConcepts.length > 0 ? Math.round((viewedInZone / allConcepts.length) * 100) : 0;
 
   // Toggle favorite status
   const toggleFavorite = useCallback((conceptId: string) => {
@@ -537,7 +588,60 @@ export const ConceptExplorer: React.FC<ConceptExplorerProps> = ({
     return favorites.includes(`${zoneId}-${conceptId}`);
   }, [favorites, zoneId]);
 
+  const isViewed = useCallback((conceptId: string) => {
+    return viewed.includes(`${zoneId}-${conceptId}`);
+  }, [viewed, zoneId]);
+
   const favoritesCount = allConcepts.filter(c => favorites.includes(`${zoneId}-${c.id}`)).length;
+
+  // Share functionality
+  const handleShare = async () => {
+    if (!cardRef.current) return;
+    
+    setIsSharing(true);
+    try {
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: theme === 'dark' ? '#1a1a2e' : '#ffffff',
+        scale: 2,
+        useCORS: true,
+      });
+      
+      const imageUrl = canvas.toDataURL('image/png');
+      setShareImageUrl(imageUrl);
+      setShareDialogOpen(true);
+    } catch (error) {
+      console.error('Failed to generate share image:', error);
+      toast.error('生成分享圖片失敗');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const downloadShareImage = () => {
+    if (!shareImageUrl || !currentConcept) return;
+    
+    const link = document.createElement('a');
+    link.download = `八字學堂-${currentConcept.title}.png`;
+    link.href = shareImageUrl;
+    link.click();
+    toast.success('圖片已下載');
+  };
+
+  const copyShareImage = async () => {
+    if (!shareImageUrl) return;
+    
+    try {
+      const response = await fetch(shareImageUrl);
+      const blob = await response.blob();
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob })
+      ]);
+      toast.success('圖片已複製到剪貼簿');
+    } catch (error) {
+      console.error('Failed to copy image:', error);
+      toast.error('複製圖片失敗，請嘗試下載');
+    }
+  };
 
   const handlePrev = () => {
     if (currentIndex > 0) {
@@ -636,19 +740,48 @@ export const ConceptExplorer: React.FC<ConceptExplorerProps> = ({
             </Badge>
           </div>
         </div>
+        
+        {/* 學習進度條 */}
+        <div className="mt-2 px-4">
+          <div className="flex items-center justify-between text-xs mb-1">
+            <span className={theme === 'dark' ? 'text-muted-foreground' : 'text-gray-500'}>
+              <Eye className="w-3 h-3 inline mr-1" />
+              學習進度
+            </span>
+            <span className={theme === 'dark' ? 'text-primary' : 'text-amber-600'}>
+              {viewedInZone}/{allConcepts.length} ({progressPercent}%)
+            </span>
+          </div>
+          <div className={`h-1.5 rounded-full overflow-hidden ${
+            theme === 'dark' ? 'bg-muted' : 'bg-gray-200'
+          }`}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className={`h-full rounded-full ${
+                theme === 'dark' 
+                  ? 'bg-gradient-to-r from-primary to-primary/70' 
+                  : 'bg-gradient-to-r from-amber-500 to-yellow-400'
+              }`}
+            />
+          </div>
+        </div>
       </div>
 
       {/* 進度指示器 */}
       <div className="px-4 pt-4">
         <div className="flex gap-1 justify-center">
-          {concepts.map((_, idx) => (
+          {concepts.map((concept, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
-              className={`h-1.5 rounded-full transition-all ${
+              className={`h-1.5 rounded-full transition-all relative ${
                 idx === currentIndex 
                   ? 'w-6 bg-primary' 
-                  : 'w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                  : isViewed(concept.id)
+                    ? 'w-1.5 bg-green-500/50 hover:bg-green-500/70'
+                    : 'w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50'
               }`}
             />
           ))}
@@ -671,18 +804,29 @@ export const ConceptExplorer: React.FC<ConceptExplorerProps> = ({
             className="cursor-grab active:cursor-grabbing"
           >
             {/* 主卡片 */}
-            <div className={`relative rounded-3xl overflow-hidden ${
-              theme === 'dark' 
-                ? 'bg-card border border-border' 
-                : 'bg-white shadow-xl'
-            }`}>
+            <div 
+              ref={cardRef}
+              className={`relative rounded-3xl overflow-hidden ${
+                theme === 'dark' 
+                  ? 'bg-card border border-border' 
+                  : 'bg-white shadow-xl'
+              }`}
+            >
               {/* 漸變頭部 */}
               <div className={`h-32 bg-gradient-to-r ${currentConcept.color} relative overflow-hidden`}>
                 <div className="absolute inset-0 bg-black/10" />
                 <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/30 to-transparent" />
                 
+                {/* 已讀標記 */}
+                {isViewed(currentConcept.id) && (
+                  <div className="absolute top-4 left-4 flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/80 backdrop-blur-sm">
+                    <CheckCircle className="w-3 h-3 text-white" />
+                    <span className="text-xs text-white font-medium">已讀</span>
+                  </div>
+                )}
+                
                 {/* 標題區 */}
-                <div className="absolute bottom-4 left-6 right-6">
+                <div className="absolute bottom-4 left-6 right-20">
                   <h1 className="text-3xl font-bold text-white drop-shadow-lg">
                     {currentConcept.title}
                   </h1>
@@ -691,26 +835,41 @@ export const ConceptExplorer: React.FC<ConceptExplorerProps> = ({
                   </p>
                 </div>
 
-                {/* 收藏按鈕 */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite(currentConcept.id);
-                  }}
-                  className={`absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                    isFavorite(currentConcept.id)
-                      ? 'bg-white/30 backdrop-blur-sm'
-                      : 'bg-black/20 backdrop-blur-sm hover:bg-black/30'
-                  }`}
-                >
-                  <Heart 
-                    className={`w-5 h-5 transition-all ${
-                      isFavorite(currentConcept.id) 
-                        ? 'text-red-400 fill-red-400 scale-110' 
-                        : 'text-white'
-                    }`} 
-                  />
-                </button>
+                {/* 右上角按鈕組 */}
+                <div className="absolute top-4 right-4 flex gap-2">
+                  {/* 分享按鈕 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleShare();
+                    }}
+                    disabled={isSharing}
+                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all bg-black/20 backdrop-blur-sm hover:bg-black/30"
+                  >
+                    <Share2 className={`w-5 h-5 text-white ${isSharing ? 'animate-pulse' : ''}`} />
+                  </button>
+                  
+                  {/* 收藏按鈕 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(currentConcept.id);
+                    }}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                      isFavorite(currentConcept.id)
+                        ? 'bg-white/30 backdrop-blur-sm'
+                        : 'bg-black/20 backdrop-blur-sm hover:bg-black/30'
+                    }`}
+                  >
+                    <Heart 
+                      className={`w-5 h-5 transition-all ${
+                        isFavorite(currentConcept.id) 
+                          ? 'text-red-400 fill-red-400 scale-110' 
+                          : 'text-white'
+                      }`} 
+                    />
+                  </button>
+                </div>
               </div>
 
               {/* 內容區 */}
@@ -822,6 +981,51 @@ export const ConceptExplorer: React.FC<ConceptExplorerProps> = ({
           ← 左右滑動切換概念 →
         </p>
       </div>
+
+      {/* 分享對話框 */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="w-5 h-5" />
+              分享概念卡片
+            </DialogTitle>
+          </DialogHeader>
+          
+          {shareImageUrl && (
+            <div className="space-y-4">
+              <div className="rounded-xl overflow-hidden border border-border">
+                <img 
+                  src={shareImageUrl} 
+                  alt="分享預覽" 
+                  className="w-full"
+                />
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  onClick={downloadShareImage}
+                  className="flex-1 gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4 rotate-[-90deg]" />
+                  下載圖片
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={copyShareImage}
+                  className="flex-1 gap-2"
+                >
+                  複製圖片
+                </Button>
+              </div>
+              
+              <p className="text-xs text-muted-foreground text-center">
+                下載後可分享至 LINE、Facebook、Instagram 等社群平台
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

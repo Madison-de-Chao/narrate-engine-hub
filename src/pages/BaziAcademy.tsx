@@ -13,20 +13,16 @@ import {
   Crown,
   Lock,
   GraduationCap,
-  MessageCircle,
-  CheckCircle,
-  ChevronRight
+  MessageCircle
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
 import { PageHeader } from '@/components/PageHeader';
-import { useAcademyProgress } from '@/hooks/useAcademyProgress';
 import { AiTeacher } from '@/components/AiTeacher';
-import { InteractiveLearning } from '@/components/InteractiveLearning';
+import { ConceptExplorer } from '@/components/ConceptExplorer';
 
 interface CourseZone {
   id: string;
@@ -36,6 +32,7 @@ interface CourseZone {
   color: string;
   description: string;
   isFree: boolean;
+  conceptCount: number;
 }
 
 const COURSE_ZONES: CourseZone[] = [
@@ -46,7 +43,8 @@ const COURSE_ZONES: CourseZone[] = [
     icon: <Compass className="w-6 h-6" />,
     color: 'from-amber-500 to-yellow-400',
     description: '學習四柱八字的基本架構，了解天干地支與命盤的核心概念。',
-    isFree: true
+    isFree: true,
+    conceptCount: 4
   },
   {
     id: 'legion',
@@ -55,7 +53,8 @@ const COURSE_ZONES: CourseZone[] = [
     icon: <Swords className="w-6 h-6" />,
     color: 'from-red-500 to-rose-400',
     description: '探索年月日時四大軍團的角色與使命，理解命盤的動態互動。',
-    isFree: true
+    isFree: true,
+    conceptCount: 4
   },
   {
     id: 'tenGods',
@@ -64,7 +63,8 @@ const COURSE_ZONES: CourseZone[] = [
     icon: <Users className="w-6 h-6" />,
     color: 'from-blue-500 to-cyan-400',
     description: '深入學習十神體系，解讀性格特質與人際關係的奧秘。',
-    isFree: false
+    isFree: false,
+    conceptCount: 5
   },
   {
     id: 'shensha',
@@ -73,7 +73,8 @@ const COURSE_ZONES: CourseZone[] = [
     icon: <Sparkles className="w-6 h-6" />,
     color: 'from-purple-500 to-pink-400',
     description: '探索各類吉神凶煞，掌握命運中的特殊星曜力量。',
-    isFree: false
+    isFree: false,
+    conceptCount: 4
   },
   {
     id: 'wuxing',
@@ -82,7 +83,8 @@ const COURSE_ZONES: CourseZone[] = [
     icon: <Star className="w-6 h-6" />,
     color: 'from-emerald-500 to-teal-400',
     description: '理解五行相生相剋的法則，掌握命理分析的基礎框架。',
-    isFree: false
+    isFree: false,
+    conceptCount: 5
   },
   {
     id: 'nayin',
@@ -91,7 +93,8 @@ const COURSE_ZONES: CourseZone[] = [
     icon: <BookOpen className="w-6 h-6" />,
     color: 'from-orange-500 to-red-400',
     description: '學習六十甲子納音的象徵意義，探索更深層的命理意涵。',
-    isFree: false
+    isFree: false,
+    conceptCount: 3
   },
   {
     id: 'personality',
@@ -100,7 +103,8 @@ const COURSE_ZONES: CourseZone[] = [
     icon: <Shield className="w-6 h-6" />,
     color: 'from-indigo-500 to-violet-400',
     description: '從命盤結構解讀天生性格特質，發掘優勢潛能與成長課題。',
-    isFree: false
+    isFree: false,
+    conceptCount: 2
   },
   {
     id: 'fortune',
@@ -109,7 +113,8 @@ const COURSE_ZONES: CourseZone[] = [
     icon: <TrendingUp className="w-6 h-6" />,
     color: 'from-sky-500 to-blue-400',
     description: '學習大運與流年的運勢判斷方法，掌握趨吉避凶的智慧。',
-    isFree: false
+    isFree: false,
+    conceptCount: 2
   }
 ];
 
@@ -118,9 +123,8 @@ const BaziAcademy: React.FC = () => {
   const { theme } = useTheme();
   const [userId, setUserId] = useState<string | undefined>();
   const [isAiTeacherOpen, setIsAiTeacherOpen] = useState(false);
-  const [activeLesson, setActiveLesson] = useState<{ zoneId: string; lessonId: string } | null>(null);
+  const [activeZone, setActiveZone] = useState<CourseZone | null>(null);
   const { hasAccess: isPremium } = useUnifiedMembership('bazi-premium');
-  const { progress, getZoneProgress, completeLesson, getZoneLessons, isLessonCompleted } = useAcademyProgress();
 
   useEffect(() => {
     const getUser = async () => {
@@ -141,35 +145,16 @@ const BaziAcademy: React.FC = () => {
       navigate('/subscribe');
       return;
     }
-    // 開始該區域的第一個未完成課程
-    const lessons = getZoneLessons(zone.id);
-    const firstIncomplete = lessons.find(l => !isLessonCompleted(zone.id, l)) || lessons[0];
-    setActiveLesson({ zoneId: zone.id, lessonId: firstIncomplete });
+    setActiveZone(zone);
   };
 
-  const handleLessonComplete = (score: number) => {
-    if (activeLesson) {
-      completeLesson(activeLesson.zoneId, activeLesson.lessonId, score);
-      // 自動進入下一課
-      const lessons = getZoneLessons(activeLesson.zoneId);
-      const currentIndex = lessons.indexOf(activeLesson.lessonId);
-      if (currentIndex < lessons.length - 1) {
-        setActiveLesson({ zoneId: activeLesson.zoneId, lessonId: lessons[currentIndex + 1] });
-      } else {
-        setActiveLesson(null);
-      }
-    }
-  };
-
-  // 如果正在學習課程，顯示互動學習組件
-  if (activeLesson) {
+  // 如果正在瀏覽某個區域，顯示概念探索器
+  if (activeZone) {
     return (
-      <InteractiveLearning
-        zoneId={activeLesson.zoneId}
-        lessonId={activeLesson.lessonId}
-        lessonTitle={activeLesson.lessonId}
-        onComplete={handleLessonComplete}
-        onBack={() => setActiveLesson(null)}
+      <ConceptExplorer
+        zoneId={activeZone.id}
+        zoneName={activeZone.name}
+        onBack={() => setActiveZone(null)}
       />
     );
   }

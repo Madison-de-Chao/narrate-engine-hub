@@ -8,7 +8,8 @@ import {
   BarChart3, 
   FileText,
   ChevronDown,
-  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Sparkles,
   User,
   Crown,
@@ -52,6 +53,7 @@ export const ReportTableOfContents = ({
 }: ReportTableOfContentsProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -216,99 +218,205 @@ export const ReportTableOfContents = ({
         )}
       </AnimatePresence>
 
-      {/* 桌面端側邊目錄 */}
+      {/* 桌面端側邊目錄 - 支援收合 */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
+        animate={{ 
+          opacity: 1, 
+          x: 0,
+          width: isCollapsed ? 56 : 256
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
         className={cn(
-          "hidden md:block fixed left-6 top-1/2 -translate-y-1/2 z-40",
-          "w-64 max-h-[70vh] overflow-y-auto",
+          "hidden md:block fixed left-4 top-1/2 -translate-y-1/2 z-40",
+          "max-h-[80vh] overflow-hidden",
           className
         )}
       >
-        <div className="p-4 rounded-2xl bg-card/80 backdrop-blur-md border border-border/50 shadow-lg">
-          {/* 頭部 */}
-          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/50">
-            <ListTree className="w-5 h-5 text-primary" />
-            <h3 className="font-bold">報告目錄</h3>
-          </div>
+        <div className={cn(
+          "rounded-2xl bg-card/90 backdrop-blur-md border border-border/50 shadow-lg transition-all duration-300",
+          isCollapsed ? "p-2" : "p-4"
+        )}>
+          {/* 收合/展開按鈕 */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className={cn(
+              "absolute -right-3 top-4 z-10 rounded-full w-6 h-6 p-0",
+              "bg-card border border-border shadow-md hover:bg-primary hover:text-primary-foreground",
+              "transition-all duration-200"
+            )}
+          >
+            {isCollapsed ? (
+              <ChevronRight className="w-3 h-3" />
+            ) : (
+              <ChevronLeft className="w-3 h-3" />
+            )}
+          </Button>
 
-          {/* 進度環 */}
-          <div className="flex items-center justify-center mb-4">
-            <div className="relative w-20 h-20">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                <circle
-                  cx="18"
-                  cy="18"
-                  r="16"
-                  fill="none"
-                  stroke="hsl(var(--muted))"
-                  strokeWidth="2"
-                />
-                <motion.circle
-                  cx="18"
-                  cy="18"
-                  r="16"
-                  fill="none"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeDasharray={100}
-                  initial={{ strokeDashoffset: 100 }}
-                  animate={{ strokeDashoffset: 100 - progressPercent }}
-                  transition={{ duration: 0.3 }}
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-sm font-bold">{Math.round(progressPercent)}%</span>
-              </div>
-            </div>
-          </div>
+          <AnimatePresence mode="wait">
+            {isCollapsed ? (
+              // 收合狀態 - 只顯示圖標
+              <motion.div
+                key="collapsed"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col items-center gap-1"
+              >
+                {/* 迷你進度環 */}
+                <div className="relative w-10 h-10 mb-2">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="14"
+                      fill="none"
+                      stroke="hsl(var(--muted))"
+                      strokeWidth="3"
+                    />
+                    <motion.circle
+                      cx="18"
+                      cy="18"
+                      r="14"
+                      fill="none"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeDasharray={88}
+                      initial={{ strokeDashoffset: 88 }}
+                      animate={{ strokeDashoffset: 88 - (progressPercent * 0.88) }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-[10px] font-bold">{Math.round(progressPercent)}%</span>
+                  </div>
+                </div>
 
-          {/* 章節列表 */}
-          <div className="space-y-1">
-            {tocSections.map((section, index) => {
-              const Icon = section.icon;
-              const isActive = section.id === activeSection;
-              const isPassed = index < activeIndex;
-              const isExpanded = expandedSections?.[section.id];
+                {/* 章節圖標列表 */}
+                <div className="space-y-1 overflow-y-auto max-h-[calc(80vh-100px)] scrollbar-thin">
+                  {tocSections.map((section, index) => {
+                    const Icon = section.icon;
+                    const isActive = section.id === activeSection;
+                    const isPassed = index < activeIndex;
 
-              return (
-                <motion.button
-                  key={section.id}
-                  onClick={() => handleSectionClick(section.id)}
-                  whileHover={{ x: 4 }}
-                  className={cn(
-                    "w-full p-2 rounded-lg text-left transition-all text-sm",
-                    "flex items-center gap-2",
-                    isActive && "bg-primary/10 text-primary font-medium",
-                    isPassed && "text-muted-foreground",
-                    !isActive && !isPassed && "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  )}
-                >
-                  {/* 進度指示線 */}
-                  <div className={cn(
-                    "w-0.5 h-4 rounded-full shrink-0",
-                    isActive && "bg-primary",
-                    isPassed && "bg-primary/40",
-                    !isActive && !isPassed && "bg-muted"
-                  )} />
+                    return (
+                      <motion.button
+                        key={section.id}
+                        onClick={() => handleSectionClick(section.id)}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        title={section.label}
+                        className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                          isActive && "bg-primary text-primary-foreground shadow-[0_0_10px_hsl(var(--primary)/0.4)]",
+                          isPassed && "bg-primary/20 text-primary",
+                          !isActive && !isPassed && "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="w-4 h-4" />
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            ) : (
+              // 展開狀態 - 完整目錄
+              <motion.div
+                key="expanded"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {/* 頭部 */}
+                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/50">
+                  <ListTree className="w-5 h-5 text-primary" />
+                  <h3 className="font-bold">報告目錄</h3>
+                </div>
 
-                  <Icon className="w-4 h-4 shrink-0" />
-                  
-                  <span className="truncate flex-1">{section.label}</span>
+                {/* 進度環 */}
+                <div className="flex items-center justify-center mb-4">
+                  <div className="relative w-20 h-20">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="16"
+                        fill="none"
+                        stroke="hsl(var(--muted))"
+                        strokeWidth="2"
+                      />
+                      <motion.circle
+                        cx="18"
+                        cy="18"
+                        r="16"
+                        fill="none"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeDasharray={100}
+                        initial={{ strokeDashoffset: 100 }}
+                        animate={{ strokeDashoffset: 100 - progressPercent }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-sm font-bold">{Math.round(progressPercent)}%</span>
+                    </div>
+                  </div>
+                </div>
 
-                  {/* 展開狀態 */}
-                  {expandedSections && (
-                    <div className={cn(
-                      "w-1.5 h-1.5 rounded-full shrink-0",
-                      isExpanded ? "bg-green-500" : "bg-muted-foreground/30"
-                    )} />
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
+                {/* 章節列表 */}
+                <div className="space-y-1 overflow-y-auto max-h-[calc(80vh-200px)] pr-1 scrollbar-thin">
+                  {tocSections.map((section, index) => {
+                    const Icon = section.icon;
+                    const isActive = section.id === activeSection;
+                    const isPassed = index < activeIndex;
+                    const isExpanded = expandedSections?.[section.id];
+
+                    return (
+                      <motion.button
+                        key={section.id}
+                        onClick={() => handleSectionClick(section.id)}
+                        whileHover={{ x: 4 }}
+                        className={cn(
+                          "w-full p-2 rounded-lg text-left transition-all text-sm",
+                          "flex items-center gap-2",
+                          isActive && "bg-primary/10 text-primary font-medium",
+                          isPassed && "text-muted-foreground",
+                          !isActive && !isPassed && "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
+                      >
+                        {/* 進度指示線 */}
+                        <div className={cn(
+                          "w-0.5 h-4 rounded-full shrink-0",
+                          isActive && "bg-primary",
+                          isPassed && "bg-primary/40",
+                          !isActive && !isPassed && "bg-muted"
+                        )} />
+
+                        <Icon className="w-4 h-4 shrink-0" />
+                        
+                        <span className="truncate flex-1">{section.label}</span>
+
+                        {/* 展開狀態 */}
+                        {expandedSections && (
+                          <div className={cn(
+                            "w-1.5 h-1.5 rounded-full shrink-0",
+                            isExpanded ? "bg-green-500" : "bg-muted-foreground/30"
+                          )} />
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
     </>

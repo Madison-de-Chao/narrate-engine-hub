@@ -299,7 +299,7 @@ export function CharacterLightbox({
             {/* 圖像區 - 支援觸控滑動 */}
             <div 
               ref={imageContainerRef}
-              className="flex-1 flex items-center justify-center p-4 lg:p-8 relative min-h-0 touch-pan-y"
+              className="flex-1 flex items-center justify-center p-2 lg:p-4 relative min-h-0 touch-pan-y overflow-hidden"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -318,7 +318,7 @@ export function CharacterLightbox({
                     duration: isSwiping ? 0 : 0.25,
                     x: { duration: isSwiping ? 0 : 0.2, ease: 'easeOut' }
                   }}
-                  className="relative max-h-full flex items-center justify-center select-none"
+                  className="relative h-full w-full flex items-center justify-center select-none"
                 >
                   {/* Loading 骨架 */}
                   {!imageLoaded && (
@@ -335,7 +335,7 @@ export function CharacterLightbox({
                     alt={currentChar.title}
                     onLoad={() => setImageLoaded(true)}
                     draggable={false}
-                    className={`max-h-[55vh] lg:max-h-[65vh] w-auto object-contain drop-shadow-2xl transition-opacity duration-300 pointer-events-none ${
+                    className={`max-h-full max-w-full object-contain drop-shadow-2xl transition-opacity duration-300 pointer-events-none ${
                       imageLoaded ? 'opacity-100' : 'opacity-0'
                     } ${hasFullbody ? 'rounded-2xl' : 'rounded-full max-w-[300px]'}`}
                     style={{

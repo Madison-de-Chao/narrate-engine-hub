@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import {
   ArrowLeft,
@@ -7,7 +7,8 @@ import {
   Sparkles,
   BookOpen,
   X,
-  Info
+  Info,
+  Heart
 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,28 @@ import { Badge } from '@/components/ui/badge';
 import { WuxingCycleDiagram } from '@/components/WuxingCycleDiagram';
 import { TenGodsDiagram } from '@/components/TenGodsDiagram';
 import { ShenShaDiagram } from '@/components/ShenShaDiagram';
+import { toast } from 'sonner';
+
+// localStorage key for favorites
+const FAVORITES_STORAGE_KEY = 'bazi-academy-favorites';
+
+// Helper functions for favorites
+const getFavorites = (): string[] => {
+  try {
+    const stored = localStorage.getItem(FAVORITES_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveFavorites = (favorites: string[]): void => {
+  try {
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+  } catch (e) {
+    console.error('Failed to save favorites:', e);
+  }
+};
 
 // 概念卡片資料結構
 interface ConceptCard {
@@ -476,10 +499,45 @@ export const ConceptExplorer: React.FC<ConceptExplorerProps> = ({
   const { theme } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const concepts = ZONE_CONCEPTS[zoneId] || [];
+  // Load favorites from localStorage on mount
+  useEffect(() => {
+    setFavorites(getFavorites());
+  }, []);
+
+  const allConcepts = ZONE_CONCEPTS[zoneId] || [];
+  const concepts = showFavoritesOnly 
+    ? allConcepts.filter(c => favorites.includes(`${zoneId}-${c.id}`))
+    : allConcepts;
   const currentConcept = concepts[currentIndex];
+
+  // Toggle favorite status
+  const toggleFavorite = useCallback((conceptId: string) => {
+    const fullId = `${zoneId}-${conceptId}`;
+    setFavorites(prev => {
+      const newFavorites = prev.includes(fullId)
+        ? prev.filter(id => id !== fullId)
+        : [...prev, fullId];
+      saveFavorites(newFavorites);
+      
+      if (newFavorites.includes(fullId)) {
+        toast.success('已加入收藏');
+      } else {
+        toast.info('已取消收藏');
+      }
+      
+      return newFavorites;
+    });
+  }, [zoneId]);
+
+  const isFavorite = useCallback((conceptId: string) => {
+    return favorites.includes(`${zoneId}-${conceptId}`);
+  }, [favorites, zoneId]);
+
+  const favoritesCount = allConcepts.filter(c => favorites.includes(`${zoneId}-${c.id}`)).length;
 
   const handlePrev = () => {
     if (currentIndex > 0) {
@@ -514,9 +572,27 @@ export const ConceptExplorer: React.FC<ConceptExplorerProps> = ({
       <div className={`min-h-screen flex items-center justify-center ${
         theme === 'dark' ? 'bg-background' : 'bg-gray-50'
       }`}>
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">此區域內容正在準備中...</p>
-          <Button onClick={onBack} variant="outline">返回</Button>
+        <div className="text-center px-4">
+          {showFavoritesOnly ? (
+            <>
+              <Heart className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+              <p className="text-muted-foreground mb-2">尚無收藏的概念</p>
+              <p className="text-sm text-muted-foreground/70 mb-4">
+                點擊卡片右上角的愛心即可收藏
+              </p>
+              <Button 
+                onClick={() => setShowFavoritesOnly(false)} 
+                variant="outline"
+              >
+                查看全部概念
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-muted-foreground mb-4">此區域內容正在準備中...</p>
+              <Button onClick={onBack} variant="outline">返回</Button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -540,9 +616,23 @@ export const ConceptExplorer: React.FC<ConceptExplorerProps> = ({
           <h2 className={`font-bold ${theme === 'dark' ? 'text-foreground' : 'text-gray-900'}`}>
             {zoneName}
           </h2>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            {/* 收藏篩選按鈕 */}
+            <Button
+              variant={showFavoritesOnly ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                setShowFavoritesOnly(!showFavoritesOnly);
+                setCurrentIndex(0);
+              }}
+              className="gap-1 text-xs"
+              disabled={favoritesCount === 0 && !showFavoritesOnly}
+            >
+              <Heart className={`w-3 h-3 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+              {favoritesCount}
+            </Button>
             <Badge variant="outline" className="text-xs">
-              {currentIndex + 1} / {concepts.length}
+              {concepts.length > 0 ? `${currentIndex + 1} / ${concepts.length}` : '0'}
             </Badge>
           </div>
         </div>
@@ -601,10 +691,26 @@ export const ConceptExplorer: React.FC<ConceptExplorerProps> = ({
                   </p>
                 </div>
 
-                {/* 裝飾圖標 */}
-                <div className="absolute top-4 right-4 opacity-30">
-                  <Sparkles className="w-16 h-16 text-white" />
-                </div>
+                {/* 收藏按鈕 */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(currentConcept.id);
+                  }}
+                  className={`absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                    isFavorite(currentConcept.id)
+                      ? 'bg-white/30 backdrop-blur-sm'
+                      : 'bg-black/20 backdrop-blur-sm hover:bg-black/30'
+                  }`}
+                >
+                  <Heart 
+                    className={`w-5 h-5 transition-all ${
+                      isFavorite(currentConcept.id) 
+                        ? 'text-red-400 fill-red-400 scale-110' 
+                        : 'text-white'
+                    }`} 
+                  />
+                </button>
               </div>
 
               {/* 內容區 */}

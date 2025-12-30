@@ -97,7 +97,7 @@ const generateFloatingElements = (count: number, theme: string): FloatingElement
   }));
 };
 
-// 浮動圖標組件
+// 浮動圖標組件 - 手機端隱藏以提升效能
 const FloatingIcon: React.FC<{ element: FloatingElement }> = ({ element }) => {
   const iconContent = () => {
     switch (element.icon) {
@@ -125,7 +125,7 @@ const FloatingIcon: React.FC<{ element: FloatingElement }> = ({ element }) => {
 
   return (
     <motion.div
-      className="absolute pointer-events-none"
+      className="absolute pointer-events-none hidden md:block"
       style={{
         left: `${element.x}%`,
         top: `${element.y}%`,
@@ -216,6 +216,7 @@ const NavigationMap: React.FC = () => {
   const [activeZone, setActiveZone] = useState<string | null>(null);
   const [hoveredZone, setHoveredZone] = useState<string | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
+  const [isMobile, setIsMobile] = useState(false);
   
   // 觸控相關狀態
   const [touchRipples, setTouchRipples] = useState<TouchRipple[]>([]);
@@ -226,9 +227,31 @@ const NavigationMap: React.FC = () => {
   const rippleIdRef = useRef(0);
   const trailIdRef = useRef(0);
 
-  // 生成粒子和浮動元素
-  const particles = useMemo(() => generateParticles(30, theme), [theme]);
-  const floatingElements = useMemo(() => generateFloatingElements(12, theme), [theme]);
+  // 檢測行動裝置
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // 生成粒子和浮動元素 - 手機端減少數量
+  const particles = useMemo(() => generateParticles(isMobile ? 10 : 30, theme), [theme, isMobile]);
+  const floatingElements = useMemo(() => generateFloatingElements(isMobile ? 0 : 12, theme), [theme, isMobile]);
+
+  // 根據螢幕大小動態計算區域位置
+  const getZonePosition = useCallback((zone: MapZone, index: number) => {
+    if (isMobile) {
+      // 手機端：2x2 網格佈局
+      const row = Math.floor(index / 2);
+      const col = index % 2;
+      return {
+        x: col === 0 ? 30 : 70,
+        y: row === 0 ? 35 : 65
+      };
+    }
+    return zone.position;
+  }, [isMobile]);
 
 
   // 添加觸控漣漪
@@ -350,6 +373,10 @@ const NavigationMap: React.FC = () => {
   };
 
   const getSizeClasses = (size: 'lg' | 'md' | 'sm') => {
+    // 手機端統一使用較小尺寸
+    if (isMobile) {
+      return 'w-20 h-20';
+    }
     switch (size) {
       case 'lg':
         return 'w-28 h-28 md:w-36 md:h-36';
@@ -595,8 +622,8 @@ const NavigationMap: React.FC = () => {
                 : 'bg-[linear-gradient(hsl(0_0%_0%/0.03)_1px,transparent_1px),linear-gradient(90deg,hsl(0_0%_0%/0.03)_1px,transparent_1px)]'
             }`} style={{ backgroundSize: '40px 40px' }} />
             
-            {/* 連接線 - 連接三個主要區域 */}
-            <svg className="absolute inset-0 w-full h-full" style={{ minHeight: '500px' }}>
+            {/* 連接線 - 桌面端水平連接，手機端網格連接 */}
+            <svg className={`absolute inset-0 w-full h-full ${isMobile ? 'hidden' : ''}`} style={{ minHeight: '500px' }}>
               <defs>
                 <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor={theme === 'dark' ? 'hsl(45, 100%, 50%)' : 'hsl(45, 90%, 45%)'} stopOpacity="0.2" />
@@ -653,17 +680,38 @@ const NavigationMap: React.FC = () => {
                 transition={{ duration: 0.8, delay: 0.4 }}
               />
             </svg>
+            
+            {/* 手機端連接線 - 網格佈局 */}
+            {isMobile && (
+              <svg className="absolute inset-0 w-full h-full" style={{ minHeight: '400px' }}>
+                <defs>
+                  <linearGradient id="mobileLineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor={theme === 'dark' ? 'hsl(45, 100%, 50%)' : 'hsl(45, 90%, 45%)'} stopOpacity="0.3" />
+                    <stop offset="100%" stopColor={theme === 'dark' ? 'hsl(45, 100%, 50%)' : 'hsl(45, 90%, 45%)'} stopOpacity="0.3" />
+                  </linearGradient>
+                </defs>
+                {/* 水平連接線 */}
+                <motion.line x1="30%" y1="35%" x2="70%" y2="35%" stroke="url(#mobileLineGradient)" strokeWidth="2" strokeDasharray="4 4" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.6 }} />
+                <motion.line x1="30%" y1="65%" x2="70%" y2="65%" stroke="url(#mobileLineGradient)" strokeWidth="2" strokeDasharray="4 4" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.6, delay: 0.1 }} />
+                {/* 垂直連接線 */}
+                <motion.line x1="30%" y1="35%" x2="30%" y2="65%" stroke="url(#mobileLineGradient)" strokeWidth="2" strokeDasharray="4 4" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.6, delay: 0.2 }} />
+                <motion.line x1="70%" y1="35%" x2="70%" y2="65%" stroke="url(#mobileLineGradient)" strokeWidth="2" strokeDasharray="4 4" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.6, delay: 0.3 }} />
+              </svg>
+            )}
           </div>
 
           {/* 導覽地圖區域 */}
-          <div className="relative z-10 w-full pt-8" style={{ minHeight: '500px', paddingBottom: '20px' }}>
+          <div className="relative z-10 w-full pt-8" style={{ minHeight: isMobile ? '400px' : '500px', paddingBottom: '20px' }}>
             {ZONES.map((zone, index) => {
+              // 獲取動態位置（手機端使用網格佈局）
+              const position = getZonePosition(zone, index);
+              
               // 根據位置計算飛入方向
               const getEntryDirection = () => {
                 const centerX = 50;
                 const centerY = 50;
-                const dx = zone.position.x - centerX;
-                const dy = zone.position.y - centerY;
+                const dx = position.x - centerX;
+                const dy = position.y - centerY;
                 // 從外側飛入，放大偏移量
                 return {
                   x: dx * 3,
@@ -678,8 +726,8 @@ const NavigationMap: React.FC = () => {
                   key={zone.id}
                   className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
                   style={{
-                    left: `${zone.position.x}%`,
-                    top: `${zone.position.y}%`
+                    left: `${position.x}%`,
+                    top: `${position.y}%`
                   }}
                   initial={{ 
                     scale: 0, 

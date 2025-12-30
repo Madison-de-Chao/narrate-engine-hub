@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion';
-import { Sparkles, Star } from 'lucide-react';
+import { Sparkles, Star, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 
 interface ReadingProgressBarProps {
   className?: string;
@@ -27,9 +27,19 @@ export const ReadingProgressBar: React.FC<ReadingProgressBarProps> = ({ classNam
   const [showCelebration, setShowCelebration] = useState(false);
   const [hasShownCelebration, setHasShownCelebration] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Dynamic gradient hue based on scroll progress
   const glowOpacity = useTransform(scrollYProgress, [0, 0.1, 0.9, 1], [0, 0.8, 0.8, 1]);
+
+  // 檢測行動裝置
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const generateParticles = useCallback(() => {
     const colors = [
@@ -78,6 +88,106 @@ export const ReadingProgressBar: React.FC<ReadingProgressBarProps> = ({ classNam
     });
     return () => unsubscribe();
   }, [scrollYProgress, hasShownCelebration, generateParticles]);
+
+  // 行動端收合模式 - 側邊顯示
+  if (isMobile && isCollapsed) {
+    return (
+      <>
+        {/* 側邊迷你進度指示器 */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className={`fixed right-2 top-1/2 -translate-y-1/2 z-50 ${className}`}
+        >
+          <motion.button
+            onClick={() => setIsCollapsed(false)}
+            className="flex flex-col items-center gap-1 p-2 rounded-full bg-card/90 backdrop-blur-md border border-border/50 shadow-lg"
+            whileTap={{ scale: 0.95 }}
+          >
+            {/* 垂直進度條 */}
+            <div className="relative w-1.5 h-20 bg-muted/30 rounded-full overflow-hidden">
+              <motion.div
+                className="absolute bottom-0 left-0 right-0 rounded-full"
+                style={{
+                  height: `${percentage}%`,
+                  background: `linear-gradient(to top, 
+                    hsl(var(--primary)) 0%, 
+                    hsl(280 80% 65%) 50%,
+                    hsl(45 100% 55%) 100%)`
+                }}
+              />
+            </div>
+            
+            {/* 百分比 */}
+            <span className={`text-[10px] font-bold ${
+              percentage >= 100 ? 'text-amber-400' : 'text-foreground/70'
+            }`}>
+              {percentage}%
+            </span>
+            
+            {/* 展開圖示 */}
+            <ChevronLeft className="w-3 h-3 text-muted-foreground" />
+          </motion.button>
+        </motion.div>
+
+        {/* Celebration overlay */}
+        <AnimatePresence>
+          {showCelebration && (
+            <motion.div
+              className="fixed inset-0 pointer-events-none z-[100] overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              {particles.map((particle) => (
+                <motion.div
+                  key={particle.id}
+                  className="absolute"
+                  style={{ left: `${particle.x}%`, top: `${particle.y}%` }}
+                  initial={{ opacity: 0, scale: 0, y: 50 }}
+                  animate={{ 
+                    opacity: [0, 1, 1, 0],
+                    scale: [0, 1.2, 1, 0.5],
+                    y: [50, -100, -200, -300],
+                    rotate: [0, 180, 360]
+                  }}
+                  transition={{ duration: 2.5, delay: particle.delay, ease: 'easeOut' }}
+                >
+                  <Star 
+                    className="fill-current" 
+                    style={{ 
+                      color: particle.color,
+                      width: particle.size,
+                      height: particle.size,
+                      filter: `drop-shadow(0 0 ${particle.size / 2}px ${particle.color})`
+                    }} 
+                  />
+                </motion.div>
+              ))}
+              
+              <motion.div
+                className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center"
+                initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                transition={{ delay: 0.3, type: 'spring', stiffness: 150 }}
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 1, repeat: 2, ease: 'easeInOut' }}
+                >
+                  <div className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent drop-shadow-lg">
+                    🎉 閱讀完成！
+                  </div>
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </>
+    );
+  }
 
   return (
     <>
@@ -132,6 +242,17 @@ export const ReadingProgressBar: React.FC<ReadingProgressBarProps> = ({ classNam
           animate={{ opacity: percentage > 0 ? 1 : 0, y: percentage > 0 ? 0 : -5 }}
           transition={{ duration: 0.3 }}
         >
+          {/* 行動端收合按鈕 */}
+          {isMobile && (
+            <motion.button
+              onClick={() => setIsCollapsed(true)}
+              className="p-1 rounded-full bg-muted/50 hover:bg-muted/80 transition-colors mr-1"
+              whileTap={{ scale: 0.9 }}
+            >
+              <ChevronUp className="w-3 h-3 text-muted-foreground" />
+            </motion.button>
+          )}
+          
           <motion.div
             className="w-1.5 h-1.5 rounded-full"
             style={{

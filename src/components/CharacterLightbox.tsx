@@ -489,7 +489,7 @@ export function CharacterLightbox({
                           <img
                             src={thumbnail}
                             alt={char.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover object-top"
                           />
                           {/* 五行標識 */}
                           <div 

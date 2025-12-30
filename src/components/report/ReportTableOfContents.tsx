@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence, useDragControls, PanInfo } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
@@ -15,7 +15,9 @@ import {
   Crown,
   BookOpen,
   ListTree,
-  LucideIcon
+  LucideIcon,
+  GripVertical,
+  RotateCcw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -24,6 +26,11 @@ interface TocSection {
   label: string;
   icon: LucideIcon;
   description?: string;
+}
+
+interface Position {
+  x: number;
+  y: number;
 }
 
 interface ReportTableOfContentsProps {
@@ -45,6 +52,31 @@ const tocSections: TocSection[] = [
   { id: 'logs', label: '計算日誌', icon: FileText, description: '計算過程記錄' },
 ];
 
+// 預設位置
+const DEFAULT_POSITION: Position = { x: 16, y: 0 };
+
+// 從 localStorage 讀取位置
+const getSavedPosition = (): Position => {
+  try {
+    const saved = localStorage.getItem('toc-position');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (e) {
+    console.error('Failed to parse saved position:', e);
+  }
+  return DEFAULT_POSITION;
+};
+
+// 保存位置到 localStorage
+const savePosition = (position: Position) => {
+  try {
+    localStorage.setItem('toc-position', JSON.stringify(position));
+  } catch (e) {
+    console.error('Failed to save position:', e);
+  }
+};
+
 export const ReportTableOfContents = ({
   activeSection,
   onSectionClick,
@@ -54,6 +86,11 @@ export const ReportTableOfContents = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState<Position>(DEFAULT_POSITION);
+  const [showResetButton, setShowResetButton] = useState(false);
+  const constraintsRef = useRef<HTMLDivElement>(null);
+  const dragControls = useDragControls();
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -62,16 +99,66 @@ export const ReportTableOfContents = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // 載入保存的位置
+  useEffect(() => {
+    const savedPosition = getSavedPosition();
+    setPosition(savedPosition);
+    // 如果位置不是預設位置，顯示重置按鈕
+    if (savedPosition.x !== DEFAULT_POSITION.x || savedPosition.y !== DEFAULT_POSITION.y) {
+      setShowResetButton(true);
+    }
+  }, []);
+
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    setIsDragging(false);
+    
+    // 計算新位置
+    const newPosition = {
+      x: position.x + info.offset.x,
+      y: position.y + info.offset.y
+    };
+    
+    // 確保位置在視窗範圍內
+    const containerWidth = isCollapsed ? 56 : 256;
+    const containerHeight = 400; // 估計高度
+    
+    const maxX = window.innerWidth - containerWidth - 16;
+    const maxY = window.innerHeight - containerHeight;
+    
+    const clampedPosition = {
+      x: Math.max(16, Math.min(maxX, newPosition.x)),
+      y: Math.max(-window.innerHeight / 2 + 100, Math.min(maxY / 2, newPosition.y))
+    };
+    
+    setPosition(clampedPosition);
+    savePosition(clampedPosition);
+    setShowResetButton(true);
+  }, [position, isCollapsed]);
+
+  const handleResetPosition = () => {
+    setPosition(DEFAULT_POSITION);
+    savePosition(DEFAULT_POSITION);
+    setShowResetButton(false);
+  };
+
   const activeIndex = tocSections.findIndex(s => s.id === activeSection);
   const progressPercent = ((activeIndex + 1) / tocSections.length) * 100;
 
   const handleSectionClick = (sectionId: string) => {
+    if (isDragging) return; // 拖曳時不觸發點擊
     onSectionClick(sectionId);
     if (isMobile) setIsOpen(false);
   };
 
   return (
     <>
+      {/* 拖曳約束容器 */}
+      <div ref={constraintsRef} className="fixed inset-0 pointer-events-none z-30" />
+
       {/* 浮動目錄按鈕 (移動端) */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
@@ -218,32 +305,63 @@ export const ReportTableOfContents = ({
         )}
       </AnimatePresence>
 
-      {/* 桌面端側邊目錄 - 支援收合 */}
+      {/* 桌面端側邊目錄 - 支援拖曳和收合 */}
       <motion.div
-        initial={{ opacity: 0, x: -20 }}
+        drag
+        dragControls={dragControls}
+        dragMomentum={false}
+        dragElastic={0.1}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        initial={{ opacity: 0, x: position.x, y: position.y }}
         animate={{ 
           opacity: 1, 
-          x: 0,
+          x: position.x,
+          y: position.y,
           width: isCollapsed ? 56 : 256
         }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        transition={{ 
+          duration: isDragging ? 0 : 0.3, 
+          ease: "easeInOut",
+          opacity: { duration: 0.3 }
+        }}
+        style={{ 
+          position: 'fixed',
+          left: 0,
+          top: '50%',
+          translateY: '-50%'
+        }}
         className={cn(
-          "hidden md:block fixed left-4 top-1/2 -translate-y-1/2 z-40",
+          "hidden md:block z-40",
           "max-h-[80vh] overflow-hidden",
+          isDragging && "cursor-grabbing",
           className
         )}
       >
         <div className={cn(
           "rounded-2xl bg-card/90 backdrop-blur-md border border-border/50 shadow-lg transition-all duration-300",
-          isCollapsed ? "p-2" : "p-4"
+          isCollapsed ? "p-2" : "p-4",
+          isDragging && "shadow-2xl border-primary/50"
         )}>
+          {/* 拖曳手把 */}
+          <div
+            onPointerDown={(e) => dragControls.start(e)}
+            className={cn(
+              "absolute top-0 left-0 right-0 h-8 flex items-center justify-center cursor-grab",
+              "hover:bg-muted/50 rounded-t-2xl transition-colors",
+              isDragging && "cursor-grabbing bg-primary/10"
+            )}
+          >
+            <GripVertical className="w-4 h-4 text-muted-foreground" />
+          </div>
+
           {/* 收合/展開按鈕 */}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsCollapsed(!isCollapsed)}
             className={cn(
-              "absolute -right-3 top-4 z-10 rounded-full w-6 h-6 p-0",
+              "absolute -right-3 top-12 z-10 rounded-full w-6 h-6 p-0",
               "bg-card border border-border shadow-md hover:bg-primary hover:text-primary-foreground",
               "transition-all duration-200"
             )}
@@ -255,6 +373,31 @@ export const ReportTableOfContents = ({
             )}
           </Button>
 
+          {/* 重置位置按鈕 */}
+          <AnimatePresence>
+            {showResetButton && !isCollapsed && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleResetPosition}
+                  title="重置位置"
+                  className={cn(
+                    "absolute -right-3 top-20 z-10 rounded-full w-6 h-6 p-0",
+                    "bg-card border border-border shadow-md hover:bg-accent hover:text-accent-foreground",
+                    "transition-all duration-200"
+                  )}
+                >
+                  <RotateCcw className="w-3 h-3" />
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <AnimatePresence mode="wait">
             {isCollapsed ? (
               // 收合狀態 - 只顯示圖標
@@ -264,7 +407,7 @@ export const ReportTableOfContents = ({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="flex flex-col items-center gap-1"
+                className="flex flex-col items-center gap-1 pt-8"
               >
                 {/* 迷你進度環 */}
                 <div className="relative w-10 h-10 mb-2">
@@ -331,11 +474,13 @@ export const ReportTableOfContents = ({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
+                className="pt-8"
               >
                 {/* 頭部 */}
                 <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/50">
                   <ListTree className="w-5 h-5 text-primary" />
                   <h3 className="font-bold">報告目錄</h3>
+                  <span className="ml-auto text-xs text-muted-foreground">可拖曳</span>
                 </div>
 
                 {/* 進度環 */}

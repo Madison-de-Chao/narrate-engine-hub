@@ -335,9 +335,9 @@ export function CharacterLightbox({
                     alt={currentChar.title}
                     onLoad={() => setImageLoaded(true)}
                     draggable={false}
-                    className={`max-h-full max-w-full object-contain drop-shadow-2xl transition-opacity duration-300 pointer-events-none ${
+                    className={`object-contain drop-shadow-2xl transition-opacity duration-300 pointer-events-none ${
                       imageLoaded ? 'opacity-100' : 'opacity-0'
-                    } ${hasFullbody ? 'rounded-2xl' : 'rounded-full max-w-[300px]'}`}
+                    } ${hasFullbody ? 'max-h-[78vh] lg:max-h-[82vh] rounded-2xl' : 'max-h-[50vh] rounded-full max-w-[300px]'}`}
                     style={{
                       filter: hasFullbody ? 'none' : `drop-shadow(0 0 30px ${config?.color}50)`,
                     }}

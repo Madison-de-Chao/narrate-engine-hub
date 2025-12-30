@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ChevronLeft, ChevronRight, X, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Heart, Maximize2, Grid3X3 } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Heart, Maximize2, Grid3X3, PanelRightClose, PanelRightOpen } from "lucide-react";
 import type { GanCharacter, ZhiCharacter } from "@/lib/legionTranslator/types";
 import { commanderFullbodyAvatars } from "@/assets/commanders-fullbody";
 import { advisorFullbodyAvatars } from "@/assets/advisors-fullbody";
@@ -47,6 +47,7 @@ export function CharacterLightbox({
 }: CharacterLightboxProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showThumbnails, setShowThumbnails] = useState(true);
+  const [showInfoPanel, setShowInfoPanel] = useState(true);
   const thumbnailsRef = useRef<HTMLDivElement>(null);
   const currentChar = characters[currentIndex];
   
@@ -196,6 +197,7 @@ export function CharacterLightbox({
       if (e.key === 'ArrowRight') handleNext();
       if (e.key === 'Escape') onClose();
       if (e.key === 'g' || e.key === 'G') setShowThumbnails(prev => !prev);
+      if (e.key === 'i' || e.key === 'I') setShowInfoPanel(prev => !prev);
     };
     
     window.addEventListener('keydown', handleKeyDown);
@@ -245,6 +247,15 @@ export function CharacterLightbox({
               <Button
                 variant="ghost"
                 size="icon"
+                onClick={() => setShowInfoPanel(!showInfoPanel)}
+                className="text-white/70 hover:text-white hover:bg-white/10 rounded-full"
+                title="切換資訊面板 (I)"
+              >
+                {showInfoPanel ? <PanelRightClose className="w-5 h-5" /> : <PanelRightOpen className="w-5 h-5" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowThumbnails(!showThumbnails)}
                 className="text-white/70 hover:text-white hover:bg-white/10 rounded-full"
                 title="切換縮圖列 (G)"
@@ -290,7 +301,9 @@ export function CharacterLightbox({
                 variant="ghost"
                 size="icon"
                 onClick={handleNext}
-                className="absolute right-4 lg:right-[calc(24rem+1rem)] top-1/2 -translate-y-1/2 z-50 bg-black/30 hover:bg-black/50 text-white rounded-full w-12 h-12"
+                className={`absolute top-1/2 -translate-y-1/2 z-50 bg-black/30 hover:bg-black/50 text-white rounded-full w-12 h-12 transition-all duration-300 ${
+                  showInfoPanel ? 'right-4 lg:right-[calc(24rem+1rem)]' : 'right-4'
+                }`}
               >
                 <ChevronRight className="w-8 h-8" />
               </Button>
@@ -361,73 +374,83 @@ export function CharacterLightbox({
               </div>
             </div>
 
-            {/* 資訊區 */}
-            <div className="lg:w-96 p-4 lg:p-6 bg-black/40 backdrop-blur-md overflow-y-auto">
-              <motion.div
-                key={`info-${currentChar.id}`}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
-                className="space-y-4"
-              >
-                {/* 頭部 */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className="text-white/70 border-white/20">
-                      {'gan' in currentChar ? '天干主將' : '地支軍師'}
-                    </Badge>
-                  </div>
-                  <h2 className="text-2xl lg:text-3xl font-bold text-white">
-                    {currentChar.id}
-                  </h2>
-                  <p className="text-lg text-white/80">{currentChar.title}</p>
-                </div>
-
-                {/* 描述 */}
-                <p className="text-sm text-white/70 leading-relaxed">
-                  {currentChar.description}
-                </p>
-
-                {/* 性格特質 */}
-                <div>
-                  <h3 className="text-xs font-medium text-white/50 mb-2">性格特質</h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    {currentChar.personality.map((trait, idx) => (
-                      <Badge 
-                        key={idx}
-                        variant="secondary"
-                        className="bg-white/10 text-white/80 border-0 text-xs"
-                      >
-                        {trait}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Buff/Debuff */}
-                <div className="space-y-2">
-                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <h3 className="text-xs font-medium text-green-400/80 mb-1">增益效果</h3>
-                    <div className="text-sm text-white/80 flex items-start gap-2">
-                      <span className="text-green-400 flex-shrink-0">✦</span>
-                      <span>{currentChar.buff}</span>
+            {/* 資訊區 - 可收合 */}
+            <AnimatePresence>
+              {showInfoPanel && (
+                <motion.div 
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 'auto', opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="lg:w-96 p-4 lg:p-6 bg-black/40 backdrop-blur-md overflow-y-auto overflow-x-hidden"
+                >
+                  <motion.div
+                    key={`info-${currentChar.id}`}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="space-y-4 min-w-[280px] lg:min-w-[340px]"
+                  >
+                    {/* 頭部 */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="outline" className="text-white/70 border-white/20">
+                          {'gan' in currentChar ? '天干主將' : '地支軍師'}
+                        </Badge>
+                      </div>
+                      <h2 className="text-2xl lg:text-3xl font-bold text-white">
+                        {currentChar.id}
+                      </h2>
+                      <p className="text-lg text-white/80">{currentChar.title}</p>
                     </div>
-                  </div>
-                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                    <h3 className="text-xs font-medium text-red-400/80 mb-1">減益效果</h3>
-                    <div className="text-sm text-white/80 flex items-start gap-2">
-                      <span className="text-red-400 flex-shrink-0">✧</span>
-                      <span>{currentChar.debuff}</span>
-                    </div>
-                  </div>
-                </div>
 
-                {/* 頁碼 */}
-                <div className="text-center text-white/40 text-xs pt-2 border-t border-white/10">
-                  {currentIndex + 1} / {characters.length}
-                </div>
-              </motion.div>
-            </div>
+                    {/* 描述 */}
+                    <p className="text-sm text-white/70 leading-relaxed">
+                      {currentChar.description}
+                    </p>
+
+                    {/* 性格特質 */}
+                    <div>
+                      <h3 className="text-xs font-medium text-white/50 mb-2">性格特質</h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {currentChar.personality.map((trait, idx) => (
+                          <Badge 
+                            key={idx}
+                            variant="secondary"
+                            className="bg-white/10 text-white/80 border-0 text-xs"
+                          >
+                            {trait}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Buff/Debuff */}
+                    <div className="space-y-2">
+                      <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                        <h3 className="text-xs font-medium text-green-400/80 mb-1">增益效果</h3>
+                        <div className="text-sm text-white/80 flex items-start gap-2">
+                          <span className="text-green-400 flex-shrink-0">✦</span>
+                          <span>{currentChar.buff}</span>
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <h3 className="text-xs font-medium text-red-400/80 mb-1">減益效果</h3>
+                        <div className="text-sm text-white/80 flex items-start gap-2">
+                          <span className="text-red-400 flex-shrink-0">✧</span>
+                          <span>{currentChar.debuff}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 頁碼 */}
+                    <div className="text-center text-white/40 text-xs pt-2 border-t border-white/10">
+                      {currentIndex + 1} / {characters.length}
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* 縮圖預覽列 */}

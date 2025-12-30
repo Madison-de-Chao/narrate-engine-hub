@@ -55,6 +55,49 @@ const tocSections: TocSection[] = [
 // 預設位置
 const DEFAULT_POSITION: Position = { x: 16, y: 0 };
 
+// 吸附閾值（像素）
+const SNAP_THRESHOLD = 60;
+
+// 螢幕邊緣邊距
+const EDGE_MARGIN = 16;
+
+// 計算吸附位置
+const calculateSnapPosition = (position: Position, containerWidth: number, containerHeight: number): Position => {
+  const windowWidth = window.innerWidth;
+  const windowHeight = window.innerHeight;
+  
+  // 計算四個角落和四個邊緣中點的位置
+  const snapPoints = [
+    // 四個角落
+    { x: EDGE_MARGIN, y: -(windowHeight / 2) + containerHeight / 2 + EDGE_MARGIN }, // 左上
+    { x: windowWidth - containerWidth - EDGE_MARGIN, y: -(windowHeight / 2) + containerHeight / 2 + EDGE_MARGIN }, // 右上
+    { x: EDGE_MARGIN, y: (windowHeight / 2) - containerHeight / 2 - EDGE_MARGIN }, // 左下
+    { x: windowWidth - containerWidth - EDGE_MARGIN, y: (windowHeight / 2) - containerHeight / 2 - EDGE_MARGIN }, // 右下
+    // 四個邊緣中點
+    { x: EDGE_MARGIN, y: 0 }, // 左中
+    { x: windowWidth - containerWidth - EDGE_MARGIN, y: 0 }, // 右中
+    { x: (windowWidth - containerWidth) / 2, y: -(windowHeight / 2) + containerHeight / 2 + EDGE_MARGIN }, // 上中
+    { x: (windowWidth - containerWidth) / 2, y: (windowHeight / 2) - containerHeight / 2 - EDGE_MARGIN }, // 下中
+  ];
+
+  // 找到最近的吸附點
+  let closestPoint = position;
+  let minDistance = SNAP_THRESHOLD;
+
+  for (const point of snapPoints) {
+    const distance = Math.sqrt(
+      Math.pow(position.x - point.x, 2) + Math.pow(position.y - point.y, 2)
+    );
+    
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestPoint = point;
+    }
+  }
+
+  return closestPoint;
+};
+
 // 從 localStorage 讀取位置
 const getSavedPosition = (): Position => {
   try {
@@ -126,16 +169,19 @@ export const ReportTableOfContents = ({
     const containerWidth = isCollapsed ? 56 : 256;
     const containerHeight = 400; // 估計高度
     
-    const maxX = window.innerWidth - containerWidth - 16;
+    const maxX = window.innerWidth - containerWidth - EDGE_MARGIN;
     const maxY = window.innerHeight - containerHeight;
     
     const clampedPosition = {
-      x: Math.max(16, Math.min(maxX, newPosition.x)),
+      x: Math.max(EDGE_MARGIN, Math.min(maxX, newPosition.x)),
       y: Math.max(-window.innerHeight / 2 + 100, Math.min(maxY / 2, newPosition.y))
     };
     
-    setPosition(clampedPosition);
-    savePosition(clampedPosition);
+    // 應用吸附邏輯
+    const snappedPosition = calculateSnapPosition(clampedPosition, containerWidth, containerHeight);
+    
+    setPosition(snappedPosition);
+    savePosition(snappedPosition);
     setShowResetButton(true);
   }, [position, isCollapsed]);
 

@@ -157,6 +157,7 @@ const Index = () => {
     shensha: useRef<HTMLDivElement>(null),
     personality: useRef<HTMLDivElement>(null),
     legion: useRef<HTMLDivElement>(null),
+    nayin: useRef<HTMLDivElement>(null),
     analysis: useRef<HTMLDivElement>(null),
     logs: useRef<HTMLDivElement>(null),
   };
@@ -941,6 +942,7 @@ const Index = () => {
 
               {/* 納音五行分析區 */}
               <ReportSection
+                ref={sectionRefs.nayin}
                 id="nayin"
                 title="納音五行詳解"
                 subtitle="六十甲子納音命理"

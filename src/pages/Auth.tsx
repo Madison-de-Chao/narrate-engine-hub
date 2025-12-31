@@ -81,8 +81,18 @@ export default function Auth() {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error("密碼至少需要6個字元");
+    if (password.length < 8) {
+      toast.error("密碼至少需要8個字元");
+      return;
+    }
+
+    // Check password complexity
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    
+    if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
+      toast.error("密碼必須包含大寫字母、小寫字母和數字");
       return;
     }
 
@@ -299,13 +309,14 @@ export default function Auth() {
                 <Input
                   id="signup-password"
                   type="password"
-                  placeholder="至少6個字元"
+                  placeholder="至少8個字元，含大小寫及數字"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={isLoading}
                   className="bg-input border-border"
                 />
+                <p className="text-xs text-muted-foreground">密碼須包含大寫、小寫字母及數字</p>
               </div>
 
               <div className="space-y-2">

@@ -202,8 +202,11 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY is not configured");
-      throw new Error("LOVABLE_API_KEY is not configured");
+      console.error("AI service configuration missing");
+      return new Response(
+        JSON.stringify({ error: 'AI 服務暫時不可用' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // 根據角色選擇系統提示
@@ -302,7 +305,7 @@ ${JSON.stringify(baziContext.yinyang || {})}
     });
   } catch (error) {
     console.error("AI consult error:", error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "未知錯誤" }), {
+    return new Response(JSON.stringify({ error: "AI 服務發生錯誤，請稍後再試" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

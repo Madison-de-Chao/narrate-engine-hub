@@ -101,9 +101,12 @@ const ApiConsole = () => {
 
   const generateApiKey = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const randomValues = new Uint8Array(32);
+    crypto.getRandomValues(randomValues);
+    
     let key = 'bz_';
     for (let i = 0; i < 32; i++) {
-      key += chars.charAt(Math.floor(Math.random() * chars.length));
+      key += chars[randomValues[i] % chars.length];
     }
     return key;
   };

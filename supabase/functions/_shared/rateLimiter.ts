@@ -138,4 +138,22 @@ export const RATE_LIMITS = {
     windowMs: 60 * 1000,     // 1 minute
     maxRequests: 60,          // 60 requests per minute
   },
+  
+  // Authentication - strict limits to prevent brute force
+  AUTH_LOGIN: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    maxRequests: 5,            // 5 attempts per 15 minutes per identifier
+  },
+  
+  // Auth signup - moderate limits
+  AUTH_SIGNUP: {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxRequests: 3,            // 3 signups per hour per IP
+  },
+  
+  // Password reset - strict limits
+  AUTH_PASSWORD_RESET: {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxRequests: 3,            // 3 reset attempts per hour
+  },
 };

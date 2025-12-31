@@ -303,6 +303,42 @@ export type Database = {
           },
         ]
       }
+      login_attempts: {
+        Row: {
+          attempt_at: string
+          created_at: string
+          id: string
+          identifier: string
+          identifier_type: string
+          ip_address: string | null
+          lockout_notified: boolean | null
+          lockout_until: string | null
+          success: boolean
+        }
+        Insert: {
+          attempt_at?: string
+          created_at?: string
+          id?: string
+          identifier: string
+          identifier_type: string
+          ip_address?: string | null
+          lockout_notified?: boolean | null
+          lockout_until?: string | null
+          success?: boolean
+        }
+        Update: {
+          attempt_at?: string
+          created_at?: string
+          id?: string
+          identifier?: string
+          identifier_type?: string
+          ip_address?: string | null
+          lockout_notified?: boolean | null
+          lockout_until?: string | null
+          success?: boolean
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -464,6 +500,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_account_lockout: {
+        Args: { p_identifier: string }
+        Returns: {
+          failed_attempts: number
+          is_locked: boolean
+          locked_until: string
+        }[]
+      }
+      cleanup_old_login_attempts: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -473,6 +518,18 @@ export type Database = {
       }
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
       is_premium: { Args: { check_user_id: string }; Returns: boolean }
+      record_login_attempt: {
+        Args: {
+          p_identifier: string
+          p_identifier_type: string
+          p_ip_address: string
+          p_success: boolean
+        }
+        Returns: {
+          is_now_locked: boolean
+          lockout_duration_minutes: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"

@@ -6,14 +6,17 @@ interface AuthResult {
   error?: string;
   data?: any;
   rateLimitRemaining?: number;
+  isLocked?: boolean;
+  lockedUntil?: string;
 }
 
 /**
- * Hook for rate-limited authentication
+ * Hook for rate-limited authentication with account lockout protection
  * Uses the auth-rate-limit edge function to prevent brute force attacks
  */
 export function useRateLimitedAuth() {
   const [isLoading, setIsLoading] = useState(false);
+  const [lockoutInfo, setLockoutInfo] = useState<{ isLocked: boolean; lockedUntil?: Date } | null>(null);
 
   const callAuthEndpoint = async (
     action: 'login' | 'signup' | 'reset_password',
@@ -30,7 +33,7 @@ export function useRateLimitedAuth() {
       });
 
       if (error) {
-        // Check if it's a rate limit error
+        // Check if it's a rate limit or lockout error
         if (error.message?.includes('429') || error.message?.includes('rate')) {
           return { 
             success: false, 
@@ -40,6 +43,18 @@ export function useRateLimitedAuth() {
         return { success: false, error: error.message || '驗證失敗' };
       }
 
+      // Check for account lockout
+      if (data?.isLocked) {
+        const lockedUntil = data.lockedUntil ? new Date(data.lockedUntil) : undefined;
+        setLockoutInfo({ isLocked: true, lockedUntil });
+        return { 
+          success: false, 
+          error: data.error || '帳戶已被鎖定',
+          isLocked: true,
+          lockedUntil: data.lockedUntil
+        };
+      }
+
       if (data?.error) {
         return { 
           success: false, 
@@ -47,6 +62,9 @@ export function useRateLimitedAuth() {
           rateLimitRemaining: data.rateLimitRemaining
         };
       }
+
+      // Clear lockout info on successful login
+      setLockoutInfo(null);
 
       // If edge function succeeded, sync the session with client
       if (data?.success && data?.data?.session) {
@@ -88,8 +106,8 @@ export function useRateLimitedAuth() {
   const signInWithFallback = async (credentials: { email?: string; phone?: string; password: string }) => {
     const result = await signIn(credentials);
     
-    // If edge function failed due to service error (not rate limit), try direct auth
-    if (!result.success && result.error === '服務暫時不可用，請稍後再試') {
+    // If edge function failed due to service error (not rate limit or lockout), try direct auth
+    if (!result.success && !result.isLocked && result.error === '服務暫時不可用，請稍後再試') {
       console.log('Falling back to direct Supabase auth');
       try {
         const { error } = await supabase.auth.signInWithPassword(
@@ -137,10 +155,12 @@ export function useRateLimitedAuth() {
 
   return {
     isLoading,
+    lockoutInfo,
     signIn,
     signUp,
     resetPassword,
     signInWithFallback,
-    signUpWithFallback
+    signUpWithFallback,
+    clearLockout: () => setLockoutInfo(null)
   };
 }

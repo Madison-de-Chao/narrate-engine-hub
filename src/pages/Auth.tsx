@@ -8,19 +8,22 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Loader2, UserRound, Mail, Phone } from "lucide-react";
+import { Loader2, UserRound, Mail, Phone, ShieldAlert } from "lucide-react";
 import { useGuestMode } from "@/hooks/useGuestMode";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useRateLimitedAuth } from "@/hooks/useRateLimitedAuth";
 
 export default function Auth() {
   const navigate = useNavigate();
   const { enableGuestMode } = useGuestMode();
+  const { signInWithFallback, signUpWithFallback, isLoading: authLoading } = useRateLimitedAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [authMethod, setAuthMethod] = useState<"email" | "phone">("phone");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [rateLimitWarning, setRateLimitWarning] = useState<string | null>(null);
 
   useEffect(() => {
     // 檢查是否已登入
@@ -41,20 +44,21 @@ export default function Auth() {
     }
 
     setIsLoading(true);
+    setRateLimitWarning(null);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword(
-        authMethod === "email"
-          ? { email, password }
-          : { phone, password }
-      );
+      const credentials = authMethod === "email" 
+        ? { email, password } 
+        : { phone, password };
+      
+      const result = await signInWithFallback(credentials);
 
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          toast.error(authMethod === "email" ? "電子郵件或密碼錯誤" : "手機號碼或密碼錯誤");
-        } else {
-          toast.error(error.message);
+      if (!result.success) {
+        // Check for rate limit warning
+        if (result.error?.includes('頻繁') || result.rateLimitRemaining === 0) {
+          setRateLimitWarning('登入嘗試次數已達上限，請15分鐘後再試');
         }
+        toast.error(result.error || '登入失敗');
       } else {
         toast.success("登入成功！");
         navigate("/");
@@ -102,29 +106,21 @@ export default function Auth() {
     }
 
     setIsLoading(true);
+    setRateLimitWarning(null);
     
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const credentials = authMethod === "email" 
+        ? { email, password } 
+        : { phone, password };
       
-      const { error } = await supabase.auth.signUp(
-        authMethod === "email"
-          ? {
-              email,
-              password,
-              options: { emailRedirectTo: redirectUrl }
-            }
-          : {
-              phone,
-              password,
-            }
-      );
+      const result = await signUpWithFallback(credentials);
 
-      if (error) {
-        if (error.message.includes("already registered")) {
-          toast.error(authMethod === "email" ? "此電子郵件已被註冊" : "此手機號碼已被註冊");
-        } else {
-          toast.error(error.message);
+      if (!result.success) {
+        // Check for rate limit warning
+        if (result.error?.includes('頻繁') || result.rateLimitRemaining === 0) {
+          setRateLimitWarning('註冊嘗試次數已達上限，請1小時後再試');
         }
+        toast.error(result.error || '註冊失敗');
       } else {
         toast.success("註冊成功！正在登入...");
         navigate("/");
@@ -152,6 +148,14 @@ export default function Auth() {
           </h1>
           <p className="text-muted-foreground mt-2">登入或註冊開始你的命盤之旅</p>
         </div>
+
+        {/* Rate limit warning banner */}
+        {rateLimitWarning && (
+          <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2 text-sm text-destructive">
+            <ShieldAlert className="h-4 w-4 flex-shrink-0" />
+            <span>{rateLimitWarning}</span>
+          </div>
+        )}
 
         <Tabs defaultValue="signin" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8">

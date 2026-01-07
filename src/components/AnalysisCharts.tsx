@@ -69,9 +69,22 @@ export const AnalysisCharts = ({ baziResult }: AnalysisChartsProps) => {
     Object.entries(wuxing).map(([k, v]) => [k, (v / totalWuxing) * 100])
   );
 
-  // 判斷身強身弱
-  const dayElementPercent = wuxingPercent[dayElement] || 0;
-  const isStrong = dayElementPercent > 25;
+  // 根據生扶/剋洩比例判斷身強身弱（與 ReportSummary 統一邏輯）
+  // 生扶日主：印（生我）+ 比劫（同我）
+  // 剋洩日主：官殺（剋我）+ 財（我剋）+ 食傷（我生）
+  const elementCycle = ['wood', 'fire', 'earth', 'metal', 'water'];
+  const dayIdx = elementCycle.indexOf(dayElement);
+  const shengWo = elementCycle[(dayIdx + 4) % 5]; // 生我（印）
+  const tongWo = dayElement; // 同我（比劫）
+  const keWo = elementCycle[(dayIdx + 3) % 5]; // 剋我（官殺）
+  const woKe = elementCycle[(dayIdx + 2) % 5]; // 我剋（財）
+  const woSheng = elementCycle[(dayIdx + 1) % 5]; // 我生（食傷）
+  
+  const supportScore = (wuxing[shengWo as keyof typeof wuxing] || 0) + (wuxing[tongWo as keyof typeof wuxing] || 0);
+  const drainScore = (wuxing[keWo as keyof typeof wuxing] || 0) + (wuxing[woKe as keyof typeof wuxing] || 0) + (wuxing[woSheng as keyof typeof wuxing] || 0);
+  const strengthRatio = supportScore / (supportScore + drainScore + 0.1);
+  const isStrong = strengthRatio > 0.55;
+  const strengthLevel = strengthRatio > 0.55 ? '身強' : strengthRatio < 0.45 ? '身弱' : '中和';
 
   // 找出最強最弱五行
   const sorted = Object.entries(wuxing).sort((a, b) => b[1] - a[1]);

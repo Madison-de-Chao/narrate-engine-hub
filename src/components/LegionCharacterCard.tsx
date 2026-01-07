@@ -17,15 +17,6 @@ interface LegionCharacterCardProps {
   index?: number;
 }
 
-// 類型守衛
-function isGanCharacter(char: CharacterType): char is GanCharacter {
-  return 'gan' in char;
-}
-
-function isZhiCharacter(char: CharacterType): char is ZhiCharacter {
-  return 'zhi' in char;
-}
-
 export const LegionCharacterCard = ({ 
   type, 
   character, 
@@ -37,18 +28,34 @@ export const LegionCharacterCard = ({
   const isStrategist = type === 'strategist';
   const isLieutenant = type === 'lieutenant';
   
-  // 取得角色 ID
-  const characterId = isGanCharacter(character) 
-    ? character.gan 
-    : isZhiCharacter(character) 
-      ? character.zhi 
-      : character.id;
+  // 取得角色 ID - 優先使用 gan/zhi 屬性，否則使用 id
+  const getCharacterKey = (): string => {
+    // 檢查 gan 屬性（天干角色）
+    if ('gan' in character && typeof (character as any).gan === 'string') {
+      return (character as any).gan;
+    }
+    // 檢查 zhi 屬性（地支角色）
+    if ('zhi' in character && typeof (character as any).zhi === 'string') {
+      return (character as any).zhi;
+    }
+    // 檢查 id 屬性
+    if ('id' in character && typeof character.id === 'string') {
+      return character.id;
+    }
+    return '';
+  };
+  
+  const characterId = getCharacterKey();
   
   // 取得角色頭像
   const getAvatarSrc = () => {
+    if (!characterId) return undefined;
+    
+    // 主將、副將、奇謀都是天干角色，使用 commander 頭像
     if (isGeneral || isLieutenant || type === 'specialist') {
       return getCommanderAvatar(characterId);
     } else if (isStrategist) {
+      // 軍師是地支角色，使用 advisor 頭像
       return getAdvisorAvatar(characterId);
     }
     return undefined;
@@ -215,13 +222,13 @@ export const LegionCharacterCard = ({
         </div>
         
         {/* 地支專屬：藏干資訊 */}
-        {isZhiCharacter(character) && character.hiddenStems && (
+        {'zhi' in character && 'hiddenStems' in character && (character as any).hiddenStems && (
           <div className="mt-3 pt-3 border-t border-border/20">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Users className="w-3.5 h-3.5" />
               <span>藏干：</span>
               <span className="text-foreground/70">
-                {character.hiddenStems.join('、')}
+                {((character as any).hiddenStems as string[]).join('、')}
               </span>
             </div>
           </div>

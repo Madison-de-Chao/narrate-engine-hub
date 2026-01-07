@@ -1,15 +1,17 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { Check, Lock } from "lucide-react";
 
 interface ReportProgressProps {
   sections: Array<{
     id: string;
     label: string;
     completed?: boolean;
+    isPremium?: boolean;
   }>;
   activeSection: string;
   onSectionClick?: (sectionId: string) => void;
+  hasAccess?: boolean;
   className?: string;
 }
 
@@ -17,6 +19,7 @@ export const ReportProgress = ({
   sections,
   activeSection,
   onSectionClick,
+  hasAccess = false,
   className
 }: ReportProgressProps) => {
   const activeIndex = sections.findIndex(s => s.id === activeSection);
@@ -47,6 +50,7 @@ export const ReportProgress = ({
           {sections.map((section, index) => {
             const isActive = section.id === activeSection;
             const isPassed = index < activeIndex;
+            const isLocked = section.isPremium && !hasAccess;
             
             return (
               <motion.button
@@ -58,11 +62,14 @@ export const ReportProgress = ({
                   "relative flex items-center justify-center w-8 h-8 rounded-full transition-all",
                   "border-2",
                   isActive && "border-primary bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.5)]",
-                  isPassed && "border-primary/60 bg-primary/20 text-primary",
-                  !isActive && !isPassed && "border-border bg-muted/50 text-muted-foreground hover:border-primary/50"
+                  isPassed && !isLocked && "border-primary/60 bg-primary/20 text-primary",
+                  isLocked && "border-amber-500/50 bg-amber-500/10 text-amber-500",
+                  !isActive && !isPassed && !isLocked && "border-border bg-muted/50 text-muted-foreground hover:border-primary/50"
                 )}
               >
-                {isPassed ? (
+                {isLocked ? (
+                  <Lock className="w-3 h-3" />
+                ) : isPassed ? (
                   <Check className="w-4 h-4" />
                 ) : (
                   <span className="text-xs font-bold">{index + 1}</span>
@@ -76,6 +83,7 @@ export const ReportProgress = ({
                   isActive && "opacity-100"
                 )}>
                   {section.label}
+                  {isLocked && " 🔒"}
                 </div>
               </motion.button>
             );

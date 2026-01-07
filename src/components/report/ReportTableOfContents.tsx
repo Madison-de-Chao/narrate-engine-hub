@@ -40,17 +40,24 @@ interface ReportTableOfContentsProps {
   className?: string;
 }
 
-const tocSections: TocSection[] = [
-  { id: 'summary', label: '命盤總覽', icon: LayoutDashboard, description: '核心指標與運勢概覽' },
-  { id: 'bazi', label: '傳統八字排盤', icon: Scroll, description: '四柱干支與藏干分析' },
-  { id: 'legion', label: '四時軍團故事', icon: Shield, description: '四柱敘事與兵法智慧' },
-  { id: 'tenGods', label: '十神關係分析', icon: Crown, description: '命局關係與格局' },
-  { id: 'shensha', label: '神煞統計分析', icon: Sparkles, description: '吉凶神煞解讀' },
-  { id: 'personality', label: '性格深度分析', icon: User, description: '性格特質與傾向' },
-  { id: 'nayin', label: '納音五行詳解', icon: BookOpen, description: '音律五行解讀' },
-  { id: 'analysis', label: '五行陰陽分析', icon: BarChart3, description: '能量分布與平衡' },
-  { id: 'logs', label: '計算日誌', icon: FileText, description: '計算過程記錄' },
+// 免費版章節
+const freeSections: TocSection[] = [
+  { id: 'summary', label: '基本資料', icon: LayoutDashboard, description: '核心指標總覽' },
+  { id: 'bazi', label: '傳統排盤', icon: Scroll, description: '四柱干支分析' },
+  { id: 'legion', label: '四時軍團', icon: Shield, description: '軍團配置與故事' },
 ];
+
+// 訂閱解鎖章節
+const premiumSections: TocSection[] = [
+  { id: 'tenGods', label: '十神解釋', icon: Crown, description: '命局關係解讀' },
+  { id: 'shensha', label: '神煞分析', icon: Sparkles, description: '吉凶星曜解讀' },
+  { id: 'personality', label: '性格分析', icon: User, description: '性格特質傾向' },
+  { id: 'nayin', label: '納音分析', icon: BookOpen, description: '音律五行解讀' },
+  { id: 'analysis', label: '五行分析', icon: BarChart3, description: '能量分布平衡' },
+];
+
+// 合併所有目錄章節（不含計算日誌）
+const tocSections: TocSection[] = [...freeSections, ...premiumSections];
 
 // 預設位置
 const DEFAULT_POSITION: Position = { x: 16, y: 0 };

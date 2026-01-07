@@ -120,16 +120,21 @@ serve(async (req) => {
 【角色】
 - 主將：${tgRole.role}（${stem}），Buff：${tgRole.buff}，Debuff：${tgRole.debuff}
 - 軍師：${dzRole.role}（${branch}），Buff：${dzRole.buff}，Debuff：${dzRole.debuff}
-- 納音戰場：${pillarData.nayin || '未知'}${bingfuSection}
-
-【要求】
-1. 開頭描述場景，主將登場
-2. 中段展開事件，展現 Buff/Debuff，兵符必須具體出現
-3. 結尾用「老兵對新兵」對話解釋含義`;
+- 納音戰場：${pillarData.nayin || '未知'}${bingfuSection}`;
 
     const systemPrompt = `你是「四時八字軍團戰記」的故事作家。將八字命盤轉化為奇幻軍團敘事。
-天干=主將，地支=軍師，神煞=兵符。寫故事，不是說明書。
-禁止列點式說明。每個兵符都要融入情節。用對話解釋術語。300-400字。`;
+
+寫作結構（僅供你參考，不要在故事中標註段落）：
+- 開頭：場景氛圍＋主將登場
+- 中段：事件展開、技能展現、兵符融入情節
+- 結尾：老兵對新兵的對話，自然解釋術語含義
+
+規則：
+- 天干=主將，地支=軍師，神煞=兵符
+- 寫故事，不是說明書，禁止列點
+- 每個兵符都要融入情節
+- 直接輸出故事內容，不要加任何段落標題或編號
+- 300-400字`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

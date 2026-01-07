@@ -52,6 +52,7 @@ interface AvatarWithPreviewProps {
   accentColor?: string;
   size?: 'sm' | 'md' | 'lg';
   showPreview?: boolean;
+  onLoadError?: (error: { character: string; src: string; alt: string }) => void;
 }
 
 export const AvatarWithPreview = ({
@@ -63,6 +64,7 @@ export const AvatarWithPreview = ({
   accentColor,
   size = 'md',
   showPreview = true,
+  onLoadError,
 }: AvatarWithPreviewProps) => {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -193,6 +195,16 @@ export const AvatarWithPreview = ({
                 onError={() => {
                   setImageLoading(false);
                   setImageError(true);
+                  // 錯誤日誌：方便未來除錯
+                  console.error(`[AvatarWithPreview] 頭像載入失敗`, {
+                    character,
+                    src,
+                    alt,
+                    element,
+                    timestamp: new Date().toISOString(),
+                  });
+                  // 回調通知父組件
+                  onLoadError?.({ character, src: src || '', alt });
                 }}
               />
             </>

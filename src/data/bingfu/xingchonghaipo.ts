@@ -239,4 +239,25 @@ export const xingchonghaipoBingfu: BingfuDefinition[] = [
     judgment: '酉與戌相破',
     storyFragment: '合作協議付之一炬，曾經的盟友分道揚鑣。「酉戌相破，」{advisor}嘆息，「破鏡難圓，這段合作結束了。」',
   },
+  
+  // ===== 驛馬（機動）=====
+  {
+    id: 'yima',
+    name: '驛馬',
+    alias: '驛站符',
+    category: 'xingchonghaipo',
+    rarity: 'SR',
+    effect: {
+      buff: '行動力與遷徙機遇',
+      debuff: '奔波漂泊，難以安定',
+    },
+    legionInterpretation: {
+      year: '祖輩多遷徙',
+      month: '事業多變動',
+      day: '命主奔波勞碌',
+      hour: '晚年易搬遷',
+    },
+    judgment: '申子辰馬在寅；寅午戌馬在申；巳酉丑馬在亥；亥卯未馬在巳',
+    storyFragment: '快馬疾馳而過，{advisor}緊握韁繩：「驛馬入命，注定奔波，但也帶來遠方的機遇。」',
+  },
 ];

@@ -173,4 +173,21 @@ export const yinyangBingfu: BingfuDefinition[] = [
     judgment: '依流年地支推',
     storyFragment: '黑雲壓頂，風雨欲來。「天煞之年，」老兵望天長嘆，「這一年，只能步步為營。」',
   },
+  {
+    id: 'kuigang',
+    name: '魁罡',
+    alias: '魁罡符',
+    category: 'yinyang',
+    rarity: 'SR',
+    effect: {
+      buff: '威嚴果決，行動力強',
+      debuff: '剛烈孤傲，易招衝突',
+    },
+    legionInterpretation: {
+      day: '命主聰明剛毅，有領導才能',
+      hour: '子女性格剛直',
+    },
+    judgment: '庚辰、庚戌、庚申、壬辰日為魁罡日',
+    storyFragment: '{commander}渾身散發攝人威嚴，氣場如刃。「魁罡在命，」{advisor}點頭，「天生的強將，但需學會收斂銳氣。」',
+  },
 ];

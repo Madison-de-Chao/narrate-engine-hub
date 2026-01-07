@@ -1,7 +1,8 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Lock, Crown, Sparkles, Building2 } from "lucide-react";
+import { Lock, Crown, Sparkles, Building2, Zap, Star, Shield, ArrowRight, Unlock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getMembershipLabel } from "@/hooks/useUnifiedMembership";
 import type { MembershipSource, MembershipTier } from "@/lib/unified-member-sdk";
@@ -18,6 +19,31 @@ interface PremiumGateProps {
   tier?: MembershipTier;
 }
 
+// 閃爍的星星粒子動畫
+const SparkleParticle = ({ delay = 0 }: { delay?: number }) => (
+  <motion.div
+    className="absolute"
+    initial={{ opacity: 0, scale: 0 }}
+    animate={{ 
+      opacity: [0, 1, 0],
+      scale: [0, 1, 0],
+      rotate: [0, 180, 360]
+    }}
+    transition={{
+      duration: 2,
+      delay,
+      repeat: Infinity,
+      repeatDelay: 1
+    }}
+    style={{
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+    }}
+  >
+    <Star className="w-3 h-3 text-amber-400/60" fill="currentColor" />
+  </motion.div>
+);
+
 export const PremiumGate = ({
   isPremium,
   children,
@@ -27,6 +53,8 @@ export const PremiumGate = ({
   membershipSource = 'none',
   tier = 'free'
 }: PremiumGateProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   if (isPremium) {
     return (
       <div className="relative">
@@ -41,68 +69,223 @@ export const PremiumGate = ({
     );
   }
 
+  const features = [
+    { icon: Crown, text: "完整軍團故事" },
+    { icon: Shield, text: "十神深度分析" },
+    { icon: Sparkles, text: "神煞統計解讀" },
+    { icon: Zap, text: "性格深度剖析" },
+  ];
+
   return (
-    <Card className="relative overflow-hidden border-2 border-amber-500/30 bg-gradient-to-br from-stone-900/90 to-stone-950/90">
-      {/* 模糊遮罩預覽 */}
-      <div className="absolute inset-0 z-0">
-        <div className="blur-sm opacity-30 pointer-events-none scale-95">
-          {children}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card 
+        className="relative overflow-hidden border-2 border-amber-500/40 bg-gradient-to-br from-stone-900/95 to-stone-950/95 shadow-[0_0_30px_rgba(245,158,11,0.15)]"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* 動態邊框光暈 */}
+        <motion.div
+          className="absolute inset-0 rounded-lg"
+          animate={{
+            boxShadow: isHovered 
+              ? "inset 0 0 60px rgba(245,158,11,0.2), 0 0 40px rgba(245,158,11,0.15)"
+              : "inset 0 0 30px rgba(245,158,11,0.1), 0 0 20px rgba(245,158,11,0.1)"
+          }}
+          transition={{ duration: 0.3 }}
+        />
+
+        {/* 浮動星星粒子 */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[...Array(6)].map((_, i) => (
+            <SparkleParticle key={i} delay={i * 0.4} />
+          ))}
         </div>
-      </div>
-      
-      {/* 鎖定覆蓋層 */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-[300px] p-8 bg-gradient-to-b from-stone-950/80 via-stone-950/95 to-stone-950/80">
-        <div className="text-center space-y-6">
-          {/* 皇冠圖標 */}
-          <div className="relative inline-block">
-            <div className="absolute inset-0 animate-pulse bg-amber-400/20 rounded-full blur-xl" />
-            <div className="relative bg-gradient-to-br from-amber-500 to-amber-700 p-4 rounded-full">
-              <Crown className="h-10 w-10 text-stone-950" />
-            </div>
+
+        {/* 模糊遮罩預覽 */}
+        <div className="absolute inset-0 z-0">
+          <div className="blur-md opacity-20 pointer-events-none scale-95 grayscale">
+            {children}
           </div>
-          
-          {/* 標題 */}
-          <div className="space-y-2">
-            <h3 className="text-2xl font-bold text-amber-300 flex items-center justify-center gap-2">
-              <Lock className="h-5 w-5" />
-              {title}
-            </h3>
-            <p className="text-amber-100/70 max-w-md">
-              {description}
-            </p>
-          </div>
-          
-          {/* 功能列表 */}
-          <div className="flex flex-wrap justify-center gap-3 text-sm">
-            <span className="px-3 py-1 bg-amber-500/20 rounded-full text-amber-200 flex items-center gap-1">
-              <Sparkles className="h-3 w-3" /> 完整軍團故事
-            </span>
-            <span className="px-3 py-1 bg-amber-500/20 rounded-full text-amber-200 flex items-center gap-1">
-              <Sparkles className="h-3 w-3" /> 十神深度分析
-            </span>
-            <span className="px-3 py-1 bg-amber-500/20 rounded-full text-amber-200 flex items-center gap-1">
-              <Sparkles className="h-3 w-3" /> 神煞統計
-            </span>
-            <span className="px-3 py-1 bg-amber-500/20 rounded-full text-amber-200 flex items-center gap-1">
-              <Sparkles className="h-3 w-3" /> 性格深度剖析
-            </span>
-          </div>
-          
-          {/* 升級按鈕 */}
-          <Button
-            onClick={onUpgrade}
-            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-stone-950 font-bold px-8 py-6 text-lg shadow-lg shadow-amber-500/30"
-          >
-            <Crown className="mr-2 h-5 w-5" />
-            升級收費版
-          </Button>
-          
-          <p className="text-xs text-muted-foreground">
-            一次付費，終身使用完整功能
-          </p>
+          {/* 漸變遮罩 */}
+          <div className="absolute inset-0 bg-gradient-to-b from-stone-950/60 via-stone-950/90 to-stone-950/95" />
         </div>
-      </div>
-    </Card>
+        
+        {/* 鎖定覆蓋層 */}
+        <div className="relative z-10 flex flex-col items-center justify-center min-h-[320px] p-8">
+          <div className="text-center space-y-6 max-w-lg">
+            
+            {/* 動態鎖定圖標 */}
+            <motion.div 
+              className="relative inline-block"
+              animate={{ 
+                y: isHovered ? -5 : 0,
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* 外圈光暈動畫 */}
+              <motion.div 
+                className="absolute inset-0 rounded-full"
+                animate={{
+                  scale: [1, 1.3, 1],
+                  opacity: [0.3, 0.1, 0.3],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                style={{
+                  background: "radial-gradient(circle, rgba(245,158,11,0.4) 0%, transparent 70%)",
+                }}
+              />
+              
+              {/* 中圈脈衝 */}
+              <motion.div 
+                className="absolute -inset-4 rounded-full bg-amber-500/20"
+                animate={{
+                  scale: [1, 1.15, 1],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              
+              {/* 主圖標 */}
+              <motion.div 
+                className="relative bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 p-5 rounded-full shadow-lg shadow-amber-500/40"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <AnimatePresence mode="wait">
+                  {isHovered ? (
+                    <motion.div
+                      key="unlock"
+                      initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
+                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                      exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Unlock className="h-10 w-10 text-stone-900" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="lock"
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.5 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Lock className="h-10 w-10 text-stone-900" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </motion.div>
+            
+            {/* 標題區 */}
+            <motion.div 
+              className="space-y-3"
+              animate={{ y: isHovered ? -3 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-amber-200 via-amber-300 to-amber-200 bg-clip-text text-transparent">
+                🔒 {title}
+              </h3>
+              <p className="text-amber-100/80 text-sm leading-relaxed">
+                {description}
+              </p>
+            </motion.div>
+            
+            {/* 功能列表 - 動態顯示 */}
+            <motion.div 
+              className="grid grid-cols-2 gap-2 text-sm"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                visible: {
+                  transition: {
+                    staggerChildren: 0.1
+                  }
+                }
+              }}
+            >
+              {features.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 rounded-lg border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all cursor-default"
+                  variants={{
+                    hidden: { opacity: 0, x: -10 },
+                    visible: { opacity: 1, x: 0 }
+                  }}
+                  whileHover={{ scale: 1.02, x: 3 }}
+                >
+                  <feature.icon className="h-4 w-4 text-amber-400" />
+                  <span className="text-amber-200/90">{feature.text}</span>
+                </motion.div>
+              ))}
+            </motion.div>
+            
+            {/* 升級按鈕 - 強調動畫 */}
+            <motion.div
+              animate={{ y: isHovered ? -2 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button
+                  onClick={onUpgrade}
+                  className="relative overflow-hidden bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:via-amber-300 hover:to-amber-400 text-stone-900 font-bold px-10 py-6 text-lg shadow-xl shadow-amber-500/30 group"
+                >
+                  {/* 按鈕光澤動畫 */}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                    animate={{
+                      x: ["-100%", "200%"],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatDelay: 1,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  
+                  <span className="relative flex items-center gap-2">
+                    <Crown className="h-5 w-5" />
+                    立即升級解鎖
+                    <motion.span
+                      animate={{ x: [0, 4, 0] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      <ArrowRight className="h-5 w-5" />
+                    </motion.span>
+                  </span>
+                </Button>
+              </motion.div>
+            </motion.div>
+            
+            {/* 底部提示 */}
+            <motion.p 
+              className="text-xs text-amber-200/50 flex items-center justify-center gap-2"
+              animate={{ opacity: [0.5, 0.8, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Sparkles className="h-3 w-3" />
+              解鎖全部進階分析功能
+              <Sparkles className="h-3 w-3" />
+            </motion.p>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
   );
 };
 
@@ -140,7 +323,7 @@ export const MembershipIndicator = ({
   );
 };
 
-// 簡化版的故事預覽遮罩
+// 簡化版的故事預覽遮罩 - 增強版
 export const StoryPreviewGate = ({
   isPremium,
   fullStory,
@@ -173,10 +356,23 @@ export const StoryPreviewGate = ({
     <div className="relative">
       <p className="text-foreground/90 leading-relaxed">
         {previewStory}
-        <span className="text-amber-400 ml-1 cursor-pointer hover:underline" onClick={onUpgrade}>
-          [升級解鎖完整故事 →]
-        </span>
       </p>
+      <motion.div 
+        className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/30 cursor-pointer group"
+        onClick={onUpgrade}
+        whileHover={{ scale: 1.02, x: 3 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <Lock className="h-3.5 w-3.5 text-amber-400 group-hover:hidden" />
+        <Unlock className="h-3.5 w-3.5 text-amber-300 hidden group-hover:block" />
+        <span className="text-sm text-amber-300 font-medium">升級解鎖完整故事</span>
+        <motion.span
+          animate={{ x: [0, 3, 0] }}
+          transition={{ duration: 1, repeat: Infinity }}
+        >
+          <ArrowRight className="h-3.5 w-3.5 text-amber-400" />
+        </motion.span>
+      </motion.div>
     </div>
   );
 };

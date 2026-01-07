@@ -7,7 +7,7 @@ import { storyMaterialsManager } from "@/lib/storyMaterials";
 import { ModularShenshaEngine, type RulesetType } from "@/lib/shenshaRuleEngine";
 import type { ShenshaMatch } from "@/data/shenshaTypes";
 import { LegionCharacterCard } from "./LegionCharacterCard";
-import { ShenshaCardList } from "./ShenshaCard";
+// ShenshaCardList 已移除 - 兵符狀態使用簡化 Badge 顯示
 import { LegionOverviewChart } from "./LegionOverviewChart";
 import { LegionRelationshipDiagram } from "./LegionRelationshipDiagram";
 import { truncateStoryForFree } from "@/hooks/usePremiumStatus";
@@ -667,21 +667,42 @@ export const LegionCards = ({ baziResult, shenshaRuleset = 'trad', isPremium = f
                   </div>
                 </div>
 
-                {/* 神煞加持效應 - 按柱過濾 */}
-                <div className="p-5 bg-gradient-to-br from-purple-500/10 to-purple-500/5 rounded-xl border-2 border-purple-500/30">
-                  <h5 className="font-bold text-xl mb-4 flex items-center gap-2 text-purple-600 dark:text-purple-400">
-                    <Sparkles className="w-6 h-6" />
-                    神煞加持效應（{pillarName === 'year' ? '年柱' : pillarName === 'month' ? '月柱' : pillarName === 'day' ? '日柱' : '時柱'}）
+                {/* 兵符狀態摘要 - 簡化版 */}
+                <div className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-500/5 rounded-xl border border-purple-500/30">
+                  <h5 className="font-semibold text-lg mb-3 flex items-center gap-2 text-purple-600 dark:text-purple-400">
+                    <Sparkles className="w-5 h-5" />
+                    兵符狀態
                   </h5>
                   {pillarShensha.length > 0 ? (
-                    <ShenshaCardList 
-                      shenshaList={pillarShensha} 
-                      maxDisplay={6}
-                      showEvidence={true}
-                    />
+                    <div className="flex flex-wrap gap-2">
+                      {pillarShensha.map((shensha, idx) => (
+                        <Badge 
+                          key={`${shensha.name}-${idx}`}
+                          variant="outline"
+                          className={`text-xs px-3 py-1.5 ${
+                            shensha.category === '吉神' 
+                              ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10' 
+                              : shensha.category === '凶煞'
+                                ? 'border-rose-500/50 text-rose-400 bg-rose-500/10'
+                                : shensha.category === '桃花'
+                                  ? 'border-pink-500/50 text-pink-400 bg-pink-500/10'
+                                  : 'border-violet-500/50 text-violet-400 bg-violet-500/10'
+                          }`}
+                        >
+                          {shensha.category === '吉神' && '✨'}
+                          {shensha.category === '凶煞' && '⚠️'}
+                          {shensha.category === '桃花' && '💗'}
+                          {shensha.category === '特殊' && '🔮'}
+                          {' '}{shensha.name}
+                        </Badge>
+                      ))}
+                    </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground">此柱暫無特殊神煞</p>
+                    <p className="text-sm text-muted-foreground">此柱暫無兵符加成</p>
                   )}
+                  <p className="text-xs text-muted-foreground mt-2 italic">
+                    💡 詳細神煞解析請參閱傳統排盤區
+                  </p>
                 </div>
 
                 {/* 發展策略建議 */}

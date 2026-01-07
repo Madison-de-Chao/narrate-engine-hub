@@ -585,7 +585,7 @@ const shenshaToBingfuMap: Record<string, string> = {
   '丑未沖': 'chouwei_chong',
   '寅巳申三刑': 'yinsishen_xing',
   '丑戌未三刑': 'chouxuwei_xing',
-  '子卯刑': 'zimao_xing',
+  '辰午自刑': 'chenwu_xing',
   '辰午酉亥自刑': 'chenwu_xing',
   '子未害': 'ziwei_hai',
   '丑午害': 'chouwu_hai',

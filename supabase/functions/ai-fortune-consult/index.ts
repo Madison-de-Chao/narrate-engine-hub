@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { checkRateLimit, createRateLimitResponse, addRateLimitHeaders, RATE_LIMITS } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {

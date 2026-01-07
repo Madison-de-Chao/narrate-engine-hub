@@ -24,7 +24,7 @@ export const yinyangBingfu: BingfuDefinition[] = [
     storyFragment: '華蓋如傘，罩住{commander}，與世隔絕卻靈感泉湧。「藝術家的命，」{advisor}嘆道，「注定與凡俗不同。」',
   },
   {
-    id: 'yincha_yangcuo',
+    id: 'yinyang_chacuo',
     name: '陰差陽錯',
     alias: '錯緣符',
     category: 'yinyang',

@@ -316,7 +316,7 @@ export const xiongshaBingfu: BingfuDefinition[] = [
       day: '命主需避險守成',
       hour: '晚年慎防破財',
     },
-    judgment: '干支相衝且坐破敗之地',
+    judgment: '十惡大敗日：甲辰、乙巳、丙申、丁亥、戊戌、己丑、庚辰、辛巳、壬申、癸亥',
     storyFragment: '旗幟倒伏，帳簿染血。「十惡大敗之勢，」{advisor}沉聲說，「暫且收斂鋒芒，先穩住根基。」',
   },
   {

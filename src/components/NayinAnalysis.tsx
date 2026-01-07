@@ -134,26 +134,26 @@ export const NayinAnalysis = ({ nayin }: NayinAnalysisProps) => {
     .sort((a, b) => b[1] - a[1])[0];
 
   return (
-    <Card className="p-6 border-2 border-amber-500/40 bg-gradient-to-br from-amber-950 via-amber-900/80 to-slate-900">
-      <h2 className="text-2xl font-bold text-amber-100 mb-6 flex items-center gap-2">
-        <Sparkles className="w-6 h-6 text-amber-400" />
+    <Card className="p-4 sm:p-6 border-2 border-amber-500/40 bg-gradient-to-br from-amber-950 via-amber-900/80 to-slate-900">
+      <h2 className="text-lg sm:text-2xl font-bold text-amber-100 mb-4 sm:mb-6 flex items-center gap-2">
+        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400" />
         納音五行分析
       </h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* 左側：圓環圖 + 四柱一覽 */}
         <div className="space-y-4">
           {/* 圓環圖 */}
           <div className="flex items-center justify-center">
-            <div className="relative w-48 h-48">
+            <div className="relative w-36 h-36 sm:w-48 sm:h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={chartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
+                    innerRadius="40%"
+                    outerRadius="70%"
                     paddingAngle={2}
                     dataKey="value"
                   >
@@ -166,14 +166,15 @@ export const NayinAnalysis = ({ nayin }: NayinAnalysisProps) => {
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--card))', 
                       border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
+                      borderRadius: '8px',
+                      fontSize: '12px'
                     }}
                   />
                 </PieChart>
               </ResponsiveContainer>
               {/* 中心文字 */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className={`text-2xl font-bold ${ELEMENT_CONFIG[dominantElement[0]]?.color}`}>
+                <span className={`text-xl sm:text-2xl font-bold ${ELEMENT_CONFIG[dominantElement[0]]?.color}`}>
                   {dominantElement[0]}
                 </span>
                 <span className="text-xs text-muted-foreground">主導</span>
@@ -181,13 +182,13 @@ export const NayinAnalysis = ({ nayin }: NayinAnalysisProps) => {
             </div>
           </div>
 
-          {/* 五行統計 */}
-          <div className="flex justify-center gap-3 flex-wrap">
+          {/* 五行統計 - 行動端緊湊排列 */}
+          <div className="flex justify-center gap-2 sm:gap-3 flex-wrap">
             {Object.entries(elementCounts).map(([element, count]) => (
               <Badge
                 key={element}
                 variant="outline"
-                className={`${ELEMENT_CONFIG[element]?.color} border-current/30 flex items-center gap-1`}
+                className={`${ELEMENT_CONFIG[element]?.color} border-current/30 flex items-center gap-1 text-xs sm:text-sm`}
               >
                 {ELEMENT_CONFIG[element]?.icon}
                 {element} × {count}
@@ -195,7 +196,7 @@ export const NayinAnalysis = ({ nayin }: NayinAnalysisProps) => {
             ))}
           </div>
 
-          {/* 四柱納音一覽 */}
+          {/* 四柱納音一覽 - 行動端 2x2 網格 */}
           <div className="grid grid-cols-2 gap-2 mt-4">
             {pillars.map((pillar) => {
               const nayinName = nayin[pillar];
@@ -204,15 +205,15 @@ export const NayinAnalysis = ({ nayin }: NayinAnalysisProps) => {
               return (
                 <div
                   key={pillar}
-                  className={`p-3 rounded-lg bg-gradient-to-br ${config?.bgClass} border border-current/20`}
+                  className={`p-2.5 sm:p-3 rounded-lg bg-gradient-to-br ${config?.bgClass} border border-current/20`}
                 >
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs text-muted-foreground">{PILLAR_NAMES[pillar]}</span>
-                    <Badge variant="outline" className={`text-xs ${config?.color} border-current/30`}>
+                    <Badge variant="outline" className={`text-xs ${config?.color} border-current/30 px-1.5 py-0`}>
                       {element}
                     </Badge>
                   </div>
-                  <span className={`text-sm font-medium ${config?.color}`}>{nayinName}</span>
+                  <span className={`text-xs sm:text-sm font-medium ${config?.color}`}>{nayinName}</span>
                 </div>
               );
             })}
@@ -220,33 +221,33 @@ export const NayinAnalysis = ({ nayin }: NayinAnalysisProps) => {
         </div>
 
         {/* 右側：日柱重點解讀 */}
-        <div className={`p-5 rounded-xl bg-gradient-to-br ${dayConfig?.bgClass} border border-current/20`}>
-          <div className="flex items-center gap-2 mb-4">
-            <div className={`p-2 rounded-lg bg-background/50 ${dayConfig?.color}`}>
+        <div className={`p-4 sm:p-5 rounded-xl bg-gradient-to-br ${dayConfig?.bgClass} border border-current/20`}>
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
+            <div className={`p-1.5 sm:p-2 rounded-lg bg-background/50 ${dayConfig?.color}`}>
               {dayConfig?.icon}
             </div>
-            <div>
-              <h3 className="font-bold text-foreground">日柱納音：{dayNayin}</h3>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-bold text-foreground text-sm sm:text-base truncate">日柱納音：{dayNayin}</h3>
               <Badge variant="outline" className={`text-xs ${dayConfig?.color} border-current/30`}>
                 {dayElement}行
               </Badge>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">🎭 意象</h4>
-              <p className="text-foreground">{dayBrief.image}</p>
+              <h4 className="text-xs sm:text-sm font-medium text-muted-foreground mb-1">🎭 意象</h4>
+              <p className="text-sm text-foreground">{dayBrief.image}</p>
             </div>
 
             <div>
-              <h4 className="text-sm font-medium text-muted-foreground mb-1">💡 核心主題</h4>
-              <p className={`font-semibold ${dayConfig?.color}`}>{dayBrief.theme}</p>
+              <h4 className="text-xs sm:text-sm font-medium text-muted-foreground mb-1">💡 核心主題</h4>
+              <p className={`text-sm sm:text-base font-semibold ${dayConfig?.color}`}>{dayBrief.theme}</p>
             </div>
 
-            <div className="pt-3 border-t border-border/30">
-              <h4 className="text-sm font-medium text-muted-foreground mb-2">📊 五行特質</h4>
-              <p className="text-sm text-foreground leading-relaxed">
+            <div className="pt-2 sm:pt-3 border-t border-border/30">
+              <h4 className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 sm:mb-2">📊 五行特質</h4>
+              <p className="text-xs sm:text-sm text-foreground leading-relaxed">
                 {dayElement === '金' && '金主義，性剛，情烈。其性剛果決斷，其情豪邁厲利。'}
                 {dayElement === '木' && '木主仁，性直，情和。其性仁直正義，其情溫和穩重。'}
                 {dayElement === '水' && '水主智，性聰，情善。其性聰明靈活，其情柔和通達。'}

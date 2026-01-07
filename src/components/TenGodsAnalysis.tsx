@@ -115,23 +115,24 @@ export const TenGodsAnalysis = ({ baziResult }: TenGodsAnalysisProps) => {
   };
 
   return (
-    <Card className="p-6 border-2 border-blue-500/40 bg-gradient-to-br from-blue-950 via-blue-900/80 to-slate-900 relative overflow-hidden">
+    <Card className="p-4 sm:p-6 border-2 border-blue-500/40 bg-gradient-to-br from-blue-950 via-blue-900/80 to-slate-900 relative overflow-hidden">
       <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-500/10 via-transparent to-indigo-500/10 opacity-50" />
       
-      <div className="relative z-10 space-y-6">
+      <div className="relative z-10 space-y-4 sm:space-y-6">
         {/* 標題 */}
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Crown className="w-5 h-5 text-amber-400" />
+          <h3 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
+            <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
             十神分析
           </h3>
-          <div className="flex gap-2 flex-wrap">
-            <Badge variant="outline" className="text-primary border-primary/50">
+          <div className="flex gap-1.5 sm:gap-2 flex-wrap">
+            <Badge variant="outline" className="text-primary border-primary/50 text-xs">
               日主：{pillars.day.stem}
             </Badge>
             {dominantCategory && dominantCategory[1] > 0 && (
               <Badge 
                 variant="secondary"
+                className="text-xs"
                 style={{ backgroundColor: CATEGORY_COLORS[dominantCategory[0]] + '33' }}
               >
                 {dominantCategory[0]}為主
@@ -140,23 +141,23 @@ export const TenGodsAnalysis = ({ baziResult }: TenGodsAnalysisProps) => {
           </div>
         </div>
 
-        {/* 圖表區域 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 圖表區域 - 行動端堆疊 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* 分類圓環圖 */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium text-muted-foreground text-center">五類分布</h4>
-            <div className="h-[200px]">
+          <div className="space-y-2 sm:space-y-3">
+            <h4 className="text-xs sm:text-sm font-medium text-muted-foreground text-center">五類分布</h4>
+            <div className="h-[160px] sm:h-[200px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={categoryChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
+                    innerRadius="35%"
+                    outerRadius="65%"
                     paddingAngle={3}
                     dataKey="value"
-                    label={({ name, value }) => `${name} (${value})`}
+                    label={({ name, value }) => `${name}(${value})`}
                     labelLine={false}
                   >
                     {categoryChartData.map((entry, index) => (
@@ -170,17 +171,17 @@ export const TenGodsAnalysis = ({ baziResult }: TenGodsAnalysisProps) => {
           </div>
 
           {/* 詳細圓環圖 */}
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium text-muted-foreground text-center">十神詳細</h4>
-            <div className="h-[200px]">
+          <div className="space-y-2 sm:space-y-3">
+            <h4 className="text-xs sm:text-sm font-medium text-muted-foreground text-center">十神詳細</h4>
+            <div className="h-[160px] sm:h-[200px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={detailChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
+                    innerRadius="35%"
+                    outerRadius="65%"
                     paddingAngle={2}
                     dataKey="value"
                     label={({ name }) => name}
@@ -197,8 +198,8 @@ export const TenGodsAnalysis = ({ baziResult }: TenGodsAnalysisProps) => {
           </div>
         </div>
 
-        {/* 分類摘要 */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+        {/* 分類摘要 - 行動端緊湊顯示 */}
+        <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
           {Object.entries(categoryCounts).map(([category, count]) => {
             const desc = CATEGORY_DESCRIPTIONS[category];
             const isActive = count > 0;
@@ -206,7 +207,7 @@ export const TenGodsAnalysis = ({ baziResult }: TenGodsAnalysisProps) => {
             return (
               <div
                 key={category}
-                className={`rounded-lg p-3 text-center transition-all ${
+                className={`rounded-lg p-2 sm:p-3 text-center transition-all ${
                   isActive 
                     ? 'bg-card/50 border border-border/50' 
                     : 'bg-muted/20 opacity-50'
@@ -214,13 +215,13 @@ export const TenGodsAnalysis = ({ baziResult }: TenGodsAnalysisProps) => {
                 style={isActive ? { borderColor: CATEGORY_COLORS[category] + '50' } : {}}
               >
                 <div 
-                  className="text-lg font-bold"
+                  className="text-base sm:text-lg font-bold"
                   style={{ color: isActive ? CATEGORY_COLORS[category] : 'hsl(var(--muted-foreground))' }}
                 >
                   {count}
                 </div>
-                <div className="text-sm font-medium text-foreground">{category}</div>
-                <div className="text-xs text-muted-foreground mt-1">{desc?.theme}</div>
+                <div className="text-xs sm:text-sm font-medium text-foreground">{category}</div>
+                <div className="text-xs text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">{desc?.theme}</div>
               </div>
             );
           })}
@@ -228,15 +229,15 @@ export const TenGodsAnalysis = ({ baziResult }: TenGodsAnalysisProps) => {
 
         {/* 主要十神說明 */}
         {dominantCategory && dominantCategory[1] > 0 && (
-          <div className="rounded-lg p-4 bg-card/30 border border-border/30">
-            <p className="text-sm text-foreground">
+          <div className="rounded-lg p-3 sm:p-4 bg-card/30 border border-border/30">
+            <p className="text-xs sm:text-sm text-foreground">
               <span 
                 className="font-bold"
                 style={{ color: CATEGORY_COLORS[dominantCategory[0]] }}
               >
                 {dominantCategory[0]}
               </span>
-              <span className="text-muted-foreground mx-2">|</span>
+              <span className="text-muted-foreground mx-1 sm:mx-2">|</span>
               {CATEGORY_DESCRIPTIONS[dominantCategory[0]]?.meaning}
             </p>
           </div>

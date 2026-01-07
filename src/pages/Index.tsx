@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { BaziInputForm } from "@/components/BaziInputForm";
 import { TraditionalBaziDisplay } from "@/components/TraditionalBaziDisplay";
@@ -21,7 +22,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { ReportSection, ReportDivider, ReportProgress, ReportControls, ReadingProgressBar, ReportTableOfContents } from "@/components/report";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, Shield, Share2, MessageCircle, Facebook, LayoutDashboard, Scroll, BarChart3, FileText, User } from "lucide-react";
+import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, Shield, Share2, MessageCircle, Facebook, LayoutDashboard, Scroll, BarChart3, FileText, User, ChevronDown } from "lucide-react";
 import { generatePDF, type CoverPageData, type ReportData, type PdfOptions } from "@/lib/pdfGenerator";
 import { PdfOptionsDialog, type PdfOptions as DialogPdfOptions } from "@/components/PdfOptionsDialog";
 import { toast } from "sonner";
@@ -105,7 +106,7 @@ const Index = () => {
   const [isAiConsultOpen, setIsAiConsultOpen] = useState(false);
   const [isPdfOptionsOpen, setIsPdfOptionsOpen] = useState(false);
   
-  // 章節展開狀態管理
+  // 章節展開狀態管理（不含計算日誌）
   const [sectionExpandedState, setSectionExpandedState] = useState<Record<string, boolean>>({
     summary: true,
     bazi: true,
@@ -115,8 +116,10 @@ const Index = () => {
     personality: true,
     nayin: true,
     analysis: true,
-    logs: true,
   });
+  
+  // 計算日誌展開狀態（獨立管理）
+  const [logsExpanded, setLogsExpanded] = useState(false);
   
   const { hasAccess, source: membershipSource, tier, loading: membershipLoading } = useUnifiedMembership('bazi-premium');
   const { isAdmin } = useAdminStatus(user?.id);
@@ -149,7 +152,7 @@ const Index = () => {
     navigate("/subscribe");
   };
 
-  // Section refs for scrolling
+  // Section refs for scrolling（不含計算日誌）
   const sectionRefs = {
     summary: useRef<HTMLDivElement>(null),
     bazi: useRef<HTMLDivElement>(null),
@@ -159,7 +162,6 @@ const Index = () => {
     legion: useRef<HTMLDivElement>(null),
     nayin: useRef<HTMLDivElement>(null),
     analysis: useRef<HTMLDivElement>(null),
-    logs: useRef<HTMLDivElement>(null),
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -978,42 +980,50 @@ const Index = () => {
                 </PremiumGate>
               </ReportSection>
 
-              {/* 計算日誌區 */}
-              {baziResult.calculationLogs && (
-                <ReportSection
-                  ref={sectionRefs.logs}
-                  id="logs"
-                  title="計算日誌"
-                  subtitle="排盤過程與演算紀錄"
-                  icon={FileText}
-                  iconColor="text-slate-400"
-                  bgGradient="from-report-card via-report-card to-report-bg"
-                  borderColor="border-slate-500/30"
-                  decorative={false}
-                  order={9}
-                  expanded={sectionExpandedState.logs}
-                  onExpandedChange={(expanded) => handleSectionExpandedChange('logs', expanded)}
-                >
-                  <CalculationLogs logs={baziResult.calculationLogs} />
-                </ReportSection>
-              )}
-
               {/* 側邊進度指示器 */}
               <ReportProgress
                 sections={[
-                  { id: 'summary', label: '總覽' },
-                  { id: 'bazi', label: '八字排盤' },
-                  { id: 'legion', label: '軍團故事' },
-                  { id: 'tenGods', label: '十神分析' },
-                  { id: 'shensha', label: '神煞分析' },
-                  { id: 'personality', label: '性格分析' },
-                  { id: 'analysis', label: '五行分析' },
-                  { id: 'logs', label: '計算日誌' },
+                  { id: 'summary', label: '基本資料' },
+                  { id: 'bazi', label: '傳統排盤' },
+                  { id: 'legion', label: '四時軍團' },
+                  { id: 'tenGods', label: '十神解釋', isPremium: true },
+                  { id: 'shensha', label: '神煞分析', isPremium: true },
+                  { id: 'personality', label: '性格分析', isPremium: true },
+                  { id: 'nayin', label: '納音分析', isPremium: true },
+                  { id: 'analysis', label: '五行分析', isPremium: true },
                 ]}
                 activeSection={activeSection}
                 onSectionClick={scrollToSection}
+                hasAccess={hasAccess}
               />
             </div>
+
+            {/* 計算日誌區（獨立於報告主體）*/}
+            {baziResult.calculationLogs && (
+              <section className="mt-12 animate-fade-in">
+                <div className="border-t border-border/30 pt-8">
+                  <button 
+                    onClick={() => setLogsExpanded(!logsExpanded)}
+                    className="w-full flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-5 h-5 text-slate-400" />
+                      <span className="font-medium text-muted-foreground">計算日誌</span>
+                      <span className="text-xs text-muted-foreground/60">（除錯用途，不列入報告）</span>
+                    </div>
+                    <ChevronDown className={cn(
+                      "w-5 h-5 text-muted-foreground transition-transform",
+                      logsExpanded && "rotate-180"
+                    )} />
+                  </button>
+                  {logsExpanded && (
+                    <div className="mt-4 p-4 rounded-lg bg-card/50 border border-border/30">
+                      <CalculationLogs logs={baziResult.calculationLogs} />
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
           </>
         )}
       </main>

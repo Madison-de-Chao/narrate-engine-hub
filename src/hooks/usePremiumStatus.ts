@@ -85,16 +85,23 @@ export const truncateStoryForFree = (story: string | undefined, maxChars: number
   return story.slice(0, cutPoint) + "...";
 };
 
-// 免費版可見的章節
+// 免費版可見的章節（基本資料、傳統排盤、四時軍團）
 export const FREE_SECTIONS = ['summary', 'bazi', 'legion'] as const;
 
-// 付費版才可見的章節
-export const PREMIUM_SECTIONS = ['tenGods', 'shensha', 'personality', 'nayin', 'analysis', 'logs'] as const;
+// 付費版才可見的章節（十神、神煞、性格、納音、五行分析）
+export const PREMIUM_SECTIONS = ['tenGods', 'shensha', 'personality', 'nayin', 'analysis'] as const;
 
-export type SectionId = typeof FREE_SECTIONS[number] | typeof PREMIUM_SECTIONS[number];
+// 計算日誌不列入報告，但在結果頁面顯示
+export const UTILITY_SECTIONS = ['logs'] as const;
+
+export type SectionId = typeof FREE_SECTIONS[number] | typeof PREMIUM_SECTIONS[number] | typeof UTILITY_SECTIONS[number];
 
 export const isSectionFree = (sectionId: string): boolean => {
   return (FREE_SECTIONS as readonly string[]).includes(sectionId);
+};
+
+export const isSectionUtility = (sectionId: string): boolean => {
+  return (UTILITY_SECTIONS as readonly string[]).includes(sectionId);
 };
 
 // 訂閱方案名稱對照

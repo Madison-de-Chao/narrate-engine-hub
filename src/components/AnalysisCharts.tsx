@@ -108,26 +108,26 @@ export const AnalysisCharts = ({ baziResult }: AnalysisChartsProps) => {
   const advice = getQuickAdvice(dayElement, isStrong);
 
   return (
-    <Card className="p-6 border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-950 via-emerald-900/80 to-slate-900">
-      <h2 className="text-2xl font-bold text-emerald-100 mb-6 flex items-center gap-2">
-        <Sparkles className="w-6 h-6 text-emerald-400" />
+    <Card className="p-4 sm:p-6 border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-950 via-emerald-900/80 to-slate-900">
+      <h2 className="text-lg sm:text-2xl font-bold text-emerald-100 mb-4 sm:mb-6 flex items-center gap-2">
+        <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
         五行分析圖表
       </h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* 左側：圓環圖 + 陰陽 */}
         <div className="space-y-4">
           {/* 五行圓環圖 */}
           <div className="flex items-center justify-center">
-            <div className="relative w-48 h-48">
+            <div className="relative w-36 h-36 sm:w-48 sm:h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
+                    innerRadius="40%"
+                    outerRadius="70%"
                     paddingAngle={2}
                     dataKey="value"
                   >
@@ -140,14 +140,15 @@ export const AnalysisCharts = ({ baziResult }: AnalysisChartsProps) => {
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--card))', 
                       border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
+                      borderRadius: '8px',
+                      fontSize: '12px'
                     }}
                   />
                 </PieChart>
               </ResponsiveContainer>
               {/* 中心：日主 */}
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className={`text-2xl font-bold ${WUXING_CONFIG[dayElement]?.color}`}>
+                <span className={`text-xl sm:text-2xl font-bold ${WUXING_CONFIG[dayElement]?.color}`}>
                   {WUXING_CONFIG[dayElement]?.name}
                 </span>
                 <span className="text-xs text-muted-foreground">日主</span>
@@ -155,8 +156,8 @@ export const AnalysisCharts = ({ baziResult }: AnalysisChartsProps) => {
             </div>
           </div>
 
-          {/* 五行比例標籤 */}
-          <div className="flex justify-center gap-2 flex-wrap">
+          {/* 五行比例標籤 - 行動端 2x3 網格 */}
+          <div className="grid grid-cols-3 sm:flex sm:justify-center gap-1.5 sm:gap-2 sm:flex-wrap">
             {Object.entries(wuxing).map(([key, value]) => {
               const config = WUXING_CONFIG[key];
               const percent = wuxingPercent[key];
@@ -164,28 +165,30 @@ export const AnalysisCharts = ({ baziResult }: AnalysisChartsProps) => {
                 <Badge
                   key={key}
                   variant="outline"
-                  className={`${config?.color} border-current/30 flex items-center gap-1`}
+                  className={`${config?.color} border-current/30 flex items-center justify-center gap-1 text-xs sm:text-sm py-1`}
                 >
                   {config?.icon}
-                  {config?.name} {percent?.toFixed(0)}%
-                  {key === strongest && <TrendingUp className="w-3 h-3 ml-1" />}
-                  {key === weakest && <TrendingDown className="w-3 h-3 ml-1" />}
+                  <span className="hidden sm:inline">{config?.name}</span>
+                  <span className="sm:hidden">{config?.name}</span>
+                  <span className="font-medium">{percent?.toFixed(0)}%</span>
+                  {key === strongest && <TrendingUp className="w-3 h-3" />}
+                  {key === weakest && <TrendingDown className="w-3 h-3" />}
                 </Badge>
               );
             })}
           </div>
 
           {/* 陰陽平衡 */}
-          <div className="p-4 rounded-lg bg-muted/20 border border-border/30">
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">☯️ 陰陽平衡</h3>
-            <div className="flex items-center gap-4">
+          <div className="p-3 sm:p-4 rounded-lg bg-muted/20 border border-border/30">
+            <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-2 sm:mb-3">☯️ 陰陽平衡</h3>
+            <div className="flex items-center gap-3 sm:gap-4">
               <div className="flex-1">
                 <div className="flex justify-between text-xs mb-1">
                   <span>陽</span>
                   <span className="text-amber-400">{yinyang.yang}%</span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-400" style={{ width: `${yinyang.yang}%` }} />
+                  <div className="h-full bg-amber-400 transition-all" style={{ width: `${yinyang.yang}%` }} />
                 </div>
               </div>
               <div className="flex-1">
@@ -194,7 +197,7 @@ export const AnalysisCharts = ({ baziResult }: AnalysisChartsProps) => {
                   <span className="text-blue-400">{yinyang.yin}%</span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-400" style={{ width: `${yinyang.yin}%` }} />
+                  <div className="h-full bg-blue-400 transition-all" style={{ width: `${yinyang.yin}%` }} />
                 </div>
               </div>
             </div>
@@ -208,13 +211,13 @@ export const AnalysisCharts = ({ baziResult }: AnalysisChartsProps) => {
         {/* 右側：雷達圖 + 建議 */}
         <div className="space-y-4">
           {/* 雷達圖 */}
-          <div className="h-48">
+          <div className="h-40 sm:h-48">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData}>
                 <PolarGrid stroke="hsl(var(--border))" />
                 <PolarAngleAxis 
                   dataKey="subject" 
-                  tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }}
+                  tick={{ fill: 'hsl(var(--foreground))', fontSize: 11 }}
                 />
                 <Radar
                   name="五行分布"
@@ -228,24 +231,25 @@ export const AnalysisCharts = ({ baziResult }: AnalysisChartsProps) => {
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))', 
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    fontSize: '12px'
                   }}
                 />
               </RadarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* 命局強弱 */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className={`p-3 rounded-lg ${isStrong ? 'bg-amber-500/10 border-amber-500/30' : 'bg-blue-500/10 border-blue-500/30'} border`}>
+          {/* 命局強弱 - 行動端並排顯示 */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className={`p-2.5 sm:p-3 rounded-lg ${isStrong ? 'bg-amber-500/10 border-amber-500/30' : 'bg-blue-500/10 border-blue-500/30'} border`}>
               <span className="text-xs text-muted-foreground">命局</span>
-              <div className={`text-lg font-bold ${isStrong ? 'text-amber-400' : 'text-blue-400'}`}>
-                {isStrong ? '身強' : '身弱'}
+              <div className={`text-base sm:text-lg font-bold ${isStrong ? 'text-amber-400' : 'text-blue-400'}`}>
+                {strengthLevel}
               </div>
             </div>
-            <div className="p-3 rounded-lg bg-muted/20 border border-border/30">
+            <div className="p-2.5 sm:p-3 rounded-lg bg-muted/20 border border-border/30">
               <span className="text-xs text-muted-foreground">日主五行</span>
-              <div className={`text-lg font-bold ${WUXING_CONFIG[dayElement]?.color}`}>
+              <div className={`text-base sm:text-lg font-bold ${WUXING_CONFIG[dayElement]?.color}`}>
                 {WUXING_CONFIG[dayElement]?.name}命
               </div>
             </div>
@@ -253,13 +257,13 @@ export const AnalysisCharts = ({ baziResult }: AnalysisChartsProps) => {
 
           {/* 快速建議 */}
           <div className="grid grid-cols-1 gap-2">
-            <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+            <div className="p-2.5 sm:p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
               <span className="text-xs text-emerald-400">✨ 發展建議</span>
-              <p className="text-sm text-foreground mt-1">{advice.develop}</p>
+              <p className="text-xs sm:text-sm text-foreground mt-1">{advice.develop}</p>
             </div>
-            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+            <div className="p-2.5 sm:p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
               <span className="text-xs text-amber-400">⚠️ 注意事項</span>
-              <p className="text-sm text-foreground mt-1">{advice.caution}</p>
+              <p className="text-xs sm:text-sm text-foreground mt-1">{advice.caution}</p>
             </div>
           </div>
         </div>

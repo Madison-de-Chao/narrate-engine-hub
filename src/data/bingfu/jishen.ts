@@ -242,6 +242,24 @@ export const jishenBingfu: BingfuDefinition[] = [
     storyFragment: '一頂華麗的傘蓋懸浮在{commander}頭頂，散發著七彩光芒。「華蓋罩身，」{advisor}嘆道，「這是藝術家的命格，超凡脫俗，卻也難免曲高和寡。」',
   },
   {
+    id: 'xuetang',
+    name: '學堂',
+    alias: '學堂符',
+    category: 'jishen',
+    rarity: 'R',
+    effect: {
+      buff: '學習力與文采提升',
+      debuff: '書卷氣過重，行動偏慢',
+    },
+    legionInterpretation: {
+      month: '青年求學順利',
+      day: '命主重視學習',
+      hour: '子女聰慧好學',
+    },
+    judgment: '臨文昌或日支得長生之地',
+    storyFragment: '帳中燈火通明，{advisor}攤開兵書與卷軸。「學堂星照，」他笑道，「知識就是武器，讓我們磨礪策略。」',
+  },
+  {
     id: 'yuede',
     name: '月德',
     alias: '月佑符',

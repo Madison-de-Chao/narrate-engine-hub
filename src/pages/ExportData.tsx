@@ -56,7 +56,7 @@ import diwang from "@/data/shensha_trad/diwang.json";
 import yinyangChacuo from "@/data/shensha_trad/yinyang_chacuo.json";
 import fuyin from "@/data/shensha_trad/fuyin.json";
 import fanyin from "@/data/shensha_trad/fanyin.json";
-import shieDabai from "@/data/shensha_trad/shie_dabai.json";
+import shiEDabai from "@/data/shensha_trad/shi_e_dabai.json";
 import sifei from "@/data/shensha_trad/sifei.json";
 
 // 軍團版神煞
@@ -121,7 +121,7 @@ const tradShenshaList = [
   { name: "yinyang_chacuo", data: yinyangChacuo },
   { name: "fuyin", data: fuyin },
   { name: "fanyin", data: fanyin },
-  { name: "shie_dabai", data: shieDabai },
+  { name: "shi_e_dabai", data: shiEDabai },
   { name: "sifei", data: sifei }
 ];
 

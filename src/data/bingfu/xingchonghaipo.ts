@@ -89,6 +89,23 @@ export const xingchonghaipoBingfu: BingfuDefinition[] = [
     judgment: '丑與未相沖',
     storyFragment: '兩方人馬為了一塊土地爭執不休。「丑未相沖，」{advisor}嘆道，「財庫不穩，這場糾紛難以善了。」',
   },
+  {
+    id: 'sihai_chong',
+    name: '巳亥沖',
+    alias: '水火驛沖符',
+    category: 'xingchonghaipo',
+    rarity: 'SR',
+    effect: {
+      buff: '衝突激發轉機',
+      debuff: '情緒拉扯，反覆奔波',
+    },
+    legionInterpretation: {
+      day: '命主行動多變',
+      hour: '晚年常有奔波',
+    },
+    judgment: '巳與亥相沖',
+    storyFragment: '火蛇與海潮正面撞擊，霧氣騰起。「巳亥相沖，」{advisor}提醒，「行程與情緒都容易被拉扯，需要穩住節奏。」',
+  },
   
   // ===== 刑（4張）=====
   {
@@ -238,5 +255,26 @@ export const xingchonghaipoBingfu: BingfuDefinition[] = [
     },
     judgment: '酉與戌相破',
     storyFragment: '合作協議付之一炬，曾經的盟友分道揚鑣。「酉戌相破，」{advisor}嘆息，「破鏡難圓，這段合作結束了。」',
+  },
+  
+  // ===== 驛馬（機動）=====
+  {
+    id: 'yima',
+    name: '驛馬',
+    alias: '驛站符',
+    category: 'xingchonghaipo',
+    rarity: 'SR',
+    effect: {
+      buff: '行動力與遷徙機遇',
+      debuff: '奔波漂泊，難以安定',
+    },
+    legionInterpretation: {
+      year: '祖輩多遷徙',
+      month: '事業多變動',
+      day: '命主奔波勞碌',
+      hour: '晚年易搬遷',
+    },
+    judgment: '申子辰馬在寅；寅午戌馬在申；巳酉丑馬在亥；亥卯未馬在巳',
+    storyFragment: '快馬疾馳而過，{advisor}緊握韁繩：「驛馬入命，注定奔波，但也帶來遠方的機遇。」',
   },
 ];

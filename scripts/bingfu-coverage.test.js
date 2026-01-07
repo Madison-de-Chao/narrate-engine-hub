@@ -39,9 +39,8 @@ function loadBingfuDefinitions() {
     });
   }
   return { ids, names, aliases };
-}
-
-function loadMapping(validIds) {
+  const map = new Map(entries.filter(([, val]) => validIds.has(val)));
+  return { map };
   const content = fs.readFileSync(path.join(process.cwd(), "src/lib/shenshaRuleEngine.ts"), "utf8");
   const start = content.indexOf("const shenshaToBingfuMap");
   const end = content.indexOf("};", start);

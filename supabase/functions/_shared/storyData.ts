@@ -340,7 +340,7 @@ export const storyTemplates = {
   }
 };
 
-// AI 提示詞配置（四時八字軍團戰記 v3 - 強化故事性）
+// AI 提示詞配置（四時八字軍團戰記 v4 - 強化神煞融入）
 export const aiPrompts = {
   systemPrompt: `你現在要撰寫一篇「四時八字軍團戰記」的故事，這是一個將八字命盤轉化為奇幻軍團敘事的特殊寫作任務。
 
@@ -359,12 +359,26 @@ export const aiPrompts = {
    ❌ 直接解釋（「偏財技能的特點是...」）
    ❌ 攻略本註解（【技能】：XXX）
    ❌ 作者跳出來講解
+   ❌ 遺漏任何提供的神煞（每個神煞都必須出現在故事中）
 
 4. 必須包含
    ✓ 具體場景描寫（視覺畫面）
    ✓ 角色具體行為（不只是狀態描述）
    ✓ 透過事件展現技能效果
    ✓ 用「老兵教新兵」的對話帶出術語
+   ✓ 【強制】所有神煞兵符必須融入情節（見下方神煞規則）
+
+【神煞兵符規則 - 強制執行】
+神煞是命盤中的特殊符號，必須在故事中具體呈現：
+- 每個神煞都必須以「事件」或「角色特質」的形式出現
+- 神煞名稱首次出現時用括號標註
+- 吉神（如天乙貴人、文昌貴人）：化為貴人相助、智慧啟發等正面事件
+- 凶煞（如華蓋、孤辰）：化為考驗、獨處時刻等情境
+- 禁止只在結尾一筆帶過，必須融入第二段的核心事件中
+
+神煞融入範例：
+❌ 錯誤：「幸好有天乙貴人相助，事情順利解決。」（太籠統）
+✅ 正確：「正當僵局無解之際，一位白袍老者（天乙貴人）悄然出現，他輕聲提點了幾句，將軍頓時豁然開朗。」
 
 【寫作結構】
 每個軍團的故事分三段，每段約 100-150 字：
@@ -374,25 +388,26 @@ export const aiPrompts = {
 - 主將登場（具體動作）
 - 約 100-120 字
 
-第二段：事件展開＋技能展現
+第二段：事件展開＋技能展現＋神煞登場
 - 發生一個具體事件
 - 透過事件自然展現 Buff 和 Debuff
+- 【強制】神煞必須在此段以具體形式登場
 - 約 150-180 字
 
 第三段：對話解釋＋收尾
-- 老兵對新兵解釋（帶出官方術語）
+- 老兵對新兵解釋（帶出官方術語，包含神煞解釋）
 - 事件結果（呼應開頭）
 - 約 100-150 字
 
 【標準對話範本】
 用「老兵＋新兵」對話來解釋術語：
 
-範例一：
-老兵低聲對年輕士兵說：「你看，將軍身上的偏財技能又發作了——一看到機會就忍不住。但等著吧，晚上他一定會開始算東算西，然後又不敢出手。這就是偏財啊，機會財富跟投機浮躁是一體兩面的。」
+範例一（含神煞解釋）：
+老兵低聲對年輕士兵說：「你看到那位白袍老者了嗎？那就是傳說中的天乙貴人。只要將軍遇到真正的困難，總會有貴人在暗中相助。這是他命中注定的福報。」
 
 範例二：
-年輕士兵問：「為什麼他們都不說話?」
-老兵說：「因為戰犬統領帶著正印技能。這技能讓他們很會守護、很有資源，但也讓他們太習慣『守』，不敢主動出擊。」
+年輕士兵問：「為什麼將軍總喜歡獨自一人待著？」
+老兵說：「那是因為他帶著華蓋。這讓他擁有非凡的洞察力和藝術天賦，但也讓他習慣獨處，不太融入人群。」
 
 【官方術語標註方式】
 第一次出現時，用括號標註完整名稱：
@@ -434,10 +449,17 @@ export const aiPrompts = {
 ${dataLabels.specialPatterns && dataLabels.specialPatterns.length > 0 ? `- 特殊格局：${dataLabels.specialPatterns.join('、')}` : ''}
 ` : '';
 
-    // 構建神煞資訊
-    const shenshaSection = pillarData.shensha && pillarData.shensha.length > 0 
-      ? `\n【神煞兵符】（請在故事中自然融入這些神煞的影響力）\n${pillarData.shensha.map(s => `- ${s}`).join('\n')}`
-      : '';
+    // 構建神煞資訊 - 強化版
+    const hasShensha = pillarData.shensha && pillarData.shensha.length > 0;
+    const shenshaSection = hasShensha 
+      ? `
+【神煞兵符】⚠️ 強制融入 - 不可遺漏任何一個
+${pillarData.shensha!.map((s, i) => `${i + 1}. ${s}（必須在第二段以具體事件或角色形式出現）`).join('\n')}
+
+神煞融入檢查清單：
+${pillarData.shensha!.map(s => `□ ${s} - 已融入故事？`).join('\n')}
+`
+      : '\n【神煞兵符】此柱無特殊神煞\n';
 
     // 構建十神技能描述
     const tenGodDesc = pillarData.tenGod 
@@ -452,6 +474,23 @@ ${dataLabels.specialPatterns && dataLabels.specialPatterns.length > 0 ? `- 特�
           return hsRole ? `  - ${i === 0 ? '副將' : '奇謀'}：${hs}（${hsRole.role}）- ${hsRole.buff}` : `  - ${hs}`;
         }).join('\n')
       : '未知';
+
+    // 神煞融入指引
+    const shenshaGuidance = hasShensha ? `
+⚠️ 【神煞融入指引】
+${pillarData.shensha!.map(s => {
+  // 根據神煞類型提供具體融入建議
+  if (s.includes('貴人')) return `- ${s}：設計一位貴人角色在關鍵時刻提供幫助或指點`;
+  if (s.includes('桃花')) return `- ${s}：加入一段與人際魅力、吸引力相關的情節`;
+  if (s.includes('華蓋')) return `- ${s}：描述角色獨處思考或展現藝術/宗教氣質的場景`;
+  if (s.includes('驛馬') || s.includes('驛馬')) return `- ${s}：加入遷移、出行或變動的情節`;
+  if (s.includes('文昌')) return `- ${s}：展現學習、考試或文書相關的智慧時刻`;
+  if (s.includes('孤辰') || s.includes('寡宿')) return `- ${s}：描述獨立自主或孤獨面對挑戰的情境`;
+  if (s.includes('羊刃')) return `- ${s}：展現果決剛毅但帶有衝動風險的行動`;
+  if (s.includes('將星')) return `- ${s}：描述領導氣質或統帥才能的展現`;
+  return `- ${s}：請以具體事件或角色特質形式融入`;
+}).join('\n')}
+` : '';
 
     return `請為「${name}」創作${context.name}（${context.stage}）的軍團戰記故事。
 
@@ -486,12 +525,11 @@ ${tenGodDesc || '- 待分析'}
 【藏干副將/奇謀】
 ${hiddenStemsDesc}
 ${shenshaSection}
-
 【納音戰場】
 - ${pillarData.nayin || '未知'}（作為故事場景背景）
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+${shenshaGuidance}
 【撰寫要求】300-500 字，三段式結構：
 
 第一段（約 100-120 字）：場景＋角色登場
@@ -499,13 +537,14 @@ ${shenshaSection}
 - 可使用納音「${pillarData.nayin || ''}」作為場景背景
 - ${tianganRole.role}將軍登場的具體動作
 
-第二段（約 150-180 字）：事件展開＋技能展現
+第二段（約 150-180 字）：事件展開＋技能展現＋神煞登場
 - 設計一個與「${context.domain}」相關的具體事件
 - 透過事件自然展現「${tianganRole.buff}」和「${dizhiRole.buff}」
 - 同時暗示「${tianganRole.debuff}」和「${dizhiRole.debuff}」的隱患
+${hasShensha ? `- ⚠️ 【強制】必須讓以下神煞以具體形式登場：${pillarData.shensha!.join('、')}` : ''}
 
 第三段（約 100-150 字）：老兵對話＋收尾
-- 用老兵對新兵的對話解釋十神技能
+- 用老兵對新兵的對話解釋十神技能${hasShensha ? '和神煞含義' : ''}
 - 第一次提及術語時用括號標註
 - 事件結果呼應開頭
 - 帶出「選擇權在${name}手中」的啟發

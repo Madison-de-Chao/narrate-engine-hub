@@ -25,17 +25,18 @@ function loadBingfuDefinitions() {
   const ids = new Set();
   const names = new Set();
   const aliases = new Set();
-  for (const file of fs.readdirSync(dir)) {
+  for (const file of fs.readdirSync(dir).filter(f => f.endsWith(".ts") && f !== "index.ts")) {
     const txt = fs.readFileSync(path.join(dir, file), "utf8");
-    const idMatches = [...txt.matchAll(/id:\s*'([^']+)'/g)];
-    const nameMatches = [...txt.matchAll(/name:\s*'([^']+)'/g)];
-    const aliasMatches = [...txt.matchAll(/alias:\s*'([^']+)'/g)];
-    const max = Math.max(idMatches.length, nameMatches.length, aliasMatches.length);
-    for (let i = 0; i < max; i++) {
-      if (idMatches[i]?.[1]) ids.add(idMatches[i][1]);
-      if (nameMatches[i]?.[1]) names.add(nameMatches[i][1]);
-      if (aliasMatches[i]?.[1]) aliases.add(aliasMatches[i][1]);
-    }
+    const cleaned = txt
+      .replace(/import[^;]+;\s*/g, "")
+      .replace(/export const [^=]+=\s*/, "return ")
+      .replace(/export \{[^}]+\};?/g, "");
+    const defs = new Function(cleaned)();
+    defs.forEach(def => {
+      if (def?.id) ids.add(def.id);
+      if (def?.name) names.add(def.name);
+      if (def?.alias) aliases.add(def.alias);
+    });
   }
   return { ids, names, aliases };
 }

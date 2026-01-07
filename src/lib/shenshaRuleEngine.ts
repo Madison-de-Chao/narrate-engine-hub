@@ -528,6 +528,7 @@ const shenshaToBingfuMap: Record<string, string> = {
   '太極貴人': 'taiji_guiren',
   '天德': 'tiande',
   '月德': 'yuede',
+  // 合類型沿用本體兵符
   '天德合': 'tiande',
   '月德合': 'yuede',
   '金輿': 'jinyu',

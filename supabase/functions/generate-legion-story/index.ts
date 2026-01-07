@@ -7,10 +7,19 @@ import {
   aiPrompts,
   generateLocalStory 
 } from '../_shared/storyData.ts';
+import { getBingfuInfo, getBingfuInterpretation, fillStoryFragment } from '../_shared/bingfuData.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+// 柱位類型映射
+const pillarTypeMap: Record<string, 'year' | 'month' | 'day' | 'hour'> = {
+  year: 'year',
+  month: 'month',
+  day: 'day',
+  hour: 'hour',
 };
 
 serve(async (req) => {
@@ -30,6 +39,28 @@ serve(async (req) => {
     const dizhiRole = getDizhiRole(pillarData.branch);
 
     console.log(`Commander: ${tianganRole.role}, Strategist: ${dizhiRole.role}`);
+
+    // 構建兵符資料（帶有故事模板）
+    const pillarType = pillarTypeMap[legionType] || 'day';
+    const bingfuDataArray = (pillarData.shensha || []).map((shenshaName: string) => {
+      const bingfuInfo = getBingfuInfo(shenshaName);
+      if (bingfuInfo) {
+        return {
+          name: shenshaName,
+          alias: bingfuInfo.alias,
+          storyFragment: fillStoryFragment(bingfuInfo.storyFragment, tianganRole.role, dizhiRole.role),
+          interpretation: getBingfuInterpretation(shenshaName, pillarType) || undefined,
+        };
+      }
+      return {
+        name: shenshaName,
+        alias: shenshaName,
+        storyFragment: '',
+        interpretation: undefined,
+      };
+    }).filter((bf: { storyFragment: string }) => bf.storyFragment);
+
+    console.log(`Found ${bingfuDataArray.length} bingfu with story fragments`);
 
     // 如果只需要本地生成（用於快速預覽）
     if (useLocalOnly) {
@@ -77,6 +108,12 @@ serve(async (req) => {
       );
     }
 
+    // 構建帶有兵符資料的 pillarData
+    const enrichedPillarData = {
+      ...pillarData,
+      bingfuData: bingfuDataArray,
+    };
+
     // 構建 AI 提示詞（使用共用模組）
     const systemPrompt = aiPrompts.systemPrompt;
     
@@ -90,7 +127,7 @@ serve(async (req) => {
       context,
       tianganRole,
       dizhiRole,
-      pillarData
+      pillarData: enrichedPillarData
     }) + `\n\n【此柱神煞】\n${shenshaInfo}\n（請在故事中適當融入這些神煞的影響力）`;
 
     // 調用 Lovable AI

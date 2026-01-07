@@ -444,6 +444,12 @@ export const aiPrompts = {
       tenGod?: { stem: string; branch: string };
       hiddenStems?: string[];
       shensha?: string[];
+      bingfuData?: Array<{
+        name: string;
+        alias: string;
+        storyFragment: string;
+        interpretation?: string;
+      }>;
       dataLabels?: {
         strengthTag?: string;
         dominantElement?: string;
@@ -490,11 +496,18 @@ ${pillarData.shensha!.map(s => `□ ${s}兵符 - 已融入故事？`).join('\n')
 `
       : '\n【兵符】此柱無特殊兵符\n';
 
-    // 兵符融入指引
+    // 兵符融入指引 - 使用兵符資料庫的 storyFragment 模板
     const shenshaGuidance = hasShensha ? `
-⚠️ 【兵符融入指引】
+⚠️ 【兵符融入指引 - 官方故事片段模板】
 ${pillarData.shensha!.map(s => {
-  // 根據兵符類型提供具體融入建議
+  // 嘗試從 bingfuData 獲取故事模板
+  const bingfuData = pillarData.bingfuData?.find(bf => bf.name === s);
+  if (bingfuData?.storyFragment) {
+    return `- ${s}兵符（${bingfuData.alias}）：
+  官方模板：「${bingfuData.storyFragment.replace(/{commander}/g, tianganRole.role).replace(/{advisor}/g, dizhiRole.role)}」
+  柱位解讀：${bingfuData.interpretation || '請自然融入'}`;
+  }
+  // 降級到原本的規則
   if (s.includes('貴人')) return `- ${s}兵符：設計一位貴人角色在關鍵時刻提供幫助或指點`;
   if (s.includes('桃花')) return `- ${s}兵符：加入一段與人際魅力、吸引力相關的情節`;
   if (s.includes('華蓋')) return `- ${s}兵符：描述角色獨處思考或展現藝術/宗教氣質的場景`;

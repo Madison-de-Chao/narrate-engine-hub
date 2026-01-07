@@ -301,7 +301,7 @@ export const xiongshaBingfu: BingfuDefinition[] = [
     storyFragment: '軍心渙散，帳中一片沉默。「四廢壓陣，」{advisor}提醒，「振作精神，才能扭轉頹勢。」',
   },
   {
-    id: 'shie_dabai',
+    id: 'shi_e_dabai',
     name: '十惡大敗',
     alias: '大敗符',
     category: 'xiongsha',

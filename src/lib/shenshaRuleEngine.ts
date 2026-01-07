@@ -574,6 +574,7 @@ const shenshaToBingfuMap: Record<string, string> = {
   '魁罡': 'kuigang',
   '陰陽差錯': 'yincha_yangcuo',
   '四廢': 'sifei',
+  '十惡大敗': 'shi_e_dabai',
   // 刑沖害破
   '子午沖': 'ziwu_chong',
   '卯酉沖': 'maoyou_chong',
@@ -589,7 +590,7 @@ const shenshaToBingfuMap: Record<string, string> = {
   '丑午害': 'chouwu_hai',
   '反吟': 'fanyin',
   '伏吟': 'fuyin',
-  '十惡大敗': 'shie_dabai',
+  '十惡大敗': 'shi_e_dabai',
 };
 
 /**

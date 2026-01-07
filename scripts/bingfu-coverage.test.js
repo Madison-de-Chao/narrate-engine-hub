@@ -8,8 +8,12 @@ function loadTradNames() {
   for (const file of fs.readdirSync(dir).filter(f => f.endsWith(".json"))) {
     const data = JSON.parse(fs.readFileSync(path.join(dir, file), "utf8"));
     if (Array.isArray(data)) {
-      data.forEach(d => names.push(d.name || d.rule_name));
-    } else {
+      data.forEach(d => {
+        if (d?.name || d?.rule_name) {
+          names.push(d.name || d.rule_name);
+        }
+      });
+    } else if (data?.name) {
       names.push(data.name);
     }
   }
@@ -23,10 +27,14 @@ function loadBingfuDefinitions() {
   const aliases = new Set();
   for (const file of fs.readdirSync(dir)) {
     const txt = fs.readFileSync(path.join(dir, file), "utf8");
-    for (const match of txt.matchAll(/id:\s*'([^']+)'[\s\S]*?name:\s*'([^']+)'[\s\S]*?alias:\s*'([^']+)'/g)) {
-      ids.add(match[1]);
-      names.add(match[2]);
-      aliases.add(match[3]);
+    const idMatches = [...txt.matchAll(/id:\s*'([^']+)'/g)];
+    const nameMatches = [...txt.matchAll(/name:\s*'([^']+)'/g)];
+    const aliasMatches = [...txt.matchAll(/alias:\s*'([^']+)'/g)];
+    const max = Math.max(idMatches.length, nameMatches.length, aliasMatches.length);
+    for (let i = 0; i < max; i++) {
+      if (idMatches[i]?.[1]) ids.add(idMatches[i][1]);
+      if (nameMatches[i]?.[1]) names.add(nameMatches[i][1]);
+      if (aliasMatches[i]?.[1]) aliases.add(aliasMatches[i][1]);
     }
   }
   return { ids, names, aliases };

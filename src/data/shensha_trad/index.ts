@@ -50,7 +50,7 @@ import diwang from './diwang.json';
 import yinyangChacuo from './yinyang_chacuo.json';
 import fuyin from './fuyin.json';
 import fanyin from './fanyin.json';
-import shieDabai from './shie_dabai.json';
+import shiEDabai from './shi_e_dabai.json';
 import sifei from './sifei.json';
 
 import type { ShenshaRuleDefinition } from '../shenshaTypes';
@@ -104,7 +104,7 @@ export const tradRules: ShenshaRuleDefinition[] = [
   yinyangChacuo,
   fuyin,
   fanyin,
-  shieDabai,
+  shiEDabai,
   sifei
 ] as ShenshaRuleDefinition[];
 

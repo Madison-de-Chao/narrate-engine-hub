@@ -187,7 +187,7 @@ export const yinyangBingfu: BingfuDefinition[] = [
       day: '命主聰明剛毅，有領導才能',
       hour: '子女性格剛直',
     },
-    judgment: '庚辰、庚戌、庚申、壬辰日為魁罡日',
+    judgment: '庚辰、庚戌、壬辰、壬戌日為魁罡日',
     storyFragment: '{commander}渾身散發攝人威嚴，氣場如刃。「魁罡在命，」{advisor}點頭，「天生的強將，但需學會收斂銳氣。」',
   },
 ];

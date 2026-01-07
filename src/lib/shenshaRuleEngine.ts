@@ -561,7 +561,7 @@ const shenshaToBingfuMap: Record<string, string> = {
   '桃花': 'taohuasha',
   '咸池': 'xianchi',
   '紅鸞': 'hongluan',
-  '天喜': 'tianxi',
+  '天喜': 'tianxi_taohua',
   '沐浴桃花': 'muyu_taohua',
   '紅艷': 'liuxia',
   // 陰陽

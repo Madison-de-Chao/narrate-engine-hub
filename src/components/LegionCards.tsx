@@ -1,13 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BaziResult } from "@/pages/Index";
-import { Swords, Users, Heart, Sparkles, Crown, Shield, Star, Zap, BookOpen, TrendingUp, Target, ThumbsUp, ThumbsDown, Lock } from "lucide-react";
+import { Swords, Users, Sparkles, Crown, Shield, Star, Zap, ThumbsUp, ThumbsDown, Lock } from "lucide-react";
 import tenGodsData from "@/data/ten_gods.json";
-import { storyMaterialsManager } from "@/lib/storyMaterials";
 import { ModularShenshaEngine, type RulesetType } from "@/lib/shenshaRuleEngine";
 import type { ShenshaMatch } from "@/data/shenshaTypes";
 import { LegionCharacterCard } from "./LegionCharacterCard";
-// ShenshaCardList 已移除 - 兵符狀態使用簡化 Badge 顯示
 import { LegionOverviewChart } from "./LegionOverviewChart";
 import { LegionRelationshipDiagram } from "./LegionRelationshipDiagram";
 import { truncateStoryForFree } from "@/hooks/usePremiumStatus";
@@ -541,181 +539,90 @@ export const LegionCards = ({ baziResult, shenshaRuleset = 'trad', isPremium = f
                   )}
                 </div>
 
-                {/* 深度分析區塊 */}
-                <div className="pt-4 border-t-2 border-border/50">
-                  <h4 className="font-bold text-2xl mb-4 flex items-center gap-2">
-                    <BookOpen className="w-6 h-6" />
-                    深度分析與註釋
-                  </h4>
+                {/* 簡化分析區：圖表式呈現 */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4 border-t border-border/30">
+                  {/* 十神標籤 */}
+                  <div className="p-3 bg-card/50 rounded-lg border border-border/40 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">天干十神</p>
+                    <Badge variant="outline" className="bg-primary/20 border-primary/40 text-sm">
+                      {tenGod?.stem || "—"}
+                    </Badge>
+                  </div>
+                  <div className="p-3 bg-card/50 rounded-lg border border-border/40 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">地支十神</p>
+                    <Badge variant="outline" className="bg-secondary/20 border-secondary/40 text-sm">
+                      {tenGod?.branch || "—"}
+                    </Badge>
+                  </div>
+                  
+                  {/* 納音 */}
+                  <div className="p-3 bg-card/50 rounded-lg border border-border/40 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">納音</p>
+                    <p className="text-sm font-medium text-foreground">{nayin[pillarName] || "—"}</p>
+                  </div>
+                  
+                  {/* 身強弱 */}
+                  <div className="p-3 bg-card/50 rounded-lg border border-border/40 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">日主狀態</p>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-sm ${
+                        yongShenInfo.strengthLevel === '身強' 
+                          ? 'border-emerald-500/50 text-emerald-400' 
+                          : yongShenInfo.strengthLevel === '身弱'
+                            ? 'border-rose-500/50 text-rose-400'
+                            : 'border-amber-500/50 text-amber-400'
+                      }`}
+                    >
+                      {yongShenInfo.strengthLevel}
+                    </Badge>
+                  </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
-                  {/* 命理核心分析 */}
-                  <div className="p-5 bg-card/40 backdrop-blur-sm rounded-xl border border-border/40 hover:border-primary/30 transition-colors">
-                    <h5 className="font-bold text-lg mb-3 flex items-center gap-2">
-                      <Target className="w-5 h-5 text-primary" />
-                      命理核心分析
-                    </h5>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      此柱五行配置體現陰陽調和的特質。天干{stem}與地支{branch}相互配合，展現獨特的能量場特徵。
-                    </p>
-                  </div>
-
-                  {/* 納音深度解讀 */}
-                  <div className="p-5 bg-card/40 backdrop-blur-sm rounded-xl border border-border/40 hover:border-secondary/30 transition-colors">
-                    <h5 className="font-bold text-lg mb-3 flex items-center gap-2">
-                      🎵 納音深度解讀
-                    </h5>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {nayin[pillarName] || "此納音"}在命理學中代表獨特的命格特質。
-                      在{legion.name}的位置上，此納音與生俱來的特質將在{legion.stage}階段發揮重要作用。
-                    </p>
-                  </div>
-                </div>
-
-                {/* 十神關係分析 */}
-                <div className="p-5 bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl border-2 border-accent/30">
-                  <h5 className="font-bold text-xl mb-4 flex items-center gap-2 text-accent">
-                    <Star className="w-6 h-6" />
-                    十神關係分析
-                  </h5>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {/* 天干十神 */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="bg-primary/20 border-primary/40">
-                          天干：{tenGod?.stem || "未知"}
-                        </Badge>
-                      </div>
-                      {tenGod?.stem && tenGodsData.tenGodsRules[tenGod.stem as keyof typeof tenGodsData.tenGodsRules] && (
-                        <div className="space-y-2 text-sm">
-                          <p className="text-foreground">
-                            <span className="font-semibold">象徵：</span>
-                            {tenGodsData.tenGodsRules[tenGod.stem as keyof typeof tenGodsData.tenGodsRules].象徵}
-                          </p>
-                          <p className="text-green-600 dark:text-green-400">
-                            <span className="font-semibold">正面：</span>
-                            {tenGodsData.tenGodsRules[tenGod.stem as keyof typeof tenGodsData.tenGodsRules].正面}
-                          </p>
-                          <p className="text-amber-600 dark:text-amber-400">
-                            <span className="font-semibold">負面：</span>
-                            {tenGodsData.tenGodsRules[tenGod.stem as keyof typeof tenGodsData.tenGodsRules].負面}
-                          </p>
-                        </div>
-                      )}
+                {/* 喜忌簡圖 */}
+                <div className="flex gap-4 p-3 bg-card/30 rounded-lg">
+                  <div className="flex-1 flex items-center gap-2">
+                    <ThumbsUp className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <div className="flex flex-wrap gap-1">
+                      {yongShenInfo.xiYong.map((el, i) => (
+                        <span key={i} className="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">{el}</span>
+                      ))}
                     </div>
-                    {/* 地支十神 */}
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="bg-secondary/20 border-secondary/40">
-                          地支：{tenGod?.branch || "未知"}
-                        </Badge>
-                      </div>
-                      {tenGod?.branch && tenGodsData.tenGodsRules[tenGod.branch as keyof typeof tenGodsData.tenGodsRules] && (
-                        <div className="space-y-2 text-sm">
-                          <p className="text-foreground">
-                            <span className="font-semibold">象徵：</span>
-                            {tenGodsData.tenGodsRules[tenGod.branch as keyof typeof tenGodsData.tenGodsRules].象徵}
-                          </p>
-                          <p className="text-green-600 dark:text-green-400">
-                            <span className="font-semibold">正面：</span>
-                            {tenGodsData.tenGodsRules[tenGod.branch as keyof typeof tenGodsData.tenGodsRules].正面}
-                          </p>
-                          <p className="text-amber-600 dark:text-amber-400">
-                            <span className="font-semibold">負面：</span>
-                            {tenGodsData.tenGodsRules[tenGod.branch as keyof typeof tenGodsData.tenGodsRules].負面}
-                          </p>
-                        </div>
-                      )}
+                  </div>
+                  <div className="flex-1 flex items-center gap-2">
+                    <ThumbsDown className="w-4 h-4 text-rose-400 shrink-0" />
+                    <div className="flex flex-wrap gap-1">
+                      {yongShenInfo.jiShen.map((el, i) => (
+                        <span key={i} className="text-xs px-2 py-0.5 rounded bg-rose-500/20 text-rose-300">{el}</span>
+                      ))}
                     </div>
                   </div>
                 </div>
 
-                {/* 用神喜忌資訊 */}
-                <div className="p-5 bg-gradient-to-br from-indigo-500/10 to-purple-500/5 rounded-xl border-2 border-indigo-500/30">
-                  <h5 className="font-bold text-xl mb-4 flex items-center gap-2 text-indigo-400">
-                    <Target className="w-6 h-6" />
-                    用神喜忌（{yongShenInfo.strengthLevel}）
-                  </h5>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <ThumbsUp className="w-4 h-4 text-emerald-400" />
-                        <span className="font-semibold text-emerald-300">喜用神</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {yongShenInfo.xiYong.map((element, idx) => (
-                          <Badge key={idx} variant="outline" className="border-emerald-500/50 text-emerald-300 bg-emerald-950/50">
-                            {element}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="p-3 rounded-lg bg-rose-950/40 border border-rose-500/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <ThumbsDown className="w-4 h-4 text-rose-400" />
-                        <span className="font-semibold text-rose-300">忌神</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {yongShenInfo.jiShen.map((element, idx) => (
-                          <Badge key={idx} variant="outline" className="border-rose-500/50 text-rose-300 bg-rose-950/50">
-                            {element}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 兵符狀態摘要 - 簡化版 */}
-                <div className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-500/5 rounded-xl border border-purple-500/30">
-                  <h5 className="font-semibold text-lg mb-3 flex items-center gap-2 text-purple-600 dark:text-purple-400">
-                    <Sparkles className="w-5 h-5" />
-                    兵符狀態
-                  </h5>
-                  {pillarShensha.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {pillarShensha.map((shensha, idx) => (
+                {/* 兵符狀態 */}
+                <div className="flex items-center gap-3 p-3 bg-purple-500/5 rounded-lg border border-purple-500/20">
+                  <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
+                  <div className="flex flex-wrap gap-1.5">
+                    {pillarShensha.length > 0 ? (
+                      pillarShensha.map((shensha, idx) => (
                         <Badge 
                           key={`${shensha.name}-${idx}`}
                           variant="outline"
-                          className={`text-xs px-3 py-1.5 ${
+                          className={`text-xs ${
                             shensha.category === '吉神' 
-                              ? 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10' 
+                              ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' 
                               : shensha.category === '凶煞'
-                                ? 'border-rose-500/50 text-rose-400 bg-rose-500/10'
-                                : shensha.category === '桃花'
-                                  ? 'border-pink-500/50 text-pink-400 bg-pink-500/10'
-                                  : 'border-violet-500/50 text-violet-400 bg-violet-500/10'
+                                ? 'border-rose-500/40 text-rose-400 bg-rose-500/10'
+                                : 'border-violet-500/40 text-violet-400 bg-violet-500/10'
                           }`}
                         >
-                          {shensha.category === '吉神' && '✨'}
-                          {shensha.category === '凶煞' && '⚠️'}
-                          {shensha.category === '桃花' && '💗'}
-                          {shensha.category === '特殊' && '🔮'}
-                          {' '}{shensha.name}
+                          {shensha.name}
                         </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">此柱暫無兵符加成</p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-2 italic">
-                    💡 詳細神煞解析請參閱傳統排盤區
-                  </p>
-                </div>
-
-                {/* 發展策略建議 */}
-                <div className="p-5 bg-primary/10 rounded-xl border-2 border-primary/30">
-                  <h5 className="font-bold text-lg mb-3 flex items-center gap-2 text-primary">
-                    <TrendingUp className="w-5 h-5" />
-                    發展策略建議
-                  </h5>
-                  <p className="text-sm leading-relaxed">
-                    充分發揮{stem}的{commanderRole?.buff}優勢，同時運用{branch}的{advisorRole?.buff}能力，
-                    並注意避免{commanderRole?.debuff}和{advisorRole?.debuff}的負面影響。
-                    結合{nayin[pillarName] || "此納音"}的優勢，可以在{pillarName === 'year' ? '家庭關係與個人根基' : pillarName === 'month' ? '事業發展與人際網絡' : pillarName === 'day' ? '個人成長與感情生活' : '創新創造與未來規劃'}方面取得重大突破。
-                  </p>
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground">無兵符</span>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>

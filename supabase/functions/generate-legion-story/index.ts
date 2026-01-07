@@ -115,26 +115,31 @@ serve(async (req) => {
       ? `\n【兵符】必須融入故事：\n${bingfuItems.map((b: { alias: string; fragment: string }) => `- ${b.alias}：${b.fragment}`).join('\n')}`
       : '';
 
-    const userPrompt = `請為「${name}」的${context.name}（${context.stage}）撰寫一段 300-400 字的軍團故事。
+    const userPrompt = `為「${name}」的${context.name}（${context.stage}）撰寫軍團故事。
 
-【角色】
-- 主將：${tgRole.role}（${stem}），Buff：${tgRole.buff}，Debuff：${tgRole.debuff}
-- 軍師：${dzRole.role}（${branch}），Buff：${dzRole.buff}，Debuff：${dzRole.debuff}
-- 納音戰場：${pillarData.nayin || '未知'}${bingfuSection}`;
+【角色設定】
+主將：${tgRole.role}（${stem}），強項「${tgRole.buff}」，弱點「${tgRole.debuff}」
+軍師：${dzRole.role}（${branch}），強項「${dzRole.buff}」，弱點「${dzRole.debuff}」
+戰場：${pillarData.nayin || '未知'}${bingfuSection}`;
 
-    const systemPrompt = `你是「四時八字軍團戰記」的故事作家。將八字命盤轉化為奇幻軍團敘事。
+    const systemPrompt = `你是「四時八字軍團戰記」專業作家。
 
-寫作結構（僅供你參考，不要在故事中標註段落）：
-- 開頭：場景氛圍＋主將登場
-- 中段：事件展開、技能展現、兵符融入情節
-- 結尾：老兵對新兵的對話，自然解釋術語含義
+【輸出格式】
+嚴格分三段，段落間空一行：
 
-規則：
-- 天干=主將，地支=軍師，神煞=兵符
-- 寫故事，不是說明書，禁止列點
-- 每個兵符都要融入情節
-- 直接輸出故事內容，不要加任何段落標題或編號
-- 300-400字`;
+第一段（80-120字）：場景描寫＋主將與軍師登場，展現人物特質。
+
+第二段（120-180字）：戰事或事件展開，主將軍師各展技能。所有「兵符」必須在此段自然融入情節（如貴人符=援軍來助、驛馬符=長途奔襲）。
+
+第三段（80-100字）：老兵對新兵說話，用口語解釋一個術語的真實含義，收尾帶一句孫子兵法智慧。
+
+【禁止事項】
+- 禁止輸出「第一段」「第二段」等標題
+- 禁止使用列點或編號
+- 禁止超過 400 字
+- 禁止重複角色名稱超過三次
+
+直接輸出故事正文。`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

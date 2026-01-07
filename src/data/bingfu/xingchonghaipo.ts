@@ -89,6 +89,23 @@ export const xingchonghaipoBingfu: BingfuDefinition[] = [
     judgment: '丑與未相沖',
     storyFragment: '兩方人馬為了一塊土地爭執不休。「丑未相沖，」{advisor}嘆道，「財庫不穩，這場糾紛難以善了。」',
   },
+  {
+    id: 'sihai_chong',
+    name: '巳亥沖',
+    alias: '水火驛沖符',
+    category: 'xingchonghaipo',
+    rarity: 'SR',
+    effect: {
+      buff: '衝突激發轉機',
+      debuff: '情緒拉扯，反覆奔波',
+    },
+    legionInterpretation: {
+      day: '命主行動多變',
+      hour: '晚年常有奔波',
+    },
+    judgment: '巳與亥相沖',
+    storyFragment: '火蛇與海潮正面撞擊，霧氣騰起。「巳亥相沖，」{advisor}提醒，「行程與情緒都容易被拉扯，需要穩住節奏。」',
+  },
   
   // ===== 刑（4張）=====
   {

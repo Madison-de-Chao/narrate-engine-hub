@@ -578,7 +578,7 @@ const shenshaToBingfuMap: Record<string, string> = {
   '子午沖': 'ziwu_chong',
   '卯酉沖': 'maoyou_chong',
   '寅申沖': 'yinshen_chong',
-  '巳亥沖': 'yinshen_chong',
+  '巳亥沖': 'sihai_chong',
   '辰戌沖': 'chenxu_chong',
   '丑未沖': 'chouwei_chong',
   '寅巳申三刑': 'yinsishen_xing',

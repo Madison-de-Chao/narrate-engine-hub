@@ -1,0 +1,264 @@
+/**
+ * 凶煞兵符 - 15張
+ * 帶來負面影響的神煞
+ */
+
+import type { BingfuDefinition } from './index';
+
+export const xiongshaBingfu: BingfuDefinition[] = [
+  {
+    id: 'yangren',
+    name: '羊刃',
+    alias: '狂刃符',
+    category: 'xiongsha',
+    rarity: 'SSR',
+    effect: {
+      buff: '攻擊爆發力 +20%',
+      debuff: '衝動易惹禍、自損血量',
+    },
+    legionInterpretation: {
+      year: '家族衝動好勇',
+      month: '青年魯莽，易出事',
+      day: '命主急躁，性格剛烈',
+      hour: '子女好勇，晚年波動',
+    },
+    judgment: '甲見卯；乙見寅；丙戊見午；丁己見酉；庚見酉；辛見申；壬見子；癸見亥',
+    storyFragment: '{commander}的刀鋒泛著寒光，殺意騰騰。「羊刃加身，」{advisor}憂心道，「攻擊力倍增，但要小心傷了自己。」這是雙刃劍——殺敵一千，自損八百。',
+  },
+  {
+    id: 'jiesha',
+    name: '劫煞',
+    alias: '奪財符',
+    category: 'xiongsha',
+    rarity: 'SR',
+    effect: {
+      buff: '臨危反擊力強',
+      debuff: '財運受損、小人暗害',
+    },
+    legionInterpretation: {
+      year: '家族財耗',
+      month: '青年破財',
+      day: '命主易破財',
+      hour: '子女耗財',
+    },
+    judgment: '申子辰局劫煞在寅；寅午戌局劫煞在申；巳酉丑局劫煞在亥；亥卯未局劫煞在巳',
+    storyFragment: '一道黑影從暗處竄出，劫走了軍需物資。「劫煞入侵，」{advisor}咬牙道，「財庫被盜，我們需要更加警惕小人。」',
+  },
+  {
+    id: 'zaisha',
+    name: '災煞',
+    alias: '災符',
+    category: 'xiongsha',
+    rarity: 'SR',
+    effect: {
+      buff: null,
+      debuff: '意外災禍，防不勝防',
+    },
+    legionInterpretation: {
+      month: '青年遇險',
+      day: '個性冒險致災',
+      hour: '晚年或子女遇災',
+    },
+    judgment: '依年支推算：子見午，丑見未，依次遞推',
+    storyFragment: '天空烏雲密布，雷電交加。「災煞降臨，」{advisor}神色凝重，「天災人禍，難以預料。全軍戒備！」',
+  },
+  {
+    id: 'guanfu',
+    name: '官符',
+    alias: '官非符',
+    category: 'xiongsha',
+    rarity: 'SR',
+    effect: {
+      buff: null,
+      debuff: '官非、是非、法律糾紛',
+    },
+    legionInterpretation: {
+      month: '青年職場易有糾紛',
+      day: '命主易遭官非',
+    },
+    judgment: '依流年與命局相沖',
+    storyFragment: '一紙公文從天而降，上面蓋著血紅的官印。「官符入命，」{commander}皺眉道，「官司是非，難以避免。」',
+  },
+  {
+    id: 'baihu',
+    name: '白虎',
+    alias: '血光符',
+    category: 'xiongsha',
+    rarity: 'SSR',
+    effect: {
+      buff: null,
+      debuff: '傷病血光，意外受傷',
+    },
+    legionInterpretation: {
+      year: '家族有血光',
+      day: '命主病厄',
+      hour: '子女受傷',
+    },
+    judgment: '依流年天干查：如甲年白虎在寅',
+    storyFragment: '一隻白色猛虎從迷霧中現身，血紅的眼睛直盯著{commander}。「白虎凶星，」{advisor}驚呼，「小心血光之災！」',
+  },
+  {
+    id: 'tiangou',
+    name: '天狗',
+    alias: '損耗符',
+    category: 'xiongsha',
+    rarity: 'SR',
+    effect: {
+      buff: null,
+      debuff: '損耗破財，是非纏身',
+    },
+    legionInterpretation: {
+      year: '家族損耗',
+      month: '青年多事',
+    },
+    judgment: '依年支推算',
+    storyFragment: '一隻黑犬吞噬著月亮，營地陷入黑暗。「天狗食月，」老兵嘆息，「財物損耗，難以避免。」',
+  },
+  {
+    id: 'guchen',
+    name: '孤辰',
+    alias: '孤星符',
+    category: 'xiongsha',
+    rarity: 'SR',
+    effect: {
+      buff: null,
+      debuff: '孤獨，感情不順',
+    },
+    legionInterpretation: {
+      day: '命主孤僻',
+      hour: '子女孤獨',
+    },
+    judgment: '亥子丑年見寅；寅卯辰年見巳；巳午未年見申；申酉戌年見亥',
+    storyFragment: '{commander}獨自站在山巔，身影孤單。「孤辰入命，」{advisor}嘆道，「他注定是孤獨的行者，難以與人長久相伴。」',
+  },
+  {
+    id: 'guasu',
+    name: '寡宿',
+    alias: '寡星符',
+    category: 'xiongsha',
+    rarity: 'SR',
+    effect: {
+      buff: null,
+      debuff: '婚姻不順，情感延遲',
+    },
+    legionInterpretation: {
+      day: '命主婚姻挫折',
+      hour: '子女婚姻困難',
+    },
+    judgment: '亥子丑年見戌；寅卯辰年見丑；巳午未年見辰；申酉戌年見未',
+    storyFragment: '空蕩的營帳中，{commander}獨自對著燭火發呆。「寡宿星照，」老兵搖頭，「良緣難覓，姻緣遲來。」',
+  },
+  {
+    id: 'wangshen',
+    name: '亡神',
+    alias: '迷惑符',
+    category: 'xiongsha',
+    rarity: 'SR',
+    effect: {
+      buff: null,
+      debuff: '心神迷亂，判斷失誤',
+    },
+    legionInterpretation: {
+      month: '青年迷惘',
+      day: '命主判斷失誤',
+    },
+    judgment: '申子辰見巳；寅午戌見亥；巳酉丑見寅；亥卯未見申',
+    storyFragment: '迷霧籠罩著戰場，{commander}失去了方向。「亡神作祟，」{advisor}急道，「心神迷亂，我們需要冷靜！」',
+  },
+  {
+    id: 'pima',
+    name: '披麻',
+    alias: '喪服符',
+    category: 'xiongsha',
+    rarity: 'R',
+    effect: {
+      buff: null,
+      debuff: '家族喪事，悲傷之兆',
+    },
+    legionInterpretation: {
+      year: '家族有哀事',
+    },
+    judgment: '依年支遞推',
+    storyFragment: '白布飄揚，哀樂聲起。{commander}身披麻衣，面容悲戚。「披麻煞動，」老兵低聲道，「家中恐有喪事。」',
+  },
+  {
+    id: 'sangmen',
+    name: '喪門',
+    alias: '喪門符',
+    category: 'xiongsha',
+    rarity: 'SR',
+    effect: {
+      buff: null,
+      debuff: '哀喪之兆，親人有難',
+    },
+    legionInterpretation: {
+      year: '家族有喪厄',
+    },
+    judgment: '依年支推算',
+    storyFragment: '營門上突然掛起了白燈籠，{advisor}神色大變：「喪門煞至，今年恐有親人之厄。」',
+  },
+  {
+    id: 'sishen',
+    name: '死神',
+    alias: '死神符',
+    category: 'xiongsha',
+    rarity: 'SSR',
+    effect: {
+      buff: null,
+      debuff: '健康危機，生死關頭',
+    },
+    legionInterpretation: {
+      hour: '晚年身體風險',
+    },
+    judgment: '依日支與流年對應',
+    storyFragment: '一道陰冷的氣息襲來，{commander}感到後背發涼。「死神的氣息，」{advisor}聲音顫抖，「健康是最大的隱患。」',
+  },
+  {
+    id: 'zaiyang',
+    name: '災殃',
+    alias: '殃符',
+    category: 'xiongsha',
+    rarity: 'R',
+    effect: {
+      buff: null,
+      debuff: '多事不順，諸事不遂',
+    },
+    legionInterpretation: {
+      month: '青年多阻',
+    },
+    judgment: '依年支與流年對應',
+    storyFragment: '屋漏偏逢連夜雨，{commander}的計劃接連受挫。「災殃纏身，」老兵嘆道，「這段時間，諸事不宜。」',
+  },
+  {
+    id: 'tianxing',
+    name: '天刑',
+    alias: '刑符',
+    category: 'xiongsha',
+    rarity: 'SR',
+    effect: {
+      buff: '執法剛正',
+      debuff: '官非刑責，牢獄之災',
+    },
+    legionInterpretation: {
+      day: '命主易觸法律',
+    },
+    judgment: '依日支查三刑格：寅巳申、丑戌未、子卯等',
+    storyFragment: '鐵鍊的聲響迴盪在大堂，{commander}被押上公堂。「天刑煞動，」{advisor}憂心忡忡，「法律之災，需格外小心。」',
+  },
+  {
+    id: 'tiansha',
+    name: '天煞',
+    alias: '煞符',
+    category: 'xiongsha',
+    rarity: 'SR',
+    effect: {
+      buff: null,
+      debuff: '災禍連連，動盪不安',
+    },
+    legionInterpretation: {
+      year: '家族動盪',
+    },
+    judgment: '依流年地支推',
+    storyFragment: '天空突然暗了下來，一股煞氣籠罩全軍。「天煞降臨，」{advisor}大喊，「今年多災多難，需謹慎行事！」',
+  },
+];

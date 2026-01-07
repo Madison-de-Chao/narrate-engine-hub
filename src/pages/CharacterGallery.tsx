@@ -104,7 +104,8 @@ const CharacterGallery = () => {
     if ('gan' in char) {
       return commanderAvatars[char.gan as keyof typeof commanderAvatars];
     }
-    return advisorAvatars[char.id as keyof typeof advisorAvatars];
+    // 地支角色：使用 zhi 屬性（如「子」、「丑」）來查找
+    return advisorAvatars[(char as ZhiCharacter).zhi as keyof typeof advisorAvatars];
   };
 
   // 獲取角色類型

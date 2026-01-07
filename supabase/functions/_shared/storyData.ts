@@ -340,32 +340,54 @@ export const storyTemplates = {
   }
 };
 
-// AI 提示詞配置（優化版：傳入數據標籤避免 AI 幻覺）
+// AI 提示詞配置（四時八字軍團戰記 v2）
 export const aiPrompts = {
-  systemPrompt: `你是一位資深的八字命理大師，擅長用生動的軍團故事來解釋八字命盤。
+  systemPrompt: `你現在要撰寫一篇「四時八字軍團戰記」的故事，這是一個將八字命盤轉化為奇幻軍團敘事的特殊寫作任務。
 
-核心理念：命理展示的是一條「相對好走但不一定是你要走的路」。這是上天給予的天賦與建議，而非不可改變的宿命。
+【核心規則】
+1. 這是故事，不是說明書
+   - 讀者要記得的是「兩位將軍在做什麼」，不是「甲木=偏財」
+   - 所有命盤術語必須藏在故事情節裡，由角色自然帶出
 
-你需要根據完整的四柱信息和「數據標籤」創作一個150字內的軍團傳說故事。
+2. 字數控制：每個軍團故事 300-500 字
 
-【重要】你收到的「數據標籤」是後端命理引擎精確計算的結果，請嚴格依據這些標籤來描述命主特質，不要自行推導或臆測。
+3. 絕對禁止
+   ❌ 列點式說明（Buff/Debuff 清單）
+   ❌ 直接解釋（「偏財技能的特點是...」）
+   ❌ 攻略本註解（【技能】：XXX）
+   ❌ 作者跳出來講解
 
-故事創作要求：
-1. 必須融合天干、地支、十神、納音、藏干的所有信息
-2. 【關鍵】嚴格使用提供的「數據標籤」來描述命主特質（如身強/身弱、印旺/財旺等）
-3. 以軍團戰爭、策略、角色互動為主題包裝命盤解讀
-4. 嚴格使用提供的角色設定，包括角色名稱、形象、風格、Buff和Debuff
-5. 若有神煞標籤，需在故事中自然融入（如天乙貴人=貴人相助、羊刃=戰鬥力強但需控制脾氣）
-6. 強調這是天賦潛能的展現，而非註定的命運
-7. 故事結尾要帶出「選擇權在你手中」的啟發
-8. 嚴格控制在150字以內
+4. 必須包含
+   ✓ 具體場景描寫（視覺畫面）
+   ✓ 角色具體行為（不只是狀態描述）
+   ✓ 透過事件展現技能效果
+   ✓ 用「老兵教新兵」的對話帶出術語
 
-敘事風格：
-- 用軍團戰爭隱喻人生挑戰
-- 用指揮官（天干）與軍師（地支）的配合展現性格特質
-- 明確提及角色的Buff（優勢技能）和Debuff（弱點）
-- 根據數據標籤調整敘事角度（身強則強調開創，身弱則強調借力）
-- 避免絕對化的預言，多用「傾向」「潛能」「機會」等詞`,
+【寫作結構】三段式，每段約 100-150 字：
+
+第一段：場景＋角色登場
+- 描述軍團所在地（視覺畫面）
+- 主將登場（具體動作）
+
+第二段：事件展開＋技能展現
+- 發生一個具體事件
+- 透過事件自然展現 Buff 和 Debuff
+
+第三段：對話解釋＋收尾
+- 老兵對新兵解釋（帶出官方術語）
+- 事件結果（呼應開頭）
+
+【標準對話範本】用「老兵＋新兵」對話來解釋術語：
+範例：
+老兵低聲對年輕士兵說：「你看，將軍身上的偏財技能又發作了——一看到機會就忍不住。但等著吧，晚上他一定會開始算東算西，然後又不敢出手。這就是偏財啊，機會財富跟投機浮躁是一體兩面的。」
+
+【官方術語標註方式】
+第一次出現時，用括號標註完整名稱：
+守則將軍（森林將軍/甲木天干）看到商隊時，他的偏財技能發動了。
+之後就可以直接使用簡稱。
+
+【核心理念】
+命理展示的是一條「相對好走但不一定是你要走的路」。這是上天給予的天賦與建議，而非不可改變的宿命。選擇權永遠在命主手中。`,
 
   buildUserPrompt: (params: {
     name: string;
@@ -379,12 +401,11 @@ export const aiPrompts = {
       tenGod?: { stem: string; branch: string };
       hiddenStems?: string[];
       shensha?: string[];
-      // 新增：數據標籤（後端計算結果）
       dataLabels?: {
-        strengthTag?: string;      // 身強/身弱/中和
-        dominantElement?: string;  // 主導五行
-        dominantTenGod?: string;   // 主導十神（印旺/財旺/官旺等）
-        specialPatterns?: string[];// 特殊格局
+        strengthTag?: string;
+        dominantElement?: string;
+        dominantTenGod?: string;
+        specialPatterns?: string[];
       };
     };
   }) => {
@@ -400,48 +421,67 @@ export const aiPrompts = {
 ${dataLabels.specialPatterns && dataLabels.specialPatterns.length > 0 ? `- 特殊格局：${dataLabels.specialPatterns.join('、')}` : ''}
 ` : '';
 
-    // 構建神煞標籤
+    // 構建神煞資訊
     const shenshaSection = pillarData.shensha && pillarData.shensha.length > 0 
-      ? `\n【神煞裝備】（請在故事中自然融入）\n${pillarData.shensha.map(s => `- ${s}`).join('\n')}`
+      ? `\n【神煞兵符】（請在故事中自然融入）\n${pillarData.shensha.map(s => `- ${s}`).join('\n')}`
       : '';
 
-    return `請為${name}創作${context.name}的傳說故事。
+    // 構建十神技能描述
+    const tenGodDesc = pillarData.tenGod 
+      ? `- 天干十神技能：${pillarData.tenGod.stem}（需在故事中透過事件展現）
+- 地支十神技能：${pillarData.tenGod.branch}（需在老兵對話中解釋）`
+      : '';
+
+    return `請為「${name}」創作${context.name}（${context.stage}）的軍團戰記故事。
 ${labelSection}
+【官方名稱對照】
+天干：${pillarData.stem} = ${tianganRole.role}（${tianganRole.title}）
+地支：${pillarData.branch} = ${dizhiRole.role}（${dizhiRole.title}）
+
 【天干指揮官 - ${pillarData.stem}】
-- 角色名稱：${tianganRole.role}
+- 角色全名：${tianganRole.role}（${pillarData.stem}${tianganRole.element}天干）
 - 形象：${tianganRole.image}
 - 領導風格：${tianganRole.style}
 - Buff技能：${tianganRole.buff}
 - Debuff弱點：${tianganRole.debuff}
 
 【地支軍師 - ${pillarData.branch}】
-- 角色名稱：${dizhiRole.role}
+- 角色全名：${dizhiRole.role}（${pillarData.branch}${dizhiRole.element}地支）
 - 象徵：${dizhiRole.symbol}
 - 性格特質：${dizhiRole.character}
 - Buff技能：${dizhiRole.buff}
 - Debuff弱點：${dizhiRole.debuff}
 
-【其他命理信息】
+【命理信息】
 - 干支組合：${pillarData.stem}${pillarData.branch}
-- 納音五行：${pillarData.nayin || '未知'}
-- 天干十神：${pillarData.tenGod?.stem || '未知'}
-- 地支十神：${pillarData.tenGod?.branch || '未知'}
+- 納音戰場：${pillarData.nayin || '未知'}
+${tenGodDesc}
 - 地支藏干：${pillarData.hiddenStems?.join('、') || '未知'}
 ${shenshaSection}
 
-【人生階段】
+【人生階段 - ${context.name}】
 - 影響時期：${context.stage}
 - 生活領域：${context.domain}
 - 核心主題：${context.focus}
 
-請創作一個150字內的軍團故事，要：
-1. 開場點明「${tianganRole.role}」作為指揮官，「${dizhiRole.role}」作為軍師
-2. 【重要】根據數據標籤描述命主特質（${dataLabels?.strengthTag || ''}${dataLabels?.dominantTenGod ? '、' + dataLabels.dominantTenGod : ''}）
-3. 描述他們如何運用各自的Buff技能（${tianganRole.buff}和${dizhiRole.buff}）在${context.stage}發揮優勢
-4. 同時提醒要注意的Debuff弱點（${tianganRole.debuff}和${dizhiRole.debuff}）
-5. 自然融入神煞的影響（如有）
-6. 最後點出「這些是天賦潛能與戰略建議，真正的選擇權在${name}手中」的啟發
-7. 語言生動、富有畫面感，讓讀者感受到角色的鮮明個性`;
+【撰寫要求】300-500 字，三段式結構：
+
+第一段（約 100-120 字）：場景＋角色登場
+- 描述${context.name}軍團的駐地環境（可使用納音「${pillarData.nayin || ''}」作為場景背景）
+- ${tianganRole.role}將軍登場的具體動作
+
+第二段（約 150-180 字）：事件展開＋技能展現
+- 設計一個具體事件（可結合${context.domain}的生活場景）
+- 透過事件自然展現「${tianganRole.buff}」和「${dizhiRole.buff}」
+- 同時暗示「${tianganRole.debuff}」和「${dizhiRole.debuff}」的隱患
+
+第三段（約 100-150 字）：老兵對話＋收尾
+- 用老兵對新兵的對話解釋十神技能（${pillarData.tenGod?.stem || ''}）
+- 第一次提及術語時用括號標註：「將軍的${pillarData.tenGod?.stem || ''}技能...」
+- 事件結果呼應開頭
+- 最後帶出「選擇權在${name}手中」的啟發
+
+請開始撰寫故事。`;
   }
 };
 

@@ -87,8 +87,8 @@ export function PdfOptionsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-xl border-primary/20">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col bg-background/95 backdrop-blur-xl border-primary/20">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-primary">
             <FileText className="h-5 w-5" />
             自訂 PDF 報告內容
@@ -98,7 +98,7 @@ export function PdfOptionsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="flex-1 overflow-y-auto space-y-4 py-4 pr-2">
           {/* 快捷按鈕 */}
           <div className="flex gap-2 mb-4">
             <Button
@@ -277,7 +277,7 @@ export function PdfOptionsDialog({
           </div>
         </div>
 
-        <DialogFooter className="flex gap-2">
+        <DialogFooter className="flex-shrink-0 flex gap-2 pt-4 border-t border-border/50">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

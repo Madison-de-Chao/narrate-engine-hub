@@ -515,6 +515,170 @@ export class ModularShenshaEngine {
 // 導出單例（向下兼容）
 export const shenshaEngine = new ModularShenshaEngine('trad');
 
+// 兵符對照表（神煞名稱到兵符定義的映射）
+import { bingfuById, allBingfu, type BingfuDefinition } from '@/data/bingfu';
+
+// 建立神煞名稱到兵符ID的映射
+const shenshaToBingfuMap: Record<string, string> = {
+  // 吉神
+  '天乙貴人': 'tianyi_guiren',
+  '文昌貴人': 'wenchang',
+  '文昌': 'wenchang',
+  '太極貴人': 'taiji_guiren',
+  '天德': 'tiande',
+  '月德': 'yuede',
+  '天德合': 'tiande_he',
+  '月德合': 'yuede_he',
+  '金輿': 'jinyu',
+  '驛馬': 'yima',
+  '將星': 'jiangxing',
+  '華蓋': 'huagai',
+  '天廚': 'tianchu',
+  '三台': 'santai',
+  '八座': 'bazuo',
+  '福星': 'fuxing_guiren',
+  '福星貴人': 'fuxing_guiren',
+  '天官貴人': 'tianguan_guiren',
+  // 凶煞
+  '羊刃': 'yangren',
+  '亡神': 'wangshen',
+  '劫煞': 'jiesha',
+  '災煞': 'zaisha',
+  '六厄': 'liusha',
+  '白虎': 'baihu',
+  '天狗': 'tiangou',
+  '喪門': 'sangmen',
+  '披麻': 'pima',
+  '官符': 'guanfu',
+  '病符': 'bingfu',
+  '天刑': 'tianxing',
+  '五鬼': 'wugui',
+  '血刃': 'xueran',
+  '流霞': 'liuxia',
+  // 桃花
+  '桃花': 'taohua',
+  '咸池': 'xianchi',
+  '紅鸞': 'hongluan',
+  '天喜': 'tianxi',
+  '沐浴桃花': 'muyu_taohua',
+  '紅艷': 'hongyan',
+  // 陰陽
+  '孤辰': 'guchen',
+  '寡宿': 'guasu',
+  '天羅': 'tianluo',
+  '地網': 'diwang',
+  '空亡': 'kongwang',
+  '截路': 'jielu',
+  '旬空': 'xunkong',
+  '魁罡': 'kuigang',
+  '陰陽差錯': 'yinyang_chacuo',
+  '四廢': 'sifei',
+  // 刑沖害破
+  '子午沖': 'ziwu_chong',
+  '卯酉沖': 'maoyou_chong',
+  '寅申沖': 'yinshen_chong',
+  '巳亥沖': 'sihai_chong',
+  '辰戌沖': 'chenxu_chong',
+  '丑未沖': 'chouwei_chong',
+  '寅巳申三刑': 'yinsishen_xing',
+  '丑戌未三刑': 'chouxuwei_xing',
+  '子卯刑': 'zimao_xing',
+  '辰午酉亥自刑': 'zixing',
+  '子未害': 'ziwei_hai',
+  '丑午害': 'chouwu_hai',
+  '反吟': 'fanyin',
+  '伏吟': 'fuyin',
+  '十惡大敗': 'shie_dabai',
+};
+
+/**
+ * 獲取神煞對應的兵符定義
+ */
+export function getShenshaBingfu(shenshaName: string): BingfuDefinition | null {
+  const bingfuId = shenshaToBingfuMap[shenshaName];
+  if (bingfuId && bingfuById[bingfuId]) {
+    return bingfuById[bingfuId];
+  }
+  // 嘗試模糊匹配
+  const matchedBingfu = allBingfu.find(bf => 
+    bf.name === shenshaName || 
+    bf.alias === shenshaName ||
+    shenshaName.includes(bf.name)
+  );
+  return matchedBingfu || null;
+}
+
+/**
+ * 擴展的神煞匹配結果，包含兵符資訊
+ */
+export interface EnrichedShenshaMatch extends ShenshaMatch {
+  bingfu?: {
+    id: string;
+    alias: string;
+    storyFragment: string;
+    legionInterpretation: BingfuDefinition['legionInterpretation'];
+    effect: BingfuDefinition['effect'];
+  };
+}
+
+/**
+ * 計算神煞並附加兵符資訊
+ */
+export function calculateShenshaWithBingfu(input: ShenshaInput | BaziChart): EnrichedShenshaMatch[] {
+  const engine = new ModularShenshaEngine('trad');
+  const matches = engine.calculate(input);
+  
+  return matches.map(match => {
+    const bingfuDef = getShenshaBingfu(match.name);
+    const enriched: EnrichedShenshaMatch = { ...match };
+    
+    if (bingfuDef) {
+      enriched.bingfu = {
+        id: bingfuDef.id,
+        alias: bingfuDef.alias,
+        storyFragment: bingfuDef.storyFragment,
+        legionInterpretation: bingfuDef.legionInterpretation,
+        effect: bingfuDef.effect,
+      };
+    }
+    
+    return enriched;
+  });
+}
+
+/**
+ * 根據柱位獲取對應的兵符解讀
+ */
+export function getBingfuInterpretation(
+  shenshaName: string, 
+  pillar: 'year' | 'month' | 'day' | 'hour'
+): string | null {
+  const bingfu = getShenshaBingfu(shenshaName);
+  if (!bingfu) return null;
+  return bingfu.legionInterpretation[pillar] || null;
+}
+
+/**
+ * 獲取兵符故事片段（已填充角色名稱）
+ */
+export function getBingfuStoryFragment(
+  shenshaName: string,
+  commanderName?: string,
+  advisorName?: string
+): string | null {
+  const bingfu = getShenshaBingfu(shenshaName);
+  if (!bingfu) return null;
+  
+  let fragment = bingfu.storyFragment;
+  if (commanderName) {
+    fragment = fragment.replace(/{commander}/g, commanderName);
+  }
+  if (advisorName) {
+    fragment = fragment.replace(/{advisor}/g, advisorName);
+  }
+  return fragment;
+}
+
 // 向下兼容的函數接口
 export function calculateShenshaWithEvidence(
   dayStem: string,
@@ -554,4 +718,5 @@ export function calculateShenshaSimple(
 
 // 重新導出類型
 export type { ShenshaMatch, ShenshaEvidence, ShenshaRuleDefinition, BaziChart };
-export { RARITY_CONFIG, CATEGORY_CONFIG };
+export { RARITY_CONFIG, CATEGORY_CONFIG, bingfuById, allBingfu };
+export type { BingfuDefinition };

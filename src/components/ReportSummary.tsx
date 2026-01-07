@@ -4,8 +4,10 @@ import { BaziResult } from "@/pages/Index";
 import { 
   Star, Shield, TrendingUp, Heart, Briefcase,
   Sparkles, ArrowUpRight, ArrowDownRight, Minus,
-  ThumbsUp, ThumbsDown, Zap, Droplets, Flame, Mountain, Trees
+  ThumbsUp, ThumbsDown, Zap, Droplets, Flame, Mountain, Trees,
+  Compass, Palette, Gift, Activity
 } from "lucide-react";
+import { getDetailedAdvice } from "@/data/fortuneAdviceTemplates";
 
 interface ReportSummaryProps {
   baziResult: BaziResult;
@@ -274,32 +276,130 @@ export const ReportSummary = ({ baziResult }: ReportSummaryProps) => {
             </div>
           </div>
 
-          {/* 實用建議 + 古籍引用 */}
-          <div className="mt-4 space-y-3">
-            <div className="p-4 rounded-lg bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/20">
-              <h4 className="text-sm font-bold text-indigo-300 mb-2 font-serif">開運建議</h4>
-              <div className="grid md:grid-cols-2 gap-3 text-sm text-indigo-200/80">
-                <div>
-                  <p className="font-medium text-emerald-400 mb-1">✓ 適合方向</p>
-                  <p>{yongShenAnalysis.advice.favorable}</p>
+          {/* 個性化開運建議 */}
+          {(() => {
+            const detailedAdvice = getDetailedAdvice(
+              dayMasterElement,
+              strengthLevel as '身強' | '身弱' | '中和'
+            );
+            return (
+              <div className="mt-4 space-y-3">
+                {/* 核心建議 */}
+                <div className="p-4 rounded-lg bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-500/20">
+                  <h4 className="text-sm font-bold text-indigo-300 mb-3 font-serif flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    開運建議
+                    <Badge variant="outline" className="text-xs border-indigo-500/50 text-indigo-300 ml-2">
+                      {elementNames[dayMasterElement]}命 · {strengthLevel}
+                    </Badge>
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-3 text-sm text-indigo-200/80">
+                    <div className="p-3 rounded-lg bg-emerald-950/30 border border-emerald-500/20">
+                      <p className="font-medium text-emerald-400 mb-2 flex items-center gap-1.5">
+                        <ThumbsUp className="w-3.5 h-3.5" />
+                        適合方向
+                      </p>
+                      <p className="leading-relaxed">{detailedAdvice.summary.favorable}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-rose-950/30 border border-rose-500/20">
+                      <p className="font-medium text-rose-400 mb-2 flex items-center gap-1.5">
+                        <ThumbsDown className="w-3.5 h-3.5" />
+                        宜避開
+                      </p>
+                      <p className="leading-relaxed">{detailedAdvice.summary.unfavorable}</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-rose-400 mb-1">✗ 宜避開</p>
-                  <p>{yongShenAnalysis.advice.unfavorable}</p>
+
+                {/* 詳細建議區塊 */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  <div className="p-3 rounded-lg bg-violet-950/40 border border-violet-500/20">
+                    <p className="text-xs text-violet-300 mb-1 flex items-center gap-1">
+                      <Activity className="w-3 h-3" />
+                      生活方式
+                    </p>
+                    <p className="text-xs text-violet-200/80 leading-relaxed">{detailedAdvice.details.lifestyle}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-sky-950/40 border border-sky-500/20">
+                    <p className="text-xs text-sky-300 mb-1 flex items-center gap-1">
+                      <Briefcase className="w-3 h-3" />
+                      事業發展
+                    </p>
+                    <p className="text-xs text-sky-200/80 leading-relaxed">{detailedAdvice.details.career}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-pink-950/40 border border-pink-500/20">
+                    <p className="text-xs text-pink-300 mb-1 flex items-center gap-1">
+                      <Heart className="w-3 h-3" />
+                      感情經營
+                    </p>
+                    <p className="text-xs text-pink-200/80 leading-relaxed">{detailedAdvice.details.relationship}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-teal-950/40 border border-teal-500/20">
+                    <p className="text-xs text-teal-300 mb-1 flex items-center gap-1">
+                      <Shield className="w-3 h-3" />
+                      養生保健
+                    </p>
+                    <p className="text-xs text-teal-200/80 leading-relaxed">{detailedAdvice.details.health}</p>
+                  </div>
+                </div>
+
+                {/* 開運物品 */}
+                <div className="p-3 rounded-lg bg-amber-950/30 border border-amber-500/20">
+                  <div className="grid grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <p className="text-amber-300 mb-1.5 flex items-center gap-1">
+                        <Gift className="w-3 h-3" />
+                        開運物品
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {detailedAdvice.lucky.items.map((item, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs border-amber-500/40 text-amber-200/80">
+                            {item}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-amber-300 mb-1.5 flex items-center gap-1">
+                        <Palette className="w-3 h-3" />
+                        幸運顏色
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {detailedAdvice.lucky.colors.map((color, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs border-amber-500/40 text-amber-200/80">
+                            {color}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-amber-300 mb-1.5 flex items-center gap-1">
+                        <Compass className="w-3 h-3" />
+                        有利方位
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {detailedAdvice.lucky.directions.map((dir, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs border-amber-500/40 text-amber-200/80">
+                            {dir}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 古籍引用 */}
+                <div className="quote-classical text-sm text-indigo-200/70">
+                  <p className="mb-1">
+                    《滴天髓》云：「{strengthLevel === '身強' ? '旺者宜洩，強者宜制' : strengthLevel === '身弱' ? '衰者宜扶，弱者宜生' : '中和純粹，無處不宜'}」
+                  </p>
+                  <p className="text-xs text-indigo-300/50">
+                    ——命理格局以日主強弱為綱，用神喜忌為目
+                  </p>
                 </div>
               </div>
-            </div>
-            
-            {/* 古籍引用 */}
-            <div className="quote-classical text-sm text-indigo-200/70">
-              <p className="mb-1">
-                《滴天髓》云：「{strengthLevel === '身強' ? '旺者宜洩，強者宜制' : strengthLevel === '身弱' ? '衰者宜扶，弱者宜生' : '中和純粹，無處不宜'}」
-              </p>
-              <p className="text-xs text-indigo-300/50">
-                ——命理格局以日主強弱為綱，用神喜忌為目
-              </p>
-            </div>
-          </div>
+            );
+          })()}
         </div>
 
         {/* 速覽提示 */}

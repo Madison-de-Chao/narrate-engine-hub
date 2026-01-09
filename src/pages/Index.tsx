@@ -30,6 +30,7 @@ import { FunctionsHttpError, type User as SupabaseUser, type Session } from "@su
 import { useGuestMode } from "@/hooks/useGuestMode";
 import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
 import { MembershipBadge } from "@/components/EntitlementGuard";
+import { useStoryRegeneration } from "@/hooks/useStoryRegeneration";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import logoSishi from "@/assets/logo-sishi.png";
@@ -106,6 +107,25 @@ const Index = () => {
   const shenshaRuleset: 'trad' = 'trad';
   const [isAiConsultOpen, setIsAiConsultOpen] = useState(false);
   const [isPdfOptionsOpen, setIsPdfOptionsOpen] = useState(false);
+  const [currentCalculationId, setCurrentCalculationId] = useState<string | null>(null);
+  const [isRegeneratingStories, setIsRegeneratingStories] = useState(false);
+  
+  // 故事重生機制 Hook
+  const {
+    creditsRemaining,
+    checkStoriesLocked,
+    saveAndLockStories,
+    regenerateStories,
+    loadStoredStories,
+    isLoading: storyCreditsLoading,
+  } = useStoryRegeneration(user?.id);
+  
+  // 故事鎖定狀態
+  const [storyLockInfo, setStoryLockInfo] = useState<{
+    isLocked: boolean;
+    createdAt?: string;
+    version?: number;
+  }>({ isLocked: false });
   
   // 章節展開狀態管理（不含計算日誌）
   const [sectionExpandedState, setSectionExpandedState] = useState<Record<string, boolean>>({
@@ -340,6 +360,18 @@ const Index = () => {
       legionStories: stories
     } : null);
 
+    // 如果用戶已登入，保存並鎖定故事
+    if (user?.id && calculationId && Object.keys(stories).length > 0) {
+      const saved = await saveAndLockStories(calculationId, stories);
+      if (saved) {
+        setStoryLockInfo({
+          isLocked: true,
+          createdAt: new Date().toISOString(),
+          version: 1,
+        });
+      }
+    }
+
     toast.success("軍團傳說故事生成完成！");
   };
 
@@ -463,6 +495,35 @@ const Index = () => {
         
         setBaziResult(result);
         
+        // 保存計算 ID
+        const calcId = data.calculation.id;
+        setCurrentCalculationId(calcId);
+        
+        // 檢查是否已有鎖定的故事
+        if (user?.id && calcId) {
+          const storedStories = await loadStoredStories(calcId);
+          if (storedStories && Object.keys(storedStories).length > 0) {
+            // 使用已儲存的故事
+            setBaziResult(prev => prev ? { ...prev, legionStories: storedStories } : null);
+            
+            // 檢查鎖定狀態
+            const lockedStories = await checkStoriesLocked(calcId);
+            if (lockedStories.length > 0) {
+              const firstStory = lockedStories[0];
+              setStoryLockInfo({
+                isLocked: firstStory.is_locked,
+                createdAt: firstStory.created_at,
+                version: firstStory.version,
+              });
+            }
+            toast.success("已載入您保存的軍團故事");
+            return;
+          }
+        }
+        
+        // 重置鎖定狀態
+        setStoryLockInfo({ isLocked: false });
+        
         // Show different message for guest users
         if (isGuest) {
           toast.success("命盤生成成功！正在生成軍團傳說故事...");
@@ -471,7 +532,7 @@ const Index = () => {
         }
 
         // 生成四個軍團的AI故事
-        generateLegionStories(result, data.calculation.id);
+        generateLegionStories(result, calcId);
       }
     } catch (error: unknown) {
       console.error("計算失敗:", error);
@@ -850,7 +911,29 @@ const Index = () => {
                 expanded={sectionExpandedState.legion}
                 onExpandedChange={(expanded) => handleSectionExpandedChange('legion', expanded)}
               >
-                <LegionCards baziResult={baziResult} shenshaRuleset={shenshaRuleset} isPremium={hasAccess} onUpgrade={handleUpgrade} />
+                <LegionCards 
+                  baziResult={baziResult} 
+                  shenshaRuleset={shenshaRuleset} 
+                  isPremium={hasAccess} 
+                  onUpgrade={handleUpgrade}
+                  calculationId={currentCalculationId || undefined}
+                  userId={user?.id}
+                  storyLockInfo={storyLockInfo}
+                  creditsRemaining={creditsRemaining}
+                  onRegenerate={async () => {
+                    if (!currentCalculationId || !baziResult) return;
+                    setIsRegeneratingStories(true);
+                    const canRegenerate = await regenerateStories(currentCalculationId);
+                    if (canRegenerate) {
+                      // 重新生成故事
+                      setStoryLockInfo({ isLocked: false });
+                      setBaziResult(prev => prev ? { ...prev, legionStories: {} } : null);
+                      await generateLegionStories(baziResult, currentCalculationId);
+                    }
+                    setIsRegeneratingStories(false);
+                  }}
+                  isRegenerating={isRegeneratingStories}
+                />
               </ReportSection>
 
               <ReportDivider variant="gradient" />

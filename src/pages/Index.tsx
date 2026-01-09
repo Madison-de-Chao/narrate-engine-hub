@@ -102,7 +102,8 @@ const Index = () => {
   const [calculatingUserName, setCalculatingUserName] = useState<string>("");
   const [isDownloading, setIsDownloading] = useState(false);
   const [activeSection, setActiveSection] = useState('summary');
-  const [shenshaRuleset, setShenshaRuleset] = useState<'trad' | 'legion'>('trad');
+  // 神煞規則集已統一使用傳統版 (trad)
+  const shenshaRuleset: 'trad' = 'trad';
   const [isAiConsultOpen, setIsAiConsultOpen] = useState(false);
   const [isPdfOptionsOpen, setIsPdfOptionsOpen] = useState(false);
   
@@ -664,33 +665,6 @@ const Index = () => {
 
         {/* 區域1：資料輸入區 */}
         <section className="animate-fade-in space-y-4">
-          {/* 神煞規則集切換 */}
-          <div className="flex items-center justify-end gap-3">
-            <span className="text-sm text-muted-foreground">神煞規則集：</span>
-            <ToggleGroup
-              type="single"
-              value={shenshaRuleset}
-              onValueChange={(value) => value && setShenshaRuleset(value as 'trad' | 'legion')}
-              className="bg-muted/50 rounded-lg p-1"
-            >
-              <ToggleGroupItem
-                value="trad"
-                aria-label="傳統版"
-                className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground px-4"
-              >
-                <BookOpen className="h-4 w-4 mr-2" />
-                傳統版 (20)
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="legion"
-                aria-label="軍團版"
-                className="data-[state=on]:bg-accent data-[state=on]:text-accent-foreground px-4"
-              >
-                <Swords className="h-4 w-4 mr-2" />
-                軍團版 (34)
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
           <BaziInputForm onCalculate={handleCalculate} isCalculating={isCalculating} userId={user?.id} />
         </section>
 

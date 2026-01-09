@@ -35,7 +35,6 @@ import { zhTW } from "date-fns/locale";
 interface ApiKey {
   id: string;
   name: string;
-  api_key: string | null;
   api_key_hash: string | null;
   api_key_prefix: string | null;
   is_active: boolean;
@@ -132,7 +131,6 @@ const ApiConsole = () => {
       .insert({
         user_id: session.user.id,
         name: newKeyName.trim(),
-        api_key: null, // No longer store plaintext
         api_key_hash: apiKeyHash,
         api_key_prefix: apiKeyPrefix,
       });
@@ -199,26 +197,16 @@ const ApiConsole = () => {
   };
 
   const getDisplayKey = (key: ApiKey) => {
-    // If we have the full key (legacy), show it masked
-    if (key.api_key) {
-      return key.api_key.substring(0, 7) + '•'.repeat(20) + key.api_key.substring(key.api_key.length - 4);
-    }
-    // For hashed keys, only show prefix
+    // Only show prefix for hashed keys
     if (key.api_key_prefix) {
       return key.api_key_prefix + '•'.repeat(28);
     }
     return '•'.repeat(35);
   };
 
-  const isLegacyKey = (key: ApiKey) => !!key.api_key;
-
-  const handleCopyKey = (key: ApiKey) => {
-    if (key.api_key) {
-      navigator.clipboard.writeText(key.api_key);
-      toast.success("已複製到剪貼簿");
-    } else {
-      toast.error("此金鑰已加密儲存，無法複製。如需使用請重新產生新金鑰。");
-    }
+  const handleCopyKey = () => {
+    // Keys are now always hashed - cannot be copied after creation
+    toast.error("金鑰僅在建立時顯示一次，如需使用請重新產生新金鑰。");
   };
 
   if (loading) {
@@ -436,34 +424,18 @@ const ApiConsole = () => {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <code className="text-sm bg-muted px-2 py-1 rounded">
-                            {isLegacyKey(key) && visibleKeys.has(key.id) ? key.api_key : getDisplayKey(key)}
+                            {getDisplayKey(key)}
                           </code>
-                          {isLegacyKey(key) && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => toggleKeyVisibility(key.id)}
-                            >
-                              {visibleKeys.has(key.id) ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </Button>
-                          )}
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => handleCopyKey(key)}
-                            title={isLegacyKey(key) ? "複製金鑰" : "此金鑰已加密，無法複製"}
+                            onClick={() => handleCopyKey()}
+                            title="此金鑰已加密，無法複製"
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
-                          {!isLegacyKey(key) && (
-                            <Badge variant="secondary" className="text-xs">已加密</Badge>
-                          )}
+                          <Badge variant="secondary" className="text-xs">已加密</Badge>
                         </div>
                       </TableCell>
                       <TableCell className="text-center">

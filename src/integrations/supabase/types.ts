@@ -276,22 +276,31 @@ export type Database = {
           calculation_id: string
           created_at: string
           id: string
+          is_locked: boolean
           legion_type: string
           story: string
+          user_id: string | null
+          version: number
         }
         Insert: {
           calculation_id: string
           created_at?: string
           id?: string
+          is_locked?: boolean
           legion_type: string
           story: string
+          user_id?: string | null
+          version?: number
         }
         Update: {
           calculation_id?: string
           created_at?: string
           id?: string
+          is_locked?: boolean
           legion_type?: string
           story?: string
+          user_id?: string | null
+          version?: number
         }
         Relationships: [
           {
@@ -432,6 +441,36 @@ export type Database = {
           term_date?: string
           term_name?: string
           year?: number
+        }
+        Relationships: []
+      }
+      story_regeneration_credits: {
+        Row: {
+          created_at: string
+          credits_remaining: number
+          id: string
+          last_purchase_at: string | null
+          total_credits_purchased: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_remaining?: number
+          id?: string
+          last_purchase_at?: string | null
+          total_credits_purchased?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_remaining?: number
+          id?: string
+          last_purchase_at?: string | null
+          total_credits_purchased?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

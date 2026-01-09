@@ -272,7 +272,60 @@ export const jishenBingfu: BingfuDefinition[] = [
     legionInterpretation: {
       month: '青年期得月德庇護',
     },
-    judgment: '以月支推算',
+    judgment: '以月支推算：寅午戌見丙；申子辰見壬；亥卯未見甲；巳酉丑見庚',
     storyFragment: '銀色的月光灑落，為{commander}的盔甲鍍上一層柔和的光暈。「月德護體，」老兵說道，「今夜的戰鬥，我們必將平安。」',
+  },
+  {
+    id: 'tiande_he',
+    name: '天德合',
+    alias: '德合符',
+    category: 'jishen',
+    rarity: 'SR',
+    effect: {
+      buff: '天德遇合，福上加福',
+      debuff: null,
+    },
+    legionInterpretation: {
+      year: '家族福德深厚',
+      day: '命主解厄能力強',
+    },
+    judgment: '天德所合之干：寅月丁合壬見己，卯月申合巳見庚，以此類推',
+    storyFragment: '兩道金光在{commander}頭頂交匯，形成一道護盾。「天德逢合，」{advisor}讚嘆道，「這是雙重的庇護，凶災化解之力更強。」',
+  },
+  {
+    id: 'yuede_he',
+    name: '月德合',
+    alias: '月合符',
+    category: 'jishen',
+    rarity: 'SR',
+    effect: {
+      buff: '月德遇合，逢凶化吉',
+      debuff: null,
+    },
+    legionInterpretation: {
+      month: '青年期雙重庇護',
+      day: '命主護身能力佳',
+    },
+    judgment: '月德所合之干：寅月丙合辛見辛，午月丙合辛見辛，以此類推',
+    storyFragment: '月光與星光交織，在{commander}周身形成柔和的光環。「月德合體，」老兵笑道，「這是月神的雙重祝福，百事順遂。」',
+  },
+  {
+    id: 'yima',
+    name: '驛馬',
+    alias: '奔馳符',
+    category: 'jishen',
+    rarity: 'SR',
+    effect: {
+      buff: '遷移順利，事業拓展',
+      debuff: '奔波勞碌，難以安定',
+    },
+    legionInterpretation: {
+      year: '祖上有遷徙之象',
+      month: '青年多外出發展',
+      day: '命主好動，適合外勤',
+      hour: '子女遠行或海外發展',
+    },
+    judgment: '申子辰見寅；寅午戌見申；巳酉丑見亥；亥卯未見巳',
+    storyFragment: '一匹神駿從遠方奔來，鬃毛飛揚。「驛馬入命，」{advisor}說道，「這是長途奔襲的信號，遠方有機遇等著我們。」',
   },
 ];

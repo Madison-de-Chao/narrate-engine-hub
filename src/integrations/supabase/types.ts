@@ -16,7 +16,6 @@ export type Database = {
     Tables: {
       api_keys: {
         Row: {
-          api_key: string
           api_key_hash: string | null
           api_key_prefix: string | null
           created_at: string
@@ -31,7 +30,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          api_key: string
           api_key_hash?: string | null
           api_key_prefix?: string | null
           created_at?: string
@@ -46,7 +44,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          api_key?: string
           api_key_hash?: string | null
           api_key_prefix?: string | null
           created_at?: string

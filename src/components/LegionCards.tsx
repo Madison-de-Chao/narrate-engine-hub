@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BaziResult } from "@/pages/Index";
@@ -8,6 +9,8 @@ import type { ShenshaMatch } from "@/data/shenshaTypes";
 import { LegionCharacterCard } from "./LegionCharacterCard";
 import { LegionOverviewChart } from "./LegionOverviewChart";
 import { LegionRelationshipDiagram } from "./LegionRelationshipDiagram";
+import { StoryLockIndicator } from "./StoryLockIndicator";
+import { StoryRegenerationButton } from "./StoryRegenerationButton";
 import { truncateStoryForFree } from "@/hooks/usePremiumStatus";
 import { Button } from "./ui/button";
 import { translatePillarToLegion, translateBaziToArmy, getGanCharacter, getZhiCharacter } from "@/lib/legionTranslator";
@@ -17,6 +20,16 @@ interface LegionCardsProps {
   shenshaRuleset?: RulesetType;
   isPremium?: boolean;
   onUpgrade?: () => void;
+  calculationId?: string;
+  userId?: string;
+  storyLockInfo?: {
+    isLocked: boolean;
+    createdAt?: string;
+    version?: number;
+  };
+  creditsRemaining?: number;
+  onRegenerate?: () => Promise<void>;
+  isRegenerating?: boolean;
 }
 
 // 天干對應五行
@@ -226,8 +239,20 @@ const pillarToMatchedPillarMap: Record<string, string[]> = {
   hour: ['時支', '時干']
 };
 
-export const LegionCards = ({ baziResult, shenshaRuleset = 'trad', isPremium = false, onUpgrade }: LegionCardsProps) => {
+export const LegionCards = ({ 
+  baziResult, 
+  shenshaRuleset = 'trad', 
+  isPremium = false, 
+  onUpgrade,
+  calculationId,
+  userId,
+  storyLockInfo,
+  creditsRemaining = 0,
+  onRegenerate,
+  isRegenerating = false
+}: LegionCardsProps) => {
   const { pillars, nayin, tenGods, wuxing } = baziResult;
+  const hasStories = Boolean(baziResult.legionStories && Object.keys(baziResult.legionStories).length > 0);
 
   // 使用模組化規則引擎計算帶證據鏈的神煞（與傳統排盤同步規則集）
   const shenshaEngine = new ModularShenshaEngine(shenshaRuleset);
@@ -275,7 +300,26 @@ export const LegionCards = ({ baziResult, shenshaRuleset = 'trad', isPremium = f
         <h2 className="text-4xl font-bold bg-gradient-to-r from-orange-300 via-amber-300 to-yellow-300 bg-clip-text text-transparent mb-3">
           四時軍團詳細故事
         </h2>
-        <p className="text-orange-200/70">每個軍團的完整命盤解釋</p>
+        <p className="text-orange-200/70 mb-4">每個軍團的完整命盤解釋</p>
+        
+        {/* 故事鎖定狀態與重生按鈕 */}
+        {hasStories && (
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-4 pt-4 border-t border-orange-500/30">
+            <StoryLockIndicator 
+              isLocked={storyLockInfo?.isLocked ?? true}
+              createdAt={storyLockInfo?.createdAt}
+              version={storyLockInfo?.version}
+            />
+            {onRegenerate && (
+              <StoryRegenerationButton
+                creditsRemaining={creditsRemaining}
+                isLocked={storyLockInfo?.isLocked ?? true}
+                onRegenerate={onRegenerate}
+                isRegenerating={isRegenerating}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* 軍團總覽圖 */}

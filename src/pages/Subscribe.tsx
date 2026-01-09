@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Crown, Check, ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { Crown, Check, ArrowLeft, Loader2, Sparkles, RefreshCw, Zap } from "lucide-react";
 import { usePremiumStatus, PLAN_NAMES } from "@/hooks/usePremiumStatus";
+import { useStoryRegeneration } from "@/hooks/useStoryRegeneration";
 import type { User } from "@supabase/supabase-js";
 
 const SUBSCRIPTION_PLANS = [
@@ -45,11 +46,44 @@ const SUBSCRIPTION_PLANS = [
   }
 ];
 
+// 故事重生資格套餐
+const REGENERATION_PACKS = [
+  {
+    id: 'regen_1',
+    name: '單次重生',
+    credits: 1,
+    price: 'NT$ 29',
+    description: '重新生成一次軍團故事',
+    popular: false
+  },
+  {
+    id: 'regen_3',
+    name: '三次重生',
+    credits: 3,
+    price: 'NT$ 69',
+    originalPrice: 'NT$ 87',
+    discount: '省 21%',
+    description: '最熱門選擇',
+    popular: true
+  },
+  {
+    id: 'regen_10',
+    name: '十次重生',
+    credits: 10,
+    price: 'NT$ 199',
+    originalPrice: 'NT$ 290',
+    discount: '省 31%',
+    description: '資深玩家首選',
+    popular: false
+  }
+];
+
 export default function Subscribe() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const { isPremium, tier, loading: premiumLoading } = usePremiumStatus(user?.id);
+  const { creditsRemaining, isLoading: creditsLoading, refreshCredits } = useStoryRegeneration(user?.id);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -101,7 +135,30 @@ export default function Subscribe() {
     }
   };
 
-  if (premiumLoading) {
+  const handlePurchaseCredits = async (packId: string, credits: number) => {
+    if (!user) {
+      toast.error("請先登入");
+      navigate("/auth");
+      return;
+    }
+
+    setIsLoading(packId);
+
+    try {
+      // 這裡未來會串接統一金流 API
+      toast.info(`重生資格購買開發中，敬請期待！\n\n購買 ${credits} 次重生資格`, {
+        duration: 5000
+      });
+      
+    } catch (error) {
+      console.error("購買失敗:", error);
+      toast.error("購買過程發生錯誤，請稍後再試");
+    } finally {
+      setIsLoading(null);
+    }
+  };
+
+  if (premiumLoading || creditsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-background/80 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -237,6 +294,102 @@ export default function Subscribe() {
           ))}
         </div>
 
+        {/* 故事重生資格區 */}
+        <div className="mb-12">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-orange-600/20 text-amber-300 px-4 py-2 rounded-full border border-amber-500/30 mb-4">
+              <RefreshCw className="h-5 w-5" />
+              <span className="font-medium">故事重生資格</span>
+            </div>
+            <h2 className="text-2xl font-bold mb-2">重新生成軍團故事</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              軍團故事生成後即鎖定。購買重生資格可重新生成專屬故事（舊版本不保留）
+            </p>
+            {creditsRemaining > 0 && (
+              <Badge variant="secondary" className="mt-3 gap-1 text-base px-4 py-1">
+                <Zap className="h-4 w-4" />
+                目前剩餘: {creditsRemaining} 次重生資格
+              </Badge>
+            )}
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            {REGENERATION_PACKS.map((pack) => (
+              <Card 
+                key={pack.id}
+                className={`relative overflow-hidden transition-all hover:shadow-lg ${
+                  pack.popular 
+                    ? 'border-amber-500/50 shadow-[0_0_15px_hsl(38,92%,50%,0.15)]' 
+                    : 'border-border/50'
+                }`}
+              >
+                {pack.popular && (
+                  <div className="absolute top-0 right-0">
+                    <Badge className="rounded-none rounded-bl-lg bg-amber-500 text-amber-950">
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      推薦
+                    </Badge>
+                  </div>
+                )}
+                
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <RefreshCw className={pack.popular ? "text-amber-500" : "text-muted-foreground"} />
+                    {pack.name}
+                  </CardTitle>
+                  <CardDescription>{pack.description}</CardDescription>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold">{pack.price}</span>
+                    </div>
+                    {pack.originalPrice && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-muted-foreground line-through">{pack.originalPrice}</span>
+                        <Badge variant="secondary" className="text-green-400 bg-green-500/20">
+                          {pack.discount}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Zap className="h-4 w-4 text-amber-500" />
+                    <span>可重新生成 {pack.credits} 次軍團故事</span>
+                  </div>
+                </CardContent>
+                
+                <CardFooter>
+                  <Button
+                    onClick={() => handlePurchaseCredits(pack.id, pack.credits)}
+                    disabled={isLoading !== null}
+                    className={`w-full ${
+                      pack.popular 
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 text-amber-950' 
+                        : ''
+                    }`}
+                    variant={pack.popular ? "default" : "outline"}
+                  >
+                    {isLoading === pack.id ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        處理中...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        購買
+                      </>
+                    )}
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+
         {/* FAQ */}
         <div className="text-center space-y-4">
           <h2 className="text-xl font-semibold">常見問題</h2>
@@ -254,15 +407,15 @@ export default function Subscribe() {
               </p>
             </Card>
             <Card className="p-4">
-              <h3 className="font-medium mb-2">付款安全嗎？</h3>
+              <h3 className="font-medium mb-2">故事重生資格是什麼？</h3>
               <p className="text-sm text-muted-foreground">
-                所有付款資訊由統一金流加密處理，我們不儲存您的卡號資料。
+                軍團故事生成後會鎖定。若想重新生成，需使用重生資格，舊版本不會保留。
               </p>
             </Card>
             <Card className="p-4">
-              <h3 className="font-medium mb-2">有問題怎麼辦？</h3>
+              <h3 className="font-medium mb-2">重生資格會過期嗎？</h3>
               <p className="text-sm text-muted-foreground">
-                歡迎透過客服信箱聯繫我們，我們會盡快回覆。
+                不會！購買的重生資格永久有效，可隨時使用。
               </p>
             </Card>
           </div>

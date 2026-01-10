@@ -199,6 +199,39 @@ const Index = () => {
     }
   };
 
+  // 滾動監聽：自動更新 activeSection
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '-20% 0px -60% 0px', // 當章節進入視窗上區20%到下區60%的區域時觸發
+      threshold: 0
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const sectionId = entry.target.getAttribute('id');
+          if (sectionId) {
+            setActiveSection(sectionId);
+          }
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    // 監聽所有章節
+    Object.values(sectionRefs).forEach(ref => {
+      if (ref.current) {
+        observer.observe(ref.current);
+      }
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [baziResult]); // 當 baziResult 變化時重新設定監聽
+
   useEffect(() => {
     // 设置认证状态监听器
     const { data: { subscription } } = supabase.auth.onAuthStateChange(

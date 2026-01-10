@@ -53,6 +53,9 @@ export interface PdfOptions {
   includeHourStory: boolean;
 }
 
+// PDF 生成進度回調類型
+export type PdfProgressCallback = (progress: number, stage: string) => void;
+
 export interface ReportData {
   name: string;
   gender: string;
@@ -3153,11 +3156,11 @@ const createStoryPage = (
 // ========================
 // 字體載入檢測 - 優化中文字體支援
 // ========================
-const waitForFonts = async (timeout = 5000): Promise<boolean> => {
+const waitForFonts = async (timeout = 2000): Promise<boolean> => {
   console.log('[PDF] Waiting for fonts to load...');
   
   try {
-    // Step 1: 等待瀏覽器字體 API ready
+    // 快速檢查字體 API，減少等待時間
     if (document.fonts && typeof document.fonts.ready !== 'undefined') {
       await Promise.race([
         document.fonts.ready,
@@ -3166,44 +3169,33 @@ const waitForFonts = async (timeout = 5000): Promise<boolean> => {
       console.log('[PDF] Browser fonts API ready');
     }
     
-    // Step 2: 預載入中文字體 - 創建測試元素強制載入
+    // 簡化字體預載入 - 只使用單一測試元素
     const fontTestContainer = document.createElement('div');
     fontTestContainer.style.cssText = `
       position: absolute;
       left: -9999px;
       top: -9999px;
       visibility: hidden;
-      font-size: 72px;
+      font-size: 48px;
     `;
-    
-    // 測試所有使用的字體
-    const fontTests = [
-      { family: FONTS.heading, text: '虹靈御所八字命理' },
-      { family: FONTS.base, text: '四時軍團戰略系統' },
-    ];
-    
-    fontTests.forEach(({ family, text }) => {
-      const span = document.createElement('span');
-      span.style.fontFamily = family;
-      span.textContent = text;
-      fontTestContainer.appendChild(span);
-    });
+    fontTestContainer.innerHTML = `
+      <span style="font-family: ${FONTS.heading}">虹靈御所</span>
+      <span style="font-family: ${FONTS.base}">八字命理</span>
+    `;
     
     document.body.appendChild(fontTestContainer);
     
-    // Step 3: 等待字體渲染
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // 減少等待時間 - 大部分字體已經透過 Google Fonts 預載入
+    await new Promise(resolve => setTimeout(resolve, 100));
     
-    // Step 4: 清理測試元素
     document.body.removeChild(fontTestContainer);
-    
     console.log('[PDF] Chinese fonts preloaded successfully');
     return true;
     
   } catch (e) {
     console.warn('[PDF] Font loading check failed:', e);
-    // Fallback: 等待固定時間
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // 縮短 fallback 時間
+    await new Promise(resolve => setTimeout(resolve, 500));
     return true;
   }
 };
@@ -3211,7 +3203,7 @@ const waitForFonts = async (timeout = 5000): Promise<boolean> => {
 // ========================
 // 圖片預載入
 // ========================
-const waitForImages = async (container: HTMLElement, timeout = 3000): Promise<void> => {
+const waitForImages = async (container: HTMLElement, timeout = 1500): Promise<void> => {
   console.log('[PDF] Waiting for images to load...');
   const images = container.querySelectorAll('img');
   if (images.length === 0) {
@@ -3219,12 +3211,20 @@ const waitForImages = async (container: HTMLElement, timeout = 3000): Promise<vo
     return;
   }
 
+  // 平行處理圖片載入，使用較短的 timeout
   const imagePromises = Array.from(images).map(img => {
     if (img.complete && img.naturalHeight > 0) {
       return Promise.resolve();
     }
     return new Promise<void>((resolve) => {
+      const timeoutId = setTimeout(() => {
+        img.removeEventListener('load', handler);
+        img.removeEventListener('error', handler);
+        resolve();
+      }, 800); // 單張圖片最多等 800ms
+      
       const handler = () => {
+        clearTimeout(timeoutId);
         img.removeEventListener('load', handler);
         img.removeEventListener('error', handler);
         resolve();
@@ -3279,7 +3279,7 @@ const safeHtml2Canvas = async (element: HTMLElement, pageIndex: number): Promise
     console.log(`[PDF] html2canvas starting for page ${pageIndex + 1}...`);
     
     const canvas = await html2canvas(element, {
-      scale: 2,
+      scale: 1.5, // 降低 scale 從 2 到 1.5，顯著提升速度，品質仍足夠
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#0a0a0f',
@@ -3287,6 +3287,7 @@ const safeHtml2Canvas = async (element: HTMLElement, pageIndex: number): Promise
       windowWidth: 794,
       windowHeight: 1123,
       removeContainer: false,
+      imageTimeout: 800, // 圖片載入超時 800ms
       
       // 忽略問題元素
       ignoreElements: (el) => {
@@ -3384,15 +3385,22 @@ const safeHtml2Canvas = async (element: HTMLElement, pageIndex: number): Promise
 };
 
 // ========================
-// 主要導出函數
+// 主要導出函數 - 支援進度回調
 // ========================
 export const generatePDF = async (
   _elementId: string, 
   fileName: string, 
   coverData?: CoverPageData, 
   reportData?: ReportData,
-  options: PdfOptions = defaultPdfOptions
+  options: PdfOptions = defaultPdfOptions,
+  onProgress?: PdfProgressCallback
 ) => {
+  const reportProgress = (progress: number, stage: string) => {
+    onProgress?.(progress, stage);
+    console.log(`[PDF] Progress: ${progress}% - ${stage}`);
+  };
+  
+  reportProgress(0, '準備中...');
   console.log('[PDF] ========================================');
   console.log('[PDF] Starting PDF generation...', { fileName, options });
   console.log('[PDF] ========================================');
@@ -3414,29 +3422,34 @@ export const generatePDF = async (
   let container: HTMLDivElement | null = null;
   
   try {
-    // Step 1: 等待字體載入
+    // Step 1: 等待字體載入 (5%)
+    reportProgress(5, '載入字體...');
     await waitForFonts();
     
-    // Step 1.5: 預載入所有頭像圖片
+    // Step 1.5: 預載入所有頭像圖片 (10%)
+    reportProgress(10, '預載入圖片...');
     console.log('[PDF] Preloading avatar images...');
     const avatarUrls = collectAvatarUrls(reportData.pillars);
     const preloadedImages = await preloadImages(avatarUrls);
     console.log(`[PDF] Preloaded ${preloadedImages.size} images, success: ${[...preloadedImages.values()].filter(v => v).length}`);
     
-    // Step 2: 創建報告 HTML
+    // Step 2: 創建報告 HTML (15%)
+    reportProgress(15, '建立報告結構...');
     console.log('[PDF] Creating report container...');
     container = createReportContainer(reportData, coverData, options);
     container.setAttribute('data-pdf-container', 'true');
     console.log('[PDF] Container created, children count:', container.children.length);
     
-    // Step 3: 等待圖片載入
+    // Step 3: 等待圖片載入 (20%)
+    reportProgress(20, '載入頁面資源...');
     await waitForImages(container);
     
-    // Step 4: 額外等待確保 DOM 穩定
+    // Step 4: 減少 DOM 穩定等待時間
     console.log('[PDF] Waiting for DOM to stabilize...');
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 150)); // 從 500ms 減少到 150ms
     
-    // Step 5: 獲取所有頁面
+    // Step 5: 獲取所有頁面 (25%)
+    reportProgress(25, '準備頁面...');
     const pages: HTMLElement[] = [];
     for (let i = 0; i < container.children.length; i++) {
       const child = container.children[i];
@@ -3462,20 +3475,27 @@ export const generatePDF = async (
       throw new Error('No valid pages found in container');
     }
     
-    // Step 6: 創建 PDF
+    // Step 6: 創建 PDF (30%)
+    reportProgress(30, '初始化 PDF...');
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
-      format: 'a4'
+      format: 'a4',
+      compress: true // 啟用壓縮
     });
     
     const pdfWidth = 210;
     const pdfHeight = 297;
     let renderedPages = 0;
     
+    // 計算每頁進度增量 (30% -> 95%)
+    const progressPerPage = pages.length > 0 ? 65 / pages.length : 65;
+    
     // Step 7: 逐頁渲染
     for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
+      const currentProgress = Math.round(30 + (i * progressPerPage));
+      reportProgress(currentProgress, `渲染頁面 ${i + 1}/${pages.length}...`);
       console.log(`[PDF] Processing page ${i + 1}/${pages.length}...`);
       
       try {
@@ -3486,10 +3506,10 @@ export const generatePDF = async (
           continue;
         }
         
-        // 轉換為圖片
+        // 轉換為圖片 - 使用較低品質加速
         let imgData: string;
         try {
-          imgData = canvas.toDataURL('image/jpeg', 0.92);
+          imgData = canvas.toDataURL('image/jpeg', 0.85); // 從 0.92 降到 0.85
           if (!imgData || imgData === 'data:,') {
             console.error(`[PDF] Page ${i + 1} canvas.toDataURL failed`);
             continue;
@@ -3514,14 +3534,17 @@ export const generatePDF = async (
       }
     }
     
-    // Step 8: 檢查結果
+    // Step 8: 檢查結果 (95%)
+    reportProgress(95, '完成最終處理...');
     if (renderedPages === 0) {
       throw new Error('No pages were successfully rendered to PDF');
     }
     
-    // Step 9: 下載 PDF
+    // Step 9: 下載 PDF (100%)
+    reportProgress(98, '準備下載...');
     console.log(`[PDF] Saving PDF with ${renderedPages} pages...`);
     pdf.save(fileName);
+    reportProgress(100, '完成！');
     console.log('[PDF] ========================================');
     console.log('[PDF] PDF saved successfully!');
     console.log('[PDF] ========================================');

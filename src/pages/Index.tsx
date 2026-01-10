@@ -103,6 +103,8 @@ const Index = () => {
   const [isCalculating, setIsCalculating] = useState(false);
   const [calculatingUserName, setCalculatingUserName] = useState<string>("");
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadStage, setDownloadStage] = useState('');
   const [activeSection, setActiveSection] = useState('summary');
   // 神煞規則集已統一使用傳統版 (trad)
   const shenshaRuleset: 'trad' = 'trad';
@@ -568,6 +570,8 @@ const Index = () => {
     
     setIsPdfOptionsOpen(false);
     setIsDownloading(true);
+    setDownloadProgress(0);
+    setDownloadStage('準備中...');
     try {
       const fileName = `${baziResult.name}_八字命盤報告_${new Date().toLocaleDateString("zh-TW").replace(/\//g, "")}.pdf`;
       
@@ -629,13 +633,21 @@ const Index = () => {
         includeHourStory: options.includeHourStory,
       };
       
-      await generatePDF("bazi-report-content", fileName, coverData, reportData, pdfOptions);
+      // 進度回調函數
+      const onProgress = (progress: number, stage: string) => {
+        setDownloadProgress(progress);
+        setDownloadStage(stage);
+      };
+      
+      await generatePDF("bazi-report-content", fileName, coverData, reportData, pdfOptions, onProgress);
       toast.success(`報告下載成功！`);
     } catch (error) {
       console.error("下載報告失敗:", error);
       toast.error("下載報告失敗，請稍後再試");
     } finally {
       setIsDownloading(false);
+      setDownloadProgress(0);
+      setDownloadStage('');
     }
   };
 
@@ -787,6 +799,8 @@ const Index = () => {
                 onOpenChange={setIsPdfOptionsOpen}
                 onGenerate={(options) => handleDownloadReport(options)}
                 isDownloading={isDownloading}
+                downloadProgress={downloadProgress}
+                downloadStage={downloadStage}
                 hasLegionStories={{
                   year: !!baziResult.legionStories?.year,
                   month: !!baziResult.legionStories?.month,

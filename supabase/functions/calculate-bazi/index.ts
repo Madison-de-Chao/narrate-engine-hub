@@ -58,6 +58,61 @@ const WUXING_MAP: { [key: string]: string } = {
   "子": "水", "亥": "水"
 };
 
+// 藏干資料
+const HIDDEN_STEMS: { [key: string]: { stem: string; weight: number; ratio: number; type: string }[] } = {
+  "子": [{ stem: "癸", weight: 1.0, ratio: 100, type: "本氣" }],
+  "丑": [
+    { stem: "己", weight: 0.6, ratio: 60, type: "本氣" },
+    { stem: "癸", weight: 0.3, ratio: 30, type: "中氣" },
+    { stem: "辛", weight: 0.1, ratio: 10, type: "餘氣" }
+  ],
+  "寅": [
+    { stem: "甲", weight: 0.6, ratio: 60, type: "本氣" },
+    { stem: "丙", weight: 0.3, ratio: 30, type: "中氣" },
+    { stem: "戊", weight: 0.1, ratio: 10, type: "餘氣" }
+  ],
+  "卯": [{ stem: "乙", weight: 1.0, ratio: 100, type: "本氣" }],
+  "辰": [
+    { stem: "戊", weight: 0.6, ratio: 60, type: "本氣" },
+    { stem: "乙", weight: 0.3, ratio: 30, type: "中氣" },
+    { stem: "癸", weight: 0.1, ratio: 10, type: "餘氣" }
+  ],
+  "巳": [
+    { stem: "丙", weight: 0.6, ratio: 60, type: "本氣" },
+    { stem: "戊", weight: 0.3, ratio: 30, type: "中氣" },
+    { stem: "庚", weight: 0.1, ratio: 10, type: "餘氣" }
+  ],
+  "午": [
+    { stem: "丁", weight: 0.7, ratio: 70, type: "本氣" },
+    { stem: "己", weight: 0.3, ratio: 30, type: "中氣" }
+  ],
+  "未": [
+    { stem: "己", weight: 0.6, ratio: 60, type: "本氣" },
+    { stem: "丁", weight: 0.3, ratio: 30, type: "中氣" },
+    { stem: "乙", weight: 0.1, ratio: 10, type: "餘氣" }
+  ],
+  "申": [
+    { stem: "庚", weight: 0.6, ratio: 60, type: "本氣" },
+    { stem: "壬", weight: 0.3, ratio: 30, type: "中氣" },
+    { stem: "戊", weight: 0.1, ratio: 10, type: "餘氣" }
+  ],
+  "酉": [{ stem: "辛", weight: 1.0, ratio: 100, type: "本氣" }],
+  "戌": [
+    { stem: "戊", weight: 0.6, ratio: 60, type: "本氣" },
+    { stem: "辛", weight: 0.3, ratio: 30, type: "中氣" },
+    { stem: "丁", weight: 0.1, ratio: 10, type: "餘氣" }
+  ],
+  "亥": [
+    { stem: "壬", weight: 0.7, ratio: 70, type: "本氣" },
+    { stem: "甲", weight: 0.3, ratio: 30, type: "中氣" }
+  ]
+};
+
+// 獲取地支藏干（返回天干陣列）
+function getHiddenStems(branch: string): string[] {
+  return (HIDDEN_STEMS[branch] || []).map(h => h.stem);
+}
+
 // 計算年柱
 function calculateYearPillar(year: number, lichunDate: Date, birthDate: Date): { stem: string, branch: string } {
   let adjustedYear = year;
@@ -1104,6 +1159,14 @@ serve(async (req) => {
       }
     };
     
+    // 計算藏干
+    const hiddenStems = {
+      year: getHiddenStems(yearPillar.branch),
+      month: getHiddenStems(monthPillar.branch),
+      day: getHiddenStems(dayPillar.branch),
+      hour: getHiddenStems(hourPillar.branch)
+    };
+    
     // 計算神煞
     const shensha = calculateShenshaSimple(
       dayPillar.stem,
@@ -1140,7 +1203,7 @@ serve(async (req) => {
           hour_nayin: nayin.hour,
           wuxing_scores: wuxingScores,
           yinyang_ratio: yinyangRatio,
-          hidden_stems: {},
+          hidden_stems: hiddenStems,
           ten_gods: tenGods,
           shensha: shensha,
           legion_analysis: {},
@@ -1164,6 +1227,7 @@ serve(async (req) => {
           id: calculationId,
           pillars,
           nayin,
+          hiddenStems,
           wuxingScores,
           yinyangRatio,
           tenGods,

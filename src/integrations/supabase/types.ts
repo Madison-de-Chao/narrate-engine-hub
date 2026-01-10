@@ -594,6 +594,45 @@ export type Database = {
           },
         ]
       }
+      subscriptions_safe: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string | null
+          payment_provider: string | null
+          payment_reference_masked: string | null
+          plan: string | null
+          started_at: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          payment_provider?: string | null
+          payment_reference_masked?: never
+          plan?: string | null
+          started_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          payment_provider?: string | null
+          payment_reference_masked?: never
+          plan?: string | null
+          started_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_account_lockout: {

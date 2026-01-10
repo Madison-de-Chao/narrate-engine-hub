@@ -65,7 +65,8 @@ export function CharacterLightbox({
     if ('gan' in char) {
       return commanderFullbodyAvatars[char.gan] || null;
     }
-    return advisorFullbodyAvatars[char.id] || null;
+    // 地支角色使用 zhi 屬性（如「子」「丑」）作為鍵
+    return advisorFullbodyAvatars[(char as ZhiCharacter).zhi] || null;
   };
 
   // 使用全身圖或頭像

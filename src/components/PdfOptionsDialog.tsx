@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Download, FileText, Users, Sparkles, Scroll, BookOpen, List } from "lucide-react";
 
 export interface PdfOptions {
@@ -22,6 +23,8 @@ interface PdfOptionsDialogProps {
   onOpenChange: (open: boolean) => void;
   onGenerate: (options: PdfOptions) => void;
   isDownloading: boolean;
+  downloadProgress?: number;
+  downloadStage?: string;
   hasLegionStories: {
     year: boolean;
     month: boolean;
@@ -47,6 +50,8 @@ export function PdfOptionsDialog({
   onOpenChange,
   onGenerate,
   isDownloading,
+  downloadProgress = 0,
+  downloadStage = '',
   hasLegionStories,
 }: PdfOptionsDialogProps) {
   const [options, setOptions] = useState<PdfOptions>(defaultOptions);
@@ -277,6 +282,17 @@ export function PdfOptionsDialog({
           </div>
         </div>
 
+        {/* 進度顯示區塊 */}
+        {isDownloading && (
+          <div className="flex-shrink-0 space-y-2 px-1 py-3 bg-muted/20 rounded-lg border border-border/30">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{downloadStage || '準備中...'}</span>
+              <span className="text-primary font-medium">{Math.round(downloadProgress)}%</span>
+            </div>
+            <Progress value={downloadProgress} className="h-2" />
+          </div>
+        )}
+
         <DialogFooter className="flex-shrink-0 flex gap-2 pt-4 border-t border-border/50">
           <Button
             variant="outline"
@@ -288,12 +304,12 @@ export function PdfOptionsDialog({
           <Button
             onClick={() => onGenerate(options)}
             disabled={isDownloading || selectedCount === 0}
-            className="gap-2"
+            className="gap-2 min-w-[120px]"
           >
             {isDownloading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
-                生成中...
+                {Math.round(downloadProgress)}%
               </>
             ) : (
               <>

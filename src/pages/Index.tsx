@@ -210,8 +210,10 @@ const Index = () => {
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          const sectionId = entry.target.getAttribute('id');
-          if (sectionId) {
+          const fullId = entry.target.getAttribute('id');
+          if (fullId && fullId.startsWith('section-')) {
+            // 移除 'section-' 前綴，取得實際的 sectionId
+            const sectionId = fullId.replace('section-', '');
             setActiveSection(sectionId);
           }
         }

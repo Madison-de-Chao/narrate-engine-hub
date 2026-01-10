@@ -276,9 +276,8 @@ export const ReportTableOfContents = ({
                 <div className="mt-3 relative h-2 bg-muted rounded-full overflow-hidden">
                   <motion.div
                     className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-accent to-secondary rounded-full"
-                    initial={{ width: 0 }}
                     animate={{ width: `${progressPercent}%` }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 text-center">
@@ -557,9 +556,8 @@ export const ReportTableOfContents = ({
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeDasharray={100}
-                        initial={{ strokeDashoffset: 100 }}
                         animate={{ strokeDashoffset: 100 - progressPercent }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.5, ease: "easeInOut" }}
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">

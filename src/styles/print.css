@@ -1,0 +1,251 @@
+/* ========================================
+   列印專用樣式
+   用於 ReportPrint 頁面的 PDF 生成
+   ======================================== */
+
+/* 全域列印設定 */
+@media print {
+  /* 移除所有邊距和背景 */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 隱藏所有非報告內容 */
+  body > *:not(.report-print-container) {
+    display: none !important;
+  }
+
+  /* 確保每頁獨立 */
+  .report-page {
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+
+  .report-page:last-child {
+    page-break-after: auto;
+  }
+}
+
+/* ========================================
+   報告容器樣式（螢幕 + 列印共用）
+   ======================================== */
+
+.report-print-container {
+  width: 100%;
+  background: white;
+  color: #1a1a1a;
+  font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+}
+
+.report-page {
+  width: 210mm;
+  height: 297mm;
+  margin: 0 auto 20px;
+  padding: 0;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+@media print {
+  .report-page {
+    margin: 0;
+    box-shadow: none;
+  }
+}
+
+/* ========================================
+   封面頁樣式
+   ======================================== */
+
+.report-cover {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #c8aa64;
+}
+
+.cover-content {
+  width: 100%;
+  height: 100%;
+  padding: 40mm 30mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cover-header {
+  text-align: center;
+}
+
+.cover-logo {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.logo-image {
+  width: 80px;
+  height: auto;
+  filter: drop-shadow(0 4px 12px rgba(200, 170, 100, 0.3));
+}
+
+.cover-title {
+  font-size: 48px;
+  font-weight: 600;
+  color: #c8aa64;
+  margin: 0 0 10px 0;
+  letter-spacing: 16px;
+  text-shadow: 0 4px 20px rgba(200, 170, 100, 0.3);
+}
+
+.cover-subtitle {
+  font-size: 16px;
+  color: #a0a0a0;
+  margin: 0;
+  letter-spacing: 8px;
+}
+
+.cover-info {
+  text-align: center;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  border: 2px solid rgba(200, 170, 100, 0.2);
+}
+
+.cover-name {
+  font-size: 36px;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 10px 0;
+  letter-spacing: 4px;
+}
+
+.cover-detail {
+  font-size: 14px;
+  color: #a0a0a0;
+  margin: 5px 0;
+}
+
+.cover-date {
+  font-size: 18px;
+  color: #c8aa64;
+  margin: 10px 0 0 0;
+  font-weight: 500;
+}
+
+.cover-pillars {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.pillar-item {
+  flex: 1;
+  text-align: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 2px solid rgba(200, 170, 100, 0.2);
+}
+
+.pillar-label {
+  font-size: 12px;
+  color: #a0a0a0;
+  margin-bottom: 10px;
+  letter-spacing: 2px;
+}
+
+.pillar-chars {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.pillar-chars span {
+  font-size: 32px;
+  font-weight: 600;
+  color: white;
+}
+
+.pillar-nayin {
+  font-size: 12px;
+  color: #c8aa64;
+}
+
+.cover-footer {
+  text-align: center;
+}
+
+.disclaimer {
+  font-size: 11px;
+  color: #808080;
+  line-height: 1.6;
+  margin: 0 0 20px 0;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.cover-date-stamp {
+  font-size: 12px;
+  color: #a0a0a0;
+  margin: 0;
+}
+
+/* ========================================
+   內容頁樣式（待實作）
+   ======================================== */
+
+.report-content-page {
+  padding: 20mm 25mm;
+}
+
+.page-header {
+  text-align: center;
+  padding-bottom: 10mm;
+  border-bottom: 2px solid #c8aa64;
+  margin-bottom: 10mm;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+  letter-spacing: 4px;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 5px 0 0 0;
+  letter-spacing: 2px;
+}
+
+.page-footer {
+  position: absolute;
+  bottom: 15mm;
+  left: 25mm;
+  right: 25mm;
+  text-align: center;
+  font-size: 10px;
+  color: #999;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 5mm;
+}

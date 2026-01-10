@@ -24,8 +24,7 @@ import { ReportSection, ReportDivider, ReportProgress, ReportControls, ReadingPr
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, Shield, Share2, MessageCircle, Facebook, LayoutDashboard, Scroll, BarChart3, FileText, User, ChevronDown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { type ReportData } from "@/lib/pdfGenerator";
+import { generatePDF, type CoverPageData, type ReportData, type PdfOptions } from "@/lib/pdfGenerator";
 import { PdfOptionsDialog, type PdfOptions as DialogPdfOptions } from "@/components/PdfOptionsDialog";
 import { toast } from "sonner";
 import { FunctionsHttpError, type User as SupabaseUser, type Session } from "@supabase/supabase-js";
@@ -595,18 +594,42 @@ const Index = () => {
     }
   };
 
-  const handleDownloadReport = async (_options?: DialogPdfOptions) => {
+  const handleDownloadReport = async (options?: DialogPdfOptions) => {
     if (!baziResult) return;
     
-    setIsPdfOptionsOpen(false);
+    // 如果沒有提供選項，開啟選項對話框
+    if (!options) {
+      setIsPdfOptionsOpen(true);
+      return;
+    }
     
+    setIsPdfOptionsOpen(false);
+    setIsDownloading(true);
+    setDownloadProgress(0);
+    setDownloadStage('準備中...');
     try {
-      // 準備報告資料
+      const fileName = `${baziResult.name}_八字命盤報告_${new Date().toLocaleDateString("zh-TW").replace(/\//g, "")}.pdf`;
+      
+      // 準備封面資料
       const birthDateStr = baziResult.birthDate instanceof Date 
         ? baziResult.birthDate.toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric" })
         : String(baziResult.birthDate);
       
-      // 轉換神煞資料
+      const coverData: CoverPageData = {
+        name: baziResult.name,
+        birthDate: birthDateStr,
+        birthTime: baziResult.birthDate instanceof Date 
+          ? baziResult.birthDate.toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })
+          : "",
+        gender: baziResult.gender,
+        yearPillar: baziResult.pillars.year,
+        monthPillar: baziResult.pillars.month,
+        dayPillar: baziResult.pillars.day,
+        hourPillar: baziResult.pillars.hour,
+      };
+      
+      // 準備報告資料
+      // 轉換神煞資料為 PDF 格式
       const shenshaForPdf = baziResult.shensha
         .filter((s): s is ShenshaMatch => typeof s !== 'string' && 'name' in s)
         .map((s) => ({
@@ -632,11 +655,34 @@ const Index = () => {
         shensha: shenshaForPdf,
       };
       
-      // 跳轉到列印預覽頁面
-      navigate('/report/print', { state: { reportData } });
+      // 轉換選項格式
+      const pdfOptions: PdfOptions = {
+        includeCover: options.includeCover,
+        includeTableOfContents: options.includeTableOfContents,
+        includePillars: options.includePillars,
+        includeShensha: options.includeShensha,
+        includeLegionDetails: options.includeLegionDetails,
+        includeYearStory: options.includeYearStory,
+        includeMonthStory: options.includeMonthStory,
+        includeDayStory: options.includeDayStory,
+        includeHourStory: options.includeHourStory,
+      };
+      
+      // 進度回調函數
+      const onProgress = (progress: number, stage: string) => {
+        setDownloadProgress(progress);
+        setDownloadStage(stage);
+      };
+      
+      await generatePDF("bazi-report-content", fileName, coverData, reportData, pdfOptions, onProgress);
+      toast.success(`報告下載成功！`);
     } catch (error) {
-      console.error("跳轉到列印頁面失敗:", error);
-      toast.error("無法開啟列印頁面，請稍後再試");
+      console.error("下載報告失敗:", error);
+      toast.error("下載報告失敗，請稍後再試");
+    } finally {
+      setIsDownloading(false);
+      setDownloadProgress(0);
+      setDownloadStage('');
     }
   };
 

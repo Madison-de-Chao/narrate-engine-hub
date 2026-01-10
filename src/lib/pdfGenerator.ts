@@ -171,33 +171,54 @@ const ensureFontsLoaded = async (): Promise<void> => {
   }
 };
 
-// 預載入圖片函數 - 確保頭像正確嵌入 PDF
-const preloadImages = async (imageSrcs: string[]): Promise<Map<string, boolean>> => {
-  const results = new Map<string, boolean>();
-  
-  const loadPromises = imageSrcs.map(src => {
-    return new Promise<void>((resolve) => {
-      if (!src) {
-        resolve();
-        return;
+// 將圖片轉換為 base64
+const imageToBase64 = async (src: string): Promise<string | null> => {
+  return new Promise((resolve) => {
+    if (!src) {
+      resolve(null);
+      return;
+    }
+    
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const base64 = canvas.toDataURL('image/png');
+          resolve(base64);
+        } else {
+          resolve(null);
+        }
+      } catch (error) {
+        console.warn(`[PDF] Failed to convert image to base64: ${src}`, error);
+        resolve(null);
       }
-      
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      
-      img.onload = () => {
-        results.set(src, true);
-        resolve();
-      };
-      
-      img.onerror = () => {
-        console.warn(`[PDF] Failed to preload image: ${src}`);
-        results.set(src, false);
-        resolve();
-      };
-      
-      img.src = src;
-    });
+    };
+    
+    img.onerror = () => {
+      console.warn(`[PDF] Failed to load image: ${src}`);
+      resolve(null);
+    };
+    
+    img.src = src;
+  });
+};
+
+// 預載入圖片並轉換為 base64
+const preloadImages = async (imageSrcs: string[]): Promise<Map<string, string>> => {
+  const results = new Map<string, string>();
+  
+  const loadPromises = imageSrcs.map(async (src) => {
+    const base64 = await imageToBase64(src);
+    if (base64) {
+      results.set(src, base64);
+    }
   });
   
   await Promise.all(loadPromises);
@@ -829,7 +850,7 @@ const createTableOfContentsPage = (entries: TocEntry[], dateStr: string, totalPa
 }
 
 // 創建報告 HTML 容器
-const createReportContainer = (reportData: ReportData, coverData?: CoverPageData, options: PdfOptions = defaultPdfOptions): HTMLDivElement => {
+const createReportContainer = (reportData: ReportData, coverData?: CoverPageData, options: PdfOptions = defaultPdfOptions, imageBase64Map?: Map<string, string>): HTMLDivElement => {
   const container = document.createElement('div');
   container.style.cssText = `
     width: 794px;
@@ -3482,7 +3503,7 @@ export const generatePDF = async (
     // Step 2: 創建報告 HTML (15%)
     reportProgress(15, '建立報告結構...');
     console.log('[PDF] Creating report container...');
-    container = createReportContainer(reportData, coverData, options);
+    container = createReportContainer(reportData, coverData, options, preloadedImages);
     container.setAttribute('data-pdf-container', 'true');
     console.log('[PDF] Container created, children count:', container.children.length);
     

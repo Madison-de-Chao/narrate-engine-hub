@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Search, Eye, Trash2, Calendar, User, MapPin, FileText, RefreshCw } from 'lucide-react';
+import { Loader2, Search, Eye, Trash2, Calendar, User, MapPin, FileText, RefreshCw, CheckSquare, Square } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
@@ -51,6 +52,8 @@ export const AdminReports = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedReport, setSelectedReport] = useState<BaziCalculation | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [batchDeleting, setBatchDeleting] = useState(false);
 
   const fetchReports = async () => {
     setLoading(true);
@@ -110,6 +113,55 @@ export const AdminReports = () => {
     }
   };
 
+  // 批量刪除
+  const handleBatchDelete = async () => {
+    if (selectedIds.size === 0) {
+      toast.error('請先選擇要刪除的報告');
+      return;
+    }
+    
+    if (!confirm(`確定要刪除選中的 ${selectedIds.size} 筆報告嗎？此操作無法復原。`)) return;
+    
+    setBatchDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('bazi_calculations')
+        .delete()
+        .in('id', Array.from(selectedIds));
+
+      if (error) throw error;
+      
+      setReports(prev => prev.filter(r => !selectedIds.has(r.id)));
+      setSelectedIds(new Set());
+      toast.success(`已成功刪除 ${selectedIds.size} 筆報告`);
+    } catch (error) {
+      console.error('批量刪除報告失敗:', error);
+      toast.error('批量刪除報告失敗');
+    } finally {
+      setBatchDeleting(false);
+    }
+  };
+
+  // 全選/取消全選
+  const handleSelectAll = () => {
+    if (selectedIds.size === filteredReports.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredReports.map(r => r.id)));
+    }
+  };
+
+  // 單選
+  const handleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
   const filteredReports = reports.filter(report => {
     const searchLower = searchTerm.toLowerCase();
     const profile = report.user_id ? profiles.get(report.user_id) : null;
@@ -138,10 +190,27 @@ export const AdminReports = () => {
           <h2 className="text-2xl font-bold">命理報告管理</h2>
           <p className="text-muted-foreground">查看和管理所有用戶的八字命盤報告</p>
         </div>
-        <Button onClick={fetchReports} variant="outline" size="sm">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          刷新
-        </Button>
+        <div className="flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <Button 
+              onClick={handleBatchDelete} 
+              variant="destructive" 
+              size="sm"
+              disabled={batchDeleting}
+            >
+              {batchDeleting ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4 mr-2" />
+              )}
+              刪除選中 ({selectedIds.size})
+            </Button>
+          )}
+          <Button onClick={fetchReports} variant="outline" size="sm">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            刷新
+          </Button>
+        </div>
       </div>
 
       {/* 搜尋欄 */}
@@ -208,6 +277,13 @@ export const AdminReports = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={filteredReports.length > 0 && selectedIds.size === filteredReports.length}
+                      onCheckedChange={handleSelectAll}
+                      aria-label="全選"
+                    />
+                  </TableHead>
                   <TableHead>姓名</TableHead>
                   <TableHead>性別</TableHead>
                   <TableHead>八字</TableHead>
@@ -219,7 +295,7 @@ export const AdminReports = () => {
               <TableBody>
                 {filteredReports.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       沒有找到報告
                     </TableCell>
                   </TableRow>
@@ -227,7 +303,14 @@ export const AdminReports = () => {
                   filteredReports.map((report) => {
                     const profile = report.user_id ? profiles.get(report.user_id) : null;
                     return (
-                      <TableRow key={report.id}>
+                      <TableRow key={report.id} className={selectedIds.has(report.id) ? 'bg-muted/50' : ''}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.has(report.id)}
+                            onCheckedChange={() => handleSelect(report.id)}
+                            aria-label={`選擇 ${report.name}`}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">{report.name}</TableCell>
                         <TableCell>
                           <Badge variant={report.gender === '男' ? 'default' : 'secondary'}>

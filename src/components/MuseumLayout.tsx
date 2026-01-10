@@ -4,6 +4,7 @@ import { ChevronLeft, Sun, Moon, User, LogOut } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { NavigationMapDropdown } from '@/components/NavigationMapDropdown';
+import { SimplifiedLogo } from '@/components/icons/SimplifiedLogo';
 import { MemberLoginWidget, useMember } from '@/lib/member';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -88,6 +89,15 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
         }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/')}
+                className={`transition-colors ${
+                  theme === 'dark' ? 'text-gold hover:text-gold/80' : 'text-ink hover:text-ink/80'
+                }`}
+                aria-label="返回首頁"
+              >
+                <SimplifiedLogo className="w-6 h-6" />
+              </button>
               <span className={`text-xs tracking-wider ${
                 theme === 'dark' ? 'text-paper/60' : 'text-void/60'
               }`}>

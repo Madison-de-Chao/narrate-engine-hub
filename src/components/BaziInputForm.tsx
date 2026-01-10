@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CalendarIcon, Loader2, History, User, ChevronDown, Trash2, Sparkles, RefreshCw, Clock, MapPin, Settings2, HelpCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CitySelector, CITY_DATABASE } from "@/components/CitySelector";
+import { TimeWheelSelector } from "@/components/TimeWheelSelector";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -594,19 +595,31 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                 </Label>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Select value={formData.hour} onValueChange={(value) => setFormData({ ...formData, hour: value })}>
-                <SelectTrigger className="bg-input border-border text-foreground flex-1">
-                  <SelectValue placeholder="請選擇時辰" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border max-h-[300px] z-[9999]">
-                  {HOUR_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex gap-4">
+              {/* 下拉選單 */}
+              <div className="flex-1">
+                <Select value={formData.hour} onValueChange={(value) => setFormData({ ...formData, hour: value })}>
+                  <SelectTrigger className="bg-input border-border text-foreground">
+                    <SelectValue placeholder="請選擇時辰" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border-border max-h-[300px] z-[9999]">
+                    {HOUR_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* 十二時辰圓盤 */}
+              <div className="flex-1">
+                <TimeWheelSelector
+                  value={formData.hour}
+                  onChange={(value) => setFormData({ ...formData, hour: value })}
+                />
+              </div>
+              
               {usePreciseTime && (
                 <div className="flex items-center gap-1">
                   <Input

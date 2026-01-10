@@ -19,6 +19,7 @@ import { PremiumGate } from "@/components/PremiumGate";
 import { AiFortuneConsult } from "@/components/AiFortuneConsult";
 import { LegionSummoningOverlay } from "@/components/LegionSummoningOverlay";
 import { PageHeader } from "@/components/PageHeader";
+import { BrandIntro } from "@/components/BrandIntro";
 import { ReportSection, ReportDivider, ReportProgress, ReportControls, ReadingProgressBar, ReportTableOfContents } from "@/components/report";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -638,8 +639,15 @@ const Index = () => {
     }
   };
 
+  const [showBrandIntro, setShowBrandIntro] = useState(true);
+
   return (
     <>
+    {/* 品牌引導前奏 */}
+    {showBrandIntro && (
+      <BrandIntro onComplete={() => setShowBrandIntro(false)} />
+    )}
+    
     {/* 頂部閱讀進度條 */}
     <ReadingProgressBar />
     

@@ -614,3 +614,85 @@
     font-size: 18pt !important;
   }
 }
+
+/* 星空動畫效果 - 用於品牌引導頁 */
+@keyframes animateStars {
+  from { 
+    transform: translateY(0); 
+  }
+  to { 
+    transform: translateY(-1000px); 
+  }
+}
+
+.stars, .stars2, .stars3 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.stars {
+  background: transparent;
+  animation: animateStars 50s linear infinite;
+}
+
+.stars::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, white, transparent),
+    radial-gradient(2px 2px at 60px 70px, white, transparent),
+    radial-gradient(1px 1px at 50px 50px, white, transparent),
+    radial-gradient(1px 1px at 130px 80px, white, transparent),
+    radial-gradient(2px 2px at 90px 10px, white, transparent);
+  background-size: 200px 200px;
+  background-repeat: repeat;
+}
+
+.stars2 {
+  background: transparent;
+  animation: animateStars 100s linear infinite;
+  opacity: 0.5;
+}
+
+.stars2::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  background-image: 
+    radial-gradient(1px 1px at 40px 60px, white, transparent),
+    radial-gradient(1px 1px at 110px 90px, white, transparent),
+    radial-gradient(1px 1px at 70px 20px, white, transparent);
+  background-size: 250px 250px;
+  background-repeat: repeat;
+}
+
+.stars3 {
+  background: transparent;
+  animation: animateStars 150s linear infinite;
+  opacity: 0.3;
+}
+
+.stars3::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  background-image: 
+    radial-gradient(1px 1px at 80px 40px, white, transparent),
+    radial-gradient(1px 1px at 140px 100px, white, transparent);
+  background-size: 300px 300px;
+  background-repeat: repeat;
+}

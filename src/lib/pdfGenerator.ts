@@ -3,6 +3,7 @@ import html2canvas from "html2canvas";
 import { commanderAvatars } from "@/assets/commanders";
 import { advisorAvatars } from "@/assets/advisors";
 import { GAN_CHARACTERS, ZHI_CHARACTERS } from "@/lib/legionTranslator/characterData";
+import { getShenshaIcon } from "@/lib/shenshaIconMapping";
 
 // 封面資料介面
 export interface CoverPageData {
@@ -915,6 +916,10 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
         
         <!-- 品牌標題 -->
         <div style="text-align: center; margin-bottom: 50px;">
+          <!-- Logo -->
+          <div style="display: flex; justify-content: center; margin-bottom: 30px;">
+            <img src="/logo-honglingyusuo-new.png" alt="虹靈御所" style="width: 120px; height: auto; filter: drop-shadow(0 4px 12px rgba(200, 170, 100, 0.3));" onerror="this.style.display='none'" />
+          </div>
           <div style="display: flex; align-items: center; justify-content: center; gap: 25px; margin-bottom: 20px;">
             <div style="width: 80px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.gold});"></div>
             <span style="font-size: 14px; color: ${COLORS.goldDark}; letter-spacing: 8px;">八字人生兵法</span>
@@ -2596,8 +2601,15 @@ const createShenshaPages = (shensha: ShenshaItem[], dateStr: string, startPage: 
                       justify-content: center;
                       box-shadow: 0 4px 15px ${catConfig.color}20;
                       flex-shrink: 0;
+                      overflow: hidden;
                     ">
-                      <span style="font-size: 24px; filter: drop-shadow(0 2px 6px ${catConfig.color}50);">${catConfig.icon}</span>
+                      ${(() => {
+                        const iconPath = getShenshaIcon(item.name);
+                        if (iconPath) {
+                          return `<img src="${iconPath}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><span style="font-size: 24px; filter: drop-shadow(0 2px 6px ${catConfig.color}50); display: none;">${catConfig.icon}</span>`;
+                        }
+                        return `<span style="font-size: 24px; filter: drop-shadow(0 2px 6px ${catConfig.color}50);">${catConfig.icon}</span>`;
+                      })()}
                     </div>
                     
                     <!-- 名稱與標籤 -->

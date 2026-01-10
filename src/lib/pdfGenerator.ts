@@ -3586,12 +3586,11 @@ export const generatePDF = async (
       throw new Error('No pages were successfully rendered to PDF');
     }
     
-    // Step 9: 下載 PDF (100%)
-    reportProgress(98, '準備下載...');
-    console.log(`[PDF] Saving PDF with ${renderedPages} pages...`);
-        // 添加免責聲明頁面
+    // Step 9: 添加免責聲明頁面
     reportProgress(95, '正在加入免責聲明...');
-    const disclaimerHtml = createDisclaimerPage(dateStr, pages.length);
+    console.log(`[PDF] Adding disclaimer page...`);
+    const currentDateStr = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+    const disclaimerHtml = createDisclaimerPage(currentDateStr, pages.length);
     const disclaimerContainer = document.createElement('div');
     disclaimerContainer.innerHTML = disclaimerHtml;
     document.body.appendChild(disclaimerContainer);

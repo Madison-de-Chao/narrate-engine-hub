@@ -146,6 +146,13 @@ export type Database = {
             referencedRelation: "api_keys"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "api_request_logs_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       bazi_calculations: {
@@ -533,7 +540,60 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      api_keys_safe: {
+        Row: {
+          created_at: string | null
+          default_template_id: string | null
+          id: string | null
+          is_active: boolean | null
+          last_used_at: string | null
+          name: string | null
+          plan_id: string | null
+          requests_count: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_template_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_used_at?: string | null
+          name?: string | null
+          plan_id?: string | null
+          requests_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          default_template_id?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_used_at?: string | null
+          name?: string | null
+          plan_id?: string | null
+          requests_count?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_default_template_id_fkey"
+            columns: ["default_template_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_keys_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "api_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       check_account_lockout: {

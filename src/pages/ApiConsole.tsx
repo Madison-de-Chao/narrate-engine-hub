@@ -32,15 +32,18 @@ import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { zhTW } from "date-fns/locale";
 
+// Safe view interface - excludes sensitive hash/prefix columns
 interface ApiKey {
   id: string;
   name: string;
-  api_key_hash: string | null;
-  api_key_prefix: string | null;
   is_active: boolean;
   requests_count: number;
   last_used_at: string | null;
   created_at: string;
+  user_id: string;
+  updated_at: string;
+  plan_id: string | null;
+  default_template_id: string | null;
 }
 
 const ApiConsole = () => {
@@ -84,8 +87,9 @@ const ApiConsole = () => {
   }, []);
 
   const fetchApiKeys = async () => {
+    // Use the secure view that excludes api_key_hash and api_key_prefix
     const { data, error } = await supabase
-      .from('api_keys')
+      .from('api_keys_safe' as any)
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -95,7 +99,7 @@ const ApiConsole = () => {
       return;
     }
 
-    setApiKeys(data || []);
+    setApiKeys((data as unknown as ApiKey[]) || []);
   };
 
   const generateApiKey = () => {
@@ -196,12 +200,9 @@ const ApiConsole = () => {
     }
   };
 
-  const getDisplayKey = (key: ApiKey) => {
-    // Only show prefix for hashed keys
-    if (key.api_key_prefix) {
-      return key.api_key_prefix + '•'.repeat(28);
-    }
-    return '•'.repeat(35);
+  const getDisplayKey = () => {
+    // API keys are hashed - prefix is no longer exposed for security
+    return 'bz_' + '•'.repeat(32);
   };
 
   const handleCopyKey = () => {
@@ -424,7 +425,7 @@ const ApiConsole = () => {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <code className="text-sm bg-muted px-2 py-1 rounded">
-                            {getDisplayKey(key)}
+                            {getDisplayKey()}
                           </code>
                           <Button
                             variant="ghost"

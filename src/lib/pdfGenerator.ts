@@ -635,8 +635,8 @@ const createTableOfContentsPage = (entries: TocEntry[], dateStr: string, totalPa
     ">
       <!-- 圖標區域 -->
       <div style="
-        width: 52px;
-        height: 52px;
+        width: 60px;
+        height: 60px;
         background: linear-gradient(135deg, ${entry.color}20 0%, ${entry.color}08 100%);
         border: 1px solid ${entry.color}40;
         border-radius: 10px;
@@ -921,7 +921,7 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
         <div style="text-align: center; margin-bottom: 50px;">
           <!-- Logo -->
           <div style="display: flex; justify-content: center; margin-bottom: 30px;">
-            <img src="/logo-honglingyusuo-new.png" alt="虹靈御所" style="width: 120px; height: auto; filter: drop-shadow(0 4px 12px rgba(200, 170, 100, 0.3));" onerror="this.style.display='none'" />
+            <img src="/home/ubuntu/narrate-engine-hub/src/assets/logo.png" alt="虹靈御所" style="width: 120px; height: auto; filter: drop-shadow(0 4px 12px rgba(200, 170, 100, 0.3));" onerror="this.style.display='none'" />
           </div>
           <div style="display: flex; align-items: center; justify-content: center; gap: 25px; margin-bottom: 20px;">
             <div style="width: 80px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.gold});"></div>
@@ -997,6 +997,7 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
         
         <!-- 底部資訊 -->
         <div style="text-align: center; margin-top: auto;">
+          <p style="font-size: 9px; color: #888; margin-top: 30px; letter-spacing: 1px; padding: 0 50px;">本報告為基於您個人資訊的命理分析，旨在提供自我探索的參考路徑，而非對未來的絕對定論。您的人生選擇，終將由您自己決定。</p>
           <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px;">
             <div style="width: 100px; height: 1px; background: linear-gradient(90deg, transparent, ${COLORS.border});"></div>
             <div style="width: 6px; height: 6px; border: 1px solid ${COLORS.goldDark}; transform: rotate(45deg);"></div>
@@ -1383,13 +1384,13 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
                 const total = Object.values(reportData.wuxing!).reduce((a, b) => a + b, 0);
                 const value = reportData.wuxing![el.key as keyof typeof reportData.wuxing];
                 const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-                const barHeight = Math.max(15, pct * 0.8);
+                const barHeight = Math.max(20, pct * 1.2);
                 return `
                   <div style="flex: 1; text-align: center;">
                     <!-- 圓形能量圖 -->
                     <div style="
-                      width: 52px;
-                      height: 52px;
+                      width: 60px;
+                      height: 60px;
                       border-radius: 50%;
                       background: linear-gradient(135deg, ${el.color}18 0%, ${el.color}05 100%);
                       border: 3px solid ${el.color}50;
@@ -1496,8 +1497,8 @@ const createReportContainer = (reportData: ReportData, coverData?: CoverPageData
             
             <!-- 太極圖示意 -->
             <div style="
-              width: 90px;
-              height: 90px;
+              width: 120px;
+              height: 120px;
               margin: 0 auto 16px;
               border-radius: 50%;
               background: linear-gradient(180deg, #dcc88c 50%, #4a4a8a 50%);
@@ -3244,6 +3245,51 @@ const waitForImages = async (container: HTMLElement, timeout = 1500): Promise<vo
 // ========================
 // 安全的 html2canvas 封裝
 // ========================
+const createDisclaimerPage = (dateStr: string, totalPages: number): string => {
+  const pageNum = totalPages + 1;
+  return `
+    <div style="
+      width: 794px; 
+      height: 1123px; 
+      background-color: ${COLORS.bgPrimary}; 
+      color: ${COLORS.textSecondary}; 
+      font-family: ${FONTS.base};
+      padding: 45px;
+      display: flex;
+      flex-direction: column;
+    ">
+      ${createHeader('服務條款與免責聲明', CHAPTERS.toc, pageNum, totalPages + 1)}
+      
+      <div style="flex: 1; overflow-y: auto; padding: 20px; line-height: 1.8; font-size: 12px;">
+        <h3 style="font-family: ${FONTS.heading}; color: ${COLORS.gold}; font-size: 18px; letter-spacing: 2px; margin-bottom: 20px; text-align: center;">虹靈御所｜個人命理報告服務條款與免責聲明</h3>
+        <p style="margin-bottom: 15px;">歡迎您使用虹靈御所（Rainbow Sanctuary）的個人命理分析服務。在您深入探索本報告之前，請仔細閱讀以下條款，它將幫助您更清晰地理解本服務的性質與範疇。</p>
+        
+        <ol style="padding-left: 20px; margin: 0;">
+          <li style="margin-bottom: 15px;">
+            <strong>服務性質</strong>：本報告是基於傳統的八字命理學術，結合獨創的「四時軍團系統」進行的個人特質與潛能分析。我們的目標是提供一個全新的視角，協助您「看見」自己的內在結構、「感受」生命的可能性，並從中找到「療癒」與成長的力量。這是一份自我探索的工具，而非預測未來的絕對定論。
+          </li>
+          <li style="margin-bottom: 15px;">
+            <strong>非專業建議替代品</strong>：本報告的任何內容，均不應被視為醫療、金融、法律、心理治療等專業領域的建議。當您面臨人生重大決策（如健康、財務、法律等問題）時，我們強烈建議您尋求相關領域合格專業人士的協助。
+          </li>
+          <li style="margin-bottom: 15px;">
+            <strong>資訊的局限性</strong>：命理分析的準確性受多種因素影響，包含但不限於您提供的出生資訊的精確度。本報告的解讀與觀點僅為一種可能性，不保證完全符合您過去、現在或未來的實際情況。生命是動態且充滿變數的，個人的自由意志與後天努力，將對人生軌跡產生關鍵影響。
+          </li>
+          <li style="margin-bottom: 15px;">
+            <strong>個人責任</strong>：您對本報告資訊的理解、詮釋及使用，皆為您個人的選擇與責任。虹靈御所對於您根據本報告所採取的任何行動及其結果，不承擔任何形式的法律或道義責任。
+          </li>
+          <li style="margin-bottom: 15px;">
+            <strong>版權聲明</strong>：本報告的全部內容，包括但不限於文字、圖像、圖表及整體設計，其版權均為虹靈御所所有。未經書面授權，嚴禁以任何形式複製、轉載、修改或公開傳播。
+          </li>
+        </ol>
+
+        <p style="margin-top: 25px; text-align: center; font-style: italic; color: ${COLORS.goldDark};">我們的承諾是「Always Bring Care & Truth」。我們致力於提供真誠且有溫度的分析，陪伴您走在自我探索的道路上。感謝您的信任與理解。</p>
+      </div>
+
+      ${createFooter(dateStr, '免責聲明', CHAPTERS.toc, pageNum, totalPages + 1)}
+    </div>
+  `;
+};
+
 const safeHtml2Canvas = async (element: HTMLElement, pageIndex: number): Promise<HTMLCanvasElement | null> => {
   // Monkey-patch createPattern 防止 0x0 canvas 錯誤
   const originalCreatePattern = CanvasRenderingContext2D.prototype.createPattern;
@@ -3543,6 +3589,21 @@ export const generatePDF = async (
     // Step 9: 下載 PDF (100%)
     reportProgress(98, '準備下載...');
     console.log(`[PDF] Saving PDF with ${renderedPages} pages...`);
+        // 添加免責聲明頁面
+    reportProgress(95, '正在加入免責聲明...');
+    const disclaimerHtml = createDisclaimerPage(dateStr, pages.length);
+    const disclaimerContainer = document.createElement('div');
+    disclaimerContainer.innerHTML = disclaimerHtml;
+    document.body.appendChild(disclaimerContainer);
+    await waitForImages(disclaimerContainer);
+    const disclaimerCanvas = await safeHtml2Canvas(disclaimerContainer, pages.length);
+    if (disclaimerCanvas) {
+      pdf.addPage();
+      const imgData = disclaimerCanvas.toDataURL('image/jpeg', 0.8);
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdf.internal.pageSize.getWidth(), pdf.internal.pageSize.getHeight());
+    }
+    document.body.removeChild(disclaimerContainer);
+
     pdf.save(fileName);
     reportProgress(100, '完成！');
     console.log('[PDF] ========================================');

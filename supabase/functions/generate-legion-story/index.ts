@@ -81,15 +81,26 @@ serve(async (req) => {
   }
 
   try {
-    const { legionType, pillarData, name, calculationId, useLocalOnly } = await req.json();
+    const body = await req.json();
+    const { legionType, name, calculationId, useLocalOnly } = body;
     
-    const stem = pillarData.stem;
-    const branch = pillarData.branch;
+    // 支援兩種輸入格式：pillarData 物件或獨立欄位
+    const pillarData = body.pillarData || {};
+    const stem = pillarData.stem || body.stem || '';
+    const branch = pillarData.branch || body.branch || '';
+    
+    if (!stem || !branch) {
+      return new Response(
+        JSON.stringify({ error: '缺少天干(stem)或地支(branch)資料' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     const context = legionContext[legionType] || legionContext.day;
     const tgRole = tianganRoles[stem] || { role: stem, buff: '未知', debuff: '未知' };
     const dzRole = dizhiRoles[branch] || { role: branch, buff: '未知', debuff: '未知' };
 
-    console.log(`Generating story for ${name}, legion: ${legionType}, pillar: ${stem}${branch}`);
+    console.log(`Generating story for ${name || '匿名'}, legion: ${legionType}, pillar: ${stem}${branch}`);
     console.log(`Commander: ${tgRole.role}, Advisor: ${dzRole.role}`);
 
     // 處理兵符
@@ -226,13 +237,40 @@ ${bingfuSection || '此柱未顯現特殊兵符'}
     const story = data.choices[0]?.message?.content || '故事生成失敗';
     console.log(`Story generated, length: ${story.length}`);
 
-    // 儲存到資料庫
+    // 儲存到資料庫 - 使用 service role key 繞過 RLS
     if (calculationId) {
-      const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_ANON_KEY') ?? '');
-      const dbType = dbTypeMap[legionType] || 'self';
-      const { error } = await supabase.from('legion_stories').insert({ calculation_id: calculationId, legion_type: dbType, story });
-      if (error) console.error('DB save error:', error);
-      else console.log('Story saved to DB');
+      const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+      
+      if (serviceRoleKey) {
+        const supabase = createClient(supabaseUrl, serviceRoleKey);
+        const dbType = dbTypeMap[legionType] || 'self';
+        
+        // 從請求取得 user_id 或從 authorization header 解析
+        const authHeader = req.headers.get('authorization');
+        let userId: string | null = null;
+        
+        if (authHeader) {
+          try {
+            const token = authHeader.replace('Bearer ', '');
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            userId = payload.sub;
+          } catch (e) {
+            console.log('Could not parse user from token');
+          }
+        }
+        
+        const { error } = await supabase.from('legion_stories').insert({ 
+          calculation_id: calculationId, 
+          legion_type: dbType, 
+          story,
+          user_id: userId 
+        });
+        if (error) console.error('DB save error:', error);
+        else console.log('Story saved to DB');
+      } else {
+        console.log('SUPABASE_SERVICE_ROLE_KEY not configured, skipping DB save');
+      }
     }
 
     return new Response(JSON.stringify({ story, source: 'ai' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

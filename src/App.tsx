@@ -9,6 +9,7 @@ import { EntitlementGuard } from "@/components/EntitlementGuard";
 import { MemberProvider } from "@/lib/member";
 import { supabase } from "@/integrations/supabase/client";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 import "@/lib/member/styles.css";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -72,6 +73,7 @@ const App = () => (
             </MuseumLayout>
           </BrowserRouter>
           <SpeedInsights />
+          <Analytics />
         </TooltipProvider>
       </MemberProvider>
     </ThemeProvider>

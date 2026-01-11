@@ -70,11 +70,16 @@ const ReportPrint = () => {
     document.title = fileName;
 
     // 等待所有資源載入完成
+    console.log('[ReportPrint] Report data loaded:', data);
+    
     const loadTimer = setTimeout(() => {
+      console.log('[ReportPrint] Ready to print');
       setIsReady(true);
       // 自動觸發列印對話框
-      window.print();
-    }, 1500); // 給 1.5 秒時間讓圖片載入
+      setTimeout(() => {
+        window.print();
+      }, 500); // 再等 0.5 秒確保狀態更新
+    }, 3000); // 給 3 秒時間讓內容完全渲染
 
     return () => {
       clearTimeout(loadTimer);

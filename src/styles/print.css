@@ -19,8 +19,8 @@
     print-color-adjust: exact;
   }
 
-  /* 隱藏所有非報告內容 */
-  body > *:not(.report-print-container) {
+  /* 隱藏不需要列印的元素 */
+  .print\:hidden {
     display: none !important;
   }
 

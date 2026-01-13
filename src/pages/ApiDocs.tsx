@@ -769,7 +769,7 @@ const createPsychologyPrompt = (baziData) => {
                           <td className="p-3"><code>gender</code></td>
                           <td className="p-3">string</td>
                           <td className="p-3"><Badge variant="destructive" className="text-xs">必填</Badge></td>
-                          <td className="p-3">性別（男/女）</td>
+                          <td className="p-3">性別（male/female 或 男/女）</td>
                         </tr>
                         <tr className="border-t">
                           <td className="p-3"><code>birthDate</code></td>

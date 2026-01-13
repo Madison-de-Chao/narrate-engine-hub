@@ -399,7 +399,104 @@ const ReportPrint = () => {
           </div>
         )}
 
-        {/* 第4頁：免責聲明完整版 */}
+        {/* 軍團故事頁面（每個有故事的柱一頁） */}
+        {reportData.legionStories && Object.entries(reportData.legionStories).map(([pillarName, story]) => {
+          if (!story || typeof story !== 'string') return null;
+          
+          const legionConfig: Record<string, { name: string; icon: string; color: string }> = {
+            year: { name: '年柱軍團', icon: '🌱', color: '#10b981' },
+            month: { name: '月柱軍團', icon: '☀️', color: '#f59e0b' },
+            day: { name: '日柱軍團', icon: '🍃', color: '#ef4444' },
+            hour: { name: '時柱軍團', icon: '❄️', color: '#3b82f6' },
+          };
+          
+          const legion = legionConfig[pillarName as keyof typeof legionConfig];
+          if (!legion) return null;
+          
+          const pillar = reportData.pillars[pillarName as keyof typeof reportData.pillars];
+          if (!pillar) return null;
+          
+          return (
+            <div key={pillarName} className="report-page report-content-page">
+              <div className="page-header">
+                <h2 className="page-title">
+                  <span style={{ marginRight: '8px' }}>{legion.icon}</span>
+                  {legion.name}
+                </h2>
+                <p className="page-subtitle">
+                  {pillar.stem}{pillar.branch} · {reportData.nayin[pillarName as keyof typeof reportData.nayin]}
+                </p>
+              </div>
+
+              <div style={{ marginTop: '15mm' }}>
+                {/* 天干和地支角色 */}
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '1fr 1fr', 
+                  gap: '8mm',
+                  marginBottom: '10mm'
+                }}>
+                  <div style={{
+                    padding: '6mm',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '4mm',
+                    border: `2px solid ${legion.color}`,
+                  }}>
+                    <h4 style={{ 
+                      fontSize: '14px', 
+                      fontWeight: 600, 
+                      color: legion.color,
+                      marginBottom: '4mm'
+                    }}>
+                      ⚔️ 天干：{pillar.stem}
+                    </h4>
+                    <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>
+                      指揮官 · 主導能量
+                    </p>
+                  </div>
+                  <div style={{
+                    padding: '6mm',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '4mm',
+                    border: `2px solid ${legion.color}`,
+                  }}>
+                    <h4 style={{ 
+                      fontSize: '14px', 
+                      fontWeight: 600, 
+                      color: legion.color,
+                      marginBottom: '4mm'
+                    }}>
+                      🛡️ 地支：{pillar.branch}
+                    </h4>
+                    <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>
+                      軍師 · 策略智慧
+                    </p>
+                  </div>
+                </div>
+
+                {/* 軍團故事 */}
+                <div style={{
+                  padding: '8mm',
+                  backgroundColor: 'white',
+                  borderRadius: '4mm',
+                  border: '1px solid #e0e0e0',
+                  lineHeight: 1.8,
+                  fontSize: '12px',
+                  color: '#333',
+                  whiteSpace: 'pre-wrap'
+                }}>
+                  {story}
+                </div>
+              </div>
+
+              <div className="page-footer">
+                <p>虹靈御所 Rainbow Sanctuary © {new Date().getFullYear()}</p>
+              </div>
+            </div>
+          );
+        })}
+
+        {/* 免責聲明完整版 */}
         <div className="report-page report-content-page">
           <div className="page-header">
             <h2 className="page-title">服務條款與免責聲明</h2>

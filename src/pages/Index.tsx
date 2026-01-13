@@ -24,7 +24,7 @@ import { ReportSection, ReportDivider, ReportProgress, ReportControls, ReadingPr
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Download, Loader2, LogOut, UserRound, Sparkles, Swords, BookOpen, Crown, Shield, Share2, MessageCircle, Facebook, LayoutDashboard, Scroll, BarChart3, FileText, User, ChevronDown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+// useNavigate is already imported at line 2
 import { type ReportData } from "@/lib/pdfGenerator";
 import { PdfOptionsDialog, type PdfOptions as DialogPdfOptions } from "@/components/PdfOptionsDialog";
 import { toast } from "sonner";

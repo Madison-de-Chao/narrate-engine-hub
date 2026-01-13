@@ -1182,7 +1182,7 @@ serve(async (req) => {
           },
           body: {
             name: '姓名 (必填)',
-            gender: 'male 或 female (必填)',
+            gender: 'male/female 或 男/女 (必填)',
             birthDate: 'YYYY-MM-DD (必填)',
             birthTime: 'HH:MM (必填)',
             timezoneOffsetMinutes: '時區偏移分鐘數，預設480 (UTC+8)'
@@ -1224,18 +1224,23 @@ serve(async (req) => {
 
     const body = await req.json();
     requestBody = body;
-    const { name, gender, birthDate, birthTime, timezoneOffsetMinutes = 480 } = body;
+    const { name, gender: rawGender, birthDate, birthTime, timezoneOffsetMinutes = 480 } = body;
 
-    if (!name || !gender || !birthDate || !birthTime) {
+    if (!name || !rawGender || !birthDate || !birthTime) {
       return new Response(
         JSON.stringify({ success: false, error: 'Missing required fields', required: ['name', 'gender', 'birthDate', 'birthTime'] }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
+    // Normalize gender: accept both English (male/female) and Chinese (男/女)
+    let gender: string = rawGender;
+    if (rawGender === '男') gender = 'male';
+    else if (rawGender === '女') gender = 'female';
+    
     if (!['male', 'female'].includes(gender)) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Invalid gender. Must be "male" or "female".' }),
+        JSON.stringify({ success: false, error: 'Invalid gender. Must be "male", "female", "男", or "女".' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }

@@ -484,12 +484,15 @@ const ApiConsole = () => {
   -H "x-api-key: YOUR_API_KEY" \\
   -d '{
     "name": "張三",
-    "gender": "男",
+    "gender": "male",
     "birthDate": "1990-05-15",
     "birthTime": "14:30"
   }'`}</code>
             </pre>
             <p className="text-sm text-muted-foreground mt-3">
+              💡 <code>gender</code> 參數支援 <code>"male"</code>/<code>"female"</code> 或 <code>"男"</code>/<code>"女"</code> 格式。
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
               ⚠️ 建立新金鑰後請立即複製保存，金鑰只會在建立時顯示一次。
             </p>
           </CardContent>

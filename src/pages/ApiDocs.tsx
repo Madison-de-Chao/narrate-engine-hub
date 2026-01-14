@@ -1604,50 +1604,230 @@ const createPsychologyPrompt = (baziData) => {
             <Card>
               <CardHeader>
                 <CardTitle>錯誤回應格式</CardTitle>
+                <CardDescription>API 錯誤回應的標準格式與處理建議</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <CodeBlock
-                  code={`{
+              <CardContent className="space-y-6">
+                <div>
+                  <h4 className="font-medium mb-3">標準錯誤格式</h4>
+                  <CodeBlock
+                    code={`{
   "success": false,
-  "error": "錯誤訊息描述"
+  "error": "錯誤類型描述",
+  "message": "詳細錯誤訊息",
+  "code": "ERROR_CODE",
+  "details": { ... },
+  "requestId": "req_abc123xyz"
 }`}
-                  id="error-format"
-                />
+                    id="error-format"
+                  />
+                </div>
 
                 <div>
-                  <h4 className="font-medium mb-3">常見錯誤碼</h4>
+                  <h4 className="font-medium mb-3">HTTP 狀態碼說明</h4>
                   <div className="border rounded-lg overflow-hidden">
                     <table className="w-full text-sm">
                       <thead className="bg-muted">
                         <tr>
-                          <th className="text-left p-3">HTTP 狀態碼</th>
+                          <th className="text-left p-3">狀態碼</th>
+                          <th className="text-left p-3">類型</th>
                           <th className="text-left p-3">說明</th>
+                          <th className="text-left p-3">處理建議</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr className="border-t">
-                          <td className="p-3"><Badge variant="outline">400</Badge></td>
-                          <td className="p-3">請求參數錯誤，缺少必填欄位或格式不正確</td>
+                          <td className="p-3"><Badge className="bg-green-600">200</Badge></td>
+                          <td className="p-3">成功</td>
+                          <td className="p-3">請求成功</td>
+                          <td className="p-3 text-muted-foreground">正常處理回應</td>
                         </tr>
                         <tr className="border-t">
-                          <td className="p-3"><Badge variant="outline">401</Badge></td>
-                          <td className="p-3">未授權，API Key 無效或已過期</td>
+                          <td className="p-3"><Badge variant="destructive">400</Badge></td>
+                          <td className="p-3">請求錯誤</td>
+                          <td className="p-3">參數格式錯誤或缺少必填欄位</td>
+                          <td className="p-3 text-muted-foreground">檢查參數格式</td>
                         </tr>
                         <tr className="border-t">
-                          <td className="p-3"><Badge variant="outline">403</Badge></td>
-                          <td className="p-3">API Key 已停用或超出配額</td>
+                          <td className="p-3"><Badge variant="destructive">401</Badge></td>
+                          <td className="p-3">未授權</td>
+                          <td className="p-3">API Key 無效或未提供</td>
+                          <td className="p-3 text-muted-foreground">檢查 API Key</td>
                         </tr>
                         <tr className="border-t">
-                          <td className="p-3"><Badge variant="outline">429</Badge></td>
-                          <td className="p-3">請求過於頻繁，已超出速率限制</td>
+                          <td className="p-3"><Badge variant="destructive">403</Badge></td>
+                          <td className="p-3">禁止存取</td>
+                          <td className="p-3">API Key 已停用或權限不足</td>
+                          <td className="p-3 text-muted-foreground">確認訂閱狀態</td>
                         </tr>
                         <tr className="border-t">
-                          <td className="p-3"><Badge variant="outline">500</Badge></td>
+                          <td className="p-3"><Badge variant="secondary">429</Badge></td>
+                          <td className="p-3">請求過多</td>
+                          <td className="p-3">超過速率限制 (30 req/min)</td>
+                          <td className="p-3 text-muted-foreground">實作指數退避重試</td>
+                        </tr>
+                        <tr className="border-t">
+                          <td className="p-3"><Badge variant="destructive">500</Badge></td>
+                          <td className="p-3">伺服器錯誤</td>
                           <td className="p-3">伺服器內部錯誤</td>
+                          <td className="p-3 text-muted-foreground">稍後重試</td>
+                        </tr>
+                        <tr className="border-t">
+                          <td className="p-3"><Badge variant="secondary">503</Badge></td>
+                          <td className="p-3">服務不可用</td>
+                          <td className="p-3">服務維護中</td>
+                          <td className="p-3 text-muted-foreground">等待後重試</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>各狀態碼回應範例</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">400 - 參數錯誤</h4>
+                  <CodeBlock
+                    code={`{
+  "success": false,
+  "error": "Invalid request parameters",
+  "code": "VALIDATION_ERROR",
+  "details": {
+    "field": "birthDate",
+    "message": "Invalid date format. Expected YYYY-MM-DD",
+    "received": "1990/05/15"
+  }
+}`}
+                    id="error-400"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">401 - 認證失敗</h4>
+                  <CodeBlock
+                    code={`{
+  "success": false,
+  "error": "Unauthorized",
+  "message": "Invalid or missing API key",
+  "code": "AUTH_ERROR"
+}`}
+                    id="error-401"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">429 - 速率限制</h4>
+                  <CodeBlock
+                    code={`{
+  "success": false,
+  "error": "Rate limit exceeded",
+  "message": "Too many requests. Please slow down.",
+  "code": "RATE_LIMIT_ERROR",
+  "retryAfter": 60,
+  "limit": {
+    "requests": 30,
+    "window": "1 minute",
+    "remaining": 0,
+    "resetAt": "2024-01-15T10:31:00Z"
+  }
+}`}
+                    id="error-429"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">500 - 伺服器錯誤</h4>
+                  <CodeBlock
+                    code={`{
+  "success": false,
+  "error": "Internal server error",
+  "message": "An unexpected error occurred",
+  "code": "SERVER_ERROR",
+  "requestId": "req_abc123xyz"
+}`}
+                    id="error-500"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>錯誤處理程式碼範例</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">JavaScript 錯誤處理</h4>
+                  <CodeBlock
+                    code={`async function callBaziApi(params) {
+  const response = await fetch("${baseUrl}/bazi-api", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": API_KEY
+    },
+    body: JSON.stringify(params)
+  });
+
+  const body = await response.json();
+
+  if (!response.ok) {
+    switch (response.status) {
+      case 400:
+        console.error("參數錯誤:", body.details);
+        break;
+      case 401:
+        console.error("認證失敗，請檢查 API Key");
+        break;
+      case 429:
+        console.error("請求過於頻繁，請稍後再試");
+        // 等待 retryAfter 秒後重試
+        break;
+      case 500:
+        console.error("伺服器錯誤，RequestId:", body.requestId);
+        break;
+    }
+    throw new Error(body.message || body.error);
+  }
+
+  return body;
+}`}
+                    id="js-error-handling"
+                    language="javascript"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">指數退避重試邏輯</h4>
+                  <CodeBlock
+                    code={`async function callWithRetry(fn, maxRetries = 3, baseDelay = 1000) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const retryable = [429, 500, 502, 503, 504];
+      if (!retryable.includes(error.status) || attempt === maxRetries - 1) {
+        throw error;
+      }
+      
+      const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
+      console.log(\`重試 \${attempt + 1}/\${maxRetries}，等待 \${delay}ms\`);
+      await new Promise(r => setTimeout(r, delay));
+    }
+  }
+}
+
+// 使用範例
+const result = await callWithRetry(
+  () => callBaziApi({ name: "測試", birthDate: "1990-05-15", birthTime: "14:30", gender: "male" })
+);`}
+                    id="retry-logic"
+                    language="javascript"
+                  />
                 </div>
               </CardContent>
             </Card>

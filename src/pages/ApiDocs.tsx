@@ -1605,7 +1605,230 @@ function UnifiedExample() {
 
             <Card>
               <CardHeader>
-                <CardTitle>類型定義參考</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  TypeScript 類型匯出
+                </CardTitle>
+                <CardDescription>
+                  獨立的類型定義檔案，可直接導入使用
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                  <h4 className="font-medium mb-2">📦 類型匯出檔案</h4>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    完整類型定義位於 <code className="bg-muted px-1 rounded">src/lib/bazi-api-types.ts</code>
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    包含 40+ 種類型定義，涵蓋請求、回應、分析資料結構與工具類型
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">基本導入</h4>
+                  <CodeBlock
+                    code={`// 導入請求與回應類型
+import type { 
+  BaziCalculateRequest,
+  BaziV1Response,
+  BaziCalculateResponse 
+} from '@/lib/bazi-api-types';
+
+// 導入資料結構類型
+import type {
+  FourPillars,
+  Pillar,
+  HiddenStems,
+  HiddenStemItem
+} from '@/lib/bazi-api-types';
+
+// 導入分析類型
+import type {
+  WuxingScores,
+  WuxingElement,
+  YinYangRatio,
+  TenGodItem,
+  ShenshaItem
+} from '@/lib/bazi-api-types';`}
+                    id="types-import-basic"
+                    language="typescript"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">可用類型一覽</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="border rounded-lg p-4">
+                      <h5 className="font-medium text-sm mb-2 text-primary">📝 請求類型</h5>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li><code>BaziCalculateRequest</code> - 基本請求參數</li>
+                        <li><code>BaziV1CalculateRequest</code> - V1 擴展請求</li>
+                        <li><code>BaziSDKConfig</code> - SDK 配置選項</li>
+                      </ul>
+                    </div>
+                    <div className="border rounded-lg p-4">
+                      <h5 className="font-medium text-sm mb-2 text-primary">📤 回應類型</h5>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li><code>BaziCalculateResponse</code> - Legacy 回應</li>
+                        <li><code>BaziV1Response</code> - V1 回應</li>
+                        <li><code>BaziV1Data</code> - V1 資料結構</li>
+                        <li><code>BaziCalculateData</code> - Legacy 資料結構</li>
+                      </ul>
+                    </div>
+                    <div className="border rounded-lg p-4">
+                      <h5 className="font-medium text-sm mb-2 text-primary">📊 基礎結構</h5>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li><code>Pillar</code> - 單柱資訊</li>
+                        <li><code>FourPillars</code> - 四柱結構</li>
+                        <li><code>HiddenStems</code> - 藏干結構</li>
+                        <li><code>HiddenStemItem</code> - 藏干項目</li>
+                        <li><code>PillarName</code> - 柱位名稱</li>
+                      </ul>
+                    </div>
+                    <div className="border rounded-lg p-4">
+                      <h5 className="font-medium text-sm mb-2 text-primary">🔥 五行與陰陽</h5>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li><code>WuxingElement</code> - 五行元素</li>
+                        <li><code>WuxingScores</code> - 五行分數</li>
+                        <li><code>WuxingBreakdown</code> - 五行明細</li>
+                        <li><code>YinYangRatio</code> - 陰陽比例</li>
+                        <li><code>YinYangType</code> - 陰陽類型</li>
+                      </ul>
+                    </div>
+                    <div className="border rounded-lg p-4">
+                      <h5 className="font-medium text-sm mb-2 text-primary">⭐ 十神類型</h5>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li><code>TenGodName</code> - 十神名稱</li>
+                        <li><code>TenGodCategory</code> - 十神類別</li>
+                        <li><code>TenGodItem</code> - 十神項目</li>
+                        <li><code>TenGodBranchItem</code> - 分支十神</li>
+                        <li><code>TenGodStats</code> - 十神統計</li>
+                      </ul>
+                    </div>
+                    <div className="border rounded-lg p-4">
+                      <h5 className="font-medium text-sm mb-2 text-primary">🎯 神煞類型</h5>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li><code>ShenshaCategory</code> - 神煞類別</li>
+                        <li><code>ShenshaRarity</code> - 神煞稀有度</li>
+                        <li><code>ShenshaItem</code> - 神煞項目</li>
+                        <li><code>ShenshaStats</code> - 神煞統計</li>
+                      </ul>
+                    </div>
+                    <div className="border rounded-lg p-4">
+                      <h5 className="font-medium text-sm mb-2 text-primary">⚔️ 軍團類型</h5>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li><code>LegionType</code> - 軍團類型</li>
+                        <li><code>LegionRole</code> - 軍團角色</li>
+                        <li><code>LegionMember</code> - 軍團成員</li>
+                        <li><code>LegionInfo</code> - 軍團資訊</li>
+                      </ul>
+                    </div>
+                    <div className="border rounded-lg p-4">
+                      <h5 className="font-medium text-sm mb-2 text-primary">🛠️ 工具類型</h5>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li><code>BaziErrorCode</code> - 錯誤碼</li>
+                        <li><code>BaziErrorInfo</code> - 錯誤資訊</li>
+                        <li><code>NayinItem</code> - 納音項目</li>
+                        <li><code>DeepReadonly&lt;T&gt;</code> - 深層唯讀</li>
+                        <li><code>ApiResponse&lt;T&gt;</code> - API 回應包裝</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">類型守衛函數</h4>
+                  <CodeBlock
+                    code={`import { 
+  isWuxingElement,
+  isTenGodName,
+  isPillarName,
+  isBaziAPIError
+} from '@/lib/bazi-api-types';
+
+// 檢查是否為有效的五行元素
+const element = data.element;
+if (isWuxingElement(element)) {
+  console.log('有效五行:', element); // TypeScript 自動推斷類型
+}
+
+// 檢查是否為有效的十神名稱
+if (isTenGodName(name)) {
+  console.log('十神:', name); // 類型: TenGodName
+}
+
+// 檢查是否為 API 錯誤
+try {
+  await client.calculate(request);
+} catch (error) {
+  if (isBaziAPIError(error)) {
+    console.error(\`錯誤碼: \${error.statusCode}\`);
+  }
+}`}
+                    id="type-guards"
+                    language="typescript"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">進階類型使用</h4>
+                  <CodeBlock
+                    code={`import type {
+  FourPillars,
+  WuxingScores,
+  TenGodItem,
+  ShenshaItem,
+  PillarName,
+  WuxingElement,
+  DeepReadonly,
+  ApiResponse
+} from '@/lib/bazi-api-types';
+
+// 建立類型安全的處理函數
+function processPillars(pillars: FourPillars): void {
+  const pillarNames: PillarName[] = ['year', 'month', 'day', 'hour'];
+  
+  pillarNames.forEach(name => {
+    const pillar = pillars[name];
+    console.log(\`\${name}: \${pillar.stem}\${pillar.branch}\`);
+  });
+}
+
+// 使用工具類型建立唯讀資料
+type ReadonlyBaziResult = DeepReadonly<{
+  pillars: FourPillars;
+  wuxing: WuxingScores;
+}>;
+
+// 建立統一的 API 回應處理
+function handleResponse<T>(response: ApiResponse<T>): T {
+  if (!response.success) {
+    throw new Error(response.error);
+  }
+  return response.data;
+}
+
+// 五行類型安全處理
+function getElementColor(element: WuxingElement): string {
+  const colors: Record<WuxingElement, string> = {
+    '木': 'green',
+    '火': 'red',
+    '土': 'yellow',
+    '金': 'gold',
+    '水': 'blue'
+  };
+  return colors[element];
+}`}
+                    id="advanced-types"
+                    language="typescript"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>快速類型參考</CardTitle>
               </CardHeader>
               <CardContent>
                 <CodeBlock

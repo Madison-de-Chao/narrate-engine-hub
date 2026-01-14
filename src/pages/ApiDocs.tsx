@@ -2134,6 +2134,176 @@ const result = await callWithRetry(
                     language="javascript"
                   />
                 </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">Python 錯誤處理</h4>
+                  <CodeBlock
+                    code={`import requests
+from typing import Optional, Dict, Any
+import time
+import random
+
+class BaziAPIError(Exception):
+    """八字 API 錯誤"""
+    def __init__(self, message: str, status_code: int, code: str = None, retryable: bool = False):
+        super().__init__(message)
+        self.status_code = status_code
+        self.code = code
+        self.retryable = retryable
+
+def call_bazi_api(params: Dict[str, Any], api_key: str) -> Dict[str, Any]:
+    """調用八字 API 並處理錯誤"""
+    url = "${baseUrl}/bazi-api"
+    headers = {
+        "Content-Type": "application/json",
+        "X-API-Key": api_key
+    }
+    
+    response = requests.post(url, json=params, headers=headers)
+    body = response.json()
+    
+    if not response.ok:
+        error_msg = body.get("message") or body.get("error", "Unknown error")
+        error_code = body.get("code")
+        retryable = response.status_code in [429, 500, 502, 503, 504]
+        
+        if response.status_code == 400:
+            details = body.get("details", {})
+            print(f"參數錯誤: {details.get('field')} - {details.get('message')}")
+        elif response.status_code == 401:
+            print("認證失敗，請檢查 API Key")
+        elif response.status_code == 429:
+            retry_after = body.get("retryAfter", 60)
+            print(f"請求過於頻繁，請等待 {retry_after} 秒後重試")
+        elif response.status_code == 500:
+            request_id = body.get("requestId")
+            print(f"伺服器錯誤，RequestId: {request_id}")
+        
+        raise BaziAPIError(error_msg, response.status_code, error_code, retryable)
+    
+    return body`}
+                    id="python-error-handling"
+                    language="python"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">Python 指數退避重試</h4>
+                  <CodeBlock
+                    code={`def call_with_retry(
+    fn, 
+    max_retries: int = 3, 
+    base_delay: float = 1.0
+) -> Any:
+    """帶指數退避的重試邏輯"""
+    last_error = None
+    
+    for attempt in range(max_retries):
+        try:
+            return fn()
+        except BaziAPIError as e:
+            last_error = e
+            
+            if not e.retryable or attempt == max_retries - 1:
+                raise
+            
+            # 指數退避 + 隨機抖動
+            delay = base_delay * (2 ** attempt) + random.random()
+            print(f"重試 {attempt + 1}/{max_retries}，等待 {delay:.2f} 秒")
+            time.sleep(delay)
+    
+    raise last_error
+
+# 使用範例
+try:
+    result = call_with_retry(
+        lambda: call_bazi_api({
+            "name": "張三",
+            "gender": "male",
+            "birthDate": "1990-05-15",
+            "birthTime": "14:30"
+        }, api_key="YOUR_API_KEY")
+    )
+    print("計算成功:", result["data"]["pillars"])
+except BaziAPIError as e:
+    print(f"API 錯誤 [{e.status_code}]: {e}")`}
+                    id="python-retry-logic"
+                    language="python"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">Python 完整客戶端類別</h4>
+                  <CodeBlock
+                    code={`class BaziClient:
+    """八字 API 客戶端"""
+    
+    def __init__(
+        self, 
+        api_key: str,
+        base_url: str = "${baseUrl}",
+        max_retries: int = 3,
+        timeout: int = 30
+    ):
+        self.api_key = api_key
+        self.base_url = base_url
+        self.max_retries = max_retries
+        self.timeout = timeout
+    
+    def _request(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """內部請求方法，帶自動重試"""
+        url = f"{self.base_url}/{endpoint}"
+        headers = {
+            "Content-Type": "application/json",
+            "X-API-Key": self.api_key
+        }
+        
+        return call_with_retry(
+            lambda: self._do_request(url, headers, data),
+            max_retries=self.max_retries
+        )
+    
+    def _do_request(self, url: str, headers: Dict, data: Dict) -> Dict:
+        response = requests.post(url, json=data, headers=headers, timeout=self.timeout)
+        body = response.json()
+        
+        if not response.ok:
+            raise BaziAPIError(
+                body.get("message", "Unknown error"),
+                response.status_code,
+                body.get("code"),
+                response.status_code in [429, 500, 502, 503, 504]
+            )
+        return body
+    
+    def calculate(self, **kwargs) -> Dict[str, Any]:
+        """Legacy API 計算"""
+        return self._request("bazi-api", kwargs)
+    
+    def v1_calculate(self, **kwargs) -> Dict[str, Any]:
+        """V1 基礎計算"""
+        return self._request("v1-bazi-calculate", kwargs)
+    
+    def v1_analyze(self, **kwargs) -> Dict[str, Any]:
+        """V1 進階分析"""
+        return self._request("v1-bazi-analyze", kwargs)
+
+# 使用範例
+client = BaziClient(api_key="YOUR_API_KEY")
+
+result = client.calculate(
+    name="王小明",
+    gender="male",
+    birthDate="1985-03-20",
+    birthTime="08:30"
+)
+
+print("四柱:", result["data"]["pillars"])
+print("五行:", result["data"]["wuxingScores"])`}
+                    id="python-client-class"
+                    language="python"
+                  />
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

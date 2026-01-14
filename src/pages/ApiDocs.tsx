@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Book, Code, Zap, Shield, Palette, FileText, Workflow, Variable } from "lucide-react";
+import { Copy, Check, Book, Code, Zap, Shield, Palette, FileText, Workflow, Variable, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -776,12 +776,16 @@ const createPsychologyPrompt = (baziData) => {
 
         {/* API Reference */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">概覽</TabsTrigger>
             <TabsTrigger value="endpoint">端點說明</TabsTrigger>
             <TabsTrigger value="templates" className="flex items-center gap-1">
               <Palette className="h-3 w-3" />
               模板指南
+            </TabsTrigger>
+            <TabsTrigger value="sdk" className="flex items-center gap-1">
+              <Package className="h-3 w-3" />
+              SDK
             </TabsTrigger>
             <TabsTrigger value="examples">程式範例</TabsTrigger>
             <TabsTrigger value="errors">錯誤處理</TabsTrigger>
@@ -1346,6 +1350,307 @@ const createPsychologyPrompt = (baziData) => {
                     </ul>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* SDK Tab */}
+          <TabsContent value="sdk" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="h-5 w-5" />
+                  TypeScript SDK
+                </CardTitle>
+                <CardDescription>
+                  官方 TypeScript SDK 提供完整類型定義、自動重試與錯誤處理
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                  <h4 className="font-medium mb-2">✨ SDK 特點</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• 完整 TypeScript 類型定義</li>
+                    <li>• 內建指數退避自動重試機制</li>
+                    <li>• 結構化錯誤處理</li>
+                    <li>• 支援 Legacy 與 V1 API</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">安裝方式</h4>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    SDK 檔案位於 <code className="bg-muted px-1 rounded">src/lib/bazi-api-sdk.ts</code>
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">基本使用</h4>
+                  <CodeBlock
+                    code={`import { createBaziClient } from '@/lib/bazi-api-sdk';
+
+// 建立客戶端
+const client = createBaziClient({
+  apiKey: 'YOUR_API_KEY',
+  maxRetries: 3,        // 最大重試次數
+  initialRetryDelay: 1000, // 初始重試延遲 (ms)
+  timeout: 30000        // 請求超時 (ms)
+});
+
+// 使用 Legacy API
+const legacyResult = await client.calculate({
+  name: '張三',
+  gender: 'male',
+  birthDate: '1990-05-15',
+  birthTime: '14:30'
+});
+
+// 使用 V1 API - 基礎計算
+const v1CalcResult = await client.v1Calculate({
+  name: '張三',
+  gender: 'male',
+  birthDate: '1990-05-15',
+  birthTime: '14:30',
+  timezoneOffsetMinutes: 480,
+  longitude: 121.47,
+  useSolarTime: true
+});
+
+// 使用 V1 API - 進階分析
+const v1AnalyzeResult = await client.v1Analyze({
+  name: '張三',
+  gender: 'male',
+  birthDate: '1990-05-15',
+  birthTime: '14:30'
+});`}
+                    id="sdk-basic"
+                    language="typescript"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">錯誤處理</h4>
+                  <CodeBlock
+                    code={`import { createBaziClient, BaziAPIError } from '@/lib/bazi-api-sdk';
+
+const client = createBaziClient({ apiKey: 'YOUR_KEY' });
+
+try {
+  const result = await client.calculate(request);
+  console.log('計算成功:', result.data);
+} catch (error) {
+  if (error instanceof BaziAPIError) {
+    console.error(\`API 錯誤 [\${error.statusCode}]: \${error.message}\`);
+    
+    if (error.retryable) {
+      console.log('此錯誤可重試');
+    }
+    
+    switch (error.statusCode) {
+      case 401:
+        console.error('API Key 無效');
+        break;
+      case 429:
+        console.error('請求過於頻繁');
+        break;
+      case 500:
+        console.error('伺服器錯誤');
+        break;
+    }
+  }
+}`}
+                    id="sdk-error-handling"
+                    language="typescript"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Code className="h-5 w-5" />
+                  React Hook
+                </CardTitle>
+                <CardDescription>
+                  使用 React Hook 簡化在 React 元件中的 API 整合
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">useBaziCalculate - Legacy API</h4>
+                  <CodeBlock
+                    code={`import { useBaziCalculate } from '@/hooks/useBaziAPI';
+
+function BaziForm() {
+  const { 
+    calculate, 
+    data, 
+    isLoading, 
+    isError, 
+    error,
+    reset 
+  } = useBaziCalculate({
+    apiKey: 'YOUR_API_KEY',
+    onSuccess: (result) => console.log('成功:', result),
+    onError: (err) => console.error('失敗:', err)
+  });
+
+  const handleSubmit = async () => {
+    await calculate({
+      name: '張三',
+      gender: 'male',
+      birthDate: '1990-05-15',
+      birthTime: '14:30'
+    });
+  };
+
+  return (
+    <div>
+      <button onClick={handleSubmit} disabled={isLoading}>
+        {isLoading ? '計算中...' : '開始計算'}
+      </button>
+      
+      {isError && <p className="text-red-500">{error?.message}</p>}
+      
+      {data?.success && (
+        <div>
+          <p>日主: {data.data.pillars.day.stem}</p>
+          <p>納音: {data.data.pillars.day.nayin}</p>
+        </div>
+      )}
+    </div>
+  );
+}`}
+                    id="hook-legacy"
+                    language="tsx"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">useBaziV1Analyze - V1 進階分析</h4>
+                  <CodeBlock
+                    code={`import { useBaziV1Analyze } from '@/hooks/useBaziAPI';
+
+function AdvancedAnalysis() {
+  const { analyze, data, isLoading, status } = useBaziV1Analyze({
+    apiKey: 'YOUR_API_KEY'
+  });
+
+  const handleAnalyze = async () => {
+    const result = await analyze({
+      name: '李四',
+      gender: 'female',
+      birthDate: '1985-08-20',
+      birthTime: '09:15',
+      timezoneOffsetMinutes: 480
+    });
+    
+    if (result) {
+      console.log('十神:', result.data.tenGods);
+      console.log('神煞:', result.data.shensha);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleAnalyze}>分析八字</button>
+      <p>狀態: {status}</p>
+    </div>
+  );
+}`}
+                    id="hook-v1-analyze"
+                    language="tsx"
+                  />
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">useBaziAPI - 統一 Hook</h4>
+                  <CodeBlock
+                    code={`import { useBaziAPI } from '@/hooks/useBaziAPI';
+
+function UnifiedExample() {
+  const api = useBaziAPI({ apiKey: 'YOUR_API_KEY' });
+
+  // Legacy API
+  const handleLegacy = () => api.legacy.calculate(request);
+  
+  // V1 計算
+  const handleV1Calc = () => api.v1.calculate(request);
+  
+  // V1 分析
+  const handleV1Analyze = () => api.v1.analyze(request);
+  
+  // 重置所有狀態
+  const handleReset = () => api.resetAll();
+
+  return (
+    <div>
+      <p>Legacy 狀態: {api.legacy.status}</p>
+      <p>V1 計算狀態: {api.v1.status}</p>
+      <p>V1 分析狀態: {api.v1.analyzeState.status}</p>
+    </div>
+  );
+}`}
+                    id="hook-unified"
+                    language="tsx"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>類型定義參考</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CodeBlock
+                  code={`// 請求參數類型
+interface BaziCalculateRequest {
+  name: string;
+  gender: 'male' | 'female' | '男' | '女';
+  birthDate: string;  // YYYY-MM-DD
+  birthTime: string;  // HH:MM
+  timezoneOffsetMinutes?: number;
+  longitude?: number;
+  useSolarTime?: boolean;
+}
+
+// 四柱結構
+interface FourPillars {
+  year: { stem: string; branch: string; nayin?: string };
+  month: { stem: string; branch: string; nayin?: string };
+  day: { stem: string; branch: string; nayin?: string };
+  hour: { stem: string; branch: string; nayin?: string };
+}
+
+// 五行分數
+interface WuxingScores {
+  木: number;
+  火: number;
+  土: number;
+  金: number;
+  水: number;
+}
+
+// SDK 配置
+interface BaziSDKConfig {
+  apiKey: string;
+  baseUrl?: string;
+  maxRetries?: number;       // 預設 3
+  initialRetryDelay?: number; // 預設 1000ms
+  timeout?: number;          // 預設 30000ms
+}
+
+// API 錯誤
+class BaziAPIError extends Error {
+  statusCode: number;
+  errorCode?: string;
+  retryable: boolean;
+}`}
+                  id="sdk-types"
+                  language="typescript"
+                />
               </CardContent>
             </Card>
           </TabsContent>

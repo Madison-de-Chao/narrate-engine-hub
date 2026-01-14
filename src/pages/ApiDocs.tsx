@@ -36,17 +36,18 @@ const ApiDocs = () => {
 
   const requestExample = `{
   "name": "張三",
-  "gender": "男",
+  "gender": "male",
   "birthDate": "1990-05-15",
   "birthTime": "14:30",
   "timezoneOffsetMinutes": 480
 }`;
 
+  // 完整的 Legacy API 回應範例
   const responseExample = `{
   "success": true,
   "data": {
     "name": "張三",
-    "gender": "男",
+    "gender": "male",
     "birthDate": "1990-05-15",
     "birthTime": "14:30",
     "pillars": {
@@ -55,12 +56,200 @@ const ApiDocs = () => {
       "day": { "stem": "甲", "branch": "子", "nayin": "海中金" },
       "hour": { "stem": "辛", "branch": "未", "nayin": "路旁土" }
     },
-    "wuxingScores": { "木": 2, "火": 3, "土": 2, "金": 3, "水": 1 },
+    "hiddenStems": {
+      "year": [{ "stem": "丁", "weight": 0.6, "type": "本氣" }, { "stem": "己", "weight": 0.4, "type": "中氣" }],
+      "month": [{ "stem": "丙", "weight": 0.6, "type": "本氣" }, { "stem": "庚", "weight": 0.3, "type": "中氣" }, { "stem": "戊", "weight": 0.1, "type": "餘氣" }],
+      "day": [{ "stem": "癸", "weight": 1.0, "type": "本氣" }],
+      "hour": [{ "stem": "己", "weight": 0.6, "type": "本氣" }, { "stem": "丁", "weight": 0.3, "type": "中氣" }, { "stem": "乙", "weight": 0.1, "type": "餘氣" }]
+    },
+    "wuxingScores": { "木": 2.1, "火": 3.5, "土": 2.8, "金": 3.2, "水": 1.4 },
     "yinyangRatio": { "yin": 5, "yang": 3 },
-    "tenGods": { ... },
-    "shensha": [ ... ],
-    "shenshaDetails": [ ... ]
+    "tenGods": {
+      "yearStem": "偏財",
+      "monthStem": "正財",
+      "hourStem": "正財",
+      "yearBranch": { "丁": "傷官", "己": "正財" },
+      "monthBranch": { "丙": "食神", "庚": "偏財", "戊": "偏財" },
+      "dayBranch": { "癸": "正印" },
+      "hourBranch": { "己": "正財", "丁": "傷官", "乙": "劫財" }
+    },
+    "shensha": ["天乙貴人", "文昌貴人", "驛馬"],
+    "shenshaDetails": [
+      {
+        "name": "天乙貴人",
+        "position": "時柱",
+        "type": "吉",
+        "category": "貴人",
+        "description": "逢凶化吉，遇難呈祥，主有貴人相助",
+        "effect": "增強人際關係，事業順遂"
+      },
+      {
+        "name": "文昌貴人",
+        "position": "月柱",
+        "type": "吉",
+        "category": "學業",
+        "description": "主聰明伶俐，學業有成",
+        "effect": "提升學習能力與考試運"
+      },
+      {
+        "name": "驛馬",
+        "position": "年柱",
+        "type": "中性",
+        "category": "行動",
+        "description": "主奔波遷移，適合外出發展",
+        "effect": "增加流動性，利於外地發展"
+      }
+    ]
+  },
+  "meta": {
+    "apiVersion": "1.0.0",
+    "calculatedAt": "2024-01-15T10:30:00.000Z"
   }
+}`;
+
+  // V1 Calculate API 完整回應範例
+  const v1CalculateResponseFull = `{
+  "success": true,
+  "data": {
+    "pillars": {
+      "year": { "stem": "庚", "branch": "午" },
+      "month": { "stem": "辛", "branch": "巳" },
+      "day": { "stem": "甲", "branch": "子" },
+      "hour": { "stem": "辛", "branch": "未" }
+    },
+    "hiddenStems": {
+      "year": [
+        { "stem": "丁", "weight": 0.6, "ratio": 60, "type": "本氣" },
+        { "stem": "己", "weight": 0.4, "ratio": 40, "type": "中氣" }
+      ],
+      "month": [
+        { "stem": "丙", "weight": 0.6, "ratio": 60, "type": "本氣" },
+        { "stem": "庚", "weight": 0.3, "ratio": 30, "type": "中氣" },
+        { "stem": "戊", "weight": 0.1, "ratio": 10, "type": "餘氣" }
+      ],
+      "day": [
+        { "stem": "癸", "weight": 1.0, "ratio": 100, "type": "本氣" }
+      ],
+      "hour": [
+        { "stem": "己", "weight": 0.6, "ratio": 60, "type": "本氣" },
+        { "stem": "丁", "weight": 0.3, "ratio": 30, "type": "中氣" },
+        { "stem": "乙", "weight": 0.1, "ratio": 10, "type": "餘氣" }
+      ]
+    },
+    "nayin": {
+      "year": "路旁土",
+      "month": "白蠟金",
+      "day": "海中金",
+      "hour": "路旁土"
+    },
+    "wuxing": {
+      "wood": 1.6,
+      "fire": 2.4,
+      "earth": 1.8,
+      "metal": 3.2,
+      "water": 1.0
+    },
+    "wuxingBreakdown": [
+      { "element": "wood", "value": 1.5, "source": "甲-day-stem" },
+      { "element": "water", "value": 1.0, "source": "子-day-branch" },
+      { "element": "fire", "value": 0.9, "source": "午-year-branch-hidden-丁" }
+    ],
+    "yinyang": { "yang": 50, "yin": 50 },
+    "fourSeasonsTeam": {
+      "family": { "commander": "庚", "advisor": "午", "element": "metal" },
+      "growth": { "commander": "辛", "advisor": "巳", "element": "metal" },
+      "self": { "commander": "甲", "advisor": "子", "element": "wood" },
+      "future": { "commander": "辛", "advisor": "未", "element": "metal" }
+    },
+    "interactions": [
+      { "type": "CLASH", "name": "子午衝", "branches": ["子", "午"], "description": "水火相衝，情緒起伏" }
+    ],
+    "meta": {
+      "birthUtc": "1990-05-15T06:30:00.000Z",
+      "solarAdjustedTime": "14:36:00",
+      "dayDelta": 0,
+      "solarMode": "TST",
+      "ziMode": "EARLY",
+      "solarTermSource": "HKO_JSON"
+    }
+  },
+  "version": "3.0.0"
+}`;
+
+  // V1 Analyze API 完整回應範例
+  const v1AnalyzeResponseFull = `{
+  "success": true,
+  "data": {
+    "pillars": { ... },
+    "hiddenStems": { ... },
+    "nayin": { ... },
+    "wuxing": { ... },
+    "yinyang": { ... },
+    
+    "tenGods": {
+      "year": { "stem": "偏財", "branch": "傷官" },
+      "month": { "stem": "正財", "branch": "食神" },
+      "day": { "stem": "日元", "branch": "正印" },
+      "hour": { "stem": "正財", "branch": "正官" },
+      "branchDetails": {
+        "year": [{ "hiddenStem": "丁", "tenGod": "傷官", "weight": 0.6 }],
+        "month": [{ "hiddenStem": "丙", "tenGod": "食神", "weight": 0.6 }],
+        "day": [{ "hiddenStem": "癸", "tenGod": "正印", "weight": 1.0 }],
+        "hour": [{ "hiddenStem": "己", "tenGod": "正財", "weight": 0.6 }]
+      }
+    },
+    
+    "shensha": [
+      {
+        "name": "天乙貴人",
+        "category": "貴人",
+        "type": "吉神",
+        "pillar": "hour",
+        "pillarValue": "未",
+        "anchorBasis": "日干",
+        "anchorValue": "甲",
+        "description": "逢凶化吉，遇難呈祥",
+        "modernMeaning": "人脈廣泛，貴人運強",
+        "buffType": "Buff",
+        "rarity": "常見"
+      },
+      {
+        "name": "文昌貴人",
+        "category": "學業",
+        "type": "吉神",
+        "pillar": "month",
+        "pillarValue": "巳",
+        "anchorBasis": "日干",
+        "anchorValue": "甲",
+        "description": "主聰明伶俐，學業有成",
+        "modernMeaning": "學習能力強，考運佳",
+        "buffType": "Buff",
+        "rarity": "常見"
+      }
+    ],
+    
+    "personality": [
+      { 
+        "trait": "仁慈寬厚", 
+        "strength": 85, 
+        "element": "wood",
+        "description": "木主仁，為人正直善良，富有同情心" 
+      },
+      { 
+        "trait": "創意思維", 
+        "strength": 70, 
+        "element": "fire",
+        "description": "食傷旺盛，創意豐富，表達能力強" 
+      },
+      { 
+        "trait": "財運敏銳", 
+        "strength": 75, 
+        "element": "metal",
+        "description": "財星多見，理財觀念佳，有商業頭腦" 
+      }
+    ]
+  },
+  "version": "3.0.0"
 }`;
 
   const curlExample = `curl -X POST "${baseUrl}/bazi-api" \\
@@ -68,12 +257,46 @@ const ApiDocs = () => {
   -H "X-API-Key: YOUR_API_KEY" \\
   -d '{
     "name": "張三",
-    "gender": "男",
+    "gender": "male",
     "birthDate": "1990-05-15",
     "birthTime": "14:30"
   }'`;
 
-  const jsExample = `const response = await fetch("${baseUrl}/bazi-api", {
+  // V1 API cURL 範例
+  const curlV1CalculateExample = `# SKU 1 - 基礎八字計算
+curl -X POST "${baseUrl}/v1-bazi-calculate" \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: YOUR_API_KEY" \\
+  -d '{
+    "year": 1990,
+    "month": 5,
+    "day": 15,
+    "hour": 14,
+    "minute": 30,
+    "tzOffsetMinutesEast": 480,
+    "longitude": 121.47,
+    "solarTimeMode": "TST",
+    "ziMode": "EARLY"
+  }'`;
+
+  const curlV1AnalyzeExample = `# SKU 2 - 進階八字分析
+curl -X POST "${baseUrl}/v1-bazi-analyze" \\
+  -H "Content-Type: application/json" \\
+  -H "X-API-Key: YOUR_API_KEY" \\
+  -d '{
+    "year": 1990,
+    "month": 5,
+    "day": 15,
+    "hour": 14,
+    "minute": 30,
+    "tzOffsetMinutesEast": 480,
+    "longitude": 121.47,
+    "solarTimeMode": "TST",
+    "ziMode": "EARLY"
+  }'`;
+
+  const jsExample = `// Legacy API 範例
+const response = await fetch("${baseUrl}/bazi-api", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -81,7 +304,7 @@ const ApiDocs = () => {
   },
   body: JSON.stringify({
     name: "張三",
-    gender: "男",
+    gender: "male",  // 支援 "male"/"female" 或 "男"/"女"
     birthDate: "1990-05-15",
     birthTime: "14:30",
     timezoneOffsetMinutes: 480
@@ -91,7 +314,83 @@ const ApiDocs = () => {
 const data = await response.json();
 console.log(data);`;
 
-  const pythonExample = `import requests
+  // V1 Calculate API JavaScript 範例
+  const jsV1CalculateExample = `// V1 SKU 1 - 基礎八字計算
+const calculateBazi = async () => {
+  const response = await fetch("${baseUrl}/v1-bazi-calculate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": "YOUR_API_KEY"
+    },
+    body: JSON.stringify({
+      year: 1990,
+      month: 5,
+      day: 15,
+      hour: 14,
+      minute: 30,
+      tzOffsetMinutesEast: 480,
+      longitude: 121.47,          // 上海經度
+      solarTimeMode: "TST",       // 真太陽時
+      ziMode: "EARLY"             // 早子時換日
+    })
+  });
+
+  const result = await response.json();
+  
+  if (result.success) {
+    console.log("四柱:", result.data.pillars);
+    console.log("五行:", result.data.wuxing);
+    console.log("納音:", result.data.nayin);
+    console.log("藏干:", result.data.hiddenStems);
+  }
+  
+  return result;
+};`;
+
+  // V1 Analyze API JavaScript 範例
+  const jsV1AnalyzeExample = `// V1 SKU 2 - 進階八字分析
+const analyzeBazi = async () => {
+  const response = await fetch("${baseUrl}/v1-bazi-analyze", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": "YOUR_API_KEY"
+    },
+    body: JSON.stringify({
+      year: 1990,
+      month: 5,
+      day: 15,
+      hour: 14,
+      minute: 30,
+      tzOffsetMinutesEast: 480,
+      longitude: 121.47,
+      solarTimeMode: "TST",
+      ziMode: "EARLY"
+    })
+  });
+
+  const result = await response.json();
+  
+  if (result.success) {
+    // 基礎資料
+    console.log("四柱:", result.data.pillars);
+    
+    // 進階分析
+    console.log("十神:", result.data.tenGods);
+    console.log("神煞:", result.data.shensha);
+    console.log("性格特質:", result.data.personality);
+    
+    // 找出吉神
+    const auspiciousStars = result.data.shensha.filter(s => s.type === "吉神");
+    console.log("吉神:", auspiciousStars.map(s => s.name));
+  }
+  
+  return result;
+};`;
+
+  const pythonExample = `# Legacy API 範例
+import requests
 
 url = "${baseUrl}/bazi-api"
 headers = {
@@ -100,7 +399,7 @@ headers = {
 }
 payload = {
     "name": "張三",
-    "gender": "男",
+    "gender": "male",  # 支援 "male"/"female" 或 "男"/"女"
     "birthDate": "1990-05-15",
     "birthTime": "14:30",
     "timezoneOffsetMinutes": 480
@@ -108,6 +407,60 @@ payload = {
 
 response = requests.post(url, json=payload, headers=headers)
 print(response.json())`;
+
+  // V1 API Python 範例
+  const pythonV1Example = `# V1 SKU 1/2 - 進階八字 API
+import requests
+import json
+
+BASE_URL = "${baseUrl}"
+API_KEY = "YOUR_API_KEY"
+
+def calculate_bazi_v1(birth_data: dict) -> dict:
+    """基礎八字計算 (SKU 1)"""
+    response = requests.post(
+        f"{BASE_URL}/v1-bazi-calculate",
+        headers={
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY
+        },
+        json=birth_data
+    )
+    return response.json()
+
+def analyze_bazi_v1(birth_data: dict) -> dict:
+    """進階八字分析 (SKU 2)"""
+    response = requests.post(
+        f"{BASE_URL}/v1-bazi-analyze",
+        headers={
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY
+        },
+        json=birth_data
+    )
+    return response.json()
+
+# 使用範例
+birth_data = {
+    "year": 1990,
+    "month": 5,
+    "day": 15,
+    "hour": 14,
+    "minute": 30,
+    "tzOffsetMinutesEast": 480,
+    "longitude": 121.47,
+    "solarTimeMode": "TST",
+    "ziMode": "EARLY"
+}
+
+# 基礎計算
+calc_result = calculate_bazi_v1(birth_data)
+print("四柱:", calc_result["data"]["pillars"])
+
+# 進階分析
+analysis_result = analyze_bazi_v1(birth_data)
+print("十神:", analysis_result["data"]["tenGods"])
+print("神煞:", [s["name"] for s in analysis_result["data"]["shensha"]])`;
 
   // Template integration examples
   const templateIntegrationExample = `// 步驟 1: 獲取八字數據
@@ -998,46 +1351,253 @@ const createPsychologyPrompt = (baziData) => {
           </TabsContent>
 
           <TabsContent value="examples" className="space-y-6">
-            <Tabs defaultValue="curl" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="curl">cURL</TabsTrigger>
-                <TabsTrigger value="javascript">JavaScript</TabsTrigger>
-                <TabsTrigger value="python">Python</TabsTrigger>
-              </TabsList>
+            {/* API 類型選擇 */}
+            <Card>
+              <CardHeader>
+                <CardTitle>選擇 API 版本</CardTitle>
+                <CardDescription>根據您的需求選擇適合的 API 端點</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-4 border rounded-lg bg-primary/5 border-primary/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className="bg-primary/20 text-primary border-primary/30">v3.0 推薦</Badge>
+                      <h5 className="font-medium">V1 標準化 API</h5>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      支援真太陽時校正、跨日修正、分鐘級精度
+                    </p>
+                    <div className="flex gap-2">
+                      <code className="text-xs bg-muted px-2 py-1 rounded">/v1-bazi-calculate</code>
+                      <code className="text-xs bg-muted px-2 py-1 rounded">/v1-bazi-analyze</code>
+                    </div>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="outline">Legacy</Badge>
+                      <h5 className="font-medium">傳統 API</h5>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      簡單易用，適合快速整合
+                    </p>
+                    <code className="text-xs bg-muted px-2 py-1 rounded">/bazi-api</code>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              <TabsContent value="curl">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>cURL 範例</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CodeBlock code={curlExample} id="curl-example" language="bash" />
-                  </CardContent>
-                </Card>
-              </TabsContent>
+            {/* cURL 範例 */}
+            <Card>
+              <CardHeader>
+                <CardTitle>cURL 範例</CardTitle>
+                <CardDescription>命令列請求範例</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="v1-calculate" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="v1-calculate">V1 基礎計算</TabsTrigger>
+                    <TabsTrigger value="v1-analyze">V1 進階分析</TabsTrigger>
+                    <TabsTrigger value="legacy">Legacy API</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="v1-calculate">
+                    <CodeBlock code={curlV1CalculateExample} id="curl-v1-calculate" language="bash" />
+                  </TabsContent>
+                  <TabsContent value="v1-analyze">
+                    <CodeBlock code={curlV1AnalyzeExample} id="curl-v1-analyze" language="bash" />
+                  </TabsContent>
+                  <TabsContent value="legacy">
+                    <CodeBlock code={curlExample} id="curl-legacy" language="bash" />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      💡 <code>gender</code> 參數支援 <code>"male"</code>/<code>"female"</code> 或 <code>"男"</code>/<code>"女"</code>
+                    </p>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
 
-              <TabsContent value="javascript">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>JavaScript / TypeScript 範例</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CodeBlock code={jsExample} id="js-example" language="javascript" />
-                  </CardContent>
-                </Card>
-              </TabsContent>
+            {/* JavaScript 範例 */}
+            <Card>
+              <CardHeader>
+                <CardTitle>JavaScript / TypeScript 範例</CardTitle>
+                <CardDescription>前端與 Node.js 整合範例</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="v1-calculate" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="v1-calculate">V1 基礎計算</TabsTrigger>
+                    <TabsTrigger value="v1-analyze">V1 進階分析</TabsTrigger>
+                    <TabsTrigger value="legacy">Legacy API</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="v1-calculate">
+                    <CodeBlock code={jsV1CalculateExample} id="js-v1-calculate" language="javascript" />
+                  </TabsContent>
+                  <TabsContent value="v1-analyze">
+                    <CodeBlock code={jsV1AnalyzeExample} id="js-v1-analyze" language="javascript" />
+                  </TabsContent>
+                  <TabsContent value="legacy">
+                    <CodeBlock code={jsExample} id="js-legacy" language="javascript" />
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
 
-              <TabsContent value="python">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Python 範例</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CodeBlock code={pythonExample} id="python-example" language="python" />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+            {/* Python 範例 */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Python 範例</CardTitle>
+                <CardDescription>使用 requests 函式庫</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="v1" className="space-y-4">
+                  <TabsList>
+                    <TabsTrigger value="v1">V1 API (推薦)</TabsTrigger>
+                    <TabsTrigger value="legacy">Legacy API</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="v1">
+                    <CodeBlock code={pythonV1Example} id="python-v1" language="python" />
+                  </TabsContent>
+                  <TabsContent value="legacy">
+                    <CodeBlock code={pythonExample} id="python-legacy" language="python" />
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+
+            {/* 完整回應格式 */}
+            <Card>
+              <CardHeader>
+                <CardTitle>📦 完整回應格式說明</CardTitle>
+                <CardDescription>詳細了解 API 回應的每個欄位</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <Tabs defaultValue="v1-calculate" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="v1-calculate">V1 基礎計算回應</TabsTrigger>
+                    <TabsTrigger value="v1-analyze">V1 進階分析回應</TabsTrigger>
+                    <TabsTrigger value="legacy">Legacy 回應</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="v1-calculate" className="space-y-4">
+                    <CodeBlock code={v1CalculateResponseFull} id="v1-calc-response-full" />
+                    <div className="border rounded-lg overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted">
+                          <tr>
+                            <th className="text-left p-3">欄位路徑</th>
+                            <th className="text-left p-3">類型</th>
+                            <th className="text-left p-3">說明</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.pillars</code></td>
+                            <td className="p-3">object</td>
+                            <td className="p-3">四柱資訊（年/月/日/時柱的天干地支）</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.hiddenStems</code></td>
+                            <td className="p-3">object</td>
+                            <td className="p-3">藏干資訊（本氣/中氣/餘氣及權重比例）</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.nayin</code></td>
+                            <td className="p-3">object</td>
+                            <td className="p-3">納音五行（海中金、爐中火等）</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.wuxing</code></td>
+                            <td className="p-3">object</td>
+                            <td className="p-3">五行分數（wood/fire/earth/metal/water）</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.wuxingBreakdown</code></td>
+                            <td className="p-3">array</td>
+                            <td className="p-3">五行分數來源明細（每個元素的貢獻）</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.yinyang</code></td>
+                            <td className="p-3">object</td>
+                            <td className="p-3">陰陽比例百分比</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.fourSeasonsTeam</code></td>
+                            <td className="p-3">object</td>
+                            <td className="p-3">四時軍團配置（家庭/成長/自我/未來）</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.interactions</code></td>
+                            <td className="p-3">array</td>
+                            <td className="p-3">地支互動（刑衝會合）</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.meta</code></td>
+                            <td className="p-3">object</td>
+                            <td className="p-3">計算元數據（太陽時、節氣來源等）</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="v1-analyze" className="space-y-4">
+                    <CodeBlock code={v1AnalyzeResponseFull} id="v1-analyze-response-full" />
+                    <div className="border rounded-lg overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted">
+                          <tr>
+                            <th className="text-left p-3">額外欄位</th>
+                            <th className="text-left p-3">類型</th>
+                            <th className="text-left p-3">說明</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.tenGods</code></td>
+                            <td className="p-3">object</td>
+                            <td className="p-3">十神分析（天干十神 + 地支藏干十神明細）</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.tenGods.branchDetails</code></td>
+                            <td className="p-3">object</td>
+                            <td className="p-3">地支藏干的十神對應（含權重）</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.shensha</code></td>
+                            <td className="p-3">array</td>
+                            <td className="p-3">神煞完整資訊（含類型、錨點、現代詮釋）</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.shensha[].category</code></td>
+                            <td className="p-3">string</td>
+                            <td className="p-3">神煞分類（貴人/學業/桃花/行動等）</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.shensha[].buffType</code></td>
+                            <td className="p-3">string</td>
+                            <td className="p-3">Buff/Debuff 分類</td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="p-3"><code>data.personality</code></td>
+                            <td className="p-3">array</td>
+                            <td className="p-3">性格特質分析（含強度百分比與五行來源）</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="legacy" className="space-y-4">
+                    <CodeBlock code={responseExample} id="legacy-response-full" />
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        💡 Legacy API 回應結構較簡單，適合快速整合。如需更精確的計算與豐富的分析資料，
+                        建議使用 V1 API。
+                      </p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="errors" className="space-y-6">

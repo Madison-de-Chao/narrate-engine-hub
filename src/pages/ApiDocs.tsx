@@ -3,9 +3,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Book, Code, Zap, Shield, Palette, FileText, Workflow, Variable, Package } from "lucide-react";
+import { Copy, Check, Book, Code, Zap, Shield, Palette, FileText, Workflow, Variable, Package, Terminal } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import CurlGenerator from "@/components/CurlGenerator";
 
 const ApiDocs = () => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -899,6 +900,9 @@ const createPsychologyPrompt = (baziData) => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* cURL Generator */}
+            <CurlGenerator baseUrl={baseUrl} />
           </TabsContent>
 
           <TabsContent value="endpoint" className="space-y-6">

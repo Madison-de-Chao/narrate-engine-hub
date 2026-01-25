@@ -147,10 +147,19 @@ export function MembershipBadge({
   return (
     <Badge 
       variant="secondary" 
-      className={`bg-amber-500/20 text-amber-300 border-amber-500/30 ${className}`}
+      className={`
+        relative overflow-hidden
+        bg-gradient-to-r from-amber-500/30 via-yellow-400/25 to-orange-500/30
+        text-amber-200 border border-amber-400/40
+        shadow-[0_0_12px_rgba(251,191,36,0.3)]
+        animate-pulse-glow
+        ${className}
+      `}
     >
-      <Crown className="h-3 w-3 mr-1" />
-      Premium 會員
+      {/* Shimmer overlay */}
+      <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+      <Crown className="h-3 w-3 mr-1 relative z-10 drop-shadow-[0_0_4px_rgba(251,191,36,0.8)]" />
+      <span className="relative z-10 font-medium">Premium 會員</span>
     </Badge>
   );
 }

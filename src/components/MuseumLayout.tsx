@@ -9,6 +9,7 @@ import { SimplifiedLogo } from '@/components/icons/SimplifiedLogo';
 import { MemberLoginWidget, useMember } from '@/lib/member';
 import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
 import { useToast } from '@/hooks/use-toast';
+import Footer from '@/components/Footer';
 import {
   Dialog,
   DialogContent,
@@ -225,6 +226,9 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
         )}
 
         {children}
+        
+        {/* 全站頁尾 */}
+        {!isExcludedRoute && <Footer />}
       </div>
 
       {/* 登入彈窗 */}

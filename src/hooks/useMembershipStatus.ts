@@ -37,7 +37,6 @@ export function useMembershipStatus(productId?: string): MembershipStatus {
 
 // 重新導出標籤相關函數
 export const MEMBERSHIP_LABELS: Record<MembershipSource, string> = {
-  sales_auth: '銷售認證會員',
   central: '中央會員',
   local: '本地會員',
   none: '免費版',

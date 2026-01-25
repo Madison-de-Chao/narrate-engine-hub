@@ -31,6 +31,13 @@ import {
   DialogContent,
 } from '@/components/ui/dialog';
 
+// Import all logos
+import logoHonglingNew from '@/assets/logo-honglingyusuo-new.png';
+import logoHongling from '@/assets/logo-honglingyusuo.png';
+import logoChaoxuanNew from '@/assets/logo-chaoxuan-new.png';
+import logoChaoxuan from '@/assets/logo-chaoxuan.png';
+import logoSishi from '@/assets/logo-sishi.png';
+import logoMain from '@/assets/logo.png';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -180,6 +187,50 @@ const Home = () => {
           animate="visible"
           variants={containerVariants}
         >
+          {/* Logos Section */}
+          <motion.div 
+            variants={itemVariants}
+            className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-6 sm:mb-8"
+          >
+            <img 
+              src={logoHonglingNew} 
+              alt="虹靈御所" 
+              className="h-12 sm:h-16 md:h-20 w-auto object-contain"
+            />
+            <img 
+              src={logoChaoxuanNew} 
+              alt="潮玄" 
+              className="h-10 sm:h-14 md:h-16 w-auto object-contain"
+            />
+            <img 
+              src={logoSishi} 
+              alt="四時" 
+              className="h-10 sm:h-14 md:h-16 w-auto object-contain"
+            />
+          </motion.div>
+
+          {/* Secondary Logos */}
+          <motion.div 
+            variants={itemVariants}
+            className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6"
+          >
+            <img 
+              src={logoMain} 
+              alt="Logo" 
+              className="h-8 sm:h-10 md:h-12 w-auto object-contain opacity-80"
+            />
+            <img 
+              src={logoHongling} 
+              alt="虹靈御所" 
+              className="h-8 sm:h-10 md:h-12 w-auto object-contain opacity-80"
+            />
+            <img 
+              src={logoChaoxuan} 
+              alt="潮玄" 
+              className="h-8 sm:h-10 md:h-12 w-auto object-contain opacity-80"
+            />
+          </motion.div>
+
           {/* Brand Badge */}
           <motion.div variants={itemVariants}>
             <Badge 

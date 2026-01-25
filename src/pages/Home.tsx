@@ -22,6 +22,7 @@ import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
+import Footer from '@/components/Footer';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -367,7 +368,6 @@ const Home = () => {
       </section>
 
       {/* Login/Register Dialog */}
-      {/* Login/Register Dialog */}
       <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
         <DialogContent className="sm:max-w-md p-0 border-0 bg-transparent shadow-none">
           <MemberLoginWidget
@@ -384,6 +384,9 @@ const Home = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

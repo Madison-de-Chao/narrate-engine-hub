@@ -11,7 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
 import "@/lib/member/styles.css";
-import Index from "./pages/Index";
+import Home from "./pages/Home";
+import BaziAnalysis from "./pages/Index";
 import Auth from "./pages/Auth";
 import Subscribe from "./pages/Subscribe";
 import Admin from "./pages/Admin";
@@ -42,7 +43,8 @@ const App = () => (
           <BrowserRouter>
             <MuseumLayout>
               <Routes>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/bazi" element={<BaziAnalysis />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/subscribe" element={<Subscribe />} />
                 <Route path="/admin" element={<Admin />} />

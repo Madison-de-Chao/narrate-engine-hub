@@ -247,10 +247,11 @@ export function getClient(): UnifiedMemberClient {
 
 // ============ 會員來源與標籤 ============
 
-export type MembershipSource = 'central' | 'local' | 'none';
-export type MembershipTier = 'free' | 'monthly' | 'yearly' | 'lifetime' | 'central';
+export type MembershipSource = 'sales_auth' | 'central' | 'local' | 'none';
+export type MembershipTier = 'free' | 'monthly' | 'yearly' | 'lifetime' | 'central' | 'premium';
 
 export const MEMBERSHIP_SOURCE_LABELS: Record<MembershipSource, string> = {
+  sales_auth: '銷售認證會員',
   central: '中央會員',
   local: '本地會員',
   none: '免費版',
@@ -262,12 +263,14 @@ export const MEMBERSHIP_TIER_LABELS: Record<MembershipTier, string> = {
   yearly: '年訂閱',
   lifetime: '終身版',
   central: '中央會員',
+  premium: '付費會員',
 };
 
 export function getMembershipLabel(
   source: MembershipSource, 
   tier: MembershipTier
 ): string {
+  if (source === 'sales_auth') return '銷售認證會員';
   if (source === 'central') return '中央會員';
   if (source === 'local') return MEMBERSHIP_TIER_LABELS[tier] || '本地會員';
   return '免費版';

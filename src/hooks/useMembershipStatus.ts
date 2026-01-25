@@ -6,14 +6,14 @@
 import { useUnifiedMembership, getMembershipLabel } from './useUnifiedMembership';
 import type { MembershipSource, MembershipTier } from '@/lib/unified-member-sdk';
 
-export type { MembershipSource };
+export type { MembershipSource, MembershipTier };
 
 export interface MembershipStatus {
   hasAccess: boolean;
   source: MembershipSource;
   loading: boolean;
   error: string | null;
-  tier: 'free' | 'monthly' | 'yearly' | 'lifetime' | 'central';
+  tier: MembershipTier;
   expiresAt: string | null;
   refetch: () => Promise<void>;
 }
@@ -37,17 +37,19 @@ export function useMembershipStatus(productId?: string): MembershipStatus {
 
 // 重新導出標籤相關函數
 export const MEMBERSHIP_LABELS: Record<MembershipSource, string> = {
+  sales_auth: '銷售認證會員',
   central: '中央會員',
   local: '本地會員',
   none: '免費版',
 };
 
-export const TIER_LABELS: Record<MembershipStatus['tier'], string> = {
+export const TIER_LABELS: Record<MembershipTier, string> = {
   free: '免費版',
   monthly: '月訂閱',
   yearly: '年訂閱',
   lifetime: '終身版',
   central: '中央會員',
+  premium: '付費會員',
 };
 
 export { getMembershipLabel };

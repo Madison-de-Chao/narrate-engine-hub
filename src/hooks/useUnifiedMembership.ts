@@ -186,19 +186,22 @@ export function useUnifiedMembership(productId?: string): MembershipStatus {
         { method: 'GET' }
       );
 
-      // 中央 API 成功且有權限
+      // 中央 API 成功且有權限（包含 sales_auth 和 central）
       if (!fnError && data && data.hasAccess === true && !data.error) {
+        const memberSource = data.source === 'sales_auth' ? 'sales_auth' : 'central';
+        const memberTier = data.source === 'sales_auth' ? 'premium' : 'central';
+        
         const result: Omit<CachedMembership, 'timestamp' | 'productId'> = {
           hasAccess: true,
-          source: 'central',
-          tier: 'central',
+          source: memberSource as MembershipSource,
+          tier: memberTier as MembershipTier,
           expiresAt: data.expiresAt || null,
           entitlements: data.entitlements || [],
         };
 
         setHasAccess(true);
-        setSource('central');
-        setTier('central');
+        setSource(memberSource as MembershipSource);
+        setTier(memberTier as MembershipTier);
         setExpiresAt(result.expiresAt);
         setEntitlements(result.entitlements);
         setCache(result);

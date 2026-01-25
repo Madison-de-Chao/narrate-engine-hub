@@ -145,13 +145,14 @@ export function MembershipBadge({
 
   const label = getMembershipLabel(source, tier);
   const isCentral = source === 'central';
+  const isSalesAuth = source === 'sales_auth';
 
   return (
     <Badge 
       variant="secondary" 
-      className={`${isCentral ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'} ${className}`}
+      className={`${isSalesAuth ? 'bg-green-500/20 text-green-300 border-green-500/30' : isCentral ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'} ${className}`}
     >
-      {isCentral ? <Building2 className="h-3 w-3 mr-1" /> : <Crown className="h-3 w-3 mr-1" />}
+      {isSalesAuth ? <Crown className="h-3 w-3 mr-1" /> : isCentral ? <Building2 className="h-3 w-3 mr-1" /> : <Crown className="h-3 w-3 mr-1" />}
       {label}
     </Badge>
   );

@@ -7,15 +7,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Central API endpoints
+// Central API endpoints (Original)
 const CENTRAL_BASE_URL = 'https://yyzcgxnvtprojutnxisz.supabase.co/functions/v1';
 const ENTITLEMENTS_ME_URL = `${CENTRAL_BASE_URL}/entitlements-me`;
 const ENTITLEMENTS_LOOKUP_URL = `${CENTRAL_BASE_URL}/entitlements-lookup`;
+
+// Sales Auth API endpoints (story_builder_hub)
+const SALES_AUTH_BASE_URL = 'https://yrdtgwoxxjksesynrjss.supabase.co/functions/v1';
+const SALES_AUTH_CHECK_URL = `${SALES_AUTH_BASE_URL}/check-entitlement`;
+const SALES_AUTH_API_KEY = 'mdc_27530c756089e4af6527dadb4e43d4eb02c3cc495b964105082bf3c945c6fb32';
+const SALES_AUTH_PRODUCT_ID = '22222222-2222-2222-2222-222222222222'; // story_builder_hub product ID
+
 const DEFAULT_PRODUCT_ID = 'bazi-premium';
 
 interface EntitlementResponse {
   hasAccess: boolean;
-  source: 'central' | 'central_fallback' | 'local' | 'error';
+  source: 'sales_auth' | 'central' | 'central_fallback' | 'local' | 'error';
   email?: string;
   productId?: string;
   tier?: string;
@@ -90,8 +97,18 @@ serve(async (req) => {
 
     let response: EntitlementResponse;
 
-    // Try JWT-based entitlements-me endpoint first (preferred method)
-    if (method === 'jwt' && centralServiceRoleKey) {
+    // Step 1: Try Sales Auth API first (story_builder_hub)
+    console.log('Trying Sales Auth API (story_builder_hub)...');
+    const salesAuthResult = await trySalesAuthMethod(userEmail);
+    
+    if (salesAuthResult.hasAccess) {
+      console.log('Sales Auth granted access');
+      response = salesAuthResult;
+    } else {
+      console.log('Sales Auth no access, trying Central API...');
+      
+      // Step 2: Try Central API (JWT-based or lookup)
+      if (method === 'jwt' && centralServiceRoleKey) {
       console.log('Using JWT-based entitlements-me endpoint');
       
       try {
@@ -131,18 +148,19 @@ serve(async (req) => {
         // Fall through to lookup method
         response = await tryLookupMethod(centralServiceRoleKey, userEmail, productId);
       }
-    } else if (centralServiceRoleKey) {
-      // Use lookup method directly
-      response = await tryLookupMethod(centralServiceRoleKey, userEmail, productId);
-    } else {
-      console.error('CENTRAL_SUPABASE_SERVICE_ROLE_KEY not configured');
-      response = {
-        hasAccess: false,
-        source: 'error',
-        error: 'Central API key not configured',
-        email: userEmail,
-        productId,
-      };
+      } else if (centralServiceRoleKey) {
+        // Use lookup method directly
+        response = await tryLookupMethod(centralServiceRoleKey, userEmail, productId);
+      } else {
+        console.error('CENTRAL_SUPABASE_SERVICE_ROLE_KEY not configured');
+        response = {
+          hasAccess: false,
+          source: 'error',
+          error: 'Central API key not configured',
+          email: userEmail,
+          productId,
+        };
+      }
     }
 
     // If central API failed, try local subscription check
@@ -182,6 +200,54 @@ serve(async (req) => {
     );
   }
 });
+
+// Helper function for Sales Auth API (story_builder_hub)
+async function trySalesAuthMethod(userEmail: string): Promise<EntitlementResponse> {
+  try {
+    const url = `${SALES_AUTH_CHECK_URL}?product_id=${SALES_AUTH_PRODUCT_ID}&email=${encodeURIComponent(userEmail)}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'x-api-key': SALES_AUTH_API_KEY,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`Sales Auth API error: ${response.status}`);
+      return {
+        hasAccess: false,
+        source: 'error',
+        email: userEmail,
+        error: `Sales Auth API returned ${response.status}`,
+      };
+    }
+
+    const data = await response.json();
+    console.log('Sales Auth response:', JSON.stringify(data));
+
+    const hasAccess = data.hasAccess === true;
+    
+    return {
+      hasAccess,
+      source: 'sales_auth',
+      email: userEmail,
+      productId: SALES_AUTH_PRODUCT_ID,
+      tier: hasAccess ? 'premium' : 'free',
+      entitlements: data.entitlement ? [data.entitlement] : [],
+      expiresAt: data.entitlement?.ends_at || null,
+    };
+  } catch (error) {
+    console.error('Sales Auth API error:', error);
+    return {
+      hasAccess: false,
+      source: 'error',
+      email: userEmail,
+      error: 'Sales Auth API request failed',
+    };
+  }
+}
 
 // Helper function for lookup method
 async function tryLookupMethod(

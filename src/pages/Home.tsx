@@ -10,7 +10,11 @@ import {
   ArrowRight,
   Star,
   Crown,
-  Zap
+  Zap,
+  Quote,
+  Briefcase,
+  Heart,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -285,6 +289,160 @@ const Home = () => {
             </CardContent>
           </Card>
         </motion.div>
+      </section>
+
+      {/* Testimonials / Use Cases Section */}
+      <section className="relative py-10 sm:py-16 px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-8 sm:mb-12"
+          >
+            <h2 className={`text-xl sm:text-2xl md:text-3xl font-bold font-serif mb-3 sm:mb-4 ${
+              theme === 'dark' ? 'text-paper' : 'text-void'
+            }`}>
+              應用場景
+            </h2>
+            <p className={`text-sm sm:text-base max-w-xl mx-auto ${
+              theme === 'dark' ? 'text-paper/60' : 'text-void/60'
+            }`}>
+              看看其他人如何運用八字分析，找到屬於自己的視角
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            variants={containerVariants}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6"
+          >
+            {/* Testimonial 1 - Career */}
+            <motion.div variants={itemVariants}>
+              <Card className={`
+                h-full transition-all duration-300 hover:shadow-lg
+                ${theme === 'dark' 
+                  ? 'bg-slate-900/60 border-slate-700/50 hover:border-emerald-500/30' 
+                  : 'bg-white/80 border-slate-200 hover:border-emerald-500/50'
+                }
+              `}>
+                <CardContent className="p-5 sm:p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+                      <Briefcase className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className={`font-semibold text-sm ${theme === 'dark' ? 'text-paper' : 'text-void'}`}>
+                        職涯規劃
+                      </p>
+                      <p className={`text-xs ${theme === 'dark' ? 'text-paper/50' : 'text-void/50'}`}>
+                        Amy・產品經理
+                      </p>
+                    </div>
+                  </div>
+                  <Quote className={`w-6 h-6 mb-2 ${theme === 'dark' ? 'text-emerald-400/40' : 'text-emerald-500/40'}`} />
+                  <p className={`text-sm leading-relaxed mb-4 ${
+                    theme === 'dark' ? 'text-paper/80' : 'text-void/80'
+                  }`}>
+                    報告讓我看見自己傾向「統籌規劃」而非「第一線執行」，幫我釐清了轉職方向。
+                    不是說「你應該怎麼做」，而是讓我自己對照後做出選擇。
+                  </p>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-0 text-xs">
+                    自我驗證後轉職成功
+                  </Badge>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Testimonial 2 - Relationship */}
+            <motion.div variants={itemVariants}>
+              <Card className={`
+                h-full transition-all duration-300 hover:shadow-lg
+                ${theme === 'dark' 
+                  ? 'bg-slate-900/60 border-slate-700/50 hover:border-rose-500/30' 
+                  : 'bg-white/80 border-slate-200 hover:border-rose-500/50'
+                }
+              `}>
+                <CardContent className="p-5 sm:p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center">
+                      <Heart className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className={`font-semibold text-sm ${theme === 'dark' ? 'text-paper' : 'text-void'}`}>
+                        人際互動
+                      </p>
+                      <p className={`text-xs ${theme === 'dark' ? 'text-paper/50' : 'text-void/50'}`}>
+                        Kevin・工程師
+                      </p>
+                    </div>
+                  </div>
+                  <Quote className={`w-6 h-6 mb-2 ${theme === 'dark' ? 'text-rose-400/40' : 'text-rose-500/40'}`} />
+                  <p className={`text-sm leading-relaxed mb-4 ${
+                    theme === 'dark' ? 'text-paper/80' : 'text-void/80'
+                  }`}>
+                    原來我習慣用「理性分析」回應情感需求，難怪總是雞同鴨講。
+                    報告把模式講得很具體，讓我知道可以從哪裡調整。
+                  </p>
+                  <Badge className="bg-rose-500/20 text-rose-400 border-0 text-xs">
+                    理解溝通盲點
+                  </Badge>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Testimonial 3 - Self Growth */}
+            <motion.div variants={itemVariants}>
+              <Card className={`
+                h-full transition-all duration-300 hover:shadow-lg
+                ${theme === 'dark' 
+                  ? 'bg-slate-900/60 border-slate-700/50 hover:border-violet-500/30' 
+                  : 'bg-white/80 border-slate-200 hover:border-violet-500/50'
+                }
+              `}>
+                <CardContent className="p-5 sm:p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className={`font-semibold text-sm ${theme === 'dark' ? 'text-paper' : 'text-void'}`}>
+                        個人成長
+                      </p>
+                      <p className={`text-xs ${theme === 'dark' ? 'text-paper/50' : 'text-void/50'}`}>
+                        小雯・自由工作者
+                      </p>
+                    </div>
+                  </div>
+                  <Quote className={`w-6 h-6 mb-2 ${theme === 'dark' ? 'text-violet-400/40' : 'text-violet-500/40'}`} />
+                  <p className={`text-sm leading-relaxed mb-4 ${
+                    theme === 'dark' ? 'text-paper/80' : 'text-void/80'
+                  }`}>
+                    喜歡報告裡的「可執行建議」，不是抽象的「多休息」，而是「每週安排一天不接案」這種具體做法。
+                  </p>
+                  <Badge className="bg-violet-500/20 text-violet-400 border-0 text-xs">
+                    落地可執行
+                  </Badge>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
+
+          {/* Disclaimer for testimonials */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className={`text-center mt-6 sm:mt-8 text-xs ${
+              theme === 'dark' ? 'text-paper/40' : 'text-void/40'
+            }`}
+          >
+            * 以上為匿名使用者分享的應用心得，不代表特定結果保證
+          </motion.p>
+        </div>
       </section>
 
       {/* Brand Philosophy Section - 手機版優化 */}

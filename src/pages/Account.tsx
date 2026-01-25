@@ -129,11 +129,21 @@ const Account = () => {
       return <Badge variant="secondary">免費版</Badge>;
     }
     
-    // 統一顯示為 Premium 會員（中央認證、本地存儲是內部分工）
+    // 統一顯示為 Premium 會員 - 帶微光漸變動畫
     return (
-      <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-        <Crown className="w-3 h-3 mr-1" />
-        Premium 會員
+      <Badge 
+        className="
+          relative overflow-hidden
+          bg-gradient-to-r from-amber-500 via-yellow-400 to-orange-500 
+          text-white border-0
+          shadow-[0_0_16px_rgba(251,191,36,0.5)]
+          animate-pulse-glow
+        "
+      >
+        {/* Shimmer overlay */}
+        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+        <Crown className="w-3 h-3 mr-1 relative z-10 drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+        <span className="relative z-10 font-semibold">Premium 會員</span>
       </Badge>
     );
   };
@@ -150,10 +160,20 @@ const Account = () => {
       premium: 'Premium',
     };
     
+    // 帶微光漸變動畫的訂閱徽章
     return (
-      <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-        <Crown className="w-3 h-3 mr-1" />
-        {planLabels[subscription.plan] || subscription.plan}
+      <Badge 
+        className="
+          relative overflow-hidden
+          bg-gradient-to-r from-amber-500 via-yellow-400 to-orange-500 
+          text-white border-0
+          shadow-[0_0_16px_rgba(251,191,36,0.5)]
+          animate-pulse-glow
+        "
+      >
+        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+        <Crown className="w-3 h-3 mr-1 relative z-10 drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+        <span className="relative z-10 font-semibold">{planLabels[subscription.plan] || subscription.plan}</span>
       </Badge>
     );
   };

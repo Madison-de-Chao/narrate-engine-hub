@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, type Variants, type Easing } from 'framer-motion';
 import { 
@@ -14,7 +14,9 @@ import {
   Quote,
   Briefcase,
   Heart,
-  TrendingUp
+  TrendingUp,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,6 +24,8 @@ import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useMember, MemberLoginWidget } from '@/lib/member';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
+import useEmblaCarousel from 'embla-carousel-react';
 import {
   Dialog,
   DialogContent,
@@ -33,11 +37,83 @@ const Home = () => {
   const { theme } = useTheme();
   const { user, loading } = useMember();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  
+  // Embla Carousel for testimonials on mobile
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    align: 'center',
+    containScroll: 'trimSnaps'
+  });
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [scrollSnaps, setScrollSnaps] = useState<number[]>([]);
+
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
+  const scrollTo = useCallback((index: number) => emblaApi && emblaApi.scrollTo(index), [emblaApi]);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    setScrollSnaps(emblaApi.scrollSnapList());
+    emblaApi.on('select', onSelect);
+    return () => {
+      emblaApi.off('select', onSelect);
+    };
+  }, [emblaApi, onSelect]);
 
   const handleToast = (options: { title: string; description: string; variant?: 'default' | 'destructive' }) => {
     toast(options);
   };
+
+  // Testimonials data
+  const testimonials = [
+    {
+      icon: Briefcase,
+      category: '職涯規劃',
+      name: 'Amy・產品經理',
+      quote: '報告讓我看見自己傾向「統籌規劃」而非「第一線執行」，幫我釐清了轉職方向。不是說「你應該怎麼做」，而是讓我自己對照後做出選擇。',
+      badge: '自我驗證後轉職成功',
+      gradient: 'from-emerald-500 to-teal-500',
+      quoteColor: 'text-emerald-400/40',
+      quoteColorLight: 'text-emerald-500/40',
+      badgeClass: 'bg-emerald-500/20 text-emerald-400',
+      hoverBorderDark: 'hover:border-emerald-500/30',
+      hoverBorderLight: 'hover:border-emerald-500/50'
+    },
+    {
+      icon: Heart,
+      category: '人際互動',
+      name: 'Kevin・工程師',
+      quote: '原來我習慣用「理性分析」回應情感需求，難怪總是雞同鴨講。報告把模式講得很具體，讓我知道可以從哪裡調整。',
+      badge: '理解溝通盲點',
+      gradient: 'from-rose-500 to-pink-500',
+      quoteColor: 'text-rose-400/40',
+      quoteColorLight: 'text-rose-500/40',
+      badgeClass: 'bg-rose-500/20 text-rose-400',
+      hoverBorderDark: 'hover:border-rose-500/30',
+      hoverBorderLight: 'hover:border-rose-500/50'
+    },
+    {
+      icon: TrendingUp,
+      category: '個人成長',
+      name: '小雯・自由工作者',
+      quote: '喜歡報告裡的「可執行建議」，不是抽象的「多休息」，而是「每週安排一天不接案」這種具體做法。',
+      badge: '落地可執行',
+      gradient: 'from-violet-500 to-purple-500',
+      quoteColor: 'text-violet-400/40',
+      quoteColorLight: 'text-violet-500/40',
+      badgeClass: 'bg-violet-500/20 text-violet-400',
+      hoverBorderDark: 'hover:border-violet-500/30',
+      hoverBorderLight: 'hover:border-violet-500/50'
+    }
+  ];
 
   const features = [
     {
@@ -313,123 +389,137 @@ const Home = () => {
             </p>
           </motion.div>
 
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            variants={containerVariants}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6"
-          >
-            {/* Testimonial 1 - Career */}
-            <motion.div variants={itemVariants}>
-              <Card className={`
-                h-full transition-all duration-300 hover:shadow-lg
-                ${theme === 'dark' 
-                  ? 'bg-slate-900/60 border-slate-700/50 hover:border-emerald-500/30' 
-                  : 'bg-white/80 border-slate-200 hover:border-emerald-500/50'
-                }
-              `}>
-                <CardContent className="p-5 sm:p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-                      <Briefcase className="w-5 h-5 text-white" />
+          {/* Mobile Carousel */}
+          {isMobile ? (
+            <div className="relative">
+              <div className="overflow-hidden" ref={emblaRef}>
+                <div className="flex">
+                  {testimonials.map((testimonial, index) => (
+                    <div key={index} className="flex-[0_0_85%] min-w-0 pl-4 first:pl-0">
+                      <Card className={`
+                        h-full transition-all duration-300
+                        ${theme === 'dark' 
+                          ? 'bg-slate-900/60 border-slate-700/50' 
+                          : 'bg-white/80 border-slate-200'
+                        }
+                      `}>
+                        <CardContent className="p-5">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${testimonial.gradient} flex items-center justify-center`}>
+                              <testimonial.icon className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <p className={`font-semibold text-sm ${theme === 'dark' ? 'text-paper' : 'text-void'}`}>
+                                {testimonial.category}
+                              </p>
+                              <p className={`text-xs ${theme === 'dark' ? 'text-paper/50' : 'text-void/50'}`}>
+                                {testimonial.name}
+                              </p>
+                            </div>
+                          </div>
+                          <Quote className={`w-6 h-6 mb-2 ${theme === 'dark' ? testimonial.quoteColor : testimonial.quoteColorLight}`} />
+                          <p className={`text-sm leading-relaxed mb-4 ${
+                            theme === 'dark' ? 'text-paper/80' : 'text-void/80'
+                          }`}>
+                            {testimonial.quote}
+                          </p>
+                          <Badge className={`${testimonial.badgeClass} border-0 text-xs`}>
+                            {testimonial.badge}
+                          </Badge>
+                        </CardContent>
+                      </Card>
                     </div>
-                    <div>
-                      <p className={`font-semibold text-sm ${theme === 'dark' ? 'text-paper' : 'text-void'}`}>
-                        職涯規劃
-                      </p>
-                      <p className={`text-xs ${theme === 'dark' ? 'text-paper/50' : 'text-void/50'}`}>
-                        Amy・產品經理
-                      </p>
-                    </div>
-                  </div>
-                  <Quote className={`w-6 h-6 mb-2 ${theme === 'dark' ? 'text-emerald-400/40' : 'text-emerald-500/40'}`} />
-                  <p className={`text-sm leading-relaxed mb-4 ${
-                    theme === 'dark' ? 'text-paper/80' : 'text-void/80'
-                  }`}>
-                    報告讓我看見自己傾向「統籌規劃」而非「第一線執行」，幫我釐清了轉職方向。
-                    不是說「你應該怎麼做」，而是讓我自己對照後做出選擇。
-                  </p>
-                  <Badge className="bg-emerald-500/20 text-emerald-400 border-0 text-xs">
-                    自我驗證後轉職成功
-                  </Badge>
-                </CardContent>
-              </Card>
-            </motion.div>
+                  ))}
+                </div>
+              </div>
 
-            {/* Testimonial 2 - Relationship */}
-            <motion.div variants={itemVariants}>
-              <Card className={`
-                h-full transition-all duration-300 hover:shadow-lg
-                ${theme === 'dark' 
-                  ? 'bg-slate-900/60 border-slate-700/50 hover:border-rose-500/30' 
-                  : 'bg-white/80 border-slate-200 hover:border-rose-500/50'
-                }
-              `}>
-                <CardContent className="p-5 sm:p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center">
-                      <Heart className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className={`font-semibold text-sm ${theme === 'dark' ? 'text-paper' : 'text-void'}`}>
-                        人際互動
-                      </p>
-                      <p className={`text-xs ${theme === 'dark' ? 'text-paper/50' : 'text-void/50'}`}>
-                        Kevin・工程師
-                      </p>
-                    </div>
-                  </div>
-                  <Quote className={`w-6 h-6 mb-2 ${theme === 'dark' ? 'text-rose-400/40' : 'text-rose-500/40'}`} />
-                  <p className={`text-sm leading-relaxed mb-4 ${
-                    theme === 'dark' ? 'text-paper/80' : 'text-void/80'
-                  }`}>
-                    原來我習慣用「理性分析」回應情感需求，難怪總是雞同鴨講。
-                    報告把模式講得很具體，讓我知道可以從哪裡調整。
-                  </p>
-                  <Badge className="bg-rose-500/20 text-rose-400 border-0 text-xs">
-                    理解溝通盲點
-                  </Badge>
-                </CardContent>
-              </Card>
-            </motion.div>
+              {/* Navigation Arrows */}
+              <button
+                onClick={scrollPrev}
+                className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                  theme === 'dark' 
+                    ? 'bg-slate-800/80 text-paper/70 hover:bg-slate-700' 
+                    : 'bg-white/80 text-void/70 hover:bg-white shadow-md'
+                }`}
+                aria-label="上一個"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={scrollNext}
+                className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                  theme === 'dark' 
+                    ? 'bg-slate-800/80 text-paper/70 hover:bg-slate-700' 
+                    : 'bg-white/80 text-void/70 hover:bg-white shadow-md'
+                }`}
+                aria-label="下一個"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
 
-            {/* Testimonial 3 - Self Growth */}
-            <motion.div variants={itemVariants}>
-              <Card className={`
-                h-full transition-all duration-300 hover:shadow-lg
-                ${theme === 'dark' 
-                  ? 'bg-slate-900/60 border-slate-700/50 hover:border-violet-500/30' 
-                  : 'bg-white/80 border-slate-200 hover:border-violet-500/50'
-                }
-              `}>
-                <CardContent className="p-5 sm:p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className={`font-semibold text-sm ${theme === 'dark' ? 'text-paper' : 'text-void'}`}>
-                        個人成長
+              {/* Dots Indicator */}
+              <div className="flex justify-center gap-2 mt-4">
+                {scrollSnaps.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => scrollTo(index)}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      index === selectedIndex
+                        ? 'bg-amber-500 w-4'
+                        : theme === 'dark' ? 'bg-paper/30' : 'bg-void/30'
+                    }`}
+                    aria-label={`跳至第 ${index + 1} 則`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* Desktop Grid */
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              variants={containerVariants}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6"
+            >
+              {testimonials.map((testimonial, index) => (
+                <motion.div key={index} variants={itemVariants}>
+                  <Card className={`
+                    h-full transition-all duration-300 hover:shadow-lg
+                    ${theme === 'dark' 
+                      ? `bg-slate-900/60 border-slate-700/50 ${testimonial.hoverBorderDark}` 
+                      : `bg-white/80 border-slate-200 ${testimonial.hoverBorderLight}`
+                    }
+                  `}>
+                    <CardContent className="p-5 sm:p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${testimonial.gradient} flex items-center justify-center`}>
+                          <testimonial.icon className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <p className={`font-semibold text-sm ${theme === 'dark' ? 'text-paper' : 'text-void'}`}>
+                            {testimonial.category}
+                          </p>
+                          <p className={`text-xs ${theme === 'dark' ? 'text-paper/50' : 'text-void/50'}`}>
+                            {testimonial.name}
+                          </p>
+                        </div>
+                      </div>
+                      <Quote className={`w-6 h-6 mb-2 ${theme === 'dark' ? testimonial.quoteColor : testimonial.quoteColorLight}`} />
+                      <p className={`text-sm leading-relaxed mb-4 ${
+                        theme === 'dark' ? 'text-paper/80' : 'text-void/80'
+                      }`}>
+                        {testimonial.quote}
                       </p>
-                      <p className={`text-xs ${theme === 'dark' ? 'text-paper/50' : 'text-void/50'}`}>
-                        小雯・自由工作者
-                      </p>
-                    </div>
-                  </div>
-                  <Quote className={`w-6 h-6 mb-2 ${theme === 'dark' ? 'text-violet-400/40' : 'text-violet-500/40'}`} />
-                  <p className={`text-sm leading-relaxed mb-4 ${
-                    theme === 'dark' ? 'text-paper/80' : 'text-void/80'
-                  }`}>
-                    喜歡報告裡的「可執行建議」，不是抽象的「多休息」，而是「每週安排一天不接案」這種具體做法。
-                  </p>
-                  <Badge className="bg-violet-500/20 text-violet-400 border-0 text-xs">
-                    落地可執行
-                  </Badge>
-                </CardContent>
-              </Card>
+                      <Badge className={`${testimonial.badgeClass} border-0 text-xs`}>
+                        {testimonial.badge}
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
             </motion.div>
-          </motion.div>
+          )}
 
           {/* Disclaimer for testimonials */}
           <motion.p

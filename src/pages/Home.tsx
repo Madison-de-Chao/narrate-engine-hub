@@ -38,25 +38,25 @@ const Home = () => {
     {
       icon: Compass,
       title: '精準八字排盤',
-      description: '運用天文演算法，精確計算四柱八字、十神、神煞',
+      description: '運用天文演算法，精確計算四柱八字、十神、神煞，並清楚呈現計算依據。',
       color: 'from-amber-500 to-orange-500'
     },
     {
       icon: Users,
       title: '四時軍團敘事',
-      description: '將抽象命理轉化為生動的軍團角色故事，易懂易記',
+      description: '把抽象命理轉成可讀、可記、可對照的「軍團角色故事」，幫你更快理解命盤結構。',
       color: 'from-emerald-500 to-teal-500'
     },
     {
       icon: BookOpen,
       title: '八字學院',
-      description: '系統化學習命理知識，從入門到進階一應俱全',
+      description: '系統化整理命理知識：從入門概念到進階應用，讓你能獨立判讀關鍵資訊。',
       color: 'from-violet-500 to-purple-500'
     },
     {
       icon: Shield,
       title: '專業可信任',
-      description: '規則透明、邏輯可驗證，不恐嚇、不宿命、不操控',
+      description: '規則透明、邏輯可驗證；不恐嚇、不宿命、不操控——只提供你能自己檢驗的解讀框架。',
       color: 'from-blue-500 to-cyan-500'
     }
   ];
@@ -132,9 +132,9 @@ const Home = () => {
               theme === 'dark' ? 'text-paper/70' : 'text-void/70'
             }`}
           >
-            這份分析是「鏡子」，不是「劇本」——提供視角與路徑，但選擇權永遠在你手上。
+            這份分析是一面鏡子，不是劇本——它提供視角與路徑；選擇權永遠在你手上。
             <br className="hidden sm:block" />
-            我們追求清楚、克制、有美感、可執行。
+            我們只做三件事：把資訊說清楚、把邏輯做扎實、把建議寫到你能執行。
           </motion.p>
 
           {/* CTA Buttons */}
@@ -227,6 +227,62 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Trust & Method Section */}
+      <section className="relative py-16 px-4 sm:px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="max-w-3xl mx-auto"
+        >
+          <Card className={`
+            ${theme === 'dark' 
+              ? 'bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-amber-500/20' 
+              : 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200'
+            }
+          `}>
+            <CardContent className="p-8 sm:p-10">
+              <Star className="w-10 h-10 mx-auto mb-6 text-amber-500" />
+              <h2 className={`text-2xl sm:text-3xl font-bold font-serif mb-6 text-center ${
+                theme === 'dark' ? 'text-paper' : 'text-void'
+              }`}>
+                信任與方法
+              </h2>
+              <div className={`space-y-5 text-base sm:text-lg leading-relaxed ${
+                theme === 'dark' ? 'text-paper/80' : 'text-void/80'
+              }`}>
+                <p className="text-center">
+                  我們相信：命盤不是用來替你下結論，而是用來幫你看見模式。
+                </p>
+                <p className={`text-center ${theme === 'dark' ? 'text-paper/60' : 'text-void/60'}`}>
+                  你會在報告中看到：
+                </p>
+                <ul className="space-y-3 max-w-xl mx-auto">
+                  <li className="flex items-start gap-3">
+                    <span className="text-amber-500 font-bold shrink-0">•</span>
+                    <span>你目前的能量配置與傾向（清楚）</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-amber-500 font-bold shrink-0">•</span>
+                    <span>哪些資訊屬於可驗證、哪些屬於推論（克制）</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-amber-500 font-bold shrink-0">•</span>
+                    <span>可落地的行動建議與提醒（可執行）</span>
+                  </li>
+                </ul>
+                <p className={`text-sm text-center pt-4 ${
+                  theme === 'dark' ? 'text-paper/50' : 'text-void/50'
+                }`}>
+                  （提醒：本服務為自我探索工具，不取代醫療、法律、財務等專業意見。）
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </section>
+
       {/* Brand Philosophy Section */}
       <section className="relative py-16 px-4 sm:px-6">
         <motion.div
@@ -243,7 +299,6 @@ const Home = () => {
             }
           `}>
             <CardContent className="p-8 sm:p-10 text-center">
-              <Star className="w-10 h-10 mx-auto mb-6 text-amber-500" />
               <h2 className={`text-2xl sm:text-3xl font-bold font-serif mb-6 ${
                 theme === 'dark' ? 'text-paper' : 'text-void'
               }`}>
@@ -252,7 +307,7 @@ const Home = () => {
               <div className={`space-y-4 text-base sm:text-lg leading-relaxed ${
                 theme === 'dark' ? 'text-paper/80' : 'text-void/80'
               }`}>
-                <p className="quote-classical">
+                <p className="quote-classical text-lg sm:text-xl">
                   「這份分析是鏡子，不是劇本：提供視角與路徑，但選擇權永遠在你手上。」
                 </p>
                 <div className={`pt-4 flex flex-wrap justify-center gap-3 text-sm ${
@@ -266,7 +321,7 @@ const Home = () => {
                 <p className={`text-sm pt-4 ${
                   theme === 'dark' ? 'text-paper/50' : 'text-void/50'
                 }`}>
-                  不恐嚇、不宿命、不操控——以尊重與可驗證的方式，陪你理解自己。
+                  不恐嚇、不宿命、不操控——用尊重與可驗證的方式，陪你理解自己。
                 </p>
               </div>
             </CardContent>
@@ -289,7 +344,7 @@ const Home = () => {
             準備好探索你的命盤了嗎？
           </h2>
           <p className={`mb-8 ${theme === 'dark' ? 'text-paper/60' : 'text-void/60'}`}>
-            輸入出生資訊，3 分鐘獲得清晰可讀的八字分析報告
+            輸入出生資訊，即可生成一份清晰可讀的八字分析報告。
           </p>
           <Button
             size="lg"

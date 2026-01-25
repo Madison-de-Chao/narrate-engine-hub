@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Calendar, Crown, Shield, LogOut, Edit2, Check, X, Loader2 } from 'lucide-react';
+import { User, Mail, Calendar, Crown, Shield, LogOut, Edit2, Check, X, Loader2, Globe, Database } from 'lucide-react';
 import { useMember } from '@/lib/member';
 import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
+import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +27,7 @@ const Account = () => {
   const { theme } = useTheme();
   const { user, profile, signOut, loading, updateProfile } = useMember();
   const { toast } = useToast();
+  const { hasAccess, source, tier, loading: membershipLoading } = useUnifiedMembership('bazi-premium');
   
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
@@ -117,6 +119,37 @@ const Account = () => {
     }
   };
 
+  // 會員來源徽章
+  const getMembershipSourceBadge = () => {
+    if (membershipLoading) {
+      return <Badge variant="secondary"><Loader2 className="w-3 h-3 animate-spin mr-1" />載入中</Badge>;
+    }
+    
+    if (!hasAccess) {
+      return <Badge variant="secondary">免費版</Badge>;
+    }
+    
+    if (source === 'central') {
+      return (
+        <Badge className="bg-gradient-to-r from-purple-500 to-violet-500 text-white border-0">
+          <Globe className="w-3 h-3 mr-1" />
+          中央會員
+        </Badge>
+      );
+    }
+    
+    if (source === 'local') {
+      return (
+        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
+          <Database className="w-3 h-3 mr-1" />
+          本地會員
+        </Badge>
+      );
+    }
+    
+    return <Badge variant="secondary">免費版</Badge>;
+  };
+
   const getSubscriptionBadge = () => {
     if (!subscription || subscription.status !== 'active') {
       return <Badge variant="secondary">免費版</Badge>;
@@ -169,6 +202,9 @@ const Account = () => {
           <h1 className={`text-2xl font-bold ${theme === 'dark' ? 'text-paper' : 'text-void'}`}>
             會員中心
           </h1>
+          <div className="flex items-center justify-center gap-2">
+            {getMembershipSourceBadge()}
+          </div>
           <p className={`text-sm ${theme === 'dark' ? 'text-paper/60' : 'text-void/60'}`}>
             管理您的帳戶與訂閱
           </p>

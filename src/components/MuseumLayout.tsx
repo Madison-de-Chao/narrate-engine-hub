@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, Sun, Moon, User, LogOut } from 'lucide-react';
+import { ChevronLeft, Sun, Moon, User, LogOut, Globe, Database } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { NavigationMapDropdown } from '@/components/NavigationMapDropdown';
 import { SimplifiedLogo } from '@/components/icons/SimplifiedLogo';
 import { MemberLoginWidget, useMember } from '@/lib/member';
+import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
 import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -36,6 +38,7 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { user, profile, signOut, loading } = useMember();
+  const { hasAccess, source, loading: membershipLoading } = useUnifiedMembership('bazi-premium');
   const { toast } = useToast();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   
@@ -111,40 +114,57 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
             </div>
             
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* 會員登入按鈕 */}
+              {/* 會員登入按鈕與徽章 */}
               {!loading && (
                 user ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={`rounded-lg transition-colors ${
-                          theme === 'dark' 
-                            ? 'hover:bg-gold/10 text-paper/70 hover:text-paper' 
-                            : 'hover:bg-ink/10 text-void/70 hover:text-void'
-                        }`}
-                      >
-                        <User className="w-4 h-4 mr-1.5" />
-                        <span className="text-xs hidden sm:inline">
-                          {profile?.display_name || user.email?.split('@')[0] || '會員'}
-                        </span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => navigate('/account')}>
-                        <User className="w-4 h-4 mr-2" />
-                        會員中心
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={handleSignOut}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <LogOut className="w-4 h-4 mr-2" />
-                        登出
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div className="flex items-center gap-2">
+                    {/* 會員來源徽章 */}
+                    {!membershipLoading && hasAccess && (
+                      source === 'central' ? (
+                        <Badge className="hidden sm:flex bg-gradient-to-r from-purple-500 to-violet-500 text-white border-0 text-[10px] px-2 py-0.5">
+                          <Globe className="w-3 h-3 mr-1" />
+                          中央會員
+                        </Badge>
+                      ) : source === 'local' ? (
+                        <Badge className="hidden sm:flex bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[10px] px-2 py-0.5">
+                          <Database className="w-3 h-3 mr-1" />
+                          本地會員
+                        </Badge>
+                      ) : null
+                    )}
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`rounded-lg transition-colors ${
+                            theme === 'dark' 
+                              ? 'hover:bg-gold/10 text-paper/70 hover:text-paper' 
+                              : 'hover:bg-ink/10 text-void/70 hover:text-void'
+                          }`}
+                        >
+                          <User className="w-4 h-4 mr-1.5" />
+                          <span className="text-xs hidden sm:inline">
+                            {profile?.display_name || user.email?.split('@')[0] || '會員'}
+                          </span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => navigate('/account')}>
+                          <User className="w-4 h-4 mr-2" />
+                          會員中心
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={handleSignOut}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <LogOut className="w-4 h-4 mr-2" />
+                          登出
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 ) : (
                   <Button
                     onClick={() => setShowLoginDialog(true)}

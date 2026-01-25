@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Calendar, Crown, Shield, LogOut, Edit2, Check, X, Loader2, Globe, Database } from 'lucide-react';
+import { User, Mail, Calendar, Crown, Shield, LogOut, Edit2, Check, X, Loader2 } from 'lucide-react';
 import { useMember } from '@/lib/member';
 import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -27,7 +27,7 @@ const Account = () => {
   const { theme } = useTheme();
   const { user, profile, signOut, loading, updateProfile } = useMember();
   const { toast } = useToast();
-  const { hasAccess, source, tier, loading: membershipLoading } = useUnifiedMembership('bazi-premium');
+  const { hasAccess, loading: membershipLoading } = useUnifiedMembership('bazi-premium');
   
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
@@ -119,8 +119,8 @@ const Account = () => {
     }
   };
 
-  // 會員來源徽章
-  const getMembershipSourceBadge = () => {
+  // 會員狀態徽章（統一顯示，不區分來源）
+  const getMembershipBadge = () => {
     if (membershipLoading) {
       return <Badge variant="secondary"><Loader2 className="w-3 h-3 animate-spin mr-1" />載入中</Badge>;
     }
@@ -129,25 +129,13 @@ const Account = () => {
       return <Badge variant="secondary">免費版</Badge>;
     }
     
-    if (source === 'central') {
-      return (
-        <Badge className="bg-gradient-to-r from-purple-500 to-violet-500 text-white border-0">
-          <Globe className="w-3 h-3 mr-1" />
-          中央會員
-        </Badge>
-      );
-    }
-    
-    if (source === 'local') {
-      return (
-        <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-          <Database className="w-3 h-3 mr-1" />
-          本地會員
-        </Badge>
-      );
-    }
-    
-    return <Badge variant="secondary">免費版</Badge>;
+    // 統一顯示為 Premium 會員（中央認證、本地存儲是內部分工）
+    return (
+      <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
+        <Crown className="w-3 h-3 mr-1" />
+        Premium 會員
+      </Badge>
+    );
   };
 
   const getSubscriptionBadge = () => {
@@ -203,7 +191,7 @@ const Account = () => {
             會員中心
           </h1>
           <div className="flex items-center justify-center gap-2">
-            {getMembershipSourceBadge()}
+            {getMembershipBadge()}
           </div>
           <p className={`text-sm ${theme === 'dark' ? 'text-paper/60' : 'text-void/60'}`}>
             管理您的帳戶與訂閱

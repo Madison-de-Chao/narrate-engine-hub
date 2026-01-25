@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, Sun, Moon, User, LogOut, Globe, Database } from 'lucide-react';
+import { ChevronLeft, Sun, Moon, User, LogOut, Crown } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +38,7 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { user, profile, signOut, loading } = useMember();
-  const { hasAccess, source, loading: membershipLoading } = useUnifiedMembership('bazi-premium');
+  const { hasAccess, loading: membershipLoading } = useUnifiedMembership('bazi-premium');
   const { toast } = useToast();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   
@@ -118,19 +118,12 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
               {!loading && (
                 user ? (
                   <div className="flex items-center gap-2">
-                    {/* 會員來源徽章 */}
+                    {/* Premium 會員徽章（統一顯示，不區分來源） */}
                     {!membershipLoading && hasAccess && (
-                      source === 'central' ? (
-                        <Badge className="hidden sm:flex bg-gradient-to-r from-purple-500 to-violet-500 text-white border-0 text-[10px] px-2 py-0.5">
-                          <Globe className="w-3 h-3 mr-1" />
-                          中央會員
-                        </Badge>
-                      ) : source === 'local' ? (
-                        <Badge className="hidden sm:flex bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[10px] px-2 py-0.5">
-                          <Database className="w-3 h-3 mr-1" />
-                          本地會員
-                        </Badge>
-                      ) : null
+                      <Badge className="hidden sm:flex bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[10px] px-2 py-0.5">
+                        <Crown className="w-3 h-3 mr-1" />
+                        Premium
+                      </Badge>
                     )}
                     
                     <DropdownMenu>

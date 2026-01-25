@@ -1,9 +1,9 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { useUnifiedMembership, getMembershipLabel } from '@/hooks/useUnifiedMembership';
+import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Lock, LogIn, ExternalLink, Crown, Building2 } from 'lucide-react';
+import { Loader2, Lock, LogIn, ExternalLink, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import type { MembershipSource, MembershipTier } from '@/lib/unified-member-sdk';
@@ -131,7 +131,7 @@ export function EntitlementGuard({
   return <>{children}</>;
 }
 
-// Export a badge component for showing membership status
+// Export a badge component for showing membership status (統一顯示，不區分來源)
 export function MembershipBadge({ 
   source, 
   tier, 
@@ -143,16 +143,14 @@ export function MembershipBadge({
 }) {
   if (source === 'none') return null;
 
-  const label = getMembershipLabel(source, tier);
-  const isCentral = source === 'central';
-
+  // 統一顯示為 Premium 會員（中央認證、本地存儲是內部分工）
   return (
     <Badge 
       variant="secondary" 
-      className={`${isCentral ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-amber-500/20 text-amber-300 border-amber-500/30'} ${className}`}
+      className={`bg-amber-500/20 text-amber-300 border-amber-500/30 ${className}`}
     >
-      {isCentral ? <Building2 className="h-3 w-3 mr-1" /> : <Crown className="h-3 w-3 mr-1" />}
-      {label}
+      <Crown className="h-3 w-3 mr-1" />
+      Premium 會員
     </Badge>
   );
 }

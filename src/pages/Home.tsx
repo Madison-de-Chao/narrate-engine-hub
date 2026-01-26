@@ -33,7 +33,7 @@ import {
 
 // Import logos (only keeping main ones for hero)
 import logoSishi from '@/assets/logo-sishi.png';
-import logoMain from '@/assets/logo.png';
+import logoMain from '@/assets/logo-honglingyusuo-new.png';
 
 const Home = () => {
   const navigate = useNavigate();

@@ -183,22 +183,11 @@ const Home = () => {
           animate="visible"
           variants={containerVariants}
         >
-          {/* Logos Section - with hover effects */}
+          {/* Logo Section - 虹靈御所 only */}
           <motion.div 
             variants={itemVariants}
-            className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 md:gap-10 mb-8 sm:mb-10"
+            className="flex items-center justify-center mb-8 sm:mb-10"
           >
-            <motion.img 
-              src={logoSishi} 
-              alt="四時" 
-              className="h-14 sm:h-18 md:h-24 w-auto object-contain cursor-pointer"
-              whileHover={{ 
-                scale: 1.08, 
-                filter: 'drop-shadow(0 0 20px rgba(251, 191, 36, 0.5))',
-                transition: { duration: 0.3 }
-              }}
-              whileTap={{ scale: 0.98 }}
-            />
             <motion.img 
               src={logoMain} 
               alt="虹靈御所" 
@@ -229,8 +218,21 @@ const Home = () => {
               theme === 'dark' ? 'text-paper' : 'text-void'
             }`}
           >
-            <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-400 bg-clip-text text-transparent">
-              八字命盤
+            <span className="inline-flex items-center justify-center gap-3 sm:gap-4">
+              <motion.img 
+                src={logoSishi} 
+                alt="四時" 
+                className="h-16 sm:h-20 md:h-28 lg:h-32 w-auto object-contain"
+                whileHover={{ 
+                  scale: 1.08, 
+                  filter: 'drop-shadow(0 0 20px rgba(251, 191, 36, 0.5))',
+                  transition: { duration: 0.3 }
+                }}
+                whileTap={{ scale: 0.98 }}
+              />
+              <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-400 bg-clip-text text-transparent">
+                八字命盤
+              </span>
             </span>
             <br />
             <span className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl ${theme === 'dark' ? 'text-paper/90' : 'text-void/90'}`}>

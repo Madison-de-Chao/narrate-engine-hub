@@ -211,28 +211,30 @@ const Home = () => {
             </Badge>
           </motion.div>
 
-          {/* Main Title - 手機版字級縮小 */}
+          {/* 四時 Logo - 放大兩倍 */}
+          <motion.div variants={itemVariants} className="flex justify-center mb-4 sm:mb-6">
+            <motion.img 
+              src={logoSishi} 
+              alt="四時" 
+              className="h-32 sm:h-40 md:h-56 lg:h-64 w-auto object-contain"
+              whileHover={{ 
+                scale: 1.08, 
+                filter: 'drop-shadow(0 0 20px rgba(251, 191, 36, 0.5))',
+                transition: { duration: 0.3 }
+              }}
+              whileTap={{ scale: 0.98 }}
+            />
+          </motion.div>
+
+          {/* Main Title - 置中 */}
           <motion.h1 
             variants={itemVariants}
-            className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold font-serif mb-4 sm:mb-6 leading-tight ${
+            className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold font-serif mb-4 sm:mb-6 leading-tight text-center ${
               theme === 'dark' ? 'text-paper' : 'text-void'
             }`}
           >
-            <span className="inline-flex items-center justify-center gap-3 sm:gap-4">
-              <motion.img 
-                src={logoSishi} 
-                alt="四時" 
-                className="h-16 sm:h-20 md:h-28 lg:h-32 w-auto object-contain"
-                whileHover={{ 
-                  scale: 1.08, 
-                  filter: 'drop-shadow(0 0 20px rgba(251, 191, 36, 0.5))',
-                  transition: { duration: 0.3 }
-                }}
-                whileTap={{ scale: 0.98 }}
-              />
-              <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-400 bg-clip-text text-transparent">
-                八字命盤
-              </span>
+            <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-400 bg-clip-text text-transparent">
+              八字命盤
             </span>
             <br />
             <span className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl ${theme === 'dark' ? 'text-paper/90' : 'text-void/90'}`}>

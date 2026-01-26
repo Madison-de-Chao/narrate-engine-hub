@@ -1,201 +1,243 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Instagram, Youtube, Facebook, Mail, Send, ExternalLink } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Mail, FileText, Shield, Map, Handshake } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
-// Import partner logo
+// Import logos
 import logoChaoxuanNew from '@/assets/logo-chaoxuan-new.png';
+import logoHonglingNew from '@/assets/logo-honglingyusuo-new.png';
+
+const currentYear = new Date().getFullYear();
+
+const socialLinks = [
+  { icon: Instagram, href: "https://www.instagram.com/momo_chao_/", label: "Instagram" },
+  { icon: Facebook, href: "https://www.facebook.com/momochao.tw", label: "Facebook" },
+  { icon: Youtube, href: "https://www.youtube.com/@momochao", label: "YouTube" },
+];
+
+const footerLinks = {
+  explore: [
+    { label: "八字解析", href: "/bazi" },
+    { label: "八字學院", href: "/academy" },
+    { label: "角色圖鑑", href: "/gallery" },
+    { label: "導覽地圖", href: "/map" },
+  ],
+  external: [
+    { label: "元壹宇宙", href: "https://www.yyuniverse.com/", external: true },
+    { label: "默默超思維訓練系統", href: "https://mmclogic.com/", external: true },
+    { label: "元壹占卜系統", href: "https://mirror.yyuniverse.com/", external: true },
+    { label: "四時八字人生兵法", href: "https://bazi.rainbow-sanctuary.com/", external: true },
+  ],
+  about: [
+    { label: "關於我們", href: "/about" },
+    { label: "隱私政策", href: "/privacy" },
+    { label: "使用條款", href: "/terms" },
+  ],
+};
 
 const Footer = () => {
   const { theme } = useTheme();
-  const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState("");
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error("請輸入電子郵件地址");
+      return;
+    }
+    
+    setIsSubscribing(true);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    toast.success("訂閱成功！感謝您的支持");
+    setEmail("");
+    setIsSubscribing(false);
+  };
 
   return (
     <footer className={`
-      relative py-8 sm:py-12 px-4 sm:px-6 border-t
+      relative py-12 sm:py-16 px-4 sm:px-6 border-t
       ${theme === 'dark' 
-        ? 'bg-slate-950/80 border-slate-800' 
-        : 'bg-slate-50 border-slate-200'
+        ? 'bg-slate-950 border-slate-800' 
+        : 'bg-slate-100 border-slate-200'
       }
     `}>
       <div className="max-w-6xl mx-auto">
-        {/* Main Footer Content - 手機版改為 2x2 網格 */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-8 sm:mb-10">
-          {/* Brand */}
-          <div className="col-span-2 sm:col-span-1 space-y-3 sm:space-y-4">
-            <h3 className={`text-base sm:text-lg font-bold font-serif ${
-              theme === 'dark' ? 'text-paper' : 'text-void'
-            }`}>
-              虹靈御所
-            </h3>
-            <p className={`text-xs sm:text-sm leading-relaxed ${
-              theme === 'dark' ? 'text-paper/60' : 'text-void/60'
-            }`}>
-              RSBZS v3.0<br />
-              八字人生兵法系統
-            </p>
-          </div>
-
-          {/* Quick Links */}
-          <div className="space-y-3 sm:space-y-4">
-            <h4 className={`text-xs sm:text-sm font-semibold uppercase tracking-wider ${
-              theme === 'dark' ? 'text-paper/80' : 'text-void/80'
-            }`}>
-              快速連結
-            </h4>
-            <ul className="space-y-1.5 sm:space-y-2">
-              <li>
-                <Link 
-                  to="/bazi" 
-                  className={`text-xs sm:text-sm transition-colors hover:text-amber-500 ${
-                    theme === 'dark' ? 'text-paper/60' : 'text-void/60'
-                  }`}
-                >
-                  八字解析
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/academy" 
-                  className={`text-xs sm:text-sm transition-colors hover:text-amber-500 ${
-                    theme === 'dark' ? 'text-paper/60' : 'text-void/60'
-                  }`}
-                >
-                  八字學院
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/gallery" 
-                  className={`text-xs sm:text-sm transition-colors hover:text-amber-500 ${
-                    theme === 'dark' ? 'text-paper/60' : 'text-void/60'
-                  }`}
-                >
-                  角色圖鑑
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/map" 
-                  className={`text-xs sm:text-sm transition-colors hover:text-amber-500 inline-flex items-center gap-1 ${
-                    theme === 'dark' ? 'text-paper/60' : 'text-void/60'
-                  }`}
-                >
-                  <Map className="w-3 h-3" />
-                  導覽地圖
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div className="space-y-3 sm:space-y-4">
-            <h4 className={`text-xs sm:text-sm font-semibold uppercase tracking-wider ${
-              theme === 'dark' ? 'text-paper/80' : 'text-void/80'
-            }`}>
-              法律聲明
-            </h4>
-            <ul className="space-y-1.5 sm:space-y-2">
-              <li>
-                <Link 
-                  to="/privacy" 
-                  className={`text-xs sm:text-sm transition-colors hover:text-amber-500 inline-flex items-center gap-1 ${
-                    theme === 'dark' ? 'text-paper/60' : 'text-void/60'
-                  }`}
-                >
-                  <Shield className="w-3 h-3" />
-                  隱私政策
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/terms" 
-                  className={`text-xs sm:text-sm transition-colors hover:text-amber-500 inline-flex items-center gap-1 ${
-                    theme === 'dark' ? 'text-paper/60' : 'text-void/60'
-                  }`}
-                >
-                  <FileText className="w-3 h-3" />
-                  使用條款
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div className="space-y-3 sm:space-y-4">
-            <h4 className={`text-xs sm:text-sm font-semibold uppercase tracking-wider ${
-              theme === 'dark' ? 'text-paper/80' : 'text-void/80'
-            }`}>
-              聯絡我們
-            </h4>
-            <a 
-              href="mailto:contact@honglingyusuo.com"
-              className={`text-xs sm:text-sm transition-colors hover:text-amber-500 inline-flex items-center gap-1.5 sm:gap-2 break-all ${
-                theme === 'dark' ? 'text-paper/60' : 'text-void/60'
-              }`}
-            >
-              <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span className="hidden sm:inline">contact@honglingyusuo.com</span>
-              <span className="sm:hidden">聯絡信箱</span>
-            </a>
-          </div>
-        </div>
-
-        {/* Partner Section */}
-        <div className={`
-          py-4 sm:py-6 px-4 rounded-lg mb-6 sm:mb-8 
-          ${theme === 'dark' ? 'bg-slate-900/40' : 'bg-slate-100/60'}
-        `}>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <div className="flex items-center gap-2">
-              <Handshake className={`w-4 h-4 ${theme === 'dark' ? 'text-amber-400' : 'text-amber-600'}`} />
-              <span className={`text-xs sm:text-sm font-medium ${
-                theme === 'dark' ? 'text-paper/70' : 'text-void/70'
-              }`}>
-                合作夥伴
-              </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
+          
+          {/* Brand with Logos */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <img 
+                  src={logoChaoxuanNew} 
+                  alt="超烜創意" 
+                  className="h-10 w-auto object-contain"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <img 
+                  src={logoHonglingNew} 
+                  alt="虹靈御所" 
+                  className="h-8 w-auto object-contain"
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <img 
-                src={logoChaoxuanNew} 
-                alt="超烜創意" 
-                className={`h-8 sm:h-10 w-auto object-contain transition-opacity hover:opacity-100 ${
-                  theme === 'dark' ? 'opacity-80' : 'opacity-90'
+
+            <p className={`text-sm leading-relaxed ${
+              theme === 'dark' ? 'text-white/60' : 'text-slate-600'
+            }`}>
+              鏡子非劇本，真實即命運。
+              <br />
+              我們不預測未來，只幫你看清現在。
+            </p>
+            
+            {/* Social Media Links */}
+            <div className="flex items-center gap-3">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
+                  className={`
+                    p-2.5 rounded-full transition-all duration-300
+                    ${theme === 'dark' 
+                      ? 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white' 
+                      : 'bg-slate-200 hover:bg-slate-300 text-slate-600 hover:text-slate-900'
+                    }
+                  `}
+                >
+                  <social.icon className="w-4 h-4" />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Explore Links */}
+          <div className="space-y-4">
+            <h4 className={`text-sm font-semibold uppercase tracking-wider ${
+              theme === 'dark' ? 'text-white/90' : 'text-slate-900'
+            }`}>
+              探索
+            </h4>
+            <ul className="space-y-2.5">
+              {footerLinks.explore.map((link) => (
+                <li key={link.href}>
+                  <Link 
+                    to={link.href}
+                    className={`text-sm transition-colors hover:text-amber-500 ${
+                      theme === 'dark' ? 'text-white/60' : 'text-slate-600'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* External Links */}
+          <div className="space-y-4">
+            <h4 className={`text-sm font-semibold uppercase tracking-wider ${
+              theme === 'dark' ? 'text-white/90' : 'text-slate-900'
+            }`}>
+              生態系統
+            </h4>
+            <ul className="space-y-2.5">
+              {footerLinks.external.map((link) => (
+                <li key={link.href}>
+                  <a 
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-sm transition-colors hover:text-amber-500 inline-flex items-center gap-1.5 ${
+                      theme === 'dark' ? 'text-white/60' : 'text-slate-600'
+                    }`}
+                  >
+                    {link.label}
+                    <ExternalLink className="w-3 h-3 opacity-50" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Newsletter */}
+          <div className="space-y-4">
+            <h4 className={`text-sm font-semibold uppercase tracking-wider ${
+              theme === 'dark' ? 'text-white/90' : 'text-slate-900'
+            }`}>
+              訂閱電子報
+            </h4>
+            <form onSubmit={handleSubscribe} className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`h-10 ${
+                  theme === 'dark' 
+                    ? 'bg-white/5 border-white/10 text-white placeholder:text-white/30' 
+                    : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'
                 }`}
               />
-            </div>
+              <Button 
+                type="submit" 
+                size="icon" 
+                disabled={isSubscribing}
+                className="h-10 w-10 shrink-0 bg-amber-500 hover:bg-amber-600 text-white"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </form>
+            <p className={`text-xs ${
+              theme === 'dark' ? 'text-white/40' : 'text-slate-500'
+            }`}>
+              獲取最新八字洞見與系統更新
+            </p>
           </div>
         </div>
 
-        {/* Disclaimer - 手機版優化 */}
+        {/* Disclaimer */}
         <div className={`
-          py-4 sm:py-6 px-3 sm:px-4 rounded-lg mb-6 sm:mb-8 text-center
-          ${theme === 'dark' ? 'bg-slate-900/60' : 'bg-slate-100'}
+          py-4 px-4 rounded-lg mb-8 text-center
+          ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-200/50'}
         `}>
-          <p className={`text-[10px] sm:text-xs leading-relaxed max-w-3xl mx-auto ${
-            theme === 'dark' ? 'text-paper/50' : 'text-void/50'
+          <p className={`text-xs leading-relaxed max-w-3xl mx-auto ${
+            theme === 'dark' ? 'text-white/50' : 'text-slate-500'
           }`}>
             本網站提供之八字命理分析屬於自我探索工具，旨在提供觀點與行動建議。
-            <span className="hidden sm:inline">本內容不構成且不取代任何醫療、心理、法律或財務等專業意見。</span>
+            本內容不構成且不取代任何醫療、心理、法律或財務等專業意見。
             若您正面臨重大決策，請諮詢合格專業人士。
           </p>
         </div>
 
-        {/* Copyright */}
+        {/* Bottom Bar */}
         <div className={`
-          pt-4 sm:pt-6 border-t text-center
-          ${theme === 'dark' ? 'border-slate-800' : 'border-slate-200'}
+          pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4
+          ${theme === 'dark' ? 'border-white/10' : 'border-slate-200'}
         `}>
-          <p className={`text-[10px] sm:text-xs ${
-            theme === 'dark' ? 'text-paper/40' : 'text-void/40'
+          <p className={`text-xs ${
+            theme === 'dark' ? 'text-white/40' : 'text-slate-500'
           }`}>
-            © {currentYear} 虹靈御所. All rights reserved.
+            © {currentYear} 超烜創意 / 虹靈御所
           </p>
-          <p className={`text-[10px] sm:text-xs mt-0.5 sm:mt-1 ${
-            theme === 'dark' ? 'text-paper/30' : 'text-void/30'
+          <div className={`flex items-center gap-3 text-xs ${
+            theme === 'dark' ? 'text-white/40' : 'text-slate-500'
           }`}>
-            RSBZS v3.0
-          </p>
+            <Link to="/privacy" className="hover:text-amber-500 transition-colors">
+              隱私政策
+            </Link>
+            <span>|</span>
+            <Link to="/terms" className="hover:text-amber-500 transition-colors">
+              使用條款
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

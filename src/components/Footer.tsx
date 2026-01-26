@@ -1,7 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Mail, FileText, Shield, Map } from 'lucide-react';
+import { Mail, FileText, Shield, Map, Handshake } from 'lucide-react';
+
+// Import partner logo
+import logoChaoxuanNew from '@/assets/logo-chaoxuan-new.png';
 
 const Footer = () => {
   const { theme } = useTheme();
@@ -135,6 +138,32 @@ const Footer = () => {
               <span className="hidden sm:inline">contact@honglingyusuo.com</span>
               <span className="sm:hidden">聯絡信箱</span>
             </a>
+          </div>
+        </div>
+
+        {/* Partner Section */}
+        <div className={`
+          py-4 sm:py-6 px-4 rounded-lg mb-6 sm:mb-8 
+          ${theme === 'dark' ? 'bg-slate-900/40' : 'bg-slate-100/60'}
+        `}>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-2">
+              <Handshake className={`w-4 h-4 ${theme === 'dark' ? 'text-amber-400' : 'text-amber-600'}`} />
+              <span className={`text-xs sm:text-sm font-medium ${
+                theme === 'dark' ? 'text-paper/70' : 'text-void/70'
+              }`}>
+                合作夥伴
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <img 
+                src={logoChaoxuanNew} 
+                alt="超烜創意" 
+                className={`h-8 sm:h-10 w-auto object-contain transition-opacity hover:opacity-100 ${
+                  theme === 'dark' ? 'opacity-80' : 'opacity-90'
+                }`}
+              />
+            </div>
           </div>
         </div>
 

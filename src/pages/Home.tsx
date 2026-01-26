@@ -31,11 +31,7 @@ import {
   DialogContent,
 } from '@/components/ui/dialog';
 
-// Import all logos
-import logoHonglingNew from '@/assets/logo-honglingyusuo-new.png';
-import logoHongling from '@/assets/logo-honglingyusuo.png';
-import logoChaoxuanNew from '@/assets/logo-chaoxuan-new.png';
-import logoChaoxuan from '@/assets/logo-chaoxuan.png';
+// Import logos (only keeping main ones for hero)
 import logoSishi from '@/assets/logo-sishi.png';
 import logoMain from '@/assets/logo.png';
 
@@ -187,47 +183,32 @@ const Home = () => {
           animate="visible"
           variants={containerVariants}
         >
-          {/* Logos Section */}
+          {/* Logos Section - with hover effects */}
           <motion.div 
             variants={itemVariants}
-            className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-6 sm:mb-8"
+            className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 md:gap-10 mb-8 sm:mb-10"
           >
-            <img 
-              src={logoHonglingNew} 
-              alt="虹靈御所" 
-              className="h-12 sm:h-16 md:h-20 w-auto object-contain"
-            />
-            <img 
-              src={logoChaoxuanNew} 
-              alt="潮玄" 
-              className="h-10 sm:h-14 md:h-16 w-auto object-contain"
-            />
-            <img 
+            <motion.img 
               src={logoSishi} 
               alt="四時" 
-              className="h-10 sm:h-14 md:h-16 w-auto object-contain"
+              className="h-14 sm:h-18 md:h-24 w-auto object-contain cursor-pointer"
+              whileHover={{ 
+                scale: 1.08, 
+                filter: 'drop-shadow(0 0 20px rgba(251, 191, 36, 0.5))',
+                transition: { duration: 0.3 }
+              }}
+              whileTap={{ scale: 0.98 }}
             />
-          </motion.div>
-
-          {/* Secondary Logos */}
-          <motion.div 
-            variants={itemVariants}
-            className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6"
-          >
-            <img 
+            <motion.img 
               src={logoMain} 
-              alt="Logo" 
-              className="h-8 sm:h-10 md:h-12 w-auto object-contain opacity-80"
-            />
-            <img 
-              src={logoHongling} 
               alt="虹靈御所" 
-              className="h-8 sm:h-10 md:h-12 w-auto object-contain opacity-80"
-            />
-            <img 
-              src={logoChaoxuan} 
-              alt="潮玄" 
-              className="h-8 sm:h-10 md:h-12 w-auto object-contain opacity-80"
+              className="h-12 sm:h-16 md:h-20 w-auto object-contain cursor-pointer"
+              whileHover={{ 
+                scale: 1.08, 
+                filter: 'drop-shadow(0 0 20px rgba(251, 191, 36, 0.5))',
+                transition: { duration: 0.3 }
+              }}
+              whileTap={{ scale: 0.98 }}
             />
           </motion.div>
 

@@ -5,7 +5,6 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { NavigationMapDropdown } from '@/components/NavigationMapDropdown';
-import { SimplifiedLogo } from '@/components/icons/SimplifiedLogo';
 import { MemberLoginWidget, useMember } from '@/lib/member';
 import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +19,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+
+// Import 虹靈御所 logo for navigation
+import logoHonglingNew from '@/assets/logo-honglingyusuo-new.png';
 
 interface MuseumLayoutProps {
   children: React.ReactNode;
@@ -95,17 +97,19 @@ export const MuseumLayout: React.FC<MuseumLayoutProps> = ({
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate('/')}
-                className={`transition-colors ${
-                  theme === 'dark' ? 'text-gold hover:text-gold/80' : 'text-ink hover:text-ink/80'
-                }`}
+                className="transition-transform hover:scale-105 flex items-center gap-2"
                 aria-label="返回首頁"
               >
-                <SimplifiedLogo className="w-6 h-6" />
+                <img 
+                  src={logoHonglingNew} 
+                  alt="虹靈御所" 
+                  className="h-7 sm:h-8 w-auto object-contain"
+                />
               </button>
-              <span className={`text-xs tracking-wider ${
+              <span className={`text-xs tracking-wider hidden sm:inline ${
                 theme === 'dark' ? 'text-paper/60' : 'text-void/60'
               }`}>
-                虹靈御所八字導覽 · 專業可信任
+                八字導覽 · 專業可信任
               </span>
               <span className={`text-xs hidden sm:inline ${
                 theme === 'dark' ? 'text-paper/40' : 'text-void/40'

@@ -30,6 +30,7 @@ import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
+import { HomeStatsSection } from '@/components/HomeStatsSection';
 
 // Import logos (only keeping main ones for hero)
 import logoSishi from '@/assets/logo-sishi.png';
@@ -297,6 +298,9 @@ const Home = () => {
           </motion.div>
         </motion.div>
       </section>
+
+      {/* Stats Section - 動態數據統計 */}
+      <HomeStatsSection />
 
       {/* Features Section - 手機版優化 */}
       <section className="relative py-10 sm:py-16 px-4 sm:px-6">

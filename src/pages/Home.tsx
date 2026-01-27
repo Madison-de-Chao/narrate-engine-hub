@@ -34,7 +34,7 @@ import { HomeStatsSection } from '@/components/HomeStatsSection';
 
 // Import logos (only keeping main ones for hero)
 import logoSishi from '@/assets/logo-sishi.png';
-import logoMain from '@/assets/logo-honglingyusuo-new.png';
+
 
 const Home = () => {
   const navigate = useNavigate();
@@ -184,23 +184,6 @@ const Home = () => {
           animate="visible"
           variants={containerVariants}
         >
-          {/* Logo Section - 虹靈御所 only */}
-          <motion.div 
-            variants={itemVariants}
-            className="flex items-center justify-center mb-8 sm:mb-10"
-          >
-            <motion.img 
-              src={logoMain} 
-              alt="虹靈御所" 
-              className="h-12 sm:h-16 md:h-20 w-auto object-contain cursor-pointer"
-              whileHover={{ 
-                scale: 1.08, 
-                filter: 'drop-shadow(0 0 20px rgba(251, 191, 36, 0.5))',
-                transition: { duration: 0.3 }
-              }}
-              whileTap={{ scale: 0.98 }}
-            />
-          </motion.div>
 
           {/* Brand Badge */}
           <motion.div variants={itemVariants}>

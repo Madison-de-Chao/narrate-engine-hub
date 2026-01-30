@@ -59,14 +59,14 @@ const premiumSections: TocSection[] = [
 // 合併所有目錄章節（不含計算日誌）
 const tocSections: TocSection[] = [...freeSections, ...premiumSections];
 
-// 預設位置
-const DEFAULT_POSITION: Position = { x: 16, y: 0 };
+// 預設位置 - 移到更靠左避免遮擋報告內容
+const DEFAULT_POSITION: Position = { x: -280, y: 0 };
 
 // 吸附閾值（像素）
 const SNAP_THRESHOLD = 60;
 
 // 螢幕邊緣邊距
-const EDGE_MARGIN = 16;
+const EDGE_MARGIN = 8;
 
 // 計算吸附位置
 const calculateSnapPosition = (position: Position, containerWidth: number, containerHeight: number): Position => {
@@ -135,7 +135,7 @@ export const ReportTableOfContents = ({
 }: ReportTableOfContentsProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true); // 預設收合，減少遮擋
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState<Position>(DEFAULT_POSITION);
   const [showResetButton, setShowResetButton] = useState(false);
@@ -391,9 +391,10 @@ export const ReportTableOfContents = ({
         )}
       >
         <div className={cn(
-          "rounded-2xl bg-card/90 backdrop-blur-md border border-border/50 shadow-lg transition-all duration-300",
+          "rounded-2xl bg-cosmic-deep/95 backdrop-blur-md border border-cosmic-gold/30 shadow-lg transition-all duration-300",
           isCollapsed ? "p-2" : "p-4",
-          isDragging && "shadow-2xl border-primary/50"
+          isDragging && "shadow-2xl border-cosmic-gold/60",
+          "shadow-[0_0_30px_rgba(200,170,100,0.1)]"
         )}>
           {/* 拖曳手把 */}
           <div

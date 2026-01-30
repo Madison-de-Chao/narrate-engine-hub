@@ -86,13 +86,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className={`
-      relative py-12 sm:py-16 px-4 sm:px-6 border-t
-      ${theme === 'dark' 
-        ? 'bg-slate-950 border-slate-800' 
-        : 'bg-slate-100 border-slate-200'
-      }
-    `}>
+    <footer className="relative py-12 sm:py-16 px-4 sm:px-6 border-t bg-background border-border">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
           
@@ -115,9 +109,7 @@ const Footer = () => {
               </div>
             </div>
 
-            <p className={`text-sm leading-relaxed ${
-              theme === 'dark' ? 'text-white/60' : 'text-slate-600'
-            }`}>
+            <p className="text-sm leading-relaxed text-muted-foreground">
               鏡子非劇本，真實即命運。
               <br />
               我們不預測未來，只幫你看清現在。
@@ -132,13 +124,7 @@ const Footer = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className={`
-                    p-2.5 rounded-full transition-all duration-300
-                    ${theme === 'dark' 
-                      ? 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white' 
-                      : 'bg-slate-200 hover:bg-slate-300 text-slate-600 hover:text-slate-900'
-                    }
-                  `}
+                  className="p-2.5 rounded-full transition-all duration-300 bg-muted hover:bg-primary/20 text-muted-foreground hover:text-primary"
                 >
                   <social.icon className="w-4 h-4" />
                 </a>
@@ -148,9 +134,7 @@ const Footer = () => {
 
           {/* Explore Links */}
           <div className="space-y-4">
-            <h4 className={`text-sm font-semibold uppercase tracking-wider ${
-              theme === 'dark' ? 'text-white/90' : 'text-slate-900'
-            }`}>
+            <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground">
               探索
             </h4>
             <ul className="space-y-2.5">
@@ -158,9 +142,7 @@ const Footer = () => {
                 <li key={link.href}>
                   <Link 
                     to={link.href}
-                    className={`text-sm transition-colors hover:text-amber-500 ${
-                      theme === 'dark' ? 'text-white/60' : 'text-slate-600'
-                    }`}
+                    className="text-sm transition-colors hover:text-primary text-muted-foreground"
                   >
                     {link.label}
                   </Link>
@@ -171,9 +153,7 @@ const Footer = () => {
 
           {/* External Links */}
           <div className="space-y-4">
-            <h4 className={`text-sm font-semibold uppercase tracking-wider ${
-              theme === 'dark' ? 'text-white/90' : 'text-slate-900'
-            }`}>
+            <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground">
               生態系統
             </h4>
             <ul className="space-y-2.5">
@@ -183,9 +163,7 @@ const Footer = () => {
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`text-sm transition-colors hover:text-amber-500 inline-flex items-center gap-1.5 ${
-                      theme === 'dark' ? 'text-white/60' : 'text-slate-600'
-                    }`}
+                    className="text-sm transition-colors hover:text-primary inline-flex items-center gap-1.5 text-muted-foreground"
                   >
                     {link.label}
                     <ExternalLink className="w-3 h-3 opacity-50" />
@@ -197,9 +175,7 @@ const Footer = () => {
 
           {/* Newsletter */}
           <div className="space-y-4">
-            <h4 className={`text-sm font-semibold uppercase tracking-wider ${
-              theme === 'dark' ? 'text-white/90' : 'text-slate-900'
-            }`}>
+            <h4 className="text-sm font-semibold uppercase tracking-wider text-foreground">
               訂閱電子報
             </h4>
             <form onSubmit={handleSubscribe} className="flex gap-2">
@@ -208,37 +184,26 @@ const Footer = () => {
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`h-10 ${
-                  theme === 'dark' 
-                    ? 'bg-white/5 border-white/10 text-white placeholder:text-white/30' 
-                    : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'
-                }`}
+                className="h-10 bg-muted border-border"
               />
               <Button 
                 type="submit" 
                 size="icon" 
                 disabled={isSubscribing}
-                className="h-10 w-10 shrink-0 bg-amber-500 hover:bg-amber-600 text-white"
+                className="h-10 w-10 shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 <Send className="w-4 h-4" />
               </Button>
             </form>
-            <p className={`text-xs ${
-              theme === 'dark' ? 'text-white/40' : 'text-slate-500'
-            }`}>
+            <p className="text-xs text-muted-foreground">
               獲取最新八字洞見與系統更新
             </p>
           </div>
         </div>
 
         {/* Disclaimer */}
-        <div className={`
-          py-4 px-4 rounded-lg mb-8 text-center
-          ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-200/50'}
-        `}>
-          <p className={`text-xs leading-relaxed max-w-3xl mx-auto ${
-            theme === 'dark' ? 'text-white/50' : 'text-slate-500'
-          }`}>
+        <div className="py-4 px-4 rounded-lg mb-8 text-center bg-muted/50">
+          <p className="text-xs leading-relaxed max-w-3xl mx-auto text-muted-foreground">
             本網站提供之八字命理分析屬於自我探索工具，旨在提供觀點與行動建議。
             本內容不構成且不取代任何醫療、心理、法律或財務等專業意見。
             若您正面臨重大決策，請諮詢合格專業人士。
@@ -246,23 +211,16 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className={`
-          pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4
-          ${theme === 'dark' ? 'border-white/10' : 'border-slate-200'}
-        `}>
-          <p className={`text-xs ${
-            theme === 'dark' ? 'text-white/40' : 'text-slate-500'
-          }`}>
+        <div className="pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-4 border-border">
+          <p className="text-xs text-muted-foreground">
             © {currentYear} 超烜創意 / 虹靈御所
           </p>
-          <div className={`flex items-center gap-3 text-xs ${
-            theme === 'dark' ? 'text-white/40' : 'text-slate-500'
-          }`}>
-            <Link to="/privacy" className="hover:text-amber-500 transition-colors">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <Link to="/privacy" className="hover:text-primary transition-colors">
               隱私政策
             </Link>
             <span>|</span>
-            <Link to="/terms" className="hover:text-amber-500 transition-colors">
+            <Link to="/terms" className="hover:text-primary transition-colors">
               使用條款
             </Link>
           </div>

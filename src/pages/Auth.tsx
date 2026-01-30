@@ -140,10 +140,11 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/80 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 bg-card/80 backdrop-blur-sm border-primary/20 card-glow">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(var(--cosmic-nebula)/0.15),_transparent_50%)] pointer-events-none" />
+      <Card className="w-full max-w-md p-8 bg-card/80 backdrop-blur-sm border-primary/20 cosmic-glow relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold cosmic-title-gradient">
             虹靈御所八字人生兵法
           </h1>
           <p className="text-muted-foreground mt-2">登入或註冊開始你的命盤之旅</p>

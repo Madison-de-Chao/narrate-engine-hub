@@ -59,8 +59,8 @@ const premiumSections: TocSection[] = [
 // 合併所有目錄章節（不含計算日誌）
 const tocSections: TocSection[] = [...freeSections, ...premiumSections];
 
-// 預設位置 - 移到更靠左避免遮擋報告內容
-const DEFAULT_POSITION: Position = { x: -280, y: 0 };
+// 預設位置 - 固定在左側邊緣，確保不遮擋置中內容
+const DEFAULT_POSITION: Position = { x: 16, y: 0 };
 
 // 吸附閾值（像素）
 const SNAP_THRESHOLD = 60;

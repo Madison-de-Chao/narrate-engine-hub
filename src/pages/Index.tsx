@@ -193,10 +193,16 @@ const Index = () => {
     setActiveSection(sectionId);
     const ref = sectionRefs[sectionId as keyof typeof sectionRefs];
     if (ref?.current) {
-      const headerOffset = 140;
-      const elementPosition = ref.current.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      // 使用 scrollIntoView 確保從頁頭開始顯示
+      ref.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start'
+      });
+      // 補償固定頭部的高度
+      setTimeout(() => {
+        const headerOffset = 120;
+        window.scrollBy({ top: -headerOffset, behavior: 'smooth' });
+      }, 100);
     }
   };
 
@@ -713,7 +719,7 @@ const Index = () => {
         }
       />
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
+      <main className="mx-auto px-4 py-8 space-y-8 max-w-4xl lg:max-w-5xl xl:max-w-6xl">
         {/* Guest Mode Alert */}
         {isGuest && (
           <Alert className="border-primary/50 bg-primary/5">
@@ -849,7 +855,7 @@ const Index = () => {
             </section>
 
             {/* 報告內容區 - Cosmic Architect 風格 */}
-            <div id="bazi-report-content" className="space-y-6 relative">
+            <div id="bazi-report-content" className="space-y-6 relative mx-auto max-w-4xl">
               {/* 星空背景 */}
               <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
                 <div className="stars opacity-30" />

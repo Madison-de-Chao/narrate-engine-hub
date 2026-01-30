@@ -21,6 +21,8 @@ interface ReportSectionProps {
   expanded?: boolean;
   /** 展開狀態變化回調 */
   onExpandedChange?: (expanded: boolean) => void;
+  /** Cosmic Architect 風格的 NAV-POINT */
+  navPoint?: string;
 }
 
 export const ReportSection = forwardRef<HTMLDivElement, ReportSectionProps>(({
@@ -29,8 +31,8 @@ export const ReportSection = forwardRef<HTMLDivElement, ReportSectionProps>(({
   subtitle,
   icon: Icon,
   iconColor = "text-primary",
-  bgGradient = "from-card via-card to-card",
-  borderColor = "border-border",
+  bgGradient = "from-cosmic-deep via-cosmic-void to-cosmic-deep",
+  borderColor = "border-cosmic-gold/30",
   children,
   className,
   decorative = true,
@@ -39,6 +41,7 @@ export const ReportSection = forwardRef<HTMLDivElement, ReportSectionProps>(({
   defaultExpanded = true,
   expanded,
   onExpandedChange,
+  navPoint,
 }, ref) => {
   // 支援受控與非受控模式
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
@@ -67,35 +70,63 @@ export const ReportSection = forwardRef<HTMLDivElement, ReportSectionProps>(({
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.5, delay: order * 0.05 }}
       className={cn(
-        "relative scroll-mt-36 rounded-2xl overflow-hidden",
+        "relative scroll-mt-36 rounded-xl overflow-hidden",
         `bg-gradient-to-br ${bgGradient}`,
-        `border-2 ${borderColor}`,
+        `border ${borderColor}`,
         "shadow-lg",
         className
       )}
     >
-      {/* 裝飾性背景元素 */}
+      {/* 星空背景 */}
       {decorative && isExpanded && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="stars opacity-30" />
+          <div className="stars2 opacity-20" />
+          {/* 星雲效果 */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-cosmic-nebula/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-cosmic-nebula2/10 rounded-full blur-3xl" />
+        </div>
+      )}
+
+      {/* Cosmic 四角裝飾 */}
+      {decorative && (
         <>
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-radial from-primary/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-radial from-secondary/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-          
-          {/* 四角裝飾 */}
-          <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-primary/30 pointer-events-none" />
-          <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-primary/30 pointer-events-none" />
-          <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-primary/30 pointer-events-none" />
-          <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-primary/30 pointer-events-none" />
+          <svg className="absolute top-0 left-0 w-6 h-6 pointer-events-none" viewBox="0 0 24 24" fill="none">
+            <path d="M0 0 L12 0 M0 0 L0 12" stroke="hsl(var(--cosmic-gold))" strokeWidth="1" opacity="0.5" />
+            <circle cx="2" cy="2" r="1" fill="hsl(var(--cosmic-gold))" opacity="0.4" />
+          </svg>
+          <svg className="absolute top-0 right-0 w-6 h-6 pointer-events-none rotate-90" viewBox="0 0 24 24" fill="none">
+            <path d="M0 0 L12 0 M0 0 L0 12" stroke="hsl(var(--cosmic-gold))" strokeWidth="1" opacity="0.5" />
+            <circle cx="2" cy="2" r="1" fill="hsl(var(--cosmic-gold))" opacity="0.4" />
+          </svg>
+          <svg className="absolute bottom-0 left-0 w-6 h-6 pointer-events-none -rotate-90" viewBox="0 0 24 24" fill="none">
+            <path d="M0 0 L12 0 M0 0 L0 12" stroke="hsl(var(--cosmic-gold))" strokeWidth="1" opacity="0.5" />
+            <circle cx="2" cy="2" r="1" fill="hsl(var(--cosmic-gold))" opacity="0.4" />
+          </svg>
+          <svg className="absolute bottom-0 right-0 w-6 h-6 pointer-events-none rotate-180" viewBox="0 0 24 24" fill="none">
+            <path d="M0 0 L12 0 M0 0 L0 12" stroke="hsl(var(--cosmic-gold))" strokeWidth="1" opacity="0.5" />
+            <circle cx="2" cy="2" r="1" fill="hsl(var(--cosmic-gold))" opacity="0.4" />
+          </svg>
         </>
       )}
 
-      {/* 章節標題 */}
+      {/* NAV-POINT 標記 */}
+      {navPoint && (
+        <div className="absolute top-2 right-4 text-[9px] font-mono text-cosmic-gold/40 tracking-widest pointer-events-none">
+          // {navPoint}
+        </div>
+      )}
+
+      {/* 章節標題 - Cosmic 風格 */}
       <button
         onClick={handleToggle}
         disabled={!collapsible}
         className={cn(
-          "relative w-full px-6 py-5 border-b border-border/50 bg-gradient-to-r from-muted/50 via-transparent to-muted/50",
+          "relative w-full px-6 py-5",
+          "border-b border-cosmic-gold/20",
+          "bg-gradient-to-r from-cosmic-void/50 via-transparent to-cosmic-void/50",
           "flex items-center justify-between text-left",
-          collapsible && "cursor-pointer hover:bg-muted/30 transition-colors"
+          collapsible && "cursor-pointer hover:bg-cosmic-gold/5 transition-colors"
         )}
       >
         <div className="flex items-center gap-3">
@@ -105,30 +136,35 @@ export const ReportSection = forwardRef<HTMLDivElement, ReportSectionProps>(({
               whileInView={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 200 }}
               className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center",
-                "bg-gradient-to-br from-primary/20 to-primary/5",
-                "border border-primary/30 shadow-lg"
+                "w-10 h-10 rounded-lg flex items-center justify-center",
+                "bg-gradient-to-br from-cosmic-gold/20 to-cosmic-gold/5",
+                "border border-cosmic-gold/30"
               )}
             >
               <Icon className={cn("w-5 h-5", iconColor)} />
             </motion.div>
           )}
           <div>
-            <h2 className="text-xl md:text-2xl font-bold font-serif bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent">
+            <h2 className="text-xl md:text-2xl font-bold font-serif cosmic-title-gradient tracking-wide">
               {title}
             </h2>
             {subtitle && (
-              <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
+              <p className="text-sm text-cosmic-text/60 mt-0.5">{subtitle}</p>
             )}
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* 章節序號裝飾 */}
+          {/* 章節序號裝飾 - Cosmic 風格 */}
           {order > 0 && (
-            <span className="text-3xl font-bold text-muted/30 font-serif hidden sm:block">
-              {String(order).padStart(2, '0')}
-            </span>
+            <div className="relative hidden sm:flex items-center justify-center w-10 h-10">
+              <svg className="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 40 40" fill="none">
+                <rect x="2" y="2" width="36" height="36" stroke="hsl(var(--cosmic-gold))" strokeWidth="0.5" />
+              </svg>
+              <span className="text-lg font-bold text-cosmic-gold/50 font-mono">
+                {String(order).padStart(2, '0')}
+              </span>
+            </div>
           )}
           
           {/* 收合按鈕 */}
@@ -138,10 +174,11 @@ export const ReportSection = forwardRef<HTMLDivElement, ReportSectionProps>(({
               transition={{ duration: 0.2 }}
               className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center",
-                "bg-muted/50 hover:bg-muted transition-colors"
+                "bg-cosmic-gold/10 border border-cosmic-gold/20",
+                "hover:bg-cosmic-gold/20 transition-colors"
               )}
             >
-              <ChevronDown className="w-5 h-5 text-muted-foreground" />
+              <ChevronDown className="w-5 h-5 text-cosmic-gold/70" />
             </motion.div>
           )}
         </div>

@@ -655,7 +655,7 @@ const Index = () => {
     {/* Loading 動畫覆蓋層 */}
     <LegionSummoningOverlay isVisible={isCalculating} userName={calculatingUserName} />
     
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
+    <div className="min-h-screen bg-cosmic-void">
       {/* 頂部標題 */}
       <PageHeader
         showHomeButton={false}
@@ -848,8 +848,16 @@ const Index = () => {
               </div>
             </section>
 
-            {/* 報告內容區 - 用於 PDF 生成 */}
+            {/* 報告內容區 - Cosmic Architect 風格 */}
             <div id="bazi-report-content" className="space-y-6 relative">
+              {/* 星空背景 */}
+              <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+                <div className="stars opacity-30" />
+                <div className="stars2 opacity-20" />
+                <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-cosmic-nebula/15 rounded-full blur-3xl" />
+                <div className="absolute bottom-1/3 left-1/5 w-80 h-80 bg-cosmic-nebula2/10 rounded-full blur-3xl" />
+              </div>
+
               {/* 專業報告頭部 */}
               <section className="animate-fade-in">
                 <ProfessionalReportHeader 
@@ -870,16 +878,15 @@ const Index = () => {
                 onCollapseAll={handleCollapseAll}
               />
 
-              {/* 命盤總覽 */}
+              {/* 命盤總覽 - Cosmic 風格 */}
               <ReportSection
                 ref={sectionRefs.summary}
                 id="summary"
                 title="命盤總覽"
                 subtitle="核心指標與運勢概覽"
                 icon={LayoutDashboard}
-                iconColor="text-indigo-400"
-                bgGradient="from-report-card via-report-card to-report-bg"
-                borderColor="border-indigo-500/30"
+                iconColor="text-cosmic-gold"
+                navPoint="CORE RESONANCE"
                 order={1}
                 expanded={sectionExpandedState.summary}
                 onExpandedChange={(expanded) => handleSectionExpandedChange('summary', expanded)}
@@ -887,18 +894,17 @@ const Index = () => {
                 <ReportSummary baziResult={baziResult} />
               </ReportSection>
 
-              <ReportDivider variant="decorative" />
+              <ReportDivider variant="compass" />
 
-              {/* 傳統八字排盤區 */}
+              {/* 傳統八字排盤區 - Cosmic 風格 */}
               <ReportSection
                 ref={sectionRefs.bazi}
                 id="bazi"
                 title="傳統八字排盤"
                 subtitle="四柱干支與藏干分析"
                 icon={Scroll}
-                iconColor="text-amber-400"
-                bgGradient="from-report-card via-report-card to-report-bg"
-                borderColor="border-amber-500/30"
+                iconColor="text-cosmic-gold"
+                navPoint="FOUR PILLARS"
                 order={2}
                 expanded={sectionExpandedState.bazi}
                 onExpandedChange={(expanded) => handleSectionExpandedChange('bazi', expanded)}
@@ -906,18 +912,17 @@ const Index = () => {
                 <TraditionalBaziDisplay baziResult={baziResult} />
               </ReportSection>
 
-              <ReportDivider variant="decorative" />
+              <ReportDivider variant="compass" />
 
-              {/* 四時軍團故事區（兵法為重）*/}
+              {/* 四時軍團故事區 - Cosmic 風格 */}
               <ReportSection
                 ref={sectionRefs.legion}
                 id="legion"
                 title="四時軍團傳說"
                 subtitle="軍團敘事與兵法智慧"
                 icon={Shield}
-                iconColor="text-orange-400"
-                bgGradient="from-report-card via-report-card to-report-bg"
-                borderColor="border-orange-500/30"
+                iconColor="text-cosmic-gold"
+                navPoint="LEGION NARRATIVE"
                 order={3}
                 expanded={sectionExpandedState.legion}
                 onExpandedChange={(expanded) => handleSectionExpandedChange('legion', expanded)}
@@ -947,20 +952,19 @@ const Index = () => {
                 />
               </ReportSection>
 
-              <ReportDivider variant="gradient" />
+              <ReportDivider variant="decorative" />
 
               {/* ===== 詳細分析區開始（收費內容）===== */}
               
-              {/* 十神關係分析區 */}
+              {/* 十神關係分析區 - Cosmic 風格 */}
               <ReportSection
                 ref={sectionRefs.tenGods}
                 id="tenGods"
                 title="十神深度分析"
                 subtitle="命理核心關係解讀"
                 icon={Crown}
-                iconColor="text-purple-400"
-                bgGradient="from-report-card via-report-card to-report-bg"
-                borderColor="border-purple-500/30"
+                iconColor="text-cosmic-gold"
+                navPoint="TEN GODS"
                 order={4}
                 expanded={sectionExpandedState.tenGods}
                 onExpandedChange={(expanded) => handleSectionExpandedChange('tenGods', expanded)}
@@ -970,7 +974,7 @@ const Index = () => {
                 </PremiumGate>
               </ReportSection>
 
-              {/* 神煞統計分析區 */}
+              {/* 神煞統計分析區 - Cosmic 風格 */}
               {baziResult.shensha && baziResult.shensha.length > 0 && (
                 <ReportSection
                   ref={sectionRefs.shensha}
@@ -978,9 +982,8 @@ const Index = () => {
                   title="神煞統計分析"
                   subtitle="吉凶星曜與運勢影響"
                   icon={Sparkles}
-                  iconColor="text-fuchsia-400"
-                  bgGradient="from-report-card via-report-card to-report-bg"
-                  borderColor="border-fuchsia-500/30"
+                  iconColor="text-cosmic-gold"
+                  navPoint="SHENSHA SYSTEM"
                   order={5}
                   expanded={sectionExpandedState.shensha}
                   onExpandedChange={(expanded) => handleSectionExpandedChange('shensha', expanded)}
@@ -991,16 +994,15 @@ const Index = () => {
                 </ReportSection>
               )}
 
-              {/* 性格深度分析區 */}
+              {/* 性格深度分析區 - Cosmic 風格 */}
               <ReportSection
                 ref={sectionRefs.personality}
                 id="personality"
                 title="性格深度剖析"
                 subtitle="內在特質與行為模式"
                 icon={User}
-                iconColor="text-teal-400"
-                bgGradient="from-report-card via-report-card to-report-bg"
-                borderColor="border-teal-500/30"
+                iconColor="text-cosmic-gold"
+                navPoint="PERSONALITY"
                 order={6}
                 expanded={sectionExpandedState.personality}
                 onExpandedChange={(expanded) => handleSectionExpandedChange('personality', expanded)}
@@ -1010,16 +1012,15 @@ const Index = () => {
                 </PremiumGate>
               </ReportSection>
 
-              {/* 納音五行分析區 */}
+              {/* 納音五行分析區 - Cosmic 風格 */}
               <ReportSection
                 ref={sectionRefs.nayin}
                 id="nayin"
                 title="納音五行詳解"
                 subtitle="六十甲子納音命理"
                 icon={BookOpen}
-                iconColor="text-cyan-400"
-                bgGradient="from-report-card via-report-card to-report-bg"
-                borderColor="border-cyan-500/30"
+                iconColor="text-cosmic-gold"
+                navPoint="NAYIN ELEMENTS"
                 order={7}
                 expanded={sectionExpandedState.nayin}
                 onExpandedChange={(expanded) => handleSectionExpandedChange('nayin', expanded)}
@@ -1029,16 +1030,15 @@ const Index = () => {
                 </PremiumGate>
               </ReportSection>
 
-              {/* 五行陰陽分析區 */}
+              {/* 五行陰陽分析區 - Cosmic 風格 */}
               <ReportSection
                 ref={sectionRefs.analysis}
                 id="analysis"
                 title="五行陰陽圖表"
                 subtitle="命盤能量分布可視化"
                 icon={BarChart3}
-                iconColor="text-emerald-400"
-                bgGradient="from-report-card via-report-card to-report-bg"
-                borderColor="border-emerald-500/30"
+                iconColor="text-cosmic-gold"
+                navPoint="WUXING CHARTS"
                 order={8}
                 expanded={sectionExpandedState.analysis}
                 onExpandedChange={(expanded) => handleSectionExpandedChange('analysis', expanded)}

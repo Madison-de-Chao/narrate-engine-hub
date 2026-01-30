@@ -32,6 +32,23 @@ const sections = [
 export const ReportNavigation = ({ activeSection, onSectionChange }: ReportNavigationProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // 統一的跳轉邏輯 - 從頁頭開始顯示
+  const handleSectionClick = (sectionId: string) => {
+    onSectionChange(sectionId);
+    const element = document.getElementById(`section-${sectionId}`);
+    if (element) {
+      element.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start'
+      });
+      // 補償固定頭部的高度
+      setTimeout(() => {
+        const headerOffset = 120;
+        window.scrollBy({ top: -headerOffset, behavior: 'smooth' });
+      }, 100);
+    }
+  };
+
   return (
     <>
       {/* 桌面版導航 */}
@@ -44,7 +61,7 @@ export const ReportNavigation = ({ activeSection, onSectionChange }: ReportNavig
               key={section.id}
               variant={isActive ? "default" : "ghost"}
               size="sm"
-              onClick={() => onSectionChange(section.id)}
+              onClick={() => handleSectionClick(section.id)}
               className={cn(
                 "gap-2 transition-all duration-300",
                 isActive && "shadow-[0_0_15px_hsl(var(--primary)/0.4)]"
@@ -94,7 +111,7 @@ export const ReportNavigation = ({ activeSection, onSectionChange }: ReportNavig
                     variant={isActive ? "secondary" : "ghost"}
                     size="sm"
                     onClick={() => {
-                      onSectionChange(section.id);
+                      handleSectionClick(section.id);
                       setIsExpanded(false);
                     }}
                     className="w-full justify-start gap-2 mb-1"

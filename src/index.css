@@ -93,91 +93,115 @@
 /* 設計系統定義 - 所有顏色必須為 HSL */
 @layer base {
   :root {
-    /* 博物館主題色 - 深色模式 */
-    --void: 240 15% 3%;
-    --paper: 45 30% 95%;
-    --gold: 45 100% 50%;
-    --ink: 240 10% 15%;
+    /* ========================================
+       Cosmic Architect 主題色系
+       ======================================== */
     
-    /* 深色賽博朋克主題 + 傳統命理元素 */
-    --background: 240 10% 8%;
-    --foreground: 45 30% 90%;
+    /* 核心色 - 深藍星空背景 */
+    --cosmic-void: 220 40% 8%;
+    --cosmic-deep: 220 45% 12%;
+    --cosmic-surface: 220 35% 15%;
+    
+    /* 金色強調 - 參考圖中的金色邊框和標題 */
+    --cosmic-gold: 42 80% 55%;
+    --cosmic-gold-dim: 42 60% 40%;
+    --cosmic-gold-bright: 45 90% 65%;
+    
+    /* 輔助色 */
+    --cosmic-accent: 35 85% 50%; /* 琥珀色，用於行動框 */
+    --cosmic-text: 45 20% 85%;
+    --cosmic-text-dim: 220 20% 60%;
+    
+    /* 星雲色 */
+    --cosmic-nebula: 240 50% 40%;
+    --cosmic-nebula2: 280 40% 35%;
+    
+    /* 博物館主題色 - 深色模式 */
+    --void: 220 40% 8%;
+    --paper: 45 30% 95%;
+    --gold: 42 80% 55%;
+    --ink: 220 30% 15%;
+    
+    /* 深色賽博朋克主題 + Cosmic Architect */
+    --background: 220 40% 8%;
+    --foreground: 45 20% 85%;
 
-    --card: 240 8% 12%;
-    --card-foreground: 45 30% 90%;
+    --card: 220 35% 12%;
+    --card-foreground: 45 20% 85%;
 
-    --popover: 240 8% 10%;
-    --popover-foreground: 45 30% 90%;
+    --popover: 220 40% 10%;
+    --popover-foreground: 45 20% 85%;
 
-    --primary: 45 100% 50%;
-    --primary-foreground: 240 10% 8%;
+    --primary: 42 80% 55%;
+    --primary-foreground: 220 40% 8%;
 
-    --secondary: 200 100% 60%;
-    --secondary-foreground: 240 10% 8%;
+    --secondary: 200 70% 50%;
+    --secondary-foreground: 220 40% 8%;
 
-    --muted: 240 5% 20%;
-    --muted-foreground: 45 20% 60%;
+    --muted: 220 30% 18%;
+    --muted-foreground: 45 15% 55%;
 
-    --accent: 320 100% 65%;
+    --accent: 35 85% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 45 30% 25%;
-    --input: 240 8% 15%;
-    --ring: 45 100% 50%;
+    --border: 42 40% 25%;
+    --input: 220 35% 15%;
+    --ring: 42 80% 55%;
 
     --radius: 0.75rem;
 
-    /* 報告區塊專用色 - 深色模式 */
-    --report-bg: 240 10% 10%;
-    --report-card: 240 8% 14%;
-    --report-border: 45 40% 30%;
-    --report-title: 45 100% 70%;
-    --report-subtitle: 45 40% 75%;
-    --report-text: 45 20% 85%;
-    --report-muted: 45 15% 55%;
+    /* 報告區塊專用色 - Cosmic Architect */
+    --report-bg: 220 40% 10%;
+    --report-card: 220 35% 14%;
+    --report-border: 42 50% 30%;
+    --report-title: 42 80% 65%;
+    --report-subtitle: 42 40% 70%;
+    --report-text: 45 15% 80%;
+    --report-muted: 220 20% 50%;
 
-    --family-legion: 40 70% 55%;
-    --growth-legion: 120 60% 45%;
-    --self-legion: 260 80% 60%;
-    --future-legion: 20 100% 60%;
+    --family-legion: 42 70% 55%;
+    --growth-legion: 120 50% 45%;
+    --self-legion: 260 60% 55%;
+    --future-legion: 25 80% 55%;
 
     /* 專業命理配色 */
-    --fortune-gold: 45 100% 55%;
-    --fortune-crimson: 0 80% 55%;
-    --fortune-jade: 160 60% 45%;
-    --fortune-azure: 210 80% 55%;
-    --fortune-purple: 280 70% 55%;
+    --fortune-gold: 42 80% 55%;
+    --fortune-crimson: 0 70% 50%;
+    --fortune-jade: 160 50% 45%;
+    --fortune-azure: 200 70% 50%;
+    --fortune-purple: 280 60% 55%;
 
     /* 傳統印章紅 */
-    --seal-red: 0 75% 50%;
+    --seal-red: 0 70% 45%;
     
-    /* 霓虹漸層 */
-    --gradient-neon: linear-gradient(135deg, hsl(45 100% 50%), hsl(40 100% 60%), hsl(35 100% 50%));
-    --gradient-cyber: linear-gradient(180deg, hsl(240 10% 8%), hsl(240 20% 12%));
-    --gradient-card: linear-gradient(135deg, hsl(240 8% 12% / 0.8), hsl(240 8% 15% / 0.9));
-    --gradient-fortune: linear-gradient(135deg, hsl(45 100% 50%), hsl(35 100% 45%), hsl(25 100% 50%));
+    /* Cosmic 漸層 */
+    --gradient-cosmic: linear-gradient(180deg, hsl(220 40% 8%), hsl(220 45% 12%), hsl(220 40% 8%));
+    --gradient-neon: linear-gradient(135deg, hsl(42 80% 55%), hsl(38 85% 50%), hsl(42 80% 55%));
+    --gradient-cyber: linear-gradient(180deg, hsl(220 40% 8%), hsl(220 50% 15%));
+    --gradient-card: linear-gradient(135deg, hsl(220 35% 12% / 0.9), hsl(220 35% 15% / 0.95));
+    --gradient-fortune: linear-gradient(135deg, hsl(42 80% 55%), hsl(35 85% 50%), hsl(28 85% 50%));
     
     /* 陰影與光暈 */
-    --shadow-neon: 0 0 20px hsl(45 100% 50% / 0.3), 0 0 40px hsl(45 100% 50% / 0.2);
-    --shadow-card: 0 10px 30px hsl(0 0% 0% / 0.5);
-    --shadow-seal: 0 4px 20px hsl(0 75% 50% / 0.3);
-    --glow-primary: 0 0 15px hsl(45 100% 50% / 0.6);
+    --shadow-neon: 0 0 20px hsl(42 80% 55% / 0.3), 0 0 40px hsl(42 80% 55% / 0.15);
+    --shadow-card: 0 10px 30px hsl(220 50% 5% / 0.5);
+    --shadow-seal: 0 4px 20px hsl(0 70% 45% / 0.3);
+    --glow-primary: 0 0 15px hsl(42 80% 55% / 0.5);
     
     /* 動畫 */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-    --sidebar-background: 240 10% 8%;
-    --sidebar-foreground: 45 30% 90%;
-    --sidebar-primary: 45 100% 50%;
-    --sidebar-primary-foreground: 240 10% 8%;
-    --sidebar-accent: 240 8% 15%;
-    --sidebar-accent-foreground: 45 30% 90%;
-    --sidebar-border: 45 30% 25%;
-    --sidebar-ring: 45 100% 50%;
+    --sidebar-background: 220 40% 8%;
+    --sidebar-foreground: 45 20% 85%;
+    --sidebar-primary: 42 80% 55%;
+    --sidebar-primary-foreground: 220 40% 8%;
+    --sidebar-accent: 220 35% 15%;
+    --sidebar-accent-foreground: 45 20% 85%;
+    --sidebar-border: 42 40% 25%;
+    --sidebar-ring: 42 80% 55%;
   }
 
   /* 淺色模式 */
@@ -242,33 +266,38 @@
   }
 
   .dark {
-    --background: 240 10% 8%;
-    --foreground: 45 30% 90%;
-    --card: 240 8% 12%;
-    --card-foreground: 45 30% 90%;
-    --popover: 240 8% 10%;
-    --popover-foreground: 45 30% 90%;
-    --primary: 45 100% 50%;
-    --primary-foreground: 240 10% 8%;
-    --secondary: 200 100% 60%;
-    --secondary-foreground: 240 10% 8%;
-    --muted: 240 5% 20%;
-    --muted-foreground: 45 20% 60%;
-    --accent: 320 100% 65%;
+    /* Cosmic Architect 深色主題 */
+    --cosmic-void: 220 40% 8%;
+    --cosmic-deep: 220 45% 12%;
+    --cosmic-gold: 42 80% 55%;
+    
+    --background: 220 40% 8%;
+    --foreground: 45 20% 85%;
+    --card: 220 35% 12%;
+    --card-foreground: 45 20% 85%;
+    --popover: 220 40% 10%;
+    --popover-foreground: 45 20% 85%;
+    --primary: 42 80% 55%;
+    --primary-foreground: 220 40% 8%;
+    --secondary: 200 70% 50%;
+    --secondary-foreground: 220 40% 8%;
+    --muted: 220 30% 18%;
+    --muted-foreground: 45 15% 55%;
+    --accent: 35 85% 50%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 45 30% 25%;
-    --input: 240 8% 15%;
-    --ring: 45 100% 50%;
-    --sidebar-background: 240 10% 8%;
-    --sidebar-foreground: 45 30% 90%;
-    --sidebar-primary: 45 100% 50%;
-    --sidebar-primary-foreground: 240 10% 8%;
-    --sidebar-accent: 240 8% 15%;
-    --sidebar-accent-foreground: 45 30% 90%;
-    --sidebar-border: 45 30% 25%;
-    --sidebar-ring: 45 100% 50%;
+    --border: 42 40% 25%;
+    --input: 220 35% 15%;
+    --ring: 42 80% 55%;
+    --sidebar-background: 220 40% 8%;
+    --sidebar-foreground: 45 20% 85%;
+    --sidebar-primary: 42 80% 55%;
+    --sidebar-primary-foreground: 220 40% 8%;
+    --sidebar-accent: 220 35% 15%;
+    --sidebar-accent-foreground: 45 20% 85%;
+    --sidebar-border: 42 40% 25%;
+    --sidebar-ring: 42 80% 55%;
   }
 }
 
@@ -279,13 +308,109 @@
 
   body {
     @apply bg-background text-foreground font-sans;
-    background: linear-gradient(180deg, hsl(240 10% 8%), hsl(240 15% 10%), hsl(240 10% 8%));
+    background: linear-gradient(180deg, hsl(220 40% 8%), hsl(220 45% 10%), hsl(220 40% 8%));
     min-height: 100vh;
   }
   
   /* 專業排版 */
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif font-bold tracking-wide;
+  }
+  
+  /* ========================================
+     Cosmic Architect 專用樣式
+     ======================================== */
+  
+  /* Cosmic 背景 */
+  .bg-cosmic-void {
+    background: hsl(var(--cosmic-void));
+  }
+  
+  .bg-cosmic-deep {
+    background: hsl(var(--cosmic-deep));
+  }
+  
+  /* Cosmic 文字色 */
+  .text-cosmic-gold {
+    color: hsl(var(--cosmic-gold));
+  }
+  
+  .text-cosmic-text {
+    color: hsl(var(--cosmic-text));
+  }
+  
+  .text-cosmic-accent {
+    color: hsl(var(--cosmic-accent));
+  }
+  
+  /* Cosmic 邊框色 */
+  .border-cosmic-gold {
+    border-color: hsl(var(--cosmic-gold));
+  }
+  
+  .border-cosmic-accent {
+    border-color: hsl(var(--cosmic-accent));
+  }
+  
+  /* Cosmic 背景色 */
+  .bg-cosmic-gold {
+    background-color: hsl(var(--cosmic-gold));
+  }
+  
+  .bg-cosmic-accent {
+    background-color: hsl(var(--cosmic-accent));
+  }
+  
+  .bg-cosmic-nebula {
+    background-color: hsl(var(--cosmic-nebula));
+  }
+  
+  .bg-cosmic-nebula2 {
+    background-color: hsl(var(--cosmic-nebula2));
+  }
+  
+  /* Cosmic 標題漸層 */
+  .cosmic-title-gradient {
+    background: linear-gradient(135deg, hsl(42 80% 65%), hsl(38 85% 55%), hsl(42 80% 65%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  /* Cosmic 網格背景 */
+  .cosmic-grid {
+    background-image: 
+      linear-gradient(hsl(42 80% 55% / 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(42 80% 55% / 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  
+  /* 慢速旋轉動畫 */
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  .animate-spin-slow {
+    animation: spin-slow 20s linear infinite;
+  }
+  
+  /* Cosmic 光暈效果 */
+  .cosmic-glow {
+    box-shadow: 0 0 20px hsl(42 80% 55% / 0.2), 0 0 40px hsl(42 80% 55% / 0.1);
+  }
+  
+  /* Cosmic 卡片 */
+  .cosmic-card {
+    @apply relative overflow-hidden rounded-lg;
+    background: linear-gradient(180deg, hsl(220 35% 12%), hsl(220 35% 10%));
+    border: 1px solid hsl(42 80% 55% / 0.3);
+  }
+  
+  .cosmic-card::before {
+    content: '';
+    @apply absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px;
+    background: linear-gradient(90deg, transparent, hsl(42 80% 55% / 0.5), transparent);
   }
   
   /* 霓虹文字效果 */
@@ -295,7 +420,7 @@
   
   /* 金色光暈文字 */
   .text-fortune {
-    background: linear-gradient(135deg, hsl(45 100% 70%), hsl(40 100% 50%), hsl(45 100% 70%));
+    background: linear-gradient(135deg, hsl(42 80% 70%), hsl(38 85% 55%), hsl(42 80% 70%));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -304,8 +429,8 @@
   
   /* 印章文字效果 */
   .text-seal {
-    color: hsl(0 75% 50%);
-    text-shadow: 0 2px 4px hsl(0 75% 50% / 0.3);
+    color: hsl(0 70% 45%);
+    text-shadow: 0 2px 4px hsl(0 70% 45% / 0.3);
   }
   
   /* 卡片光暈效果 */
@@ -315,26 +440,26 @@
   
   /* 專業分隔線 */
   .divider-fortune {
-    background: linear-gradient(90deg, transparent, hsl(45 100% 50% / 0.6), transparent);
+    background: linear-gradient(90deg, transparent, hsl(42 80% 55% / 0.5), transparent);
     height: 1px;
   }
   
   /* 傳統紋理背景 */
   .pattern-traditional {
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d97706' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4a84b' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   }
   
-  /* 專業卡片 */
+  /* 專業卡片 - Cosmic 風格 */
   .card-professional {
     @apply relative overflow-hidden;
-    background: linear-gradient(180deg, hsl(240 8% 14%), hsl(240 8% 10%));
-    border: 1px solid hsl(45 30% 25% / 0.5);
+    background: linear-gradient(180deg, hsl(220 35% 14%), hsl(220 35% 10%));
+    border: 1px solid hsl(42 50% 30% / 0.5);
   }
   
   .card-professional::before {
     content: '';
     @apply absolute inset-0 opacity-5;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d97706' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4a84b' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   }
   
   /* 淡入動畫 */
@@ -353,25 +478,25 @@
     animation: fade-in 0.6s ease-out forwards;
   }
 
-  /* 專業標籤樣式 */
+  /* 專業標籤樣式 - Cosmic 風格 */
   .badge-fortune {
     @apply px-2 py-0.5 text-xs font-medium rounded;
-    background: linear-gradient(135deg, hsl(45 100% 50% / 0.2), hsl(40 100% 45% / 0.1));
-    border: 1px solid hsl(45 100% 50% / 0.3);
-    color: hsl(45 100% 70%);
+    background: linear-gradient(135deg, hsl(42 80% 55% / 0.2), hsl(38 85% 50% / 0.1));
+    border: 1px solid hsl(42 80% 55% / 0.3);
+    color: hsl(42 80% 65%);
   }
 
   /* 專業引用框 */
   .quote-classical {
     @apply relative pl-4 py-2 italic;
-    border-left: 3px solid hsl(45 100% 50% / 0.5);
-    background: linear-gradient(90deg, hsl(45 100% 50% / 0.05), transparent);
+    border-left: 3px solid hsl(42 80% 55% / 0.5);
+    background: linear-gradient(90deg, hsl(42 80% 55% / 0.05), transparent);
   }
 
   .quote-classical::before {
     content: '"';
     @apply absolute -left-1 -top-2 text-3xl font-serif;
-    color: hsl(45 100% 50% / 0.3);
+    color: hsl(42 80% 55% / 0.3);
   }
 }
 

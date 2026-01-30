@@ -332,22 +332,57 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
 
   return (
     <>
-    <Card className="p-6 bg-card/80 backdrop-blur-sm border-primary/20 relative overflow-hidden">
-      {/* 邊框光效 */}
-      <div className="absolute inset-0 rounded-lg opacity-50 pointer-events-none"
-           style={{ boxShadow: 'inset 0 0 30px rgba(var(--primary), 0.1)' }} />
+    <Card className="relative overflow-hidden border-cosmic-gold/30 bg-cosmic-deep/90 backdrop-blur-sm">
+      {/* 星空背景 */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-cosmic-void via-cosmic-deep to-cosmic-void" />
+        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-cosmic-nebula/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 left-1/4 w-48 h-48 bg-cosmic-nebula2/10 rounded-full blur-3xl" />
+      </div>
       
-      <div className="relative z-10">
+      {/* 邊框光效 */}
+      <div className="absolute inset-0 rounded-lg pointer-events-none border border-cosmic-gold/10"
+           style={{ boxShadow: 'inset 0 0 40px rgba(200, 170, 100, 0.05)' }} />
+      
+      {/* 四角裝飾 */}
+      <svg className="absolute top-0 left-0 w-8 h-8 pointer-events-none" viewBox="0 0 32 32" fill="none">
+        <path d="M0 0 L16 0 M0 0 L0 16" stroke="hsl(var(--cosmic-gold))" strokeWidth="1.5" opacity="0.5" />
+        <path d="M4 4 L10 4 M4 4 L4 10" stroke="hsl(var(--cosmic-gold))" strokeWidth="1" opacity="0.3" />
+      </svg>
+      <svg className="absolute top-0 right-0 w-8 h-8 pointer-events-none rotate-90" viewBox="0 0 32 32" fill="none">
+        <path d="M0 0 L16 0 M0 0 L0 16" stroke="hsl(var(--cosmic-gold))" strokeWidth="1.5" opacity="0.5" />
+        <path d="M4 4 L10 4 M4 4 L4 10" stroke="hsl(var(--cosmic-gold))" strokeWidth="1" opacity="0.3" />
+      </svg>
+      <svg className="absolute bottom-0 left-0 w-8 h-8 pointer-events-none -rotate-90" viewBox="0 0 32 32" fill="none">
+        <path d="M0 0 L16 0 M0 0 L0 16" stroke="hsl(var(--cosmic-gold))" strokeWidth="1.5" opacity="0.5" />
+        <path d="M4 4 L10 4 M4 4 L4 10" stroke="hsl(var(--cosmic-gold))" strokeWidth="1" opacity="0.3" />
+      </svg>
+      <svg className="absolute bottom-0 right-0 w-8 h-8 pointer-events-none rotate-180" viewBox="0 0 32 32" fill="none">
+        <path d="M0 0 L16 0 M0 0 L0 16" stroke="hsl(var(--cosmic-gold))" strokeWidth="1.5" opacity="0.5" />
+        <path d="M4 4 L10 4 M4 4 L4 10" stroke="hsl(var(--cosmic-gold))" strokeWidth="1" opacity="0.3" />
+      </svg>
+      
+      <div className="relative z-10 p-6">
+        {/* HUD 標識 */}
+        <div className="absolute top-2 right-4 text-[9px] font-mono text-cosmic-gold/40 tracking-widest">
+          COSMIC-INPUT // LIVE
+        </div>
+        
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <CalendarIcon className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold text-foreground">資料輸入區</h2>
+            <div className="p-2 rounded-lg bg-cosmic-gold/10 border border-cosmic-gold/30">
+              <CalendarIcon className="w-5 h-5 text-cosmic-gold" />
+            </div>
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold text-cosmic-text font-serif">資料輸入區</h2>
+              <p className="text-xs text-cosmic-text-dim font-mono tracking-wide">DATA ENTRY MODULE</p>
+            </div>
           </div>
           
           <div className="flex items-center gap-2">
             {/* 資料來源提示 */}
             {dataSource !== 'none' && (
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
+              <div className="flex items-center gap-1.5 text-xs text-cosmic-gold/80 bg-cosmic-gold/10 border border-cosmic-gold/20 px-2.5 py-1 rounded">
                 {dataSource === 'history' ? (
                   <>
                     <History className="w-3.5 h-3.5" />
@@ -371,21 +406,21 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
 
         {/* 訪客資料同步提示（登入後偵測到訪客暫存） */}
         {showGuestSyncPrompt && pendingGuestData && (
-          <div className="mb-6 p-4 bg-gradient-to-br from-accent/20 to-accent/5 rounded-xl border border-accent/40">
+          <div className="mb-6 p-4 bg-cosmic-accent/10 rounded-xl border border-cosmic-accent/40">
             <div className="flex items-start gap-3">
-              <div className="p-2 bg-accent/20 rounded-full">
-                <RefreshCw className="w-5 h-5 text-accent" />
+              <div className="p-2 bg-cosmic-accent/20 rounded-full border border-cosmic-accent/30">
+                <RefreshCw className="w-5 h-5 text-cosmic-accent" />
               </div>
               <div className="flex-1">
-                <h4 className="font-bold text-foreground mb-1">發現訪客暫存資料</h4>
-                <p className="text-sm text-muted-foreground mb-3">
+                <h4 className="font-bold text-cosmic-text mb-1">發現訪客暫存資料</h4>
+                <p className="text-sm text-cosmic-text-dim mb-3">
                   偵測到您之前以訪客身份輸入的資料（{pendingGuestData.name}），是否要同步到帳號？
                 </p>
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={handleSyncGuestData} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                  <Button size="sm" onClick={handleSyncGuestData} className="bg-cosmic-accent hover:bg-cosmic-accent/90 text-cosmic-void">
                     同步資料
                   </Button>
-                  <Button size="sm" variant="outline" onClick={handleIgnoreGuestData}>
+                  <Button size="sm" variant="outline" onClick={handleIgnoreGuestData} className="border-cosmic-gold/30 text-cosmic-text hover:bg-cosmic-gold/10">
                     忽略
                   </Button>
                 </div>
@@ -396,19 +431,19 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
 
         {/* 空狀態提示（會員無歷史紀錄時） */}
         {userId && historyRecords.length === 0 && !showGuestSyncPrompt && (
-          <div className="mb-6 p-5 bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl border border-border/50 text-center">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-muted/50 rounded-full mb-3">
-              <History className="w-6 h-6 text-muted-foreground" />
+          <div className="mb-6 p-5 bg-cosmic-surface/30 rounded-xl border border-cosmic-gold/20 text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-cosmic-gold/10 rounded-full mb-3 border border-cosmic-gold/30">
+              <History className="w-6 h-6 text-cosmic-gold/70" />
             </div>
-            <h4 className="font-bold text-foreground mb-1">尚無測算紀錄</h4>
-            <p className="text-sm text-muted-foreground mb-4">
+            <h4 className="font-bold text-cosmic-text mb-1">尚無測算紀錄</h4>
+            <p className="text-sm text-cosmic-text-dim mb-4">
               完成第一次測算後，紀錄將自動保存於此
             </p>
             <Button 
               variant="outline" 
               size="sm" 
               onClick={loadDemoData}
-              className="gap-1.5"
+              className="gap-1.5 border-cosmic-gold/30 text-cosmic-gold hover:bg-cosmic-gold/10"
             >
               <Sparkles className="w-4 h-4" />
               載入示範資料測試
@@ -418,11 +453,11 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
 
         {/* 登入測算紀錄區塊（會員專用） */}
         {userId && historyRecords.length > 0 && (
-          <div className="mb-6 p-4 bg-gradient-to-br from-primary/10 to-accent/5 rounded-xl border border-primary/20">
+          <div className="mb-6 p-4 bg-cosmic-surface/20 rounded-xl border border-cosmic-gold/20">
             <div className="flex items-center gap-2 mb-3">
-              <History className="w-5 h-5 text-primary" />
-              <h3 className="font-bold text-lg text-foreground">登入測算紀錄</h3>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+              <History className="w-5 h-5 text-cosmic-gold" />
+              <h3 className="font-bold text-lg text-cosmic-text">登入測算紀錄</h3>
+              <span className="text-xs text-cosmic-text-dim bg-cosmic-gold/10 px-2 py-0.5 rounded-full border border-cosmic-gold/20">
                 共 {historyRecords.length} 筆
               </span>
             </div>
@@ -433,27 +468,27 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                   key={record.id}
                   className={`group relative p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
                     dataSource === 'history' && formData.name === record.name
-                      ? 'bg-primary/20 border-primary/50 shadow-[0_0_10px_hsl(var(--primary)/0.3)]'
-                      : 'bg-card/60 border-border/50 hover:border-primary/30 hover:bg-card/80'
+                      ? 'bg-cosmic-gold/15 border-cosmic-gold/50 shadow-[0_0_15px_rgba(200,170,100,0.2)]'
+                      : 'bg-cosmic-surface/30 border-cosmic-gold/10 hover:border-cosmic-gold/30 hover:bg-cosmic-surface/50'
                   }`}
                   onClick={() => applyHistoryRecord(record)}
                 >
                   {index === 0 && (
-                    <span className="absolute -top-2 -right-2 text-xs bg-accent text-accent-foreground px-2 py-0.5 rounded-full font-medium">
+                    <span className="absolute -top-2 -right-2 text-xs bg-cosmic-accent text-cosmic-void px-2 py-0.5 rounded-full font-medium">
                       最新
                     </span>
                   )}
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{record.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="font-medium text-cosmic-text truncate">{record.name}</p>
+                      <p className="text-xs text-cosmic-text-dim">
                         {formatHistoryDate(record.birth_date)} · {record.gender === 'male' ? '乾造' : '坤造'}
                       </p>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/10 transition-opacity shrink-0"
+                      className="h-7 w-7 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-opacity shrink-0"
                       onClick={(e) => {
                         e.stopPropagation();
                         setDeleteTarget(record);
@@ -509,20 +544,20 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* 姓名 */}
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-foreground">姓名</Label>
+              <Label htmlFor="name" className="text-cosmic-text font-medium">姓名</Label>
               <Input
                 id="name"
                 placeholder="請輸入您的姓名"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="bg-input border-border text-foreground"
+                className="bg-cosmic-surface/50 border-cosmic-gold/20 text-cosmic-text placeholder:text-cosmic-text-dim/50 focus:border-cosmic-gold/50 focus:ring-cosmic-gold/20"
                 required
               />
             </div>
 
             {/* 性別 */}
             <div className="space-y-2">
-              <Label id="gender-label" className="text-foreground">性別</Label>
+              <Label id="gender-label" className="text-cosmic-text font-medium">性別</Label>
               <RadioGroup
                 className="flex gap-4"
                 aria-labelledby="gender-label"
@@ -531,12 +566,12 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                 required
               >
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem id="gender-male" value="male" />
-                  <Label htmlFor="gender-male" className="text-foreground cursor-pointer">男</Label>
+                  <RadioGroupItem id="gender-male" value="male" className="border-cosmic-gold/40 text-cosmic-gold" />
+                  <Label htmlFor="gender-male" className="text-cosmic-text cursor-pointer">男</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <RadioGroupItem id="gender-female" value="female" />
-                  <Label htmlFor="gender-female" className="text-foreground cursor-pointer">女</Label>
+                  <RadioGroupItem id="gender-female" value="female" className="border-cosmic-gold/40 text-cosmic-gold" />
+                  <Label htmlFor="gender-female" className="text-cosmic-text cursor-pointer">女</Label>
                 </div>
               </RadioGroup>
             </div>
@@ -544,7 +579,7 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
 
           {/* 出生日期 */}
           <div className="space-y-2">
-            <Label className="text-foreground">出生日期</Label>
+            <Label className="text-cosmic-text font-medium">出生日期</Label>
             <div className="grid grid-cols-3 gap-3">
               <Input
                 type="number"
@@ -553,7 +588,7 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                 max="2100"
                 value={formData.year}
                 onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                className="bg-input border-border text-foreground"
+                className="bg-cosmic-surface/50 border-cosmic-gold/20 text-cosmic-text placeholder:text-cosmic-text-dim/50 focus:border-cosmic-gold/50"
                 required
               />
               <Input
@@ -563,7 +598,7 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                 max="12"
                 value={formData.month}
                 onChange={(e) => setFormData({ ...formData, month: e.target.value })}
-                className="bg-input border-border text-foreground"
+                className="bg-cosmic-surface/50 border-cosmic-gold/20 text-cosmic-text placeholder:text-cosmic-text-dim/50 focus:border-cosmic-gold/50"
                 required
               />
               <Input
@@ -573,7 +608,7 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                 max="31"
                 value={formData.day}
                 onChange={(e) => setFormData({ ...formData, day: e.target.value })}
-                className="bg-input border-border text-foreground"
+                className="bg-cosmic-surface/50 border-cosmic-gold/20 text-cosmic-text placeholder:text-cosmic-text-dim/50 focus:border-cosmic-gold/50"
                 required
               />
             </div>
@@ -582,15 +617,15 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
           {/* 出生時辰 */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="hour" className="text-foreground">出生時辰</Label>
+              <Label htmlFor="hour" className="text-cosmic-text font-medium">出生時辰</Label>
               <div className="flex items-center gap-2">
                 <Switch
                   id="precise-time-toggle"
                   checked={usePreciseTime}
                   onCheckedChange={setUsePreciseTime}
-                  className="scale-75"
+                  className="scale-75 data-[state=checked]:bg-cosmic-gold"
                 />
-                <Label htmlFor="precise-time-toggle" className="text-xs text-muted-foreground cursor-pointer">
+                <Label htmlFor="precise-time-toggle" className="text-xs text-cosmic-text-dim cursor-pointer">
                   精確分鐘
                 </Label>
               </div>
@@ -599,12 +634,12 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
               {/* 下拉選單 */}
               <div className="flex-1">
                 <Select value={formData.hour} onValueChange={(value) => setFormData({ ...formData, hour: value })}>
-                  <SelectTrigger className="bg-input border-border text-foreground">
+                  <SelectTrigger className="bg-cosmic-surface/50 border-cosmic-gold/20 text-cosmic-text">
                     <SelectValue placeholder="請選擇時辰" />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover border-border max-h-[300px] z-[9999]">
+                  <SelectContent className="bg-cosmic-deep border-cosmic-gold/30 max-h-[300px] z-[9999]">
                     {HOUR_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
+                      <SelectItem key={option.value} value={option.value} className="text-cosmic-text focus:bg-cosmic-gold/20 focus:text-cosmic-gold">
                         {option.label}
                       </SelectItem>
                     ))}
@@ -629,14 +664,14 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                     max="59"
                     value={formData.minute}
                     onChange={(e) => setFormData({ ...formData, minute: e.target.value })}
-                    className="w-20 bg-input border-border text-foreground"
+                    className="w-20 bg-cosmic-surface/50 border-cosmic-gold/20 text-cosmic-text"
                   />
-                  <span className="text-muted-foreground text-sm">分</span>
+                  <span className="text-cosmic-text-dim text-sm">分</span>
                 </div>
               )}
             </div>
             {usePreciseTime && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <p className="text-xs text-cosmic-gold/70 flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 節氣交界精確到分鐘，輸入精確時間可提高準確度
               </p>
@@ -646,8 +681,8 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
           {/* 出生城市 - 整合經度選擇 */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-foreground flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
+              <Label className="text-cosmic-text font-medium flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-cosmic-gold/70" />
                 出生城市
               </Label>
               <div className="flex items-center gap-2">
@@ -661,15 +696,15 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                     }
                   }}
                   disabled={!longitude && !selectedCity}
-                  className="scale-75"
+                  className="scale-75 data-[state=checked]:bg-cosmic-gold"
                 />
                 <div className="relative group">
-                  <Label htmlFor="solar-time-toggle" className={`text-xs cursor-pointer ${(!longitude && !selectedCity) ? 'text-muted-foreground/50' : 'text-primary'}`}>
+                  <Label htmlFor="solar-time-toggle" className={`text-xs cursor-pointer ${(!longitude && !selectedCity) ? 'text-cosmic-text-dim/50' : 'text-cosmic-gold'}`}>
                     真太陽時 ✨
                   </Label>
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-popover border border-border rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-64 z-50">
-                    <p className="text-xs text-foreground font-medium mb-1">真太陽時 (TST)</p>
-                    <p className="text-xs text-muted-foreground">根據出生地經度校正時間，考慮地球自轉與公轉的均時差，是專業命理師推薦的高精度計算方式。</p>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-cosmic-deep border border-cosmic-gold/30 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-64 z-50">
+                    <p className="text-xs text-cosmic-text font-medium mb-1">真太陽時 (TST)</p>
+                    <p className="text-xs text-cosmic-text-dim">根據出生地經度校正時間，考慮地球自轉與公轉的均時差，是專業命理師推薦的高精度計算方式。</p>
                   </div>
                 </div>
               </div>
@@ -688,10 +723,10 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
               placeholder="或輸入其他地點名稱"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="bg-input border-border text-foreground"
+              className="bg-cosmic-surface/50 border-cosmic-gold/20 text-cosmic-text placeholder:text-cosmic-text-dim/50"
             />
             {solarTimeMode === "TST" && longitude && (
-              <p className="text-xs text-primary flex items-center gap-1">
+              <p className="text-xs text-cosmic-gold flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
                 已啟用真太陽時校正 (經度: {parseFloat(longitude).toFixed(2)}°E)
               </p>
@@ -701,7 +736,7 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
           {/* 進階設定 Collapsible */}
           <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
             <CollapsibleTrigger asChild>
-              <Button variant="outline" className="w-full justify-between gap-2">
+              <Button variant="outline" className="w-full justify-between gap-2 border-cosmic-gold/30 text-cosmic-text bg-cosmic-surface/30 hover:bg-cosmic-gold/10 hover:text-cosmic-gold">
                 <div className="flex items-center gap-2">
                   <Settings2 className="w-4 h-4" />
                   <span>進階設定</span>
@@ -709,37 +744,38 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                 <ChevronDown className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="mt-4 space-y-4 p-4 border border-border/50 rounded-lg bg-muted/20">
+            <CollapsibleContent className="mt-4 space-y-4 p-4 border border-cosmic-gold/20 rounded-lg bg-cosmic-surface/20">
               {/* 精確時間開關 */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                  <Label htmlFor="precise-time" className="text-foreground">精確時間輸入</Label>
+                  <Clock className="w-4 h-4 text-cosmic-gold/70" />
+                  <Label htmlFor="precise-time" className="text-cosmic-text">精確時間輸入</Label>
                 </div>
                 <Switch
                   id="precise-time"
                   checked={usePreciseTime}
                   onCheckedChange={setUsePreciseTime}
+                  className="data-[state=checked]:bg-cosmic-gold"
                 />
               </div>
-              <p className="text-xs text-muted-foreground -mt-2 ml-6">
+              <p className="text-xs text-cosmic-text-dim -mt-2 ml-6">
                 啟用後可輸入精確的分鐘數，提高計算準確度
               </p>
 
               {/* 城市/經度選擇 */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
-                  <Label className="text-foreground">出生城市經度</Label>
+                  <MapPin className="w-4 h-4 text-cosmic-gold/70" />
+                  <Label className="text-cosmic-text">出生城市經度</Label>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <Select value={selectedCity} onValueChange={handleCitySelect}>
-                    <SelectTrigger className="bg-input border-border text-foreground">
+                    <SelectTrigger className="bg-cosmic-surface/50 border-cosmic-gold/20 text-cosmic-text">
                       <SelectValue placeholder="選擇城市" />
                     </SelectTrigger>
-                    <SelectContent className="bg-popover border-border z-[9999]">
+                    <SelectContent className="bg-cosmic-deep border-cosmic-gold/30 z-[9999]">
                       {Object.entries(CITY_LONGITUDES).map(([city, data]) => (
-                        <SelectItem key={city} value={city}>
+                        <SelectItem key={city} value={city} className="text-cosmic-text focus:bg-cosmic-gold/20">
                           {data.label}
                         </SelectItem>
                       ))}
@@ -754,65 +790,65 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                       setLongitude(e.target.value);
                       setSelectedCity("");
                     }}
-                    className="bg-input border-border text-foreground"
+                    className="bg-cosmic-surface/50 border-cosmic-gold/20 text-cosmic-text"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-cosmic-text-dim">
                   東經為正數，西經為負數。用於計算真太陽時。
                 </p>
               </div>
 
               {/* 真太陽時模式 */}
               <div className="space-y-2">
-                <Label className="text-foreground">太陽時模式</Label>
+                <Label className="text-cosmic-text">太陽時模式</Label>
                 <RadioGroup
                   className="flex flex-col gap-2"
                   value={solarTimeMode}
                   onValueChange={(value) => setSolarTimeMode(value as SolarTimeMode)}
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem id="solar-none" value="NONE" />
-                    <Label htmlFor="solar-none" className="text-foreground cursor-pointer flex-1">
+                    <RadioGroupItem id="solar-none" value="NONE" className="border-cosmic-gold/40 text-cosmic-gold" />
+                    <Label htmlFor="solar-none" className="text-cosmic-text cursor-pointer flex-1">
                       <span className="font-medium">標準時區</span>
-                      <span className="text-xs text-muted-foreground ml-2">使用當地標準時間</span>
+                      <span className="text-xs text-cosmic-text-dim ml-2">使用當地標準時間</span>
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem id="solar-lmt" value="LMT" disabled={!longitude} />
-                    <Label htmlFor="solar-lmt" className={`cursor-pointer flex-1 ${!longitude ? 'opacity-50' : ''}`}>
+                    <RadioGroupItem id="solar-lmt" value="LMT" disabled={!longitude} className="border-cosmic-gold/40 text-cosmic-gold" />
+                    <Label htmlFor="solar-lmt" className={`cursor-pointer flex-1 ${!longitude ? 'opacity-50' : ''} text-cosmic-text`}>
                       <span className="font-medium">平太陽時 (LMT)</span>
-                      <span className="text-xs text-muted-foreground ml-2">僅經度補償</span>
+                      <span className="text-xs text-cosmic-text-dim ml-2">僅經度補償</span>
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem id="solar-tst" value="TST" disabled={!longitude} />
-                    <Label htmlFor="solar-tst" className={`cursor-pointer flex-1 ${!longitude ? 'opacity-50' : ''}`}>
+                    <RadioGroupItem id="solar-tst" value="TST" disabled={!longitude} className="border-cosmic-gold/40 text-cosmic-gold" />
+                    <Label htmlFor="solar-tst" className={`cursor-pointer flex-1 ${!longitude ? 'opacity-50' : ''} text-cosmic-text`}>
                       <span className="font-medium">真太陽時 (TST)</span>
-                      <span className="text-xs text-muted-foreground ml-2">經度 + 均時差補償（專業）</span>
+                      <span className="text-xs text-cosmic-text-dim ml-2">經度 + 均時差補償（專業）</span>
                     </Label>
                   </div>
                 </RadioGroup>
                 {!longitude && solarTimeMode !== "NONE" && (
-                  <p className="text-xs text-amber-500">⚠️ 請先選擇城市或輸入經度</p>
+                  <p className="text-xs text-amber-400">⚠️ 請先選擇城市或輸入經度</p>
                 )}
               </div>
 
               {/* 子時模式 */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <Label className="text-foreground">子時換日規則</Label>
+                  <Label className="text-cosmic-text">子時換日規則</Label>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+                        <HelpCircle className="w-4 h-4 text-cosmic-gold/60 cursor-help" />
                       </TooltipTrigger>
-                      <TooltipContent side="right" className="max-w-sm p-4">
+                      <TooltipContent side="right" className="max-w-sm p-4 bg-cosmic-deep border-cosmic-gold/30">
                         <div className="space-y-2">
-                          <p className="font-bold text-foreground">子時換日爭議</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="font-bold text-cosmic-text">子時換日爭議</p>
+                          <p className="text-xs text-cosmic-text-dim">
                             子時（23:00-01:00）跨越午夜，究竟何時換日是命理界數百年來的重要議題。
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-cosmic-text-dim">
                             此爭議源於古代計時方式與現代時鐘的差異，至今仍無定論。
                           </p>
                         </div>
@@ -827,29 +863,29 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                   onValueChange={(value) => setZiMode(value as ZiMode)}
                 >
                   {/* 早子時選項 */}
-                  <div className="flex items-start space-x-3 p-3 rounded-lg border border-border/50 hover:border-primary/30 hover:bg-muted/20 transition-colors">
-                    <RadioGroupItem id="zi-early" value="EARLY" className="mt-1" />
-                    <Label htmlFor="zi-early" className="text-foreground cursor-pointer flex-1">
+                  <div className="flex items-start space-x-3 p-3 rounded-lg border border-cosmic-gold/20 hover:border-cosmic-gold/40 hover:bg-cosmic-gold/5 transition-colors">
+                    <RadioGroupItem id="zi-early" value="EARLY" className="mt-1 border-cosmic-gold/40 text-cosmic-gold" />
+                    <Label htmlFor="zi-early" className="text-cosmic-text cursor-pointer flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-bold">早子時派</span>
-                        <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">推薦</span>
-                        <span className="text-xs text-muted-foreground">(23:00換日)</span>
+                        <span className="text-xs bg-cosmic-gold/20 text-cosmic-gold px-2 py-0.5 rounded">推薦</span>
+                        <span className="text-xs text-cosmic-text-dim">(23:00換日)</span>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
+                      <p className="text-xs text-cosmic-text-dim leading-relaxed">
                         認為子時一到（23:00）即換日。此派源於《子平真詮》等經典，認為天氣交接於子正（23:00），故日柱應隨之更換。為當代多數命理師採用的主流派別。
                       </p>
                     </Label>
                   </div>
                   
                   {/* 晚子時選項 */}
-                  <div className="flex items-start space-x-3 p-3 rounded-lg border border-border/50 hover:border-primary/30 hover:bg-muted/20 transition-colors">
-                    <RadioGroupItem id="zi-late" value="LATE" className="mt-1" />
-                    <Label htmlFor="zi-late" className="text-foreground cursor-pointer flex-1">
+                  <div className="flex items-start space-x-3 p-3 rounded-lg border border-cosmic-gold/20 hover:border-cosmic-gold/40 hover:bg-cosmic-gold/5 transition-colors">
+                    <RadioGroupItem id="zi-late" value="LATE" className="mt-1 border-cosmic-gold/40 text-cosmic-gold" />
+                    <Label htmlFor="zi-late" className="text-cosmic-text cursor-pointer flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-bold">晚子時派</span>
-                        <span className="text-xs text-muted-foreground">(00:00換日)</span>
+                        <span className="text-xs text-cosmic-text-dim">(00:00換日)</span>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
+                      <p className="text-xs text-cosmic-text-dim leading-relaxed">
                         認為需到午夜（00:00）才換日，23:00-00:00 屬「夜子時」仍歸當日。此派認為日柱應以太陽過下中天為準，與現代曆法同步。部分港台命理師採用此法。
                       </p>
                     </Label>
@@ -857,16 +893,16 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
                 </RadioGroup>
                 
                 {/* 歷史背景說明 */}
-                <div className="p-3 bg-muted/30 rounded-lg border border-border/30">
+                <div className="p-3 bg-cosmic-surface/30 rounded-lg border border-cosmic-gold/10">
                   <div className="flex items-start gap-2">
-                    <History className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <History className="w-4 h-4 text-cosmic-gold/60 mt-0.5 shrink-0" />
                     <div className="space-y-1.5">
-                      <p className="text-xs font-medium text-foreground">歷史背景</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
+                      <p className="text-xs font-medium text-cosmic-text">歷史背景</p>
+                      <p className="text-xs text-cosmic-text-dim leading-relaxed">
                         古代中國以「銅壺滴漏」計時，一晝夜分為十二時辰，子時橫跨今之 23:00-01:00。
                         由於古人日落而息、日出而作，子時（深夜）換日的精確時刻在實務上較少觸及。
                       </p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
+                      <p className="text-xs text-cosmic-text-dim leading-relaxed">
                         清代以降，隨著西方時鐘傳入，「子初」（23:00）與「子正」（00:00）之辨才成為討論焦點。
                         兩派各有典籍依據，建議可分別測試，選擇與自身經歷更相符者。
                       </p>
@@ -880,7 +916,7 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
           {/* 提交按鈕 */}
           <Button 
             type="submit" 
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg py-6 shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.7)] transition-all"
+            className="w-full bg-gradient-to-r from-cosmic-gold via-cosmic-gold-bright to-cosmic-gold text-cosmic-void font-bold text-lg py-6 shadow-[0_0_25px_rgba(200,170,100,0.4)] hover:shadow-[0_0_35px_rgba(200,170,100,0.6)] transition-all hover:scale-[1.01]"
             disabled={isCalculating}
           >
             {isCalculating ? (

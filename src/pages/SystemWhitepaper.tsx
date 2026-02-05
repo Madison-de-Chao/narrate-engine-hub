@@ -1,4 +1,7 @@
  import React, { useState } from 'react';
+ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, PageBreak } from 'docx';
+ import { saveAs } from 'file-saver';
+ import jsPDF from 'jspdf';
  import { useNavigate } from 'react-router-dom';
  import { motion } from 'framer-motion';
  import { 
@@ -28,6 +31,8 @@
  import { Badge } from '@/components/ui/badge';
  import { Separator } from '@/components/ui/separator';
  import { toast } from 'sonner';
+ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+ import { Progress } from '@/components/ui/progress';
  
  // ============ 白皮書內容 ============
  const WHITEPAPER_SECTIONS = [
@@ -400,9 +405,568 @@
    toast.success('Markdown 白皮書下載成功');
  };
  
+ // ============ PDF 下載功能 ============
+ const downloadWhitepaperPdf = async (setProgress: (p: number) => void, setStage: (s: string) => void) => {
+   const now = new Date();
+   const dateStr = now.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+   
+   setStage('初始化 PDF 引擎...');
+   setProgress(5);
+   
+   const pdf = new jsPDF({
+     orientation: 'portrait',
+     unit: 'mm',
+     format: 'a4'
+   });
+   
+   const pageWidth = pdf.internal.pageSize.getWidth();
+   const pageHeight = pdf.internal.pageSize.getHeight();
+   const margin = 20;
+   const contentWidth = pageWidth - margin * 2;
+   let y = margin;
+   
+   // 設定字體
+   pdf.setFont('helvetica');
+   
+   // 繪製封面
+   setStage('繪製封面...');
+   setProgress(15);
+   
+   // 封面背景
+   pdf.setFillColor(15, 23, 42); // cosmic-void
+   pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+   
+   // 金色邊框
+   pdf.setDrawColor(212, 175, 55); // cosmic-gold
+   pdf.setLineWidth(1);
+   pdf.rect(10, 10, pageWidth - 20, pageHeight - 20, 'S');
+   pdf.rect(15, 15, pageWidth - 30, pageHeight - 30, 'S');
+   
+   // 標題區
+   pdf.setTextColor(212, 175, 55);
+   pdf.setFontSize(32);
+   pdf.text('HONG LING YU SUO', pageWidth / 2, 80, { align: 'center' });
+   
+   pdf.setFontSize(24);
+   pdf.text('RSBZS v3.0', pageWidth / 2, 95, { align: 'center' });
+   
+   pdf.setFontSize(28);
+   pdf.text('System Whitepaper', pageWidth / 2, 120, { align: 'center' });
+   
+   // 分隔線
+   pdf.setLineWidth(0.5);
+   pdf.line(pageWidth / 2 - 40, 135, pageWidth / 2 + 40, 135);
+   
+   // 副標題
+   pdf.setTextColor(200, 200, 200);
+   pdf.setFontSize(12);
+   pdf.text('"This analysis is a mirror, not a script"', pageWidth / 2, 150, { align: 'center' });
+   
+   // 版本資訊
+   pdf.setTextColor(150, 150, 150);
+   pdf.setFontSize(11);
+   pdf.text(`Version: v3.0`, pageWidth / 2, 200, { align: 'center' });
+   pdf.text(`Date: ${dateStr}`, pageWidth / 2, 210, { align: 'center' });
+   pdf.text(`Publisher: Hong Ling Yu Suo`, pageWidth / 2, 220, { align: 'center' });
+   
+   // 新頁面 - 目錄
+   pdf.addPage();
+   setStage('生成目錄...');
+   setProgress(25);
+   
+   pdf.setFillColor(248, 250, 252);
+   pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+   
+   y = 30;
+   pdf.setTextColor(15, 23, 42);
+   pdf.setFontSize(20);
+   pdf.text('TABLE OF CONTENTS', pageWidth / 2, y, { align: 'center' });
+   
+   y += 20;
+   pdf.setFontSize(12);
+   WHITEPAPER_SECTIONS.forEach((section, idx) => {
+     pdf.setTextColor(100, 100, 100);
+     pdf.text(`${idx + 1}.`, margin, y);
+     pdf.setTextColor(15, 23, 42);
+     pdf.text(section.title, margin + 10, y);
+     y += 10;
+   });
+   
+   // 內容頁
+   setStage('生成章節內容...');
+   const totalSections = WHITEPAPER_SECTIONS.length;
+   
+   WHITEPAPER_SECTIONS.forEach((section, idx) => {
+     setProgress(30 + Math.floor((idx / totalSections) * 50));
+     setStage(`生成章節 ${idx + 1}/${totalSections}: ${section.title}...`);
+     
+     pdf.addPage();
+     pdf.setFillColor(248, 250, 252);
+     pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+     
+     // 章節標題
+     y = 30;
+     pdf.setFillColor(15, 23, 42);
+     pdf.rect(0, y - 10, pageWidth, 20, 'F');
+     pdf.setTextColor(212, 175, 55);
+     pdf.setFontSize(16);
+     pdf.text(`Chapter ${idx + 1}: ${section.title}`, pageWidth / 2, y + 2, { align: 'center' });
+     
+     // 內容
+     y = 65;
+     pdf.setTextColor(50, 50, 50);
+     pdf.setFontSize(11);
+     
+     section.content.forEach((item, i) => {
+       const lines = pdf.splitTextToSize(`${i + 1}. ${item}`, contentWidth);
+       if (y + lines.length * 6 > pageHeight - margin) {
+         pdf.addPage();
+         pdf.setFillColor(248, 250, 252);
+         pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+         y = margin;
+       }
+       pdf.text(lines, margin, y);
+       y += lines.length * 6 + 8;
+     });
+   });
+   
+   // 附錄頁
+   setStage('生成附錄...');
+   setProgress(85);
+   
+   pdf.addPage();
+   pdf.setFillColor(248, 250, 252);
+   pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+   
+   y = 30;
+   pdf.setFillColor(15, 23, 42);
+   pdf.rect(0, y - 10, pageWidth, 20, 'F');
+   pdf.setTextColor(212, 175, 55);
+   pdf.setFontSize(16);
+   pdf.text('APPENDIX', pageWidth / 2, y + 2, { align: 'center' });
+   
+   y = 60;
+   pdf.setTextColor(15, 23, 42);
+   pdf.setFontSize(14);
+   pdf.text('A. Design Principles', margin, y);
+   
+   y += 12;
+   pdf.setFontSize(10);
+   pdf.setTextColor(80, 80, 80);
+   const principles = [
+     'Clarity: Precise presentation of energy configuration and tendencies',
+     'Restraint: Distinguish verifiable information from speculation',
+     'Actionable: Provide concrete, executable recommendations'
+   ];
+   principles.forEach(p => {
+     pdf.text(`• ${p}`, margin + 5, y);
+     y += 8;
+   });
+   
+   y += 10;
+   pdf.setTextColor(15, 23, 42);
+   pdf.setFontSize(14);
+   pdf.text('B. Technical Specifications', margin, y);
+   
+   y += 12;
+   pdf.setFontSize(10);
+   pdf.setTextColor(80, 80, 80);
+   const techStack = [
+     'Frontend: React 18 + TypeScript + Vite 5',
+     'UI: Tailwind CSS + shadcn/ui + Framer Motion',
+     'Backend: Supabase (PostgreSQL) + Edge Functions',
+     'AI: Lovable AI Integration'
+   ];
+   techStack.forEach(t => {
+     pdf.text(`• ${t}`, margin + 5, y);
+     y += 8;
+   });
+   
+   // 免責聲明頁
+   setStage('生成免責聲明...');
+   setProgress(92);
+   
+   pdf.addPage();
+   pdf.setFillColor(15, 23, 42);
+   pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+   
+   y = 40;
+   pdf.setTextColor(212, 175, 55);
+   pdf.setFontSize(18);
+   pdf.text('DISCLAIMER', pageWidth / 2, y, { align: 'center' });
+   
+   y = 70;
+   pdf.setTextColor(200, 200, 200);
+   pdf.setFontSize(10);
+   const disclaimers = [
+     '1. This report is a structured presentation of Bazi (Chinese astrology) system for reference purposes.',
+     '2. This content does not constitute medical, psychological, legal, or financial advice.',
+     '3. Trends and tendencies described are not guaranteed outcomes.',
+     '4. For major decisions involving health, psychology, law, or finance, please consult qualified professionals.',
+     '5. By using this content, you acknowledge and agree to the above statements.'
+   ];
+   disclaimers.forEach(d => {
+     const lines = pdf.splitTextToSize(d, contentWidth);
+     pdf.text(lines, margin, y);
+     y += lines.length * 6 + 8;
+   });
+   
+   // 版權頁尾
+   y = pageHeight - 30;
+   pdf.setTextColor(150, 150, 150);
+   pdf.setFontSize(9);
+   pdf.text(`© ${now.getFullYear()} Chao Xuan Creative / Hong Ling Yu Suo`, pageWidth / 2, y, { align: 'center' });
+   pdf.text('Version: RSBZS v3.0', pageWidth / 2, y + 8, { align: 'center' });
+   
+   setStage('儲存 PDF 檔案...');
+   setProgress(98);
+   
+   pdf.save(`HongLingYuSuo_Whitepaper_${new Date().toISOString().split('T')[0]}.pdf`);
+   setProgress(100);
+   toast.success('PDF 白皮書下載成功');
+ };
+ 
+ // ============ Word 下載功能 ============
+ const downloadWhitepaperWord = async (setProgress: (p: number) => void, setStage: (s: string) => void) => {
+   const now = new Date();
+   const dateStr = now.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+   
+   setStage('初始化 Word 引擎...');
+   setProgress(10);
+   
+   const children: any[] = [];
+   
+   // 封面
+   children.push(
+     new Paragraph({
+       children: [new TextRun({ text: '', break: 1 })],
+     }),
+     new Paragraph({
+       children: [new TextRun({ text: '', break: 1 })],
+     }),
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       children: [
+         new TextRun({
+           text: 'HONG LING YU SUO',
+           bold: true,
+           size: 56,
+           color: '1E3A8A',
+         }),
+       ],
+     }),
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       spacing: { before: 200 },
+       children: [
+         new TextRun({
+           text: 'RSBZS v3.0',
+           size: 36,
+           color: 'D4AF37',
+         }),
+       ],
+     }),
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       spacing: { before: 400 },
+       children: [
+         new TextRun({
+           text: 'System Whitepaper',
+           bold: true,
+           size: 48,
+           color: '1E3A8A',
+         }),
+       ],
+     }),
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       spacing: { before: 600 },
+       border: {
+         top: { style: BorderStyle.SINGLE, size: 6, color: 'D4AF37' },
+       },
+       children: [new TextRun({ text: '' })],
+     }),
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       spacing: { before: 200 },
+       children: [
+         new TextRun({
+           text: '"This analysis is a mirror, not a script"',
+           italics: true,
+           size: 24,
+           color: '666666',
+         }),
+       ],
+     }),
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       spacing: { before: 800 },
+       children: [
+         new TextRun({ text: `Version: v3.0`, size: 22, color: '888888' }),
+       ],
+     }),
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       children: [
+         new TextRun({ text: `Date: ${dateStr}`, size: 22, color: '888888' }),
+       ],
+     }),
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       children: [
+         new TextRun({ text: `Publisher: Hong Ling Yu Suo`, size: 22, color: '888888' }),
+       ],
+     }),
+     new Paragraph({
+       children: [new PageBreak()],
+     })
+   );
+   
+   setStage('生成目錄...');
+   setProgress(25);
+   
+   // 目錄
+   children.push(
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       spacing: { after: 400 },
+       children: [
+         new TextRun({
+           text: 'TABLE OF CONTENTS',
+           bold: true,
+           size: 32,
+           color: '1E3A8A',
+         }),
+       ],
+     })
+   );
+   
+   WHITEPAPER_SECTIONS.forEach((section, idx) => {
+     children.push(
+       new Paragraph({
+         spacing: { before: 100, after: 100 },
+         children: [
+           new TextRun({ text: `${idx + 1}. `, size: 24, color: 'D4AF37' }),
+           new TextRun({ text: section.title, size: 24, color: '333333' }),
+         ],
+       })
+     );
+   });
+   
+   children.push(new Paragraph({ children: [new PageBreak()] }));
+   
+   // 章節內容
+   setStage('生成章節內容...');
+   const totalSections = WHITEPAPER_SECTIONS.length;
+   
+   WHITEPAPER_SECTIONS.forEach((section, idx) => {
+     setProgress(30 + Math.floor((idx / totalSections) * 45));
+     setStage(`生成章節 ${idx + 1}/${totalSections}: ${section.title}...`);
+     
+     children.push(
+       new Paragraph({
+         heading: HeadingLevel.HEADING_1,
+         spacing: { before: 400, after: 200 },
+         shading: { fill: '1E3A8A', type: ShadingType.SOLID },
+         children: [
+           new TextRun({
+             text: `  Chapter ${idx + 1}: ${section.title}  `,
+             bold: true,
+             size: 28,
+             color: 'D4AF37',
+           }),
+         ],
+       })
+     );
+     
+     section.content.forEach((item, i) => {
+       children.push(
+         new Paragraph({
+           spacing: { before: 150, after: 150 },
+           children: [
+             new TextRun({ text: `${i + 1}. `, bold: true, size: 22, color: '1E3A8A' }),
+             new TextRun({ text: item, size: 22, color: '333333' }),
+           ],
+         })
+       );
+     });
+     
+     if (idx < WHITEPAPER_SECTIONS.length - 1) {
+       children.push(new Paragraph({ children: [new PageBreak()] }));
+     }
+   });
+   
+   // 附錄
+   setStage('生成附錄...');
+   setProgress(80);
+   
+   children.push(
+     new Paragraph({ children: [new PageBreak()] }),
+     new Paragraph({
+       heading: HeadingLevel.HEADING_1,
+       spacing: { before: 400, after: 300 },
+       shading: { fill: '1E3A8A', type: ShadingType.SOLID },
+       children: [
+         new TextRun({
+           text: '  APPENDIX  ',
+           bold: true,
+           size: 28,
+           color: 'D4AF37',
+         }),
+       ],
+     }),
+     new Paragraph({
+       heading: HeadingLevel.HEADING_2,
+       spacing: { before: 300, after: 150 },
+       children: [
+         new TextRun({ text: 'A. Design Principles', bold: true, size: 26, color: '1E3A8A' }),
+       ],
+     }),
+     new Paragraph({
+       children: [
+         new TextRun({ text: '• Clarity: ', bold: true, size: 22 }),
+         new TextRun({ text: 'Precise presentation of energy configuration and tendencies', size: 22 }),
+       ],
+     }),
+     new Paragraph({
+       children: [
+         new TextRun({ text: '• Restraint: ', bold: true, size: 22 }),
+         new TextRun({ text: 'Distinguish verifiable information from speculation', size: 22 }),
+       ],
+     }),
+     new Paragraph({
+       children: [
+         new TextRun({ text: '• Actionable: ', bold: true, size: 22 }),
+         new TextRun({ text: 'Provide concrete, executable recommendations', size: 22 }),
+       ],
+     }),
+     new Paragraph({
+       heading: HeadingLevel.HEADING_2,
+       spacing: { before: 300, after: 150 },
+       children: [
+         new TextRun({ text: 'B. Technical Specifications', bold: true, size: 26, color: '1E3A8A' }),
+       ],
+     }),
+     new Paragraph({ children: [new TextRun({ text: '• Frontend: React 18 + TypeScript + Vite 5', size: 22 })] }),
+     new Paragraph({ children: [new TextRun({ text: '• UI: Tailwind CSS + shadcn/ui + Framer Motion', size: 22 })] }),
+     new Paragraph({ children: [new TextRun({ text: '• Backend: Supabase (PostgreSQL) + Edge Functions', size: 22 })] }),
+     new Paragraph({ children: [new TextRun({ text: '• AI: Lovable AI Integration', size: 22 })] })
+   );
+   
+   // 免責聲明
+   setStage('生成免責聲明...');
+   setProgress(90);
+   
+   children.push(
+     new Paragraph({ children: [new PageBreak()] }),
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       shading: { fill: '0F172A', type: ShadingType.SOLID },
+       spacing: { before: 200, after: 200 },
+       children: [
+         new TextRun({
+           text: '  DISCLAIMER  ',
+           bold: true,
+           size: 32,
+           color: 'D4AF37',
+         }),
+       ],
+     })
+   );
+   
+   const disclaimers = [
+     '1. This report is a structured presentation of Bazi system for reference purposes.',
+     '2. This content does not constitute medical, psychological, legal, or financial advice.',
+     '3. Trends and tendencies described are not guaranteed outcomes.',
+     '4. For major decisions, please consult qualified professionals.',
+     '5. By using this content, you acknowledge and agree to the above statements.'
+   ];
+   
+   disclaimers.forEach(d => {
+     children.push(
+       new Paragraph({
+         spacing: { before: 100, after: 100 },
+         children: [new TextRun({ text: d, size: 22, color: '555555' })],
+       })
+     );
+   });
+   
+   // 版權
+   children.push(
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       spacing: { before: 600 },
+       children: [
+         new TextRun({ text: `© ${now.getFullYear()} Chao Xuan Creative / Hong Ling Yu Suo`, size: 20, color: '888888' }),
+       ],
+     }),
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       children: [
+         new TextRun({ text: 'Version: RSBZS v3.0', size: 20, color: '888888' }),
+       ],
+     })
+   );
+   
+   setStage('打包 Word 檔案...');
+   setProgress(95);
+   
+   const doc = new Document({
+     sections: [{
+       properties: {
+         page: {
+           margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 },
+         },
+       },
+       children,
+     }],
+   });
+   
+   const blob = await Packer.toBlob(doc);
+   saveAs(blob, `HongLingYuSuo_Whitepaper_${new Date().toISOString().split('T')[0]}.docx`);
+   
+   setProgress(100);
+   toast.success('Word 白皮書下載成功');
+ };
+ 
  // ============ 主元件 ============
  const SystemWhitepaper = () => {
    const navigate = useNavigate();
+   const [downloading, setDownloading] = useState(false);
+   const [downloadProgress, setDownloadProgress] = useState(0);
+   const [downloadStage, setDownloadStage] = useState('');
+ 
+   const handleDownloadPdf = async () => {
+     setDownloading(true);
+     setDownloadProgress(0);
+     try {
+       await downloadWhitepaperPdf(setDownloadProgress, setDownloadStage);
+     } catch (error) {
+       console.error('PDF download error:', error);
+       toast.error('PDF 下載失敗，請重試');
+     } finally {
+       setTimeout(() => {
+         setDownloading(false);
+         setDownloadProgress(0);
+       }, 500);
+     }
+   };
+ 
+   const handleDownloadWord = async () => {
+     setDownloading(true);
+     setDownloadProgress(0);
+     try {
+       await downloadWhitepaperWord(setDownloadProgress, setDownloadStage);
+     } catch (error) {
+       console.error('Word download error:', error);
+       toast.error('Word 下載失敗，請重試');
+     } finally {
+       setTimeout(() => {
+         setDownloading(false);
+         setDownloadProgress(0);
+       }, 500);
+     }
+   };
  
    return (
      <div className="min-h-screen bg-background">
@@ -420,16 +984,38 @@
              返回首頁
            </Button>
            <div className="flex gap-2">
-             <Button variant="outline" size="sm" onClick={downloadWhitepaperTxt}>
+             <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={downloading}>
                <FileDown className="w-4 h-4 mr-2" />
-               下載 TXT
+               下載 PDF
              </Button>
-             <Button variant="outline" size="sm" onClick={downloadWhitepaperMd}>
+             <Button variant="outline" size="sm" onClick={handleDownloadWord} disabled={downloading}>
                <ScrollText className="w-4 h-4 mr-2" />
-               下載 Markdown
+               下載 Word
              </Button>
            </div>
          </div>
+ 
+         {/* 下載進度對話框 */}
+         <Dialog open={downloading} onOpenChange={() => {}}>
+           <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-xl border-primary/20">
+             <DialogHeader>
+               <DialogTitle className="flex items-center gap-2 text-primary">
+                 <Download className="h-5 w-5 animate-bounce" />
+                 正在生成文件
+               </DialogTitle>
+               <DialogDescription>
+                 請稍候，正在生成美化的白皮書文件...
+               </DialogDescription>
+             </DialogHeader>
+             <div className="space-y-4 py-4">
+               <div className="flex items-center justify-between text-sm">
+                 <span className="text-muted-foreground">{downloadStage}</span>
+                 <span className="text-primary font-medium">{Math.round(downloadProgress)}%</span>
+               </div>
+               <Progress value={downloadProgress} className="h-2" />
+             </div>
+           </DialogContent>
+         </Dialog>
  
          {/* 封面區 */}
          <motion.div

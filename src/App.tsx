@@ -33,6 +33,8 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+ import SystemDocumentation from "./pages/SystemDocumentation";
+ import SystemWhitepaper from "./pages/SystemWhitepaper";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -74,6 +76,8 @@ const App = () => (
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/about" element={<About />} />
+                 <Route path="/docs" element={<SystemDocumentation />} />
+                 <Route path="/whitepaper" element={<SystemWhitepaper />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

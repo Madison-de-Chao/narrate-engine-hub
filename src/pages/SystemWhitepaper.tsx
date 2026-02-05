@@ -2,6 +2,7 @@
  import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, PageBreak } from 'docx';
  import { saveAs } from 'file-saver';
  import jsPDF from 'jspdf';
+ import html2canvas from 'html2canvas';
  import { useNavigate } from 'react-router-dom';
  import { motion } from 'framer-motion';
  import { 
@@ -413,217 +414,176 @@
    setStage('初始化 PDF 引擎...');
    setProgress(5);
    
-   const pdf = new jsPDF({
-     orientation: 'portrait',
-     unit: 'mm',
-     format: 'a4'
-   });
+   // 創建隱藏的渲染容器
+   const container = document.createElement('div');
+   container.style.cssText = `
+     position: fixed;
+     left: -9999px;
+     top: 0;
+     width: 794px;
+     background: white;
+     font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+   `;
+   document.body.appendChild(container);
    
-   const pageWidth = pdf.internal.pageSize.getWidth();
-   const pageHeight = pdf.internal.pageSize.getHeight();
-   const margin = 20;
-   const contentWidth = pageWidth - margin * 2;
-   let y = margin;
-   
-   // 設定字體
-   pdf.setFont('helvetica');
-   
-   // 繪製封面
-   setStage('繪製封面...');
-   setProgress(15);
-   
-   // 封面背景
-   pdf.setFillColor(15, 23, 42); // cosmic-void
-   pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-   
-   // 金色邊框
-   pdf.setDrawColor(212, 175, 55); // cosmic-gold
-   pdf.setLineWidth(1);
-   pdf.rect(10, 10, pageWidth - 20, pageHeight - 20, 'S');
-   pdf.rect(15, 15, pageWidth - 30, pageHeight - 30, 'S');
-   
-   // 標題區
-   pdf.setTextColor(212, 175, 55);
-   pdf.setFontSize(32);
-   pdf.text('HONG LING YU SUO', pageWidth / 2, 80, { align: 'center' });
-   
-   pdf.setFontSize(24);
-   pdf.text('RSBZS v3.0', pageWidth / 2, 95, { align: 'center' });
-   
-   pdf.setFontSize(28);
-   pdf.text('System Whitepaper', pageWidth / 2, 120, { align: 'center' });
-   
-   // 分隔線
-   pdf.setLineWidth(0.5);
-   pdf.line(pageWidth / 2 - 40, 135, pageWidth / 2 + 40, 135);
-   
-   // 副標題
-   pdf.setTextColor(200, 200, 200);
-   pdf.setFontSize(12);
-   pdf.text('"This analysis is a mirror, not a script"', pageWidth / 2, 150, { align: 'center' });
-   
-   // 版本資訊
-   pdf.setTextColor(150, 150, 150);
-   pdf.setFontSize(11);
-   pdf.text(`Version: v3.0`, pageWidth / 2, 200, { align: 'center' });
-   pdf.text(`Date: ${dateStr}`, pageWidth / 2, 210, { align: 'center' });
-   pdf.text(`Publisher: Hong Ling Yu Suo`, pageWidth / 2, 220, { align: 'center' });
-   
-   // 新頁面 - 目錄
-   pdf.addPage();
-   setStage('生成目錄...');
-   setProgress(25);
-   
-   pdf.setFillColor(248, 250, 252);
-   pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-   
-   y = 30;
-   pdf.setTextColor(15, 23, 42);
-   pdf.setFontSize(20);
-   pdf.text('TABLE OF CONTENTS', pageWidth / 2, y, { align: 'center' });
-   
-   y += 20;
-   pdf.setFontSize(12);
-   WHITEPAPER_SECTIONS.forEach((section, idx) => {
-     pdf.setTextColor(100, 100, 100);
-     pdf.text(`${idx + 1}.`, margin, y);
-     pdf.setTextColor(15, 23, 42);
-     pdf.text(section.title, margin + 10, y);
-     y += 10;
-   });
-   
-   // 內容頁
-   setStage('生成章節內容...');
-   const totalSections = WHITEPAPER_SECTIONS.length;
-   
-   WHITEPAPER_SECTIONS.forEach((section, idx) => {
-     setProgress(30 + Math.floor((idx / totalSections) * 50));
-     setStage(`生成章節 ${idx + 1}/${totalSections}: ${section.title}...`);
+   try {
+     setStage('生成封面...');
+     setProgress(10);
+     
+     // 渲染封面
+     container.innerHTML = `
+       <div style="width: 794px; height: 1123px; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 60px; box-sizing: border-box; position: relative;">
+         <div style="position: absolute; inset: 20px; border: 2px solid #d4af37; border-radius: 8px;"></div>
+         <div style="position: absolute; inset: 30px; border: 1px solid #d4af3766;"></div>
+         <div style="text-align: center; color: #d4af37;">
+           <h1 style="font-size: 48px; font-weight: bold; margin-bottom: 16px; letter-spacing: 4px;">虹靈御所</h1>
+           <p style="font-size: 24px; margin-bottom: 8px; color: #fbbf24;">HONG LING YU SUO</p>
+           <p style="font-size: 20px; color: #94a3b8;">RSBZS v3.0</p>
+         </div>
+         <div style="width: 200px; height: 2px; background: linear-gradient(90deg, transparent, #d4af37, transparent); margin: 40px 0;"></div>
+         <h2 style="font-size: 36px; color: white; font-weight: bold; margin-bottom: 24px;">系統白皮書</h2>
+         <p style="font-size: 16px; color: #94a3b8; font-style: italic; margin-bottom: 60px;">「這份分析是鏡子，不是劇本」</p>
+         <div style="color: #64748b; font-size: 14px; text-align: center; margin-top: auto;">
+           <p>版本：v3.0</p>
+           <p>日期：${dateStr}</p>
+           <p>發行：超烜創意 / 虹靈御所</p>
+         </div>
+       </div>
+     `;
+     
+     const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' });
+     const pdfWidth = pdf.internal.pageSize.getWidth();
+     const pdfHeight = pdf.internal.pageSize.getHeight();
+     
+     // 封面
+     const coverCanvas = await html2canvas(container, { scale: 2, useCORS: true, logging: false });
+     pdf.addImage(coverCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, pdfHeight);
+     
+     // 目錄頁
+     setStage('生成目錄...');
+     setProgress(25);
+     
+     container.innerHTML = `
+       <div style="width: 794px; min-height: 1123px; background: #fafafa; padding: 60px; box-sizing: border-box;">
+         <h2 style="font-size: 28px; color: #1e3a8a; text-align: center; margin-bottom: 40px; border-bottom: 2px solid #d4af37; padding-bottom: 16px;">目 錄</h2>
+         <div style="padding: 20px;">
+           ${WHITEPAPER_SECTIONS.map((section, idx) => `
+             <div style="display: flex; align-items: center; padding: 12px 0; border-bottom: 1px dashed #e5e7eb;">
+               <span style="color: #d4af37; font-weight: bold; font-size: 18px; width: 30px;">${idx + 1}.</span>
+               <span style="color: #1f2937; font-size: 16px; flex: 1;">${section.title}</span>
+               <span style="color: #9ca3af; font-size: 14px;">第 ${idx + 3} 頁</span>
+             </div>
+           `).join('')}
+         </div>
+       </div>
+     `;
      
      pdf.addPage();
-     pdf.setFillColor(248, 250, 252);
-     pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+     const tocCanvas = await html2canvas(container, { scale: 2, useCORS: true, logging: false });
+     pdf.addImage(tocCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, pdfHeight);
      
-     // 章節標題
-     y = 30;
-     pdf.setFillColor(15, 23, 42);
-     pdf.rect(0, y - 10, pageWidth, 20, 'F');
-     pdf.setTextColor(212, 175, 55);
-     pdf.setFontSize(16);
-     pdf.text(`Chapter ${idx + 1}: ${section.title}`, pageWidth / 2, y + 2, { align: 'center' });
+     // 章節內容
+     const totalSections = WHITEPAPER_SECTIONS.length;
+     for (let idx = 0; idx < totalSections; idx++) {
+       const section = WHITEPAPER_SECTIONS[idx];
+       setProgress(30 + Math.floor((idx / totalSections) * 50));
+       setStage(`生成章節 ${idx + 1}/${totalSections}: ${section.title}...`);
+       
+       container.innerHTML = `
+         <div style="width: 794px; min-height: 1123px; background: #fafafa; padding: 0; box-sizing: border-box;">
+           <div style="background: linear-gradient(90deg, #0f172a, #1e3a5f); padding: 20px 40px; margin-bottom: 40px;">
+             <h2 style="color: #d4af37; font-size: 22px; margin: 0;">第 ${idx + 1} 章：${section.title}</h2>
+           </div>
+           <div style="padding: 0 50px 50px;">
+             ${section.content.map((item, i) => `
+               <div style="margin-bottom: 24px; padding: 16px; background: white; border-left: 3px solid #d4af37; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                 <span style="color: #1e3a8a; font-weight: bold; font-size: 16px;">${i + 1}. </span>
+                 <span style="color: #374151; font-size: 15px; line-height: 1.8;">${item}</span>
+               </div>
+             `).join('')}
+           </div>
+         </div>
+       `;
+       
+       pdf.addPage();
+       const sectionCanvas = await html2canvas(container, { scale: 2, useCORS: true, logging: false });
+       pdf.addImage(sectionCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, pdfHeight);
+     }
      
-     // 內容
-     y = 65;
-     pdf.setTextColor(50, 50, 50);
-     pdf.setFontSize(11);
+     // 附錄
+     setStage('生成附錄...');
+     setProgress(85);
      
-     section.content.forEach((item, i) => {
-       const lines = pdf.splitTextToSize(`${i + 1}. ${item}`, contentWidth);
-       if (y + lines.length * 6 > pageHeight - margin) {
-         pdf.addPage();
-         pdf.setFillColor(248, 250, 252);
-         pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-         y = margin;
-       }
-       pdf.text(lines, margin, y);
-       y += lines.length * 6 + 8;
-     });
-   });
-   
-   // 附錄頁
-   setStage('生成附錄...');
-   setProgress(85);
-   
-   pdf.addPage();
-   pdf.setFillColor(248, 250, 252);
-   pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-   
-   y = 30;
-   pdf.setFillColor(15, 23, 42);
-   pdf.rect(0, y - 10, pageWidth, 20, 'F');
-   pdf.setTextColor(212, 175, 55);
-   pdf.setFontSize(16);
-   pdf.text('APPENDIX', pageWidth / 2, y + 2, { align: 'center' });
-   
-   y = 60;
-   pdf.setTextColor(15, 23, 42);
-   pdf.setFontSize(14);
-   pdf.text('A. Design Principles', margin, y);
-   
-   y += 12;
-   pdf.setFontSize(10);
-   pdf.setTextColor(80, 80, 80);
-   const principles = [
-     'Clarity: Precise presentation of energy configuration and tendencies',
-     'Restraint: Distinguish verifiable information from speculation',
-     'Actionable: Provide concrete, executable recommendations'
-   ];
-   principles.forEach(p => {
-     pdf.text(`• ${p}`, margin + 5, y);
-     y += 8;
-   });
-   
-   y += 10;
-   pdf.setTextColor(15, 23, 42);
-   pdf.setFontSize(14);
-   pdf.text('B. Technical Specifications', margin, y);
-   
-   y += 12;
-   pdf.setFontSize(10);
-   pdf.setTextColor(80, 80, 80);
-   const techStack = [
-     'Frontend: React 18 + TypeScript + Vite 5',
-     'UI: Tailwind CSS + shadcn/ui + Framer Motion',
-     'Backend: Supabase (PostgreSQL) + Edge Functions',
-     'AI: Lovable AI Integration'
-   ];
-   techStack.forEach(t => {
-     pdf.text(`• ${t}`, margin + 5, y);
-     y += 8;
-   });
-   
-   // 免責聲明頁
-   setStage('生成免責聲明...');
-   setProgress(92);
-   
-   pdf.addPage();
-   pdf.setFillColor(15, 23, 42);
-   pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-   
-   y = 40;
-   pdf.setTextColor(212, 175, 55);
-   pdf.setFontSize(18);
-   pdf.text('DISCLAIMER', pageWidth / 2, y, { align: 'center' });
-   
-   y = 70;
-   pdf.setTextColor(200, 200, 200);
-   pdf.setFontSize(10);
-   const disclaimers = [
-     '1. This report is a structured presentation of Bazi (Chinese astrology) system for reference purposes.',
-     '2. This content does not constitute medical, psychological, legal, or financial advice.',
-     '3. Trends and tendencies described are not guaranteed outcomes.',
-     '4. For major decisions involving health, psychology, law, or finance, please consult qualified professionals.',
-     '5. By using this content, you acknowledge and agree to the above statements.'
-   ];
-   disclaimers.forEach(d => {
-     const lines = pdf.splitTextToSize(d, contentWidth);
-     pdf.text(lines, margin, y);
-     y += lines.length * 6 + 8;
-   });
-   
-   // 版權頁尾
-   y = pageHeight - 30;
-   pdf.setTextColor(150, 150, 150);
-   pdf.setFontSize(9);
-   pdf.text(`© ${now.getFullYear()} Chao Xuan Creative / Hong Ling Yu Suo`, pageWidth / 2, y, { align: 'center' });
-   pdf.text('Version: RSBZS v3.0', pageWidth / 2, y + 8, { align: 'center' });
-   
-   setStage('儲存 PDF 檔案...');
-   setProgress(98);
-   
-   pdf.save(`HongLingYuSuo_Whitepaper_${new Date().toISOString().split('T')[0]}.pdf`);
-   setProgress(100);
-   toast.success('PDF 白皮書下載成功');
+     container.innerHTML = `
+       <div style="width: 794px; min-height: 1123px; background: #fafafa; padding: 0; box-sizing: border-box;">
+         <div style="background: linear-gradient(90deg, #0f172a, #1e3a5f); padding: 20px 40px; margin-bottom: 40px;">
+           <h2 style="color: #d4af37; font-size: 22px; margin: 0;">附錄</h2>
+         </div>
+         <div style="padding: 0 50px;">
+           <h3 style="color: #1e3a8a; font-size: 18px; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">A. 設計原則</h3>
+           <div style="margin-bottom: 24px; padding-left: 20px;">
+             <p style="color: #374151; margin-bottom: 8px;">• <strong>清楚（Clarity）</strong>：精準呈現能量配置與傾向，避免模糊描述</p>
+             <p style="color: #374151; margin-bottom: 8px;">• <strong>克制（Restraint）</strong>：區分可驗證資訊與推論，不恐嚇不操控</p>
+             <p style="color: #374151; margin-bottom: 8px;">• <strong>可執行（Actionable）</strong>：提供具體可落地的行動建議與提醒</p>
+           </div>
+           
+           <h3 style="color: #1e3a8a; font-size: 18px; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">B. 技術規格</h3>
+           <div style="margin-bottom: 24px; padding-left: 20px;">
+             <p style="color: #374151; margin-bottom: 8px;">• <strong>前端</strong>：React 18 + TypeScript + Vite 5</p>
+             <p style="color: #374151; margin-bottom: 8px;">• <strong>UI</strong>：Tailwind CSS + shadcn/ui + Framer Motion</p>
+             <p style="color: #374151; margin-bottom: 8px;">• <strong>後端</strong>：Supabase (PostgreSQL) + Edge Functions</p>
+             <p style="color: #374151; margin-bottom: 8px;">• <strong>AI</strong>：Lovable AI 整合</p>
+           </div>
+           
+           <h3 style="color: #1e3a8a; font-size: 18px; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px;">C. 品牌識別</h3>
+           <div style="padding-left: 20px;">
+             <p style="color: #374151; margin-bottom: 8px;">• <strong>視覺風格</strong>：Cosmic Architect 設計系統</p>
+             <p style="color: #374151; margin-bottom: 8px;">• <strong>主色調</strong>：深藍/靛色 (cosmic-void)</p>
+             <p style="color: #374151; margin-bottom: 8px;">• <strong>強調色</strong>：金色/琥珀色 (cosmic-gold)</p>
+             <p style="color: #374151; margin-bottom: 8px;">• <strong>輔助色</strong>：紫色星雲 (cosmic-nebula)</p>
+           </div>
+         </div>
+       </div>
+     `;
+     
+     pdf.addPage();
+     const appendixCanvas = await html2canvas(container, { scale: 2, useCORS: true, logging: false });
+     pdf.addImage(appendixCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, pdfHeight);
+     
+     // 免責聲明
+     setStage('生成免責聲明...');
+     setProgress(92);
+     
+     container.innerHTML = `
+       <div style="width: 794px; min-height: 1123px; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); padding: 60px; box-sizing: border-box; display: flex; flex-direction: column;">
+         <h2 style="color: #d4af37; font-size: 28px; text-align: center; margin-bottom: 40px;">免責聲明</h2>
+         <div style="background: rgba(255,255,255,0.05); border: 1px solid #d4af3733; border-radius: 8px; padding: 40px;">
+           <p style="color: #cbd5e1; font-size: 14px; line-height: 2; margin-bottom: 16px;">1. 本報告為八字（命理）系統的結構化呈現與解讀參考，目的在於提供觀察角度與可執行建議。</p>
+           <p style="color: #cbd5e1; font-size: 14px; line-height: 2; margin-bottom: 16px;">2. 本內容不構成醫療診斷、心理治療、法律建議、財務／投資建議或任何形式之專業服務。</p>
+           <p style="color: #cbd5e1; font-size: 14px; line-height: 2; margin-bottom: 16px;">3. 文中之趨勢、傾向、可能性描述，不等同於保證結果；使用者仍需依自身狀況做出判斷與選擇。</p>
+           <p style="color: #cbd5e1; font-size: 14px; line-height: 2; margin-bottom: 16px;">4. 涉及健康、心理、法律、財務等重大議題，請尋求合格專業人士協助。</p>
+           <p style="color: #cbd5e1; font-size: 14px; line-height: 2;">5. 使用本內容即表示你理解並同意以上聲明。</p>
+         </div>
+         <div style="margin-top: auto; text-align: center; color: #64748b; font-size: 12px;">
+           <p>© ${now.getFullYear()} 超烜創意 / 虹靈御所</p>
+           <p>版本：RSBZS v3.0</p>
+         </div>
+       </div>
+     `;
+     
+     pdf.addPage();
+     const disclaimerCanvas = await html2canvas(container, { scale: 2, useCORS: true, logging: false });
+     pdf.addImage(disclaimerCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pdfWidth, pdfHeight);
+     
+     setStage('儲存 PDF 檔案...');
+     setProgress(98);
+     
+     pdf.save(`虹靈御所_系統白皮書_${new Date().toISOString().split('T')[0]}.pdf`);
+     setProgress(100);
+     toast.success('PDF 白皮書下載成功');
+   } finally {
+     document.body.removeChild(container);
+   }
  };
  
  // ============ Word 下載功能 ============

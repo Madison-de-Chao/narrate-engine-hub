@@ -438,10 +438,10 @@
          <div style="text-align: center; color: #d4af37;">
            <h1 style="font-size: 48px; font-weight: bold; margin-bottom: 16px; letter-spacing: 4px;">虹靈御所</h1>
            <p style="font-size: 24px; margin-bottom: 8px; color: #fbbf24;">HONG LING YU SUO</p>
-           <p style="font-size: 20px; color: #94a3b8;">RSBZS v3.0</p>
          </div>
          <div style="width: 200px; height: 2px; background: linear-gradient(90deg, transparent, #d4af37, transparent); margin: 40px 0;"></div>
-         <h2 style="font-size: 36px; color: white; font-weight: bold; margin-bottom: 24px;">系統白皮書</h2>
+         <h2 style="font-size: 32px; color: white; font-weight: bold; margin-bottom: 16px;">RSBZS四時軍團八字人生兵法系統</h2>
+         <h3 style="font-size: 24px; color: #94a3b8; margin-bottom: 24px;">系統白皮書</h3>
          <p style="font-size: 16px; color: #94a3b8; font-style: italic; margin-bottom: 60px;">「這份分析是鏡子，不是劇本」</p>
          <div style="color: #64748b; font-size: 14px; text-align: center; margin-top: auto;">
            <p>版本：v3.0</p>
@@ -578,7 +578,7 @@
      setStage('儲存 PDF 檔案...');
      setProgress(98);
      
-     pdf.save(`虹靈御所_系統白皮書_${new Date().toISOString().split('T')[0]}.pdf`);
+     pdf.save(`RSBZS四時軍團八字人生兵法系統_白皮書_${new Date().toISOString().split('T')[0]}.pdf`);
      setProgress(100);
      toast.success('PDF 白皮書下載成功');
    } finally {
@@ -599,16 +599,45 @@
    // 封面
    children.push(
      new Paragraph({
-       children: [new TextRun({ text: '', break: 1 })],
+       spacing: { before: 600 },
+       children: [new TextRun({ text: '' })],
      }),
      new Paragraph({
-       children: [new TextRun({ text: '', break: 1 })],
+       spacing: { before: 400 },
+       children: [new TextRun({ text: '' })],
      }),
      new Paragraph({
        alignment: AlignmentType.CENTER,
        children: [
          new TextRun({
+           text: '虹 靈 御 所',
+           bold: true,
+           size: 72,
+           color: '1E3A8A',
+         }),
+       ],
+     }),
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       spacing: { before: 300 },
+       children: [
+         new TextRun({
            text: 'HONG LING YU SUO',
+           size: 32,
+           color: 'D4AF37',
+         }),
+       ],
+     }),
+     new Paragraph({
+       alignment: AlignmentType.CENTER,
+       spacing: { before: 600 },
+       border: {
+         top: { style: BorderStyle.SINGLE, size: 12, color: 'D4AF37' },
+         bottom: { style: BorderStyle.SINGLE, size: 12, color: 'D4AF37' },
+       },
+       children: [
+         new TextRun({
+           text: '  RSBZS四時軍團八字人生兵法系統  ',
            bold: true,
            size: 56,
            color: '1E3A8A',
@@ -617,64 +646,47 @@
      }),
      new Paragraph({
        alignment: AlignmentType.CENTER,
-       spacing: { before: 200 },
+       spacing: { before: 400 },
        children: [
          new TextRun({
-           text: 'RSBZS v3.0',
-           size: 36,
-           color: 'D4AF37',
+           text: '系 統 白 皮 書',
+           bold: true,
+           size: 48,
+           color: '333333',
          }),
        ],
      }),
      new Paragraph({
        alignment: AlignmentType.CENTER,
-       spacing: { before: 400 },
+       spacing: { before: 300 },
        children: [
          new TextRun({
-           text: 'System Whitepaper',
-           bold: true,
-           size: 48,
-           color: '1E3A8A',
+           text: '「這份分析是鏡子，不是劇本」',
+           italics: true,
+           size: 28,
+           color: '888888',
          }),
        ],
      }),
      new Paragraph({
        alignment: AlignmentType.CENTER,
        spacing: { before: 600 },
-       border: {
-         top: { style: BorderStyle.SINGLE, size: 6, color: 'D4AF37' },
-       },
-       children: [new TextRun({ text: '' })],
-     }),
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       spacing: { before: 200 },
        children: [
-         new TextRun({
-           text: '"This analysis is a mirror, not a script"',
-           italics: true,
-           size: 24,
-           color: '666666',
-         }),
+         new TextRun({ text: `版本：v3.0`, size: 28, color: '666666' }),
        ],
      }),
      new Paragraph({
        alignment: AlignmentType.CENTER,
-       spacing: { before: 800 },
+       spacing: { before: 100 },
        children: [
-         new TextRun({ text: `Version: v3.0`, size: 22, color: '888888' }),
+         new TextRun({ text: `日期：${dateStr}`, size: 28, color: '666666' }),
        ],
      }),
      new Paragraph({
        alignment: AlignmentType.CENTER,
+       spacing: { before: 100 },
        children: [
-         new TextRun({ text: `Date: ${dateStr}`, size: 22, color: '888888' }),
-       ],
-     }),
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       children: [
-         new TextRun({ text: `Publisher: Hong Ling Yu Suo`, size: 22, color: '888888' }),
+         new TextRun({ text: `發行：超烜創意 / 虹靈御所`, size: 28, color: '666666' }),
        ],
      }),
      new Paragraph({
@@ -689,12 +701,15 @@
    children.push(
      new Paragraph({
        alignment: AlignmentType.CENTER,
-       spacing: { after: 400 },
+       spacing: { before: 200, after: 600 },
+       border: {
+         bottom: { style: BorderStyle.SINGLE, size: 6, color: 'D4AF37' },
+       },
        children: [
          new TextRun({
-           text: 'TABLE OF CONTENTS',
+           text: '目    錄',
            bold: true,
-           size: 32,
+           size: 48,
            color: '1E3A8A',
          }),
        ],
@@ -704,10 +719,10 @@
    WHITEPAPER_SECTIONS.forEach((section, idx) => {
      children.push(
        new Paragraph({
-         spacing: { before: 100, after: 100 },
+         spacing: { before: 200, after: 200 },
          children: [
-           new TextRun({ text: `${idx + 1}. `, size: 24, color: 'D4AF37' }),
-           new TextRun({ text: section.title, size: 24, color: '333333' }),
+           new TextRun({ text: `第 ${idx + 1} 章   `, size: 32, bold: true, color: 'D4AF37' }),
+           new TextRun({ text: section.title, size: 32, color: '333333' }),
          ],
        })
      );
@@ -726,13 +741,13 @@
      children.push(
        new Paragraph({
          heading: HeadingLevel.HEADING_1,
-         spacing: { before: 400, after: 200 },
+         spacing: { before: 200, after: 400 },
          shading: { fill: '1E3A8A', type: ShadingType.SOLID },
          children: [
            new TextRun({
-             text: `  Chapter ${idx + 1}: ${section.title}  `,
+             text: `  第 ${idx + 1} 章：${section.title}  `,
              bold: true,
-             size: 28,
+             size: 40,
              color: 'D4AF37',
            }),
          ],
@@ -742,10 +757,10 @@
      section.content.forEach((item, i) => {
        children.push(
          new Paragraph({
-           spacing: { before: 150, after: 150 },
+           spacing: { before: 200, after: 200 },
            children: [
-             new TextRun({ text: `${i + 1}. `, bold: true, size: 22, color: '1E3A8A' }),
-             new TextRun({ text: item, size: 22, color: '333333' }),
+             new TextRun({ text: `${i + 1}. `, bold: true, size: 28, color: '1E3A8A' }),
+             new TextRun({ text: item, size: 28, color: '333333' }),
            ],
          })
        );
@@ -764,13 +779,13 @@
      new Paragraph({ children: [new PageBreak()] }),
      new Paragraph({
        heading: HeadingLevel.HEADING_1,
-       spacing: { before: 400, after: 300 },
+       spacing: { before: 200, after: 400 },
        shading: { fill: '1E3A8A', type: ShadingType.SOLID },
        children: [
          new TextRun({
-           text: '  APPENDIX  ',
+           text: '  附    錄  ',
            bold: true,
-           size: 28,
+           size: 40,
            color: 'D4AF37',
          }),
        ],
@@ -779,74 +794,91 @@
        heading: HeadingLevel.HEADING_2,
        spacing: { before: 300, after: 150 },
        children: [
-         new TextRun({ text: 'A. Design Principles', bold: true, size: 26, color: '1E3A8A' }),
+         new TextRun({ text: 'A. 設計原則', bold: true, size: 36, color: '1E3A8A' }),
        ],
      }),
      new Paragraph({
+       spacing: { before: 100, after: 100 },
        children: [
-         new TextRun({ text: '• Clarity: ', bold: true, size: 22 }),
-         new TextRun({ text: 'Precise presentation of energy configuration and tendencies', size: 22 }),
+         new TextRun({ text: '• 清楚（Clarity）：', bold: true, size: 28 }),
+         new TextRun({ text: '精準呈現能量配置與傾向，避免模糊描述', size: 28 }),
        ],
      }),
      new Paragraph({
+       spacing: { before: 100, after: 100 },
        children: [
-         new TextRun({ text: '• Restraint: ', bold: true, size: 22 }),
-         new TextRun({ text: 'Distinguish verifiable information from speculation', size: 22 }),
+         new TextRun({ text: '• 克制（Restraint）：', bold: true, size: 28 }),
+         new TextRun({ text: '區分可驗證資訊與推論，不恐嚇不操控', size: 28 }),
        ],
      }),
      new Paragraph({
+       spacing: { before: 100, after: 100 },
        children: [
-         new TextRun({ text: '• Actionable: ', bold: true, size: 22 }),
-         new TextRun({ text: 'Provide concrete, executable recommendations', size: 22 }),
+         new TextRun({ text: '• 可執行（Actionable）：', bold: true, size: 28 }),
+         new TextRun({ text: '提供具體可落地的行動建議與提醒', size: 28 }),
        ],
      }),
      new Paragraph({
        heading: HeadingLevel.HEADING_2,
-       spacing: { before: 300, after: 150 },
+       spacing: { before: 400, after: 150 },
        children: [
-         new TextRun({ text: 'B. Technical Specifications', bold: true, size: 26, color: '1E3A8A' }),
+         new TextRun({ text: 'B. 技術規格', bold: true, size: 36, color: '1E3A8A' }),
        ],
      }),
-     new Paragraph({ children: [new TextRun({ text: '• Frontend: React 18 + TypeScript + Vite 5', size: 22 })] }),
-     new Paragraph({ children: [new TextRun({ text: '• UI: Tailwind CSS + shadcn/ui + Framer Motion', size: 22 })] }),
-     new Paragraph({ children: [new TextRun({ text: '• Backend: Supabase (PostgreSQL) + Edge Functions', size: 22 })] }),
-     new Paragraph({ children: [new TextRun({ text: '• AI: Lovable AI Integration', size: 22 })] })
+     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• 前端：React 18 + TypeScript + Vite 5', size: 28 })] }),
+     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• UI：Tailwind CSS + shadcn/ui + Framer Motion', size: 28 })] }),
+     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• 後端：Supabase (PostgreSQL) + Edge Functions', size: 28 })] }),
+     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• AI：Lovable AI 整合', size: 28 })] }),
+     new Paragraph({
+       heading: HeadingLevel.HEADING_2,
+       spacing: { before: 400, after: 150 },
+       children: [
+         new TextRun({ text: 'C. 品牌識別', bold: true, size: 36, color: '1E3A8A' }),
+       ],
+     }),
+     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• 視覺風格：Cosmic Architect 設計系統', size: 28 })] }),
+     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• 主色調：深藍/靛色 (cosmic-void)', size: 28 })] }),
+     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• 強調色：金色/琥珀色 (cosmic-gold)', size: 28 })] }),
+     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• 輔助色：紫色星雲 (cosmic-nebula)', size: 28 })] })
    );
    
    // 免責聲明
    setStage('生成免責聲明...');
    setProgress(90);
    
+   const disclaimersCN = [
+     '1. 本報告為八字（命理）系統的結構化呈現與解讀參考，目的在於提供觀察角度與可執行建議。',
+     '2. 本內容不構成醫療診斷、心理治療、法律建議、財務／投資建議或任何形式之專業服務。',
+     '3. 文中之趨勢、傾向、可能性描述，不等同於保證結果；使用者仍需依自身狀況做出判斷與選擇。',
+     '4. 涉及健康、心理、法律、財務等重大議題，請尋求合格專業人士協助。',
+     '5. 使用本內容即表示你理解並同意以上聲明。'
+   ];
+ 
    children.push(
      new Paragraph({ children: [new PageBreak()] }),
      new Paragraph({
        alignment: AlignmentType.CENTER,
-       shading: { fill: '0F172A', type: ShadingType.SOLID },
-       spacing: { before: 200, after: 200 },
+       spacing: { before: 200, after: 400 },
+       border: {
+         top: { style: BorderStyle.SINGLE, size: 6, color: 'D4AF37' },
+         bottom: { style: BorderStyle.SINGLE, size: 6, color: 'D4AF37' },
+       },
        children: [
          new TextRun({
-           text: '  DISCLAIMER  ',
+           text: '  免 責 聲 明  ',
            bold: true,
-           size: 32,
-           color: 'D4AF37',
+           size: 44,
+           color: '1E3A8A',
          }),
        ],
      })
    );
    
-   const disclaimers = [
-     '1. This report is a structured presentation of Bazi system for reference purposes.',
-     '2. This content does not constitute medical, psychological, legal, or financial advice.',
-     '3. Trends and tendencies described are not guaranteed outcomes.',
-     '4. For major decisions, please consult qualified professionals.',
-     '5. By using this content, you acknowledge and agree to the above statements.'
-   ];
-   
-   disclaimers.forEach(d => {
+   disclaimersCN.forEach(d => {
      children.push(
        new Paragraph({
-         spacing: { before: 100, after: 100 },
-         children: [new TextRun({ text: d, size: 22, color: '555555' })],
+         spacing: { before: 150, after: 150 },
+         children: [new TextRun({ text: d, size: 26, color: '444444' })],
        })
      );
    });
@@ -857,13 +889,14 @@
        alignment: AlignmentType.CENTER,
        spacing: { before: 600 },
        children: [
-         new TextRun({ text: `© ${now.getFullYear()} Chao Xuan Creative / Hong Ling Yu Suo`, size: 20, color: '888888' }),
+         new TextRun({ text: `© ${now.getFullYear()} 超烜創意 / 虹靈御所`, size: 28, color: '666666' }),
        ],
      }),
      new Paragraph({
        alignment: AlignmentType.CENTER,
+       spacing: { before: 100 },
        children: [
-         new TextRun({ text: 'Version: RSBZS v3.0', size: 20, color: '888888' }),
+         new TextRun({ text: '版本：RSBZS v3.0', size: 28, color: '666666' }),
        ],
      })
    );
@@ -883,7 +916,7 @@
    });
    
    const blob = await Packer.toBlob(doc);
-   saveAs(blob, `HongLingYuSuo_Whitepaper_${new Date().toISOString().split('T')[0]}.docx`);
+   saveAs(blob, `RSBZS四時軍團八字人生兵法系統_白皮書_${new Date().toISOString().split('T')[0]}.docx`);
    
    setProgress(100);
    toast.success('Word 白皮書下載成功');
@@ -993,14 +1026,18 @@
              
              <Badge className="mb-6 px-4 py-1.5 bg-gradient-to-r from-primary/20 to-accent/20 border-primary/30 text-primary">
                <Crown className="w-3.5 h-3.5 mr-1.5" />
-               RSBZS v3.0 系統白皮書
+               RSBZS四時軍團八字人生兵法系統
              </Badge>
              
              <h1 className="text-4xl md:text-6xl font-bold font-serif mb-4">
                <span className="cosmic-title-gradient">虹靈御所</span>
              </h1>
              
-             <p className="text-xl md:text-2xl text-foreground/60 font-serif italic mb-6">
+             <p className="text-lg md:text-xl text-primary/80 font-medium mb-2">
+               系統白皮書
+             </p>
+             
+             <p className="text-base md:text-lg text-foreground/60 font-serif italic mb-6">
                「這份分析是鏡子，不是劇本」
              </p>
              

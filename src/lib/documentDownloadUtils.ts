@@ -73,9 +73,14 @@ export const downloadDocPdf = async (
       <div style="width:794px;min-height:1123px;background:#fafafa;padding:60px;box-sizing:border-box;">
         <h2 style="font-size:28px;color:#1e3a8a;text-align:center;margin-bottom:40px;border-bottom:2px solid #d4af37;padding-bottom:16px;">目 錄</h2>
         <div style="padding:20px;">
-          ${config.sections.map((s, i) => `
+          ${config.sections.map((s, i) => {
+            const chNum = i + (config.startChapter ?? 1);
+            return `
             <div style="display:flex;align-items:center;padding:12px 0;border-bottom:1px dashed #e5e7eb;">
-              <span style="color:#d4af37;font-weight:bold;font-size:18px;width:30px;">${i + 1}.</span>
+              <span style="color:#d4af37;font-weight:bold;font-size:18px;width:30px;">${chNum}.</span>
+              <span style="color:#1f2937;font-size:16px;flex:1;">${s.title}</span>
+            </div>
+          `}).join('')}
               <span style="color:#1f2937;font-size:16px;flex:1;">${s.title}</span>
             </div>
           `).join('')}

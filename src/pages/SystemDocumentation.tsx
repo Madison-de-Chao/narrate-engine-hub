@@ -1004,16 +1004,16 @@
              <ArrowLeft className="w-4 h-4 mr-2" />
              返回首頁
            </Button>
-           <div className="flex gap-2">
-             <Button variant="outline" size="sm" onClick={downloadAsText}>
-               <FileDown className="w-4 h-4 mr-2" />
-               下載 TXT
-             </Button>
-             <Button variant="outline" size="sm" onClick={downloadAsMarkdown}>
-               <ScrollText className="w-4 h-4 mr-2" />
-               下載 Markdown
-             </Button>
-           </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={downloading}>
+                <FileDown className="w-4 h-4 mr-2" />
+                下載 PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleDownloadWord} disabled={downloading}>
+                <ScrollText className="w-4 h-4 mr-2" />
+                下載 Word
+              </Button>
+            </div>
          </div>
  
          {/* 標題區 */}

@@ -479,7 +479,7 @@ export function CharacterLightbox({
                     {characters.map((char, idx) => {
                       const charConfig = ELEMENT_CONFIG[char.element as ElementType];
                       const isActive = idx === currentIndex;
-                      const thumbnail = getFullbodyAvatar(char) || getAvatarSrc(char);
+                      const thumbnail = getAvatarSrc(char);
                       
                       return (
                         <motion.button

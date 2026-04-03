@@ -37,27 +37,29 @@
  
  // ============ 路由對照表資料 ============
  const ROUTES_DATA = [
-   { path: '/', name: '首頁', description: '品牌門戶，展示核心理念與功能亮點', access: '公開', category: '核心' },
-   { path: '/bazi', name: '八字解析', description: '輸入出生資訊，獲得完整八字分析報告', access: '公開', category: '核心' },
-   { path: '/about', name: '關於我們', description: '品牌理念、系統特色與核心價值說明', access: '公開', category: '品牌' },
-   { path: '/subscribe', name: '訂閱方案', description: '會員方案說明與升級入口', access: '公開', category: '會員' },
-   { path: '/auth', name: '登入/註冊', description: '會員登入、註冊與密碼重設', access: '公開', category: '會員' },
-   { path: '/account', name: '會員中心', description: '個人資料編輯與訂閱狀態查看', access: '會員', category: '會員' },
-   { path: '/gallery', name: '角色圖鑑', description: '指揮官與軍師角色圖鑑，支援收藏與燈箱', access: '公開', category: '內容' },
-   { path: '/map', name: '導覽地圖', description: '系統功能視覺化導覽入口', access: '公開', category: '核心' },
-   { path: '/academy', name: '八字學院', description: '系統化命理知識教學', access: 'Premium', category: '學習' },
-   { path: '/guide/:zoneId', name: 'Zone Guide', description: '特定區域深度解讀', access: 'Premium', category: '學習' },
-   { path: '/privacy', name: '隱私政策', description: '資料收集與使用說明', access: '公開', category: '法律' },
-   { path: '/terms', name: '使用條款', description: '服務條款與免責聲明', access: '公開', category: '法律' },
-   { path: '/version', name: '版本資訊', description: '系統版本歷史與更新日誌', access: '公開', category: '資訊' },
-   { path: '/research', name: '研究報告', description: 'RSBZS 系統白皮書', access: '公開', category: '資訊' },
-   { path: '/api-docs', name: 'API 文件', description: 'API 規格與使用說明', access: '公開', category: '開發' },
-   { path: '/api-console', name: 'API 控制台', description: 'API 測試與管理', access: '會員', category: '開發' },
-   { path: '/admin', name: '管理後台', description: '系統管理與數據統計', access: '管理員', category: '管理' },
-   { path: '/report/print', name: '列印報告', description: '報告列印預覽頁面', access: '公開', category: '工具' },
-   { path: '/export', name: '資料匯出', description: '報告資料匯出功能', access: '會員', category: '工具' },
-   { path: '/prompt-templates', name: '提示詞模板', description: 'AI 提示詞管理', access: '會員', category: '開發' },
-   { path: '/test', name: '測試頁面', description: '系統功能測試', access: '開發', category: '開發' },
+   { path: '/', name: '首頁', description: '品牌門戶，展示核心理念、功能亮點、動態統計與應用場景', access: '公開', category: '核心' },
+   { path: '/bazi', name: '八字解析', description: '輸入出生資訊，獲得完整八字分析報告（摘要/排盤/十神/神煞/性格/軍團/圖表/紀錄共 8 章節）', access: '公開', category: '核心' },
+   { path: '/about', name: '關於我們', description: '品牌理念、系統特色、核心價值說明與團隊介紹', access: '公開', category: '品牌' },
+   { path: '/subscribe', name: '訂閱方案', description: '會員方案（月/年訂閱）說明、故事重生資格購買與常見問題', access: '公開', category: '會員' },
+   { path: '/auth', name: '登入/註冊', description: '會員登入、註冊與密碼重設，支援登入鎖定保護機制', access: '公開', category: '會員' },
+   { path: '/account', name: '會員中心', description: '個人資料編輯、訂閱狀態查看、報告歷史與收藏管理', access: '會員', category: '會員' },
+   { path: '/gallery', name: '角色圖鑑', description: '22 個角色（10 天干指揮官 + 12 地支軍師）完整圖鑑，支援五行篩選、收藏、燈箱、比較', access: '公開', category: '內容' },
+   { path: '/map', name: '導覽地圖', description: '系統功能視覺化導覽入口，以宇宙建築師風格呈現全站結構', access: '公開', category: '核心' },
+   { path: '/academy', name: '八字學院', description: '系統化命理知識教學，從入門概念到進階應用，含互動式學習', access: 'Premium', category: '學習' },
+   { path: '/guide/:zoneId', name: 'Zone Guide', description: '特定區域深度解讀，針對不同命理主題提供進階分析', access: 'Premium', category: '學習' },
+   { path: '/privacy', name: '隱私政策', description: '資料收集、使用、儲存與保護方式說明', access: '公開', category: '法律' },
+   { path: '/terms', name: '使用條款', description: '服務條款、免責聲明與使用規範', access: '公開', category: '法律' },
+   { path: '/version', name: '版本資訊', description: '系統版本歷史、更新日誌與技術規格', access: '公開', category: '資訊' },
+   { path: '/research', name: '研究報告', description: 'RSBZS 系統整合性研究報告，涵蓋架構/產品/技術/商業/倫理', access: '公開', category: '資訊' },
+   { path: '/docs', name: '系統文件', description: '完整技術文件，含路由/頁面/會員/技術架構/資料表結構', access: '公開', category: '資訊' },
+   { path: '/whitepaper', name: '系統白皮書', description: '品牌願景、四時軍團敘事框架、商業模式與發展路線圖', access: '公開', category: '資訊' },
+   { path: '/api-docs', name: 'API 文件', description: 'RESTful API 規格說明、端點列表與使用範例', access: '公開', category: '開發' },
+   { path: '/api-console', name: 'API 控制台', description: 'API 金鑰管理、請求測試與使用量統計', access: '會員', category: '開發' },
+   { path: '/admin', name: '管理後台', description: '系統管理（統計/報告/訂閱/用戶四大模組）', access: '管理員', category: '管理' },
+   { path: '/report/print', name: '列印報告', description: '報告列印預覽頁面，優化 A4 排版', access: '公開', category: '工具' },
+   { path: '/export', name: '資料匯出', description: '報告資料 PDF/Word/文字檔匯出功能', access: '會員', category: '工具' },
+   { path: '/prompt-templates', name: '提示詞模板', description: 'AI 提示詞模板管理（軍團故事/命理諮詢/性格分析/自訂）', access: '會員', category: '開發' },
+   { path: '/test', name: '測試頁面', description: '系統功能測試與迴歸測試工具', access: '開發', category: '開發' },
  ];
  
  // ============ 資料表結構 ============
@@ -179,18 +181,55 @@
        { name: 'is_public', type: 'BOOLEAN', description: '是否公開' },
      ]
    },
-   {
-     name: 'solar_terms',
-     description: '節氣資料庫',
-     columns: [
-       { name: 'id', type: 'UUID', description: '記錄 ID' },
-       { name: 'year', type: 'INTEGER', description: '年份' },
-       { name: 'term_name', type: 'TEXT', description: '節氣名稱' },
-       { name: 'term_date', type: 'TIMESTAMP', description: '節氣時間' },
-       { name: 'solar_longitude', type: 'NUMERIC', description: '太陽黃經度數' },
-     ]
-   },
- ];
+    {
+      name: 'solar_terms',
+      description: '節氣資料庫（1850-2100 年）',
+      columns: [
+        { name: 'id', type: 'UUID', description: '記錄 ID' },
+        { name: 'year', type: 'INTEGER', description: '年份' },
+        { name: 'term_name', type: 'TEXT', description: '節氣名稱（24 節氣）' },
+        { name: 'term_date', type: 'TIMESTAMP', description: '節氣精確時間' },
+        { name: 'solar_longitude', type: 'NUMERIC', description: '太陽黃經度數（精度 < 0.01°）' },
+      ]
+    },
+    {
+      name: 'login_attempts',
+      description: '登入嘗試紀錄與鎖定機制',
+      columns: [
+        { name: 'id', type: 'UUID', description: '記錄 ID' },
+        { name: 'identifier', type: 'TEXT', description: '登入識別碼（email）' },
+        { name: 'identifier_type', type: 'TEXT', description: '識別碼類型' },
+        { name: 'ip_address', type: 'TEXT', description: '來源 IP 位址' },
+        { name: 'success', type: 'BOOLEAN', description: '是否成功' },
+        { name: 'lockout_until', type: 'TIMESTAMP', description: '鎖定截止時間' },
+        { name: 'attempt_at', type: 'TIMESTAMP', description: '嘗試時間' },
+      ]
+    },
+    {
+      name: 'api_plans',
+      description: 'API 方案定義',
+      columns: [
+        { name: 'id', type: 'UUID', description: '方案 ID' },
+        { name: 'name', type: 'TEXT', description: '方案名稱' },
+        { name: 'monthly_quota', type: 'INTEGER', description: '每月配額' },
+        { name: 'price_per_request', type: 'NUMERIC', description: '每次請求價格' },
+        { name: 'features', type: 'JSONB', description: '功能清單' },
+        { name: 'is_active', type: 'BOOLEAN', description: '是否啟用' },
+      ]
+    },
+    {
+      name: 'api_request_logs',
+      description: 'API 請求日誌',
+      columns: [
+        { name: 'id', type: 'UUID', description: '記錄 ID' },
+        { name: 'api_key_id', type: 'UUID', description: '關聯 API 金鑰' },
+        { name: 'endpoint', type: 'TEXT', description: '請求端點' },
+        { name: 'response_status', type: 'INTEGER', description: 'HTTP 狀態碼' },
+        { name: 'response_time_ms', type: 'INTEGER', description: '回應時間（毫秒）' },
+        { name: 'ip_address', type: 'TEXT', description: '來源 IP' },
+      ]
+    },
+  ];
  
  // ============ 頁面內容詳細資料 ============
  const PAGE_CONTENTS = {
@@ -401,36 +440,40 @@
    {
      category: '認證與登入',
      features: [
-       { name: '電子郵件登入', description: '使用電子郵件與密碼登入' },
-       { name: '會員註冊', description: '新用戶註冊流程' },
-       { name: '密碼重設', description: '忘記密碼時的重設流程' },
-       { name: '登入鎖定保護', description: '連續失敗登入後的帳號保護機制' },
+       { name: '電子郵件登入', description: '使用電子郵件與密碼登入，支援記住登入狀態' },
+       { name: '會員註冊', description: '新用戶註冊流程，需驗證電子郵件' },
+       { name: '密碼重設', description: '忘記密碼時的安全重設流程（郵件驗證）' },
+       { name: '登入鎖定保護', description: '連續 5 次失敗登入後鎖定帳號 15 分鐘，防止暴力破解' },
+       { name: '速率限制', description: '登入/註冊/重設密碼均有獨立速率限制，資料庫級持久化' },
      ]
    },
    {
      category: '會員權限',
      features: [
-       { name: '免費版', description: '基礎八字計算與報告預覽' },
-       { name: '月訂閱會員', description: '完整報告、軍團故事、深度分析' },
-       { name: '年訂閱會員', description: '月訂閱功能 + 專屬年度運勢報告' },
-       { name: '終身會員', description: '永久存取所有功能' },
+       { name: '免費版', description: '基礎八字計算、報告預覽（部分章節）' },
+       { name: '月訂閱會員（NT$99/月）', description: '完整報告、軍團故事、深度十神分析、神煞統計、PDF 下載' },
+       { name: '年訂閱會員（NT$799/年）', description: '月訂閱全部功能 + 專屬年度運勢報告（省 33%）' },
+       { name: '終身會員', description: '永久存取所有功能，含未來更新' },
+       { name: '故事重生資格', description: '軍團故事鎖定後可使用重生資格重新生成（NT$29/次、NT$69/3次、NT$199/10次）' },
      ]
    },
    {
      category: '中央會員整合',
      features: [
-       { name: '統一會員系統', description: '與中央授權系統整合，支援跨產品權限' },
-       { name: '權限驗證', description: '透過 check-entitlement Edge Function 驗證' },
-       { name: '雙重驗證', description: '中央系統優先，本地訂閱作為 fallback' },
+       { name: '統一會員系統', description: '與中央授權系統整合，支援跨產品權限驗證' },
+       { name: '權限驗證', description: '透過 check-entitlement Edge Function 即時驗證會員資格' },
+       { name: '雙重驗證機制', description: '中央系統優先驗證，本地訂閱紀錄作為 fallback' },
+       { name: '快取機制', description: '權限查詢結果快取，減少 API 呼叫延遲' },
      ]
    },
    {
      category: '會員中心功能',
      features: [
-       { name: '個人資料編輯', description: '更新顯示名稱等個人資訊' },
-       { name: '訂閱狀態查看', description: '查看當前訂閱方案與到期時間' },
-       { name: '報告歷史', description: '查看過去的八字計算記錄' },
-       { name: '收藏管理', description: '管理角色收藏列表' },
+       { name: '個人資料編輯', description: '更新顯示名稱、頭像等個人資訊' },
+       { name: '訂閱狀態查看', description: '查看當前方案、開始/到期時間、付款紀錄' },
+       { name: '報告歷史', description: '查看過去的八字計算記錄，可重新載入' },
+       { name: '收藏管理', description: '管理角色收藏列表，支援快速查看' },
+       { name: '帳號安全', description: '密碼變更與帳號安全設定' },
      ]
    },
  ];
@@ -438,28 +481,30 @@
  // ============ 技術架構 ============
  const TECH_STACK = {
    frontend: [
-     { name: 'React 18', description: 'UI 框架' },
-     { name: 'TypeScript', description: '類型安全' },
-     { name: 'Vite 5', description: '建構工具' },
-     { name: 'React Router v6', description: '路由管理' },
-     { name: 'TanStack Query', description: '伺服器狀態管理' },
+     { name: 'React 18', description: 'UI 框架（含 Hooks、Suspense、lazy 路由）' },
+     { name: 'TypeScript 5', description: '類型安全與開發體驗優化' },
+     { name: 'Vite 5', description: '建構工具（HMR、Code Splitting、Tree Shaking）' },
+     { name: 'React Router v6', description: '路由管理（含 lazy 懶加載）' },
+     { name: 'TanStack Query', description: '伺服器狀態管理與快取' },
    ],
    styling: [
-     { name: 'Tailwind CSS', description: '原子化 CSS' },
-     { name: 'shadcn/ui', description: 'UI 元件庫' },
-     { name: 'Framer Motion', description: '動畫效果' },
-     { name: 'Lucide Icons', description: '圖標系統' },
+     { name: 'Tailwind CSS v3', description: '原子化 CSS 框架，搭配 HSL 語義化 Token' },
+     { name: 'shadcn/ui', description: 'Radix UI 基礎元件庫，支援主題定製' },
+     { name: 'Framer Motion', description: '聲明式動畫（頁面轉場/元素動畫/手勢互動）' },
+     { name: 'Lucide Icons', description: '一致風格的 SVG 圖標系統' },
+     { name: 'Recharts', description: '資料視覺化圖表（五行/陰陽分佈）' },
    ],
    backend: [
-     { name: 'Supabase', description: 'BaaS 平台' },
-     { name: 'PostgreSQL', description: '關聯式資料庫' },
-     { name: 'Row Level Security', description: '資料存取控制' },
-     { name: 'Edge Functions', description: '無伺服器函數' },
+     { name: 'PostgreSQL', description: '關聯式資料庫（13 張資料表）' },
+     { name: 'Row Level Security', description: '列級存取控制，確保資料隔離' },
+     { name: 'Edge Functions (Deno)', description: '無伺服器函數（9 個端點）' },
+     { name: 'Lovable Cloud', description: '後端即服務平台，自動擴展' },
    ],
    integrations: [
-     { name: 'Lovable AI', description: 'AI 生成服務' },
-     { name: 'Vercel Analytics', description: '效能監控' },
-     { name: 'html2canvas + jsPDF', description: 'PDF 生成' },
+     { name: 'Lovable AI', description: 'AI 生成服務（軍團故事/命理諮詢）' },
+     { name: 'Vercel Analytics', description: '效能監控與 Web Vitals 追蹤' },
+     { name: 'html2canvas + jsPDF', description: '客戶端 PDF 生成（支援中文）' },
+     { name: 'docx + file-saver', description: 'Word 文件生成與下載' },
    ],
  };
  

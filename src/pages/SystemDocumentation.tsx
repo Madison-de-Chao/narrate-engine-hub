@@ -440,36 +440,40 @@
    {
      category: '認證與登入',
      features: [
-       { name: '電子郵件登入', description: '使用電子郵件與密碼登入' },
-       { name: '會員註冊', description: '新用戶註冊流程' },
-       { name: '密碼重設', description: '忘記密碼時的重設流程' },
-       { name: '登入鎖定保護', description: '連續失敗登入後的帳號保護機制' },
+       { name: '電子郵件登入', description: '使用電子郵件與密碼登入，支援記住登入狀態' },
+       { name: '會員註冊', description: '新用戶註冊流程，需驗證電子郵件' },
+       { name: '密碼重設', description: '忘記密碼時的安全重設流程（郵件驗證）' },
+       { name: '登入鎖定保護', description: '連續 5 次失敗登入後鎖定帳號 15 分鐘，防止暴力破解' },
+       { name: '速率限制', description: '登入/註冊/重設密碼均有獨立速率限制，資料庫級持久化' },
      ]
    },
    {
      category: '會員權限',
      features: [
-       { name: '免費版', description: '基礎八字計算與報告預覽' },
-       { name: '月訂閱會員', description: '完整報告、軍團故事、深度分析' },
-       { name: '年訂閱會員', description: '月訂閱功能 + 專屬年度運勢報告' },
-       { name: '終身會員', description: '永久存取所有功能' },
+       { name: '免費版', description: '基礎八字計算、報告預覽（部分章節）' },
+       { name: '月訂閱會員（NT$99/月）', description: '完整報告、軍團故事、深度十神分析、神煞統計、PDF 下載' },
+       { name: '年訂閱會員（NT$799/年）', description: '月訂閱全部功能 + 專屬年度運勢報告（省 33%）' },
+       { name: '終身會員', description: '永久存取所有功能，含未來更新' },
+       { name: '故事重生資格', description: '軍團故事鎖定後可使用重生資格重新生成（NT$29/次、NT$69/3次、NT$199/10次）' },
      ]
    },
    {
      category: '中央會員整合',
      features: [
-       { name: '統一會員系統', description: '與中央授權系統整合，支援跨產品權限' },
-       { name: '權限驗證', description: '透過 check-entitlement Edge Function 驗證' },
-       { name: '雙重驗證', description: '中央系統優先，本地訂閱作為 fallback' },
+       { name: '統一會員系統', description: '與中央授權系統整合，支援跨產品權限驗證' },
+       { name: '權限驗證', description: '透過 check-entitlement Edge Function 即時驗證會員資格' },
+       { name: '雙重驗證機制', description: '中央系統優先驗證，本地訂閱紀錄作為 fallback' },
+       { name: '快取機制', description: '權限查詢結果快取，減少 API 呼叫延遲' },
      ]
    },
    {
      category: '會員中心功能',
      features: [
-       { name: '個人資料編輯', description: '更新顯示名稱等個人資訊' },
-       { name: '訂閱狀態查看', description: '查看當前訂閱方案與到期時間' },
-       { name: '報告歷史', description: '查看過去的八字計算記錄' },
-       { name: '收藏管理', description: '管理角色收藏列表' },
+       { name: '個人資料編輯', description: '更新顯示名稱、頭像等個人資訊' },
+       { name: '訂閱狀態查看', description: '查看當前方案、開始/到期時間、付款紀錄' },
+       { name: '報告歷史', description: '查看過去的八字計算記錄，可重新載入' },
+       { name: '收藏管理', description: '管理角色收藏列表，支援快速查看' },
+       { name: '帳號安全', description: '密碼變更與帳號安全設定' },
      ]
    },
  ];

@@ -48,6 +48,7 @@ export function CharacterLightbox({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showThumbnails, setShowThumbnails] = useState(true);
   const [showInfoPanel, setShowInfoPanel] = useState(true);
+  const [fullbodyUrl, setFullbodyUrl] = useState<string | null>(null);
   const thumbnailsRef = useRef<HTMLDivElement>(null);
   const currentChar = characters[currentIndex];
   
@@ -60,18 +61,27 @@ export function CharacterLightbox({
 
   const getCharType = (char: CharacterType): 'gan' | 'zhi' => 'gan' in char ? 'gan' : 'zhi';
 
-  // 獲取全身動態圖
-  const getFullbodyAvatar = (char: CharacterType): string | null => {
-    if ('gan' in char) {
-      return commanderFullbodyAvatars[char.gan] || null;
-    }
-    // 地支角色使用 zhi 屬性（如「子」「丑」）作為鍵
-    return advisorFullbodyAvatars[(char as ZhiCharacter).zhi] || null;
-  };
+  // 懶加載全身動態圖
+  useEffect(() => {
+    if (!currentChar) return;
+    let cancelled = false;
+    const loadAvatar = async () => {
+      let url: string | undefined;
+      if ('gan' in currentChar) {
+        url = await getCommanderFullbodyAvatar(currentChar.gan);
+      } else {
+        url = await getAdvisorFullbodyAvatar((currentChar as ZhiCharacter).zhi);
+      }
+      if (!cancelled) setFullbodyUrl(url || null);
+    };
+    setFullbodyUrl(null);
+    loadAvatar();
+    return () => { cancelled = true; };
+  }, [currentChar]);
 
   // 使用全身圖或頭像
   const displayImage = currentChar 
-    ? (getFullbodyAvatar(currentChar) || getAvatarSrc(currentChar))
+    ? (fullbodyUrl || getAvatarSrc(currentChar))
     : '';
 
   const handlePrev = useCallback(() => {

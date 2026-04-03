@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight, X, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Heart, Maximize2, Grid3X3, PanelRightClose, PanelRightOpen } from "lucide-react";
 import type { GanCharacter, ZhiCharacter } from "@/lib/legionTranslator/types";
-import { commanderFullbodyAvatars } from "@/assets/commanders-fullbody";
-import { advisorFullbodyAvatars } from "@/assets/advisors-fullbody";
+import { getCommanderFullbodyAvatar } from "@/assets/commanders-fullbody";
+import { getAdvisorFullbodyAvatar } from "@/assets/advisors-fullbody";
 
 const ELEMENT_CONFIG = {
   木: { icon: TreeDeciduous, color: '#22C55E', gradient: 'from-green-500/30 to-emerald-900/60' },
@@ -48,6 +48,7 @@ export function CharacterLightbox({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showThumbnails, setShowThumbnails] = useState(true);
   const [showInfoPanel, setShowInfoPanel] = useState(true);
+  const [fullbodyUrl, setFullbodyUrl] = useState<string | null>(null);
   const thumbnailsRef = useRef<HTMLDivElement>(null);
   const currentChar = characters[currentIndex];
   
@@ -60,18 +61,27 @@ export function CharacterLightbox({
 
   const getCharType = (char: CharacterType): 'gan' | 'zhi' => 'gan' in char ? 'gan' : 'zhi';
 
-  // 獲取全身動態圖
-  const getFullbodyAvatar = (char: CharacterType): string | null => {
-    if ('gan' in char) {
-      return commanderFullbodyAvatars[char.gan] || null;
-    }
-    // 地支角色使用 zhi 屬性（如「子」「丑」）作為鍵
-    return advisorFullbodyAvatars[(char as ZhiCharacter).zhi] || null;
-  };
+  // 懶加載全身動態圖
+  useEffect(() => {
+    if (!currentChar) return;
+    let cancelled = false;
+    const loadAvatar = async () => {
+      let url: string | undefined;
+      if ('gan' in currentChar) {
+        url = await getCommanderFullbodyAvatar(currentChar.gan);
+      } else {
+        url = await getAdvisorFullbodyAvatar((currentChar as ZhiCharacter).zhi);
+      }
+      if (!cancelled) setFullbodyUrl(url || null);
+    };
+    setFullbodyUrl(null);
+    loadAvatar();
+    return () => { cancelled = true; };
+  }, [currentChar]);
 
   // 使用全身圖或頭像
   const displayImage = currentChar 
-    ? (getFullbodyAvatar(currentChar) || getAvatarSrc(currentChar))
+    ? (fullbodyUrl || getAvatarSrc(currentChar))
     : '';
 
   const handlePrev = useCallback(() => {
@@ -211,7 +221,7 @@ export function CharacterLightbox({
   const ElementIcon = config?.icon || Sparkles;
   const charType = getCharType(currentChar);
   const isFav = isFavorite?.(currentChar.id, charType);
-  const hasFullbody = !!getFullbodyAvatar(currentChar);
+  const hasFullbody = !!fullbodyUrl;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -469,7 +479,7 @@ export function CharacterLightbox({
                     {characters.map((char, idx) => {
                       const charConfig = ELEMENT_CONFIG[char.element as ElementType];
                       const isActive = idx === currentIndex;
-                      const thumbnail = getFullbodyAvatar(char) || getAvatarSrc(char);
+                      const thumbnail = getAvatarSrc(char);
                       
                       return (
                         <motion.button

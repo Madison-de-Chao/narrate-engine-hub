@@ -233,6 +233,7 @@ const ResearchReport = () => {
         subtitle: '整合性研究報告',
         filename: 'RSBZS_研究報告',
         sections: getResearchSections(),
+        startChapter: 0,
       }, setDownloadProgress, setDownloadStage);
       toast.success('Word 研究報告下載成功');
     } catch (error) {

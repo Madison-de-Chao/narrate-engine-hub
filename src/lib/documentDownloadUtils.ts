@@ -14,6 +14,7 @@ export interface DocConfig {
   filename: string;
   sections: DocSection[];
   appendixHtml?: string;
+  startChapter?: number; // 起始章節編號，預設為 1
 }
 
 // ============ PDF 下載（html2canvas） ============

@@ -477,28 +477,30 @@
  // ============ 技術架構 ============
  const TECH_STACK = {
    frontend: [
-     { name: 'React 18', description: 'UI 框架' },
-     { name: 'TypeScript', description: '類型安全' },
-     { name: 'Vite 5', description: '建構工具' },
-     { name: 'React Router v6', description: '路由管理' },
-     { name: 'TanStack Query', description: '伺服器狀態管理' },
+     { name: 'React 18', description: 'UI 框架（含 Hooks、Suspense、lazy 路由）' },
+     { name: 'TypeScript 5', description: '類型安全與開發體驗優化' },
+     { name: 'Vite 5', description: '建構工具（HMR、Code Splitting、Tree Shaking）' },
+     { name: 'React Router v6', description: '路由管理（含 lazy 懶加載）' },
+     { name: 'TanStack Query', description: '伺服器狀態管理與快取' },
    ],
    styling: [
-     { name: 'Tailwind CSS', description: '原子化 CSS' },
-     { name: 'shadcn/ui', description: 'UI 元件庫' },
-     { name: 'Framer Motion', description: '動畫效果' },
-     { name: 'Lucide Icons', description: '圖標系統' },
+     { name: 'Tailwind CSS v3', description: '原子化 CSS 框架，搭配 HSL 語義化 Token' },
+     { name: 'shadcn/ui', description: 'Radix UI 基礎元件庫，支援主題定製' },
+     { name: 'Framer Motion', description: '聲明式動畫（頁面轉場/元素動畫/手勢互動）' },
+     { name: 'Lucide Icons', description: '一致風格的 SVG 圖標系統' },
+     { name: 'Recharts', description: '資料視覺化圖表（五行/陰陽分佈）' },
    ],
    backend: [
-     { name: 'Supabase', description: 'BaaS 平台' },
-     { name: 'PostgreSQL', description: '關聯式資料庫' },
-     { name: 'Row Level Security', description: '資料存取控制' },
-     { name: 'Edge Functions', description: '無伺服器函數' },
+     { name: 'PostgreSQL', description: '關聯式資料庫（13 張資料表）' },
+     { name: 'Row Level Security', description: '列級存取控制，確保資料隔離' },
+     { name: 'Edge Functions (Deno)', description: '無伺服器函數（9 個端點）' },
+     { name: 'Lovable Cloud', description: '後端即服務平台，自動擴展' },
    ],
    integrations: [
-     { name: 'Lovable AI', description: 'AI 生成服務' },
-     { name: 'Vercel Analytics', description: '效能監控' },
-     { name: 'html2canvas + jsPDF', description: 'PDF 生成' },
+     { name: 'Lovable AI', description: 'AI 生成服務（軍團故事/命理諮詢）' },
+     { name: 'Vercel Analytics', description: '效能監控與 Web Vitals 追蹤' },
+     { name: 'html2canvas + jsPDF', description: '客戶端 PDF 生成（支援中文）' },
+     { name: 'docx + file-saver', description: 'Word 文件生成與下載' },
    ],
  };
  

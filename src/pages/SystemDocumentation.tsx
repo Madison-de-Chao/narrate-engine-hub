@@ -23,6 +23,9 @@
    FileDown,
    ScrollText
  } from 'lucide-react';
+ import { downloadDocPdf, downloadDocWord, DocSection } from '@/lib/documentDownloadUtils';
+ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+ import { Progress } from '@/components/ui/progress';
  import { Button } from '@/components/ui/button';
  import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
  import { Badge } from '@/components/ui/badge';

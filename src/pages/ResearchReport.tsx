@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { 
@@ -20,18 +21,112 @@ import {
   Building2,
   Gamepad2,
   HeartPulse,
-  Bot
+  Bot,
+  Download,
+  FileDown,
+  ScrollText
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { downloadDocPdf, downloadDocWord, DocSection } from "@/lib/documentDownloadUtils";
+
+// ============ 研究報告下載用章節 ============
+const getResearchSections = (): DocSection[] => [
+  {
+    title: '文件總覽與關鍵內容提取',
+    items: [
+      'RSBZS 系統是結合命理學與 AI 技術的現代化八字運算平台。',
+      '核心在於高精度天文曆法、數學建模與微服務架構。',
+      '採用雙層品牌策略，分別面向大眾用戶與開發者／企業。',
+      '三大產品 SKU：RS-Core、RS-Matrix、Hong Ling Assets。',
+      '商業模式以 API 計價與 IP 授權雙軌並行。',
+    ]
+  },
+  {
+    title: '系統架構與品牌策略分析',
+    items: [
+      '虹靈御所：面向大眾，主打命理即生活、命理即藝術的敘事風格。',
+      'RSBZS：底層技術品牌，定位為 AI 時代命理基礎設施。',
+      '技術精度與一致性：採用 NASA JPL DE430 高精度天文曆法。',
+      '數學建模與可追溯性：干支推演、五行分佈等命理邏輯數學化。',
+      '微服務與容器化架構：支援高併發 API 請求與動態擴容。',
+    ]
+  },
+  {
+    title: '三大產品 SKU 深度解析',
+    items: [
+      'RS-Core：高精度八字運算引擎，支援四柱計算、流年推演、五行統計。',
+      'RS-Core 核心賣點：誤差 < 0.01°、真太陽時校正、RESTful API。',
+      'RS-Matrix：命理資料矩陣化與 AI 特徵抽取，支援向量化表示與聚類分析。',
+      'Hong Ling Assets：命理 IP 資產與敘事模組，支援角色卡與故事腳本生成。',
+    ]
+  },
+  {
+    title: '技術規格與創新點',
+    items: [
+      '高精度天文曆法：NASA JPL DE430 資料庫。',
+      '多時間基準支援：真太陽時、地方時、UTC 轉換。',
+      '干支推演數學化：消除模糊規則，提升一致性。',
+      '可解釋性 AI（XAI）：支援 SHAP 值分析與特徵貢獻度展示。',
+      '微服務架構：各運算模組獨立部署，支援動態擴容。',
+      '深度學習時序建模：LSTM、Transformer 提升動態推演精度。',
+    ]
+  },
+  {
+    title: '商業模式與市場定位',
+    items: [
+      'API 計價模式：免費試用層、開發者層、商業授權層。',
+      'IP 授權模式：一次性買斷、分潤合作、聯名開發。',
+      '垂直市場：AI 助手、心理測驗、遊戲與虛擬世界。',
+    ]
+  },
+  {
+    title: '使用者體驗與敘事風格設計',
+    items: [
+      '多元敘事風格：軍事、療癒、詩意、神話、毒舌等。',
+      '互動體驗設計：粒子動畫、打字機效果、響應式設計。',
+      '個人化報告生成：根據用戶選擇的語氣與命盤特徵自動生成。',
+      '心理測驗融合：結合 RS-Matrix 命格分類與心理學理論。',
+    ]
+  },
+  {
+    title: '技術驗證與實驗設計',
+    items: [
+      '天文曆法校正：與國際標準曆法比對。',
+      '真太陽時校正：經緯度自動計算地理時差與均時差。',
+      '命盤一致性驗證：同一組輸入多次運算結果一致。',
+      'A/B Test：針對不同運算邏輯、敘事風格進行多變量最佳化。',
+    ]
+  },
+  {
+    title: '風險評估與倫理考量',
+    items: [
+      '文化敏感性：避免觸發迷信或不當心理暗示。',
+      '使用者數據保護：符合 GDPR 與個資法規。',
+      '技術濫用預防：防止命理結果用於歧視或不當評判。',
+    ]
+  },
+  {
+    title: '總結與未來發展建議',
+    items: [
+      'RSBZS 已成為 AI 時代命理基礎設施的領航者。',
+      '建議持續投入天文精度與 AI 模型最佳化。',
+      '擴展垂直市場合作，建立命理生態系統。',
+    ]
+  },
+];
 
 const ResearchReport = () => {
   const tableOfContents = [
@@ -57,6 +152,48 @@ const ResearchReport = () => {
     { market: "遊戲與虛擬世界", application: "利用 Hong Ling Assets 建構角色與世界觀", advantage: "提供文化敘事與角色深度，提升沉浸感", icon: Gamepad2 },
   ];
 
+  const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadStage, setDownloadStage] = useState('');
+
+  const handleDownloadPdf = async () => {
+    setDownloading(true);
+    setDownloadProgress(0);
+    try {
+      await downloadDocPdf({
+        title: 'RSBZS四時軍團八字人生兵法系統',
+        subtitle: '整合性研究報告',
+        filename: 'RSBZS_研究報告',
+        sections: getResearchSections(),
+      }, setDownloadProgress, setDownloadStage);
+      toast.success('PDF 研究報告下載成功');
+    } catch (error) {
+      console.error('PDF download error:', error);
+      toast.error('PDF 下載失敗，請重試');
+    } finally {
+      setTimeout(() => { setDownloading(false); setDownloadProgress(0); }, 500);
+    }
+  };
+
+  const handleDownloadWord = async () => {
+    setDownloading(true);
+    setDownloadProgress(0);
+    try {
+      await downloadDocWord({
+        title: 'RSBZS四時軍團八字人生兵法系統',
+        subtitle: '整合性研究報告',
+        filename: 'RSBZS_研究報告',
+        sections: getResearchSections(),
+      }, setDownloadProgress, setDownloadStage);
+      toast.success('Word 研究報告下載成功');
+    } catch (error) {
+      console.error('Word download error:', error);
+      toast.error('Word 下載失敗，請重試');
+    } finally {
+      setTimeout(() => { setDownloading(false); setDownloadProgress(0); }, 500);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       {/* Header */}
@@ -70,10 +207,20 @@ const ResearchReport = () => {
               <ArrowLeft className="w-4 h-4" />
               <span>返回首頁</span>
             </Link>
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
-              <FileText className="w-3 h-3 mr-1" />
-              研究報告 v1.0
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={downloading}>
+                <FileDown className="w-4 h-4 mr-2" />
+                下載 PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleDownloadWord} disabled={downloading}>
+                <ScrollText className="w-4 h-4 mr-2" />
+                下載 Word
+              </Button>
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                <FileText className="w-3 h-3 mr-1" />
+                研究報告 v1.0
             </Badge>
+            </div>
           </div>
         </div>
       </header>
@@ -808,6 +955,26 @@ const ResearchReport = () => {
           </p>
         </motion.div>
       </main>
+
+      {/* 下載進度對話框 */}
+      <Dialog open={downloading} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-xl border-primary/20">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Download className="h-5 w-5 animate-bounce" />
+              正在生成文件
+            </DialogTitle>
+            <DialogDescription>
+              請稍候，正在生成研究報告文件...
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Progress value={downloadProgress} className="h-3" />
+            <p className="text-sm text-muted-foreground text-center">{downloadStage}</p>
+            <p className="text-xs text-muted-foreground text-center">{downloadProgress}%</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

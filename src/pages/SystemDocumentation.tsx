@@ -23,6 +23,9 @@
    FileDown,
    ScrollText
  } from 'lucide-react';
+ import { downloadDocPdf, downloadDocWord, DocSection } from '@/lib/documentDownloadUtils';
+ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+ import { Progress } from '@/components/ui/progress';
  import { Button } from '@/components/ui/button';
  import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
  import { Badge } from '@/components/ui/badge';
@@ -877,10 +880,114 @@
    toast.success('Markdown 文件下載成功');
  };
  
- // ============ 主元件 ============
+// ============ 生成下載用的章節資料 ============
+ const getDocSections = (): DocSection[] => {
+   const sections: DocSection[] = [];
+   
+   sections.push({
+     title: '系統概述',
+     items: [
+       '虹靈御所（Hong Ling Yu Suo）是基於 RSBZS v3.0（主題式八字系統）開發的專業八字命理分析平台。',
+       '品牌定位：一個讓使用者輸入出生資訊後，獲得「可讀、可理解、可落地」的八字分析頁面。',
+       '核心理念：這份分析是「鏡子」，不是「劇本」——我們追求清楚、克制、有美感、可執行。',
+     ]
+   });
+   
+   sections.push({
+     title: '完整路由對照表',
+     items: ROUTES_DATA.map(r => `${r.path} — ${r.name}：${r.description}（${r.access}）`)
+   });
+   
+   sections.push({
+     title: '公開頁面內容詳述',
+     items: Object.values(PAGE_CONTENTS).flatMap(page =>
+       [`【${page.title}】（${page.path}）`, ...page.sections.flatMap(s => s.content.map(c => `  ${s.name}：${c}`))]
+     )
+   });
+   
+   sections.push({
+     title: '會員系統功能說明',
+     items: MEMBER_FEATURES.flatMap(cat =>
+       [`【${cat.category}】`, ...cat.features.map(f => `${f.name}：${f.description}`)]
+     )
+   });
+   
+   sections.push({
+     title: '管理後台功能',
+     items: [
+       '路徑：/admin（僅限 admin 角色）',
+       '統計儀表板：總用戶數統計、訂閱轉換率、用戶增長趨勢圖表、報告生成統計',
+       '報告管理：報告列表與搜尋、報告詳情查看、批次刪除功能',
+       '訂閱管理：訂閱記錄搜尋、計畫狀態編輯、手動創建訂閱',
+       '用戶管理：用戶列表與搜尋、用戶詳細資料、角色權限管理',
+     ]
+   });
+   
+   sections.push({
+     title: '技術架構',
+     items: [
+       ...TECH_STACK.frontend.map(t => `前端：${t.name} — ${t.description}`),
+       ...TECH_STACK.styling.map(t => `樣式：${t.name} — ${t.description}`),
+       ...TECH_STACK.backend.map(t => `後端：${t.name} — ${t.description}`),
+       ...TECH_STACK.integrations.map(t => `整合：${t.name} — ${t.description}`),
+     ]
+   });
+   
+   sections.push({
+     title: '資料表結構',
+     items: DATABASE_TABLES.flatMap(table =>
+       [`【${table.name}】${table.description}`, ...table.columns.map(c => `  ${c.name} (${c.type})：${c.description}`)]
+     )
+   });
+   
+   return sections;
+ };
+
+// ============ 主元件 ============
  const SystemDocumentation = () => {
    const navigate = useNavigate();
    const [activeTab, setActiveTab] = useState('overview');
+   const [downloading, setDownloading] = useState(false);
+   const [downloadProgress, setDownloadProgress] = useState(0);
+   const [downloadStage, setDownloadStage] = useState('');
+
+   const handleDownloadPdf = async () => {
+     setDownloading(true);
+     setDownloadProgress(0);
+     try {
+       await downloadDocPdf({
+         title: 'RSBZS四時軍團八字人生兵法系統',
+         subtitle: '完整系統文件',
+         filename: 'RSBZS_系統文件',
+         sections: getDocSections(),
+       }, setDownloadProgress, setDownloadStage);
+       toast.success('PDF 系統文件下載成功');
+     } catch (error) {
+       console.error('PDF download error:', error);
+       toast.error('PDF 下載失敗，請重試');
+     } finally {
+       setTimeout(() => { setDownloading(false); setDownloadProgress(0); }, 500);
+     }
+   };
+
+   const handleDownloadWord = async () => {
+     setDownloading(true);
+     setDownloadProgress(0);
+     try {
+       await downloadDocWord({
+         title: 'RSBZS四時軍團八字人生兵法系統',
+         subtitle: '完整系統文件',
+         filename: 'RSBZS_系統文件',
+         sections: getDocSections(),
+       }, setDownloadProgress, setDownloadStage);
+       toast.success('Word 系統文件下載成功');
+     } catch (error) {
+       console.error('Word download error:', error);
+       toast.error('Word 下載失敗，請重試');
+     } finally {
+       setTimeout(() => { setDownloading(false); setDownloadProgress(0); }, 500);
+     }
+   };
  
    return (
      <div className="min-h-screen bg-background">
@@ -897,16 +1004,16 @@
              <ArrowLeft className="w-4 h-4 mr-2" />
              返回首頁
            </Button>
-           <div className="flex gap-2">
-             <Button variant="outline" size="sm" onClick={downloadAsText}>
-               <FileDown className="w-4 h-4 mr-2" />
-               下載 TXT
-             </Button>
-             <Button variant="outline" size="sm" onClick={downloadAsMarkdown}>
-               <ScrollText className="w-4 h-4 mr-2" />
-               下載 Markdown
-             </Button>
-           </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={downloading}>
+                <FileDown className="w-4 h-4 mr-2" />
+                下載 PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleDownloadWord} disabled={downloading}>
+                <ScrollText className="w-4 h-4 mr-2" />
+                下載 Word
+              </Button>
+            </div>
          </div>
  
          {/* 標題區 */}
@@ -1295,46 +1402,63 @@
            </TabsContent>
          </Tabs>
  
-         {/* 下載區塊 */}
-         <motion.div
-           initial={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           transition={{ delay: 0.3 }}
-           className="mt-12"
-         >
-           <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
-             <CardContent className="py-8">
-               <div className="text-center space-y-4">
-                 <Download className="w-12 h-12 mx-auto text-primary" />
-                 <h3 className="text-xl font-bold">下載完整文件</h3>
-                 <p className="text-muted-foreground max-w-lg mx-auto">
-                   下載包含所有系統文件的完整檔案，方便離線閱讀或分享
-                 </p>
-                 <div className="flex flex-wrap justify-center gap-3 pt-4">
-                   <Button onClick={downloadAsText} variant="outline" size="lg">
-                     <FileDown className="w-5 h-5 mr-2" />
-                     下載 TXT 純文字
-                   </Button>
-                   <Button onClick={downloadAsMarkdown} size="lg" className="bg-gradient-to-r from-primary to-accent">
-                     <ScrollText className="w-5 h-5 mr-2" />
-                     下載 Markdown 文件
-                   </Button>
-                 </div>
-                 <p className="text-xs text-muted-foreground pt-2">
-                   提示：Markdown 檔案可使用支援 MD 的編輯器開啟，或轉換為 PDF/Word
-                 </p>
-               </div>
-             </CardContent>
-           </Card>
-         </motion.div>
+          {/* 下載區塊 */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-12"
+          >
+            <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
+              <CardContent className="py-8">
+                <div className="text-center space-y-4">
+                  <Download className="w-12 h-12 mx-auto text-primary" />
+                  <h3 className="text-xl font-bold">下載完整文件</h3>
+                  <p className="text-muted-foreground max-w-lg mx-auto">
+                    下載包含所有系統文件的完整檔案，方便離線閱讀或分享
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-3 pt-4">
+                    <Button onClick={handleDownloadPdf} variant="outline" size="lg" disabled={downloading}>
+                      <FileDown className="w-5 h-5 mr-2" />
+                      下載 PDF
+                    </Button>
+                    <Button onClick={handleDownloadWord} size="lg" className="bg-gradient-to-r from-primary to-accent" disabled={downloading}>
+                      <ScrollText className="w-5 h-5 mr-2" />
+                      下載 Word 文件
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
  
-         {/* 版權資訊 */}
-         <div className="mt-8 text-center text-sm text-muted-foreground">
-           <p>© {new Date().getFullYear()} 超烜創意 / 虹靈御所 · RSBZS v3.0</p>
-         </div>
-       </div>
-     </div>
-   );
- };
+          {/* 下載進度對話框 */}
+          <Dialog open={downloading} onOpenChange={() => {}}>
+            <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-xl border-primary/20">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-primary">
+                  <Download className="h-5 w-5 animate-bounce" />
+                  正在生成文件
+                </DialogTitle>
+                <DialogDescription>
+                  請稍候，正在生成系統文件...
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <Progress value={downloadProgress} className="h-3" />
+                <p className="text-sm text-muted-foreground text-center">{downloadStage}</p>
+                <p className="text-xs text-muted-foreground text-center">{downloadProgress}%</p>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* 版權資訊 */}
+          <div className="mt-8 text-center text-sm text-muted-foreground">
+            <p>© {new Date().getFullYear()} 超烜創意 / 虹靈御所 · RSBZS v3.0</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
  
- export default SystemDocumentation;
+  export default SystemDocumentation;

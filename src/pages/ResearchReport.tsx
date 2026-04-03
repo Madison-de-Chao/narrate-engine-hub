@@ -328,6 +328,135 @@ const ResearchReport = () => {
 
         {/* Main Content */}
         <div className="space-y-12">
+          {/* Section 0: System Introduction */}
+          <section id="system-intro">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <Card className="bg-gradient-to-br from-primary/5 to-accent/10 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-primary" />
+                    〇、完整系統介紹
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <p className="text-muted-foreground leading-relaxed text-base">
+                      <strong className="text-foreground text-lg">「RSBZS四時軍團八字人生兵法系統」</strong>（Rainbow Sanctuary BaZi System）是一套由超烜創意團隊研發，結合傳統命理學與現代 AI 技術的全方位八字分析平台。消費者品牌名稱為<strong className="text-primary">「虹靈御所」</strong>。
+                    </p>
+                  </div>
+
+                  {/* 核心理念 */}
+                  <div className="p-4 rounded-lg bg-muted/30 border border-primary/10">
+                    <h4 className="font-semibold mb-3 text-foreground flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      核心理念
+                    </h4>
+                    <blockquote className="italic text-primary border-l-2 border-primary/50 pl-4 mb-3">
+                      「這份分析是鏡子，不是劇本」——提供觀察角度與可執行建議，選擇權永遠在使用者手上。
+                    </blockquote>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {[
+                        { label: '清楚', desc: '精準呈現能量配置與傾向' },
+                        { label: '克制', desc: '區分可驗證資訊與推論' },
+                        { label: '有美感', desc: '宇宙建築師視覺風格' },
+                        { label: '可執行', desc: '具體可落地的行動建議' },
+                      ].map((item, i) => (
+                        <div key={i} className="p-3 rounded bg-background/50 text-center">
+                          <p className="font-bold text-primary text-sm">{item.label}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 四時軍團框架 */}
+                  <div>
+                    <h4 className="font-semibold mb-3 text-foreground flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-primary" />
+                      四時八字軍團兵法框架
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      獨創的敘事系統將八字四柱映射為四個軍團，每個軍團包含完整的角色體系：
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-3">
+                      {[
+                        { legion: '家族軍團（年柱）', desc: '代表家庭背景、長輩關係、童年印記' },
+                        { legion: '成長軍團（月柱）', desc: '代表社會角色、事業方向、同儕互動' },
+                        { legion: '自我軍團（日柱）', desc: '代表核心人格、親密關係、內在驅力' },
+                        { legion: '未來軍團（時柱）', desc: '代表子女緣分、晚年發展、理想追求' },
+                      ].map((item, i) => (
+                        <div key={i} className="flex gap-3 p-3 rounded-lg bg-muted/50">
+                          <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                            <span className="text-xs font-bold text-primary">{i + 1}</span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground text-sm">{item.legion}</p>
+                            <p className="text-xs text-muted-foreground">{item.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 角色體系 */}
+                  <div>
+                    <h4 className="font-semibold mb-3 text-foreground flex items-center gap-2">
+                      <Users className="w-4 h-4 text-primary" />
+                      角色體系（22 個完整角色）
+                    </h4>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="p-3 rounded-lg bg-muted/30">
+                        <p className="font-medium text-sm mb-2 text-foreground">10 位天干指揮官</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {['甲木·森林將軍', '乙木·花蔓軍師', '丙火·烈日戰神', '丁火·誓燈法師', '戊土·山岳守護', '己土·大地母親', '庚金·天鍛騎士', '辛金·靈晶鑑定師', '壬水·龍河船長', '癸水·甘露天使'].map((name, i) => (
+                            <Badge key={i} variant="secondary" className="text-xs">{name}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted/30">
+                        <p className="font-medium text-sm mb-2 text-foreground">12 位地支軍師</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {['子水·夜行刺客', '丑土·封藏守衛', '寅木·雷虎獵人', '卯木·玉兔使者', '辰土·泥雲龍法師', '巳火·蛇焰術士', '午火·日鬃騎兵', '未土·牧角調和者', '申金·金杖靈猴戰士', '酉金·鳳羽判衡者', '戌土·烽火戰犬統領', '亥水·潮典海豚智者'].map((name, i) => (
+                            <Badge key={i} variant="outline" className="text-xs">{name}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 技術與輸出 */}
+                  <div className="grid md:grid-cols-3 gap-3">
+                    <Card className="bg-muted/30">
+                      <CardContent className="p-4">
+                        <Cpu className="w-5 h-5 text-primary mb-2" />
+                        <p className="font-medium text-sm">技術棧</p>
+                        <p className="text-xs text-muted-foreground">React 18 + TS + Vite 5 + PostgreSQL + Edge Functions</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-muted/30">
+                      <CardContent className="p-4">
+                        <FileText className="w-5 h-5 text-primary mb-2" />
+                        <p className="font-medium text-sm">輸出格式</p>
+                        <p className="text-xs text-muted-foreground">響應式網頁 + A4 PDF + Word 文件</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-muted/30">
+                      <CardContent className="p-4">
+                        <Lock className="w-5 h-5 text-primary mb-2" />
+                        <p className="font-medium text-sm">安全機制</p>
+                        <p className="text-xs text-muted-foreground">RLS + 登入鎖定 + API 速率限制 + HTTPS</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </section>
+
           {/* Section 1: Overview */}
           <section id="overview">
             <motion.div
@@ -342,13 +471,25 @@ const ResearchReport = () => {
                     一、文件總覽與關鍵內容提取
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="prose prose-sm dark:prose-invert max-w-none">
+                <CardContent className="prose prose-sm dark:prose-invert max-w-none space-y-4">
                   <p className="text-muted-foreground leading-relaxed">
-                    《🔮 RSBZS 虹靈御所主題式八字系統》所描述的 RSBZS 系統，是一套結合命理學與人工智慧（AI）技術的現代化八字運算平台。其核心在於以<strong className="text-foreground">高精度天文曆法、數學建模與微服務架構</strong>，打造可擴展、可驗證且適用於多元垂直市場的命理基礎設施。
+                    RSBZS 系統是一套結合命理學與人工智慧（AI）技術的現代化八字運算平台。其核心在於以<strong className="text-foreground">高精度天文曆法、數學建模與微服務架構</strong>，打造可擴展、可驗證且適用於多元垂直市場的命理基礎設施。
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
                     系統採用<strong className="text-foreground">雙層品牌策略</strong>，分別面向大眾用戶與開發者／企業，並以三大產品 SKU（RS-Core、RS-Matrix、Hong Ling Assets）支撐不同應用場景。技術創新涵蓋時間與空間精度、運算一致性、系統穩定性與容器化部署，商業模式則以 <strong className="text-foreground">API 計價與 IP 授權雙軌並行</strong>，展現高度的市場整合潛力與競爭優勢。
                   </p>
+                  <div className="grid md:grid-cols-3 gap-3 not-prose">
+                    {[
+                      { label: '計算精度', value: '< 0.01° 太陽黃經誤差' },
+                      { label: '節氣覆蓋', value: '1850-2100 年完整資料' },
+                      { label: '神煞規則', value: '40+ 種傳統規則支援' },
+                    ].map((item, i) => (
+                      <div key={i} className="p-3 rounded-lg bg-primary/5 border border-primary/10 text-center">
+                        <p className="text-xs text-muted-foreground">{item.label}</p>
+                        <p className="font-bold text-primary text-sm mt-1">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>

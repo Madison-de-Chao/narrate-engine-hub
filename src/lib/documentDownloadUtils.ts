@@ -218,13 +218,15 @@ export const downloadDocWord = async (
       children: [new TextRun({ text: '目    錄', bold: true, size: 56, color: '1E3A8A', font: 'Microsoft JhengHei' })],
     })
   );
+  const startCh = config.startChapter ?? 1;
   config.sections.forEach((s, i) => {
+    const chNum = i + startCh;
     contentChildren.push(
       new Paragraph({
         spacing: { before: 240, after: 240 },
         indent: { left: 720 },
         children: [
-          new TextRun({ text: `第 ${i + 1} 章   `, size: 36, bold: true, color: 'D4AF37', font: 'Microsoft JhengHei' }),
+          new TextRun({ text: `第 ${chNum} 章   `, size: 36, bold: true, color: 'D4AF37', font: 'Microsoft JhengHei' }),
           new TextRun({ text: s.title, size: 36, color: '333333', font: 'Microsoft JhengHei' }),
         ],
       })
@@ -235,15 +237,16 @@ export const downloadDocWord = async (
   // 章節
   const total = config.sections.length;
   config.sections.forEach((section, idx) => {
+    const chNum = idx + startCh;
     setProgress(30 + Math.floor((idx / total) * 45));
-    setStage(`生成章節 ${idx + 1}/${total}: ${section.title}...`);
+    setStage(`生成章節 ${chNum}/${total}: ${section.title}...`);
 
     contentChildren.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 400, after: 400 },
         shading: { fill: '0F172A', type: ShadingType.CLEAR },
-        children: [new TextRun({ text: `  第 ${idx + 1} 章：${section.title}  `, bold: true, size: 44, color: 'D4AF37', font: 'Microsoft JhengHei' })],
+        children: [new TextRun({ text: `  第 ${chNum} 章：${section.title}  `, bold: true, size: 44, color: 'D4AF37', font: 'Microsoft JhengHei' })],
       })
     );
 

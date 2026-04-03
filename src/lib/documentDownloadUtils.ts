@@ -155,6 +155,7 @@ export const downloadDocWord = async (
 ) => {
   const now = new Date();
   const dateStr = now.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+  const f = 'Microsoft JhengHei';
 
   setStage('初始化 Word 引擎...');
   setProgress(10);
@@ -164,45 +165,32 @@ export const downloadDocWord = async (
     new Paragraph({ spacing: { before: 2400 }, children: [new TextRun({ text: '' })] }),
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      children: [new TextRun({ text: '虹 靈 御 所', bold: true, size: 96, color: '1E3A8A', font: 'Microsoft JhengHei' })],
+      children: [new TextRun({ text: '虹 靈 御 所', bold: true, size: 72, color: '1E3A8A', font: f })],
     }),
     new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { before: 200 },
-      children: [new TextRun({ text: 'HONG LING YU SUO', size: 36, color: 'D4AF37', font: 'Arial' })],
+      alignment: AlignmentType.CENTER, spacing: { before: 200 },
+      children: [new TextRun({ text: 'HONG LING YU SUO', size: 28, color: 'D4AF37', font: 'Arial' })],
     }),
     new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { before: 800 },
+      alignment: AlignmentType.CENTER, spacing: { before: 800 },
       border: {
-        top: { style: BorderStyle.SINGLE, size: 16, color: 'D4AF37' },
-        bottom: { style: BorderStyle.SINGLE, size: 16, color: 'D4AF37' },
+        top: { style: BorderStyle.SINGLE, size: 12, color: 'D4AF37' },
+        bottom: { style: BorderStyle.SINGLE, size: 12, color: 'D4AF37' },
       },
-      children: [new TextRun({ text: `  ${config.title}  `, bold: true, size: 56, color: '1E3A8A', font: 'Microsoft JhengHei' })],
+      children: [new TextRun({ text: `  ${config.title}  `, bold: true, size: 44, color: '1E3A8A', font: f })],
     }),
     new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { before: 400 },
-      children: [new TextRun({ text: config.subtitle, bold: true, size: 40, color: '333333', font: 'Microsoft JhengHei' })],
+      alignment: AlignmentType.CENTER, spacing: { before: 300 },
+      children: [new TextRun({ text: config.subtitle, bold: true, size: 32, color: '333333', font: f })],
     }),
     new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { before: 400 },
-      children: [new TextRun({ text: '「這份分析是鏡子，不是劇本」', italics: true, size: 32, color: '888888', font: 'Microsoft JhengHei' })],
+      alignment: AlignmentType.CENTER, spacing: { before: 300 },
+      children: [new TextRun({ text: '「這份分析是鏡子，不是劇本」', italics: true, size: 24, color: '888888', font: f })],
     }),
     new Paragraph({ spacing: { before: 1200 }, children: [new TextRun({ text: '' })] }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [new TextRun({ text: `版本：v3.0`, size: 28, color: '666666', font: 'Microsoft JhengHei' })],
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER, spacing: { before: 100 },
-      children: [new TextRun({ text: `日期：${dateStr}`, size: 28, color: '666666', font: 'Microsoft JhengHei' })],
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER, spacing: { before: 100 },
-      children: [new TextRun({ text: `發行：超烜創意 / 虹靈御所`, size: 28, color: '666666', font: 'Microsoft JhengHei' })],
-    }),
+    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `版本：v3.0`, size: 22, color: '666666', font: f })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 80 }, children: [new TextRun({ text: `日期：${dateStr}`, size: 22, color: '666666', font: f })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 80 }, children: [new TextRun({ text: `發行：超烜創意 / 虹靈御所`, size: 22, color: '666666', font: f })] }),
   ];
 
   // ── 目錄 + 章節 + 免責 section ──
@@ -213,9 +201,9 @@ export const downloadDocWord = async (
   contentChildren.push(
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { before: 400, after: 600 },
-      border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: 'D4AF37' } },
-      children: [new TextRun({ text: '目    錄', bold: true, size: 56, color: '1E3A8A', font: 'Microsoft JhengHei' })],
+      spacing: { before: 300, after: 400 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: 'D4AF37' } },
+      children: [new TextRun({ text: '目    錄', bold: true, size: 44, color: '1E3A8A', font: f })],
     })
   );
   const startCh = config.startChapter ?? 1;
@@ -223,11 +211,11 @@ export const downloadDocWord = async (
     const chNum = i + startCh;
     contentChildren.push(
       new Paragraph({
-        spacing: { before: 240, after: 240 },
+        spacing: { before: 160, after: 160 },
         indent: { left: 720 },
         children: [
-          new TextRun({ text: `第 ${chNum} 章   `, size: 36, bold: true, color: 'D4AF37', font: 'Microsoft JhengHei' }),
-          new TextRun({ text: s.title, size: 36, color: '333333', font: 'Microsoft JhengHei' }),
+          new TextRun({ text: `第 ${chNum} 章   `, size: 28, bold: true, color: 'D4AF37', font: f }),
+          new TextRun({ text: s.title, size: 28, color: '333333', font: f }),
         ],
       })
     );
@@ -244,21 +232,21 @@ export const downloadDocWord = async (
     contentChildren.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_1,
-        spacing: { before: 400, after: 400 },
+        spacing: { before: 300, after: 300 },
         shading: { fill: '0F172A', type: ShadingType.CLEAR },
-        children: [new TextRun({ text: `  第 ${chNum} 章：${section.title}  `, bold: true, size: 44, color: 'D4AF37', font: 'Microsoft JhengHei' })],
+        children: [new TextRun({ text: `  第 ${chNum} 章：${section.title}  `, bold: true, size: 36, color: 'D4AF37', font: f })],
       })
     );
 
     section.items.forEach((item, i) => {
       contentChildren.push(
         new Paragraph({
-          spacing: { before: 200, after: 200 },
+          spacing: { before: 120, after: 120 },
           indent: { left: 360 },
-          border: { left: { style: BorderStyle.SINGLE, size: 8, color: 'D4AF37' } },
+          border: { left: { style: BorderStyle.SINGLE, size: 6, color: 'D4AF37' } },
           children: [
-            new TextRun({ text: `${i + 1}. `, bold: true, size: 32, color: '1E3A8A', font: 'Microsoft JhengHei' }),
-            new TextRun({ text: item, size: 32, color: '333333', font: 'Microsoft JhengHei' }),
+            new TextRun({ text: `${i + 1}. `, bold: true, size: 24, color: '1E3A8A', font: f }),
+            new TextRun({ text: item, size: 24, color: '333333', font: f }),
           ],
         })
       );
@@ -283,31 +271,25 @@ export const downloadDocWord = async (
     new Paragraph({ children: [new PageBreak()] }),
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { before: 400, after: 600 },
+      spacing: { before: 300, after: 400 },
       border: {
-        top: { style: BorderStyle.SINGLE, size: 8, color: 'D4AF37' },
-        bottom: { style: BorderStyle.SINGLE, size: 8, color: 'D4AF37' },
+        top: { style: BorderStyle.SINGLE, size: 6, color: 'D4AF37' },
+        bottom: { style: BorderStyle.SINGLE, size: 6, color: 'D4AF37' },
       },
-      children: [new TextRun({ text: '  免 責 聲 明  ', bold: true, size: 52, color: '1E3A8A', font: 'Microsoft JhengHei' })],
+      children: [new TextRun({ text: '  免 責 聲 明  ', bold: true, size: 40, color: '1E3A8A', font: f })],
     })
   );
   disclaimers.forEach(d => {
     contentChildren.push(new Paragraph({
-      spacing: { before: 200, after: 200 },
+      spacing: { before: 120, after: 120 },
       indent: { left: 720 },
-      children: [new TextRun({ text: d, size: 32, color: '444444', font: 'Microsoft JhengHei' })],
+      children: [new TextRun({ text: d, size: 24, color: '444444', font: f })],
     }));
   });
   contentChildren.push(
-    new Paragraph({ spacing: { before: 800 }, children: [new TextRun({ text: '' })] }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [new TextRun({ text: `© ${now.getFullYear()} 超烜創意 / 虹靈御所`, size: 28, color: '666666', font: 'Microsoft JhengHei' })],
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER, spacing: { before: 100 },
-      children: [new TextRun({ text: '版本：RSBZS v3.0', size: 28, color: '666666', font: 'Microsoft JhengHei' })],
-    })
+    new Paragraph({ spacing: { before: 600 }, children: [new TextRun({ text: '' })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `© ${now.getFullYear()} 超烜創意 / 虹靈御所`, size: 22, color: '666666', font: f })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 80 }, children: [new TextRun({ text: '版本：RSBZS v3.0', size: 22, color: '666666', font: f })] })
   );
 
   setStage('打包 Word 檔案...');
@@ -318,7 +300,7 @@ export const downloadDocWord = async (
       children: [new Paragraph({
         alignment: AlignmentType.RIGHT,
         border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'D4AF37' } },
-        children: [new TextRun({ text: 'RSBZS 四時軍團八字人生兵法系統', size: 18, color: '999999', italics: true, font: 'Microsoft JhengHei' })],
+        children: [new TextRun({ text: 'RSBZS 四時軍團八字人生兵法系統', size: 16, color: '999999', italics: true, font: f })],
       })],
     }),
   };
@@ -328,21 +310,17 @@ export const downloadDocWord = async (
         alignment: AlignmentType.CENTER,
         border: { top: { style: BorderStyle.SINGLE, size: 4, color: 'D4AF37' } },
         children: [
-          new TextRun({ text: '虹靈御所  ·  ', size: 18, color: '999999', font: 'Microsoft JhengHei' }),
-          new TextRun({ text: '第 ', size: 18, color: '999999' }),
-          new TextRun({ children: [PageNumber.CURRENT], size: 18, color: '999999' }),
-          new TextRun({ text: ' 頁', size: 18, color: '999999' }),
+          new TextRun({ text: '虹靈御所  ·  ', size: 16, color: '999999', font: f }),
+          new TextRun({ text: '第 ', size: 16, color: '999999' }),
+          new TextRun({ children: [PageNumber.CURRENT], size: 16, color: '999999' }),
+          new TextRun({ text: ' 頁', size: 16, color: '999999' }),
         ],
       })],
     }),
   };
 
   const doc = new Document({
-    styles: {
-      default: {
-        document: { run: { font: 'Microsoft JhengHei', size: 32 } },
-      },
-    },
+    styles: { default: { document: { run: { font: f, size: 24 } } } },
     sections: [
       {
         properties: { page: { margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },

@@ -181,18 +181,55 @@
        { name: 'is_public', type: 'BOOLEAN', description: '是否公開' },
      ]
    },
-   {
-     name: 'solar_terms',
-     description: '節氣資料庫',
-     columns: [
-       { name: 'id', type: 'UUID', description: '記錄 ID' },
-       { name: 'year', type: 'INTEGER', description: '年份' },
-       { name: 'term_name', type: 'TEXT', description: '節氣名稱' },
-       { name: 'term_date', type: 'TIMESTAMP', description: '節氣時間' },
-       { name: 'solar_longitude', type: 'NUMERIC', description: '太陽黃經度數' },
-     ]
-   },
- ];
+    {
+      name: 'solar_terms',
+      description: '節氣資料庫（1850-2100 年）',
+      columns: [
+        { name: 'id', type: 'UUID', description: '記錄 ID' },
+        { name: 'year', type: 'INTEGER', description: '年份' },
+        { name: 'term_name', type: 'TEXT', description: '節氣名稱（24 節氣）' },
+        { name: 'term_date', type: 'TIMESTAMP', description: '節氣精確時間' },
+        { name: 'solar_longitude', type: 'NUMERIC', description: '太陽黃經度數（精度 < 0.01°）' },
+      ]
+    },
+    {
+      name: 'login_attempts',
+      description: '登入嘗試紀錄與鎖定機制',
+      columns: [
+        { name: 'id', type: 'UUID', description: '記錄 ID' },
+        { name: 'identifier', type: 'TEXT', description: '登入識別碼（email）' },
+        { name: 'identifier_type', type: 'TEXT', description: '識別碼類型' },
+        { name: 'ip_address', type: 'TEXT', description: '來源 IP 位址' },
+        { name: 'success', type: 'BOOLEAN', description: '是否成功' },
+        { name: 'lockout_until', type: 'TIMESTAMP', description: '鎖定截止時間' },
+        { name: 'attempt_at', type: 'TIMESTAMP', description: '嘗試時間' },
+      ]
+    },
+    {
+      name: 'api_plans',
+      description: 'API 方案定義',
+      columns: [
+        { name: 'id', type: 'UUID', description: '方案 ID' },
+        { name: 'name', type: 'TEXT', description: '方案名稱' },
+        { name: 'monthly_quota', type: 'INTEGER', description: '每月配額' },
+        { name: 'price_per_request', type: 'NUMERIC', description: '每次請求價格' },
+        { name: 'features', type: 'JSONB', description: '功能清單' },
+        { name: 'is_active', type: 'BOOLEAN', description: '是否啟用' },
+      ]
+    },
+    {
+      name: 'api_request_logs',
+      description: 'API 請求日誌',
+      columns: [
+        { name: 'id', type: 'UUID', description: '記錄 ID' },
+        { name: 'api_key_id', type: 'UUID', description: '關聯 API 金鑰' },
+        { name: 'endpoint', type: 'TEXT', description: '請求端點' },
+        { name: 'response_status', type: 'INTEGER', description: 'HTTP 狀態碼' },
+        { name: 'response_time_ms', type: 'INTEGER', description: '回應時間（毫秒）' },
+        { name: 'ip_address', type: 'TEXT', description: '來源 IP' },
+      ]
+    },
+  ];
  
  // ============ 頁面內容詳細資料 ============
  const PAGE_CONTENTS = {

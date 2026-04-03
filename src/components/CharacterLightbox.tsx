@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight, X, Sparkles, Shield, Droplets, Mountain, Flame, TreeDeciduous, Heart, Maximize2, Grid3X3, PanelRightClose, PanelRightOpen } from "lucide-react";
 import type { GanCharacter, ZhiCharacter } from "@/lib/legionTranslator/types";
-import { commanderFullbodyAvatars } from "@/assets/commanders-fullbody";
-import { advisorFullbodyAvatars } from "@/assets/advisors-fullbody";
+import { getCommanderFullbodyAvatar } from "@/assets/commanders-fullbody";
+import { getAdvisorFullbodyAvatar } from "@/assets/advisors-fullbody";
 
 const ELEMENT_CONFIG = {
   木: { icon: TreeDeciduous, color: '#22C55E', gradient: 'from-green-500/30 to-emerald-900/60' },

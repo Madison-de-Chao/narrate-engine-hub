@@ -69,18 +69,14 @@ export const downloadDocPdf = async (
     // 目錄
     setStage('生成目錄...');
     setProgress(20);
+    const startCh = config.startChapter ?? 1;
     container.innerHTML = `
       <div style="width:794px;min-height:1123px;background:#fafafa;padding:60px;box-sizing:border-box;">
         <h2 style="font-size:28px;color:#1e3a8a;text-align:center;margin-bottom:40px;border-bottom:2px solid #d4af37;padding-bottom:16px;">目 錄</h2>
         <div style="padding:20px;">
-          ${config.sections.map((s, i) => {
-            const chNum = i + (config.startChapter ?? 1);
-            return `
+          ${config.sections.map((s, i) => `
             <div style="display:flex;align-items:center;padding:12px 0;border-bottom:1px dashed #e5e7eb;">
-              <span style="color:#d4af37;font-weight:bold;font-size:18px;width:30px;">${chNum}.</span>
-              <span style="color:#1f2937;font-size:16px;flex:1;">${s.title}</span>
-            </div>
-          `}).join('')}
+              <span style="color:#d4af37;font-weight:bold;font-size:18px;width:30px;">${i + startCh}.</span>
               <span style="color:#1f2937;font-size:16px;flex:1;">${s.title}</span>
             </div>
           `).join('')}
@@ -94,14 +90,15 @@ export const downloadDocPdf = async (
     // 章節
     const total = config.sections.length;
     for (let i = 0; i < total; i++) {
+      const chNum = i + startCh;
       const section = config.sections[i];
       setProgress(25 + Math.floor((i / total) * 55));
-      setStage(`生成章節 ${i + 1}/${total}: ${section.title}...`);
+      setStage(`生成章節 ${chNum}/${total}: ${section.title}...`);
 
       container.innerHTML = `
         <div style="width:794px;min-height:1123px;background:#fafafa;padding:0;box-sizing:border-box;">
           <div style="background:linear-gradient(90deg,#0f172a,#1e3a5f);padding:20px 40px;margin-bottom:40px;">
-            <h2 style="color:#d4af37;font-size:22px;margin:0;">第 ${i + 1} 章：${section.title}</h2>
+            <h2 style="color:#d4af37;font-size:22px;margin:0;">第 ${chNum} 章：${section.title}</h2>
           </div>
           <div style="padding:0 50px 50px;">
             ${section.items.map((item, j) => `

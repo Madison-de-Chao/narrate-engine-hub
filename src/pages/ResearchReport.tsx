@@ -177,6 +177,7 @@ const getResearchSections = (): DocSection[] => [
 
 const ResearchReport = () => {
   const tableOfContents = [
+    { id: "system-intro", title: "〇、完整系統介紹", icon: Globe },
     { id: "overview", title: "一、文件總覽與關鍵內容提取", icon: BookOpen },
     { id: "architecture", title: "二、系統架構與品牌策略分析", icon: Layers },
     { id: "products", title: "三、三大產品 SKU 深度解析", icon: Cpu },

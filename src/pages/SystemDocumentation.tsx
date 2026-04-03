@@ -880,10 +880,114 @@
    toast.success('Markdown 文件下載成功');
  };
  
- // ============ 主元件 ============
+// ============ 生成下載用的章節資料 ============
+ const getDocSections = (): DocSection[] => {
+   const sections: DocSection[] = [];
+   
+   sections.push({
+     title: '系統概述',
+     items: [
+       '虹靈御所（Hong Ling Yu Suo）是基於 RSBZS v3.0（主題式八字系統）開發的專業八字命理分析平台。',
+       '品牌定位：一個讓使用者輸入出生資訊後，獲得「可讀、可理解、可落地」的八字分析頁面。',
+       '核心理念：這份分析是「鏡子」，不是「劇本」——我們追求清楚、克制、有美感、可執行。',
+     ]
+   });
+   
+   sections.push({
+     title: '完整路由對照表',
+     items: ROUTES_DATA.map(r => `${r.path} — ${r.name}：${r.description}（${r.access}）`)
+   });
+   
+   sections.push({
+     title: '公開頁面內容詳述',
+     items: Object.values(PAGE_CONTENTS).flatMap(page =>
+       [`【${page.title}】（${page.path}）`, ...page.sections.flatMap(s => s.content.map(c => `  ${s.name}：${c}`))]
+     )
+   });
+   
+   sections.push({
+     title: '會員系統功能說明',
+     items: MEMBER_FEATURES.flatMap(cat =>
+       [`【${cat.category}】`, ...cat.features.map(f => `${f.name}：${f.description}`)]
+     )
+   });
+   
+   sections.push({
+     title: '管理後台功能',
+     items: [
+       '路徑：/admin（僅限 admin 角色）',
+       '統計儀表板：總用戶數統計、訂閱轉換率、用戶增長趨勢圖表、報告生成統計',
+       '報告管理：報告列表與搜尋、報告詳情查看、批次刪除功能',
+       '訂閱管理：訂閱記錄搜尋、計畫狀態編輯、手動創建訂閱',
+       '用戶管理：用戶列表與搜尋、用戶詳細資料、角色權限管理',
+     ]
+   });
+   
+   sections.push({
+     title: '技術架構',
+     items: [
+       ...TECH_STACK.frontend.map(t => `前端：${t.name} — ${t.description}`),
+       ...TECH_STACK.styling.map(t => `樣式：${t.name} — ${t.description}`),
+       ...TECH_STACK.backend.map(t => `後端：${t.name} — ${t.description}`),
+       ...TECH_STACK.integrations.map(t => `整合：${t.name} — ${t.description}`),
+     ]
+   });
+   
+   sections.push({
+     title: '資料表結構',
+     items: DATABASE_TABLES.flatMap(table =>
+       [`【${table.name}】${table.description}`, ...table.columns.map(c => `  ${c.name} (${c.type})：${c.description}`)]
+     )
+   });
+   
+   return sections;
+ };
+
+// ============ 主元件 ============
  const SystemDocumentation = () => {
    const navigate = useNavigate();
    const [activeTab, setActiveTab] = useState('overview');
+   const [downloading, setDownloading] = useState(false);
+   const [downloadProgress, setDownloadProgress] = useState(0);
+   const [downloadStage, setDownloadStage] = useState('');
+
+   const handleDownloadPdf = async () => {
+     setDownloading(true);
+     setDownloadProgress(0);
+     try {
+       await downloadDocPdf({
+         title: 'RSBZS四時軍團八字人生兵法系統',
+         subtitle: '完整系統文件',
+         filename: 'RSBZS_系統文件',
+         sections: getDocSections(),
+       }, setDownloadProgress, setDownloadStage);
+       toast.success('PDF 系統文件下載成功');
+     } catch (error) {
+       console.error('PDF download error:', error);
+       toast.error('PDF 下載失敗，請重試');
+     } finally {
+       setTimeout(() => { setDownloading(false); setDownloadProgress(0); }, 500);
+     }
+   };
+
+   const handleDownloadWord = async () => {
+     setDownloading(true);
+     setDownloadProgress(0);
+     try {
+       await downloadDocWord({
+         title: 'RSBZS四時軍團八字人生兵法系統',
+         subtitle: '完整系統文件',
+         filename: 'RSBZS_系統文件',
+         sections: getDocSections(),
+       }, setDownloadProgress, setDownloadStage);
+       toast.success('Word 系統文件下載成功');
+     } catch (error) {
+       console.error('Word download error:', error);
+       toast.error('Word 下載失敗，請重試');
+     } finally {
+       setTimeout(() => { setDownloading(false); setDownloadProgress(0); }, 500);
+     }
+   };
  
    return (
      <div className="min-h-screen bg-background">

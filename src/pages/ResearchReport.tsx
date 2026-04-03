@@ -152,6 +152,48 @@ const ResearchReport = () => {
     { market: "遊戲與虛擬世界", application: "利用 Hong Ling Assets 建構角色與世界觀", advantage: "提供文化敘事與角色深度，提升沉浸感", icon: Gamepad2 },
   ];
 
+  const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadStage, setDownloadStage] = useState('');
+
+  const handleDownloadPdf = async () => {
+    setDownloading(true);
+    setDownloadProgress(0);
+    try {
+      await downloadDocPdf({
+        title: 'RSBZS四時軍團八字人生兵法系統',
+        subtitle: '整合性研究報告',
+        filename: 'RSBZS_研究報告',
+        sections: getResearchSections(),
+      }, setDownloadProgress, setDownloadStage);
+      toast.success('PDF 研究報告下載成功');
+    } catch (error) {
+      console.error('PDF download error:', error);
+      toast.error('PDF 下載失敗，請重試');
+    } finally {
+      setTimeout(() => { setDownloading(false); setDownloadProgress(0); }, 500);
+    }
+  };
+
+  const handleDownloadWord = async () => {
+    setDownloading(true);
+    setDownloadProgress(0);
+    try {
+      await downloadDocWord({
+        title: 'RSBZS四時軍團八字人生兵法系統',
+        subtitle: '整合性研究報告',
+        filename: 'RSBZS_研究報告',
+        sections: getResearchSections(),
+      }, setDownloadProgress, setDownloadStage);
+      toast.success('Word 研究報告下載成功');
+    } catch (error) {
+      console.error('Word download error:', error);
+      toast.error('Word 下載失敗，請重試');
+    } finally {
+      setTimeout(() => { setDownloading(false); setDownloadProgress(0); }, 500);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
       {/* Header */}
@@ -165,9 +207,18 @@ const ResearchReport = () => {
               <ArrowLeft className="w-4 h-4" />
               <span>返回首頁</span>
             </Link>
-            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
-              <FileText className="w-3 h-3 mr-1" />
-              研究報告 v1.0
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={downloading}>
+                <FileDown className="w-4 h-4 mr-2" />
+                下載 PDF
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleDownloadWord} disabled={downloading}>
+                <ScrollText className="w-4 h-4 mr-2" />
+                下載 Word
+              </Button>
+              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                <FileText className="w-3 h-3 mr-1" />
+                研究報告 v1.0
             </Badge>
           </div>
         </div>

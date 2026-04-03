@@ -1402,46 +1402,63 @@
            </TabsContent>
          </Tabs>
  
-         {/* 下載區塊 */}
-         <motion.div
-           initial={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           transition={{ delay: 0.3 }}
-           className="mt-12"
-         >
-           <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
-             <CardContent className="py-8">
-               <div className="text-center space-y-4">
-                 <Download className="w-12 h-12 mx-auto text-primary" />
-                 <h3 className="text-xl font-bold">下載完整文件</h3>
-                 <p className="text-muted-foreground max-w-lg mx-auto">
-                   下載包含所有系統文件的完整檔案，方便離線閱讀或分享
-                 </p>
-                 <div className="flex flex-wrap justify-center gap-3 pt-4">
-                   <Button onClick={downloadAsText} variant="outline" size="lg">
-                     <FileDown className="w-5 h-5 mr-2" />
-                     下載 TXT 純文字
-                   </Button>
-                   <Button onClick={downloadAsMarkdown} size="lg" className="bg-gradient-to-r from-primary to-accent">
-                     <ScrollText className="w-5 h-5 mr-2" />
-                     下載 Markdown 文件
-                   </Button>
-                 </div>
-                 <p className="text-xs text-muted-foreground pt-2">
-                   提示：Markdown 檔案可使用支援 MD 的編輯器開啟，或轉換為 PDF/Word
-                 </p>
-               </div>
-             </CardContent>
-           </Card>
-         </motion.div>
+          {/* 下載區塊 */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-12"
+          >
+            <Card className="bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
+              <CardContent className="py-8">
+                <div className="text-center space-y-4">
+                  <Download className="w-12 h-12 mx-auto text-primary" />
+                  <h3 className="text-xl font-bold">下載完整文件</h3>
+                  <p className="text-muted-foreground max-w-lg mx-auto">
+                    下載包含所有系統文件的完整檔案，方便離線閱讀或分享
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-3 pt-4">
+                    <Button onClick={handleDownloadPdf} variant="outline" size="lg" disabled={downloading}>
+                      <FileDown className="w-5 h-5 mr-2" />
+                      下載 PDF
+                    </Button>
+                    <Button onClick={handleDownloadWord} size="lg" className="bg-gradient-to-r from-primary to-accent" disabled={downloading}>
+                      <ScrollText className="w-5 h-5 mr-2" />
+                      下載 Word 文件
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
  
-         {/* 版權資訊 */}
-         <div className="mt-8 text-center text-sm text-muted-foreground">
-           <p>© {new Date().getFullYear()} 超烜創意 / 虹靈御所 · RSBZS v3.0</p>
-         </div>
-       </div>
-     </div>
-   );
- };
+          {/* 下載進度對話框 */}
+          <Dialog open={downloading} onOpenChange={() => {}}>
+            <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-xl border-primary/20">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-primary">
+                  <Download className="h-5 w-5 animate-bounce" />
+                  正在生成文件
+                </DialogTitle>
+                <DialogDescription>
+                  請稍候，正在生成系統文件...
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <Progress value={downloadProgress} className="h-3" />
+                <p className="text-sm text-muted-foreground text-center">{downloadStage}</p>
+                <p className="text-xs text-muted-foreground text-center">{downloadProgress}%</p>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* 版權資訊 */}
+          <div className="mt-8 text-center text-sm text-muted-foreground">
+            <p>© {new Date().getFullYear()} 超烜創意 / 虹靈御所 · RSBZS v3.0</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
  
- export default SystemDocumentation;
+  export default SystemDocumentation;

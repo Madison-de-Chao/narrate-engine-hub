@@ -955,6 +955,26 @@ const ResearchReport = () => {
           </p>
         </motion.div>
       </main>
+
+      {/* 下載進度對話框 */}
+      <Dialog open={downloading} onOpenChange={() => {}}>
+        <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-xl border-primary/20">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Download className="h-5 w-5 animate-bounce" />
+              正在生成文件
+            </DialogTitle>
+            <DialogDescription>
+              請稍候，正在生成研究報告文件...
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Progress value={downloadProgress} className="h-3" />
+            <p className="text-sm text-muted-foreground text-center">{downloadStage}</p>
+            <p className="text-xs text-muted-foreground text-center">{downloadProgress}%</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

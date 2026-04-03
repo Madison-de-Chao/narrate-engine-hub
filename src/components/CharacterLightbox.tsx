@@ -221,7 +221,7 @@ export function CharacterLightbox({
   const ElementIcon = config?.icon || Sparkles;
   const charType = getCharType(currentChar);
   const isFav = isFavorite?.(currentChar.id, charType);
-  const hasFullbody = !!getFullbodyAvatar(currentChar);
+  const hasFullbody = !!fullbodyUrl;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

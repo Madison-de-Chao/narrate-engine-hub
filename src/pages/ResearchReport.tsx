@@ -220,6 +220,7 @@ const ResearchReport = () => {
                 <FileText className="w-3 h-3 mr-1" />
                 研究報告 v1.0
             </Badge>
+            </div>
           </div>
         </div>
       </header>

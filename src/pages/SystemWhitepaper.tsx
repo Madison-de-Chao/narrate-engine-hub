@@ -1,5 +1,5 @@
  import React, { useState } from 'react';
- import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, PageBreak } from 'docx';
+ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, PageBreak, Header, Footer, PageNumber } from 'docx';
  import { saveAs } from 'file-saver';
  import jsPDF from 'jspdf';
  import html2canvas from 'html2canvas';
@@ -586,341 +586,216 @@
    }
  };
  
- // ============ Word 下載功能 ============
- const downloadWhitepaperWord = async (setProgress: (p: number) => void, setStage: (s: string) => void) => {
-   const now = new Date();
-   const dateStr = now.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
-   
-   setStage('初始化 Word 引擎...');
-   setProgress(10);
-   
-   const children: any[] = [];
-   
-   // 封面
-   children.push(
-     new Paragraph({
-       spacing: { before: 600 },
-       children: [new TextRun({ text: '' })],
-     }),
-     new Paragraph({
-       spacing: { before: 400 },
-       children: [new TextRun({ text: '' })],
-     }),
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       children: [
-         new TextRun({
-           text: '虹 靈 御 所',
-           bold: true,
-           size: 72,
-           color: '1E3A8A',
-         }),
-       ],
-     }),
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       spacing: { before: 300 },
-       children: [
-         new TextRun({
-           text: 'HONG LING YU SUO',
-           size: 32,
-           color: 'D4AF37',
-         }),
-       ],
-     }),
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       spacing: { before: 600 },
-       border: {
-         top: { style: BorderStyle.SINGLE, size: 12, color: 'D4AF37' },
-         bottom: { style: BorderStyle.SINGLE, size: 12, color: 'D4AF37' },
-       },
-       children: [
-         new TextRun({
-           text: '  RSBZS四時軍團八字人生兵法系統  ',
-           bold: true,
-           size: 56,
-           color: '1E3A8A',
-         }),
-       ],
-     }),
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       spacing: { before: 400 },
-       children: [
-         new TextRun({
-           text: '系 統 白 皮 書',
-           bold: true,
-           size: 48,
-           color: '333333',
-         }),
-       ],
-     }),
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       spacing: { before: 300 },
-       children: [
-         new TextRun({
-           text: '「這份分析是鏡子，不是劇本」',
-           italics: true,
-           size: 28,
-           color: '888888',
-         }),
-       ],
-     }),
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       spacing: { before: 600 },
-       children: [
-         new TextRun({ text: `版本：v3.0`, size: 28, color: '666666' }),
-       ],
-     }),
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       spacing: { before: 100 },
-       children: [
-         new TextRun({ text: `日期：${dateStr}`, size: 28, color: '666666' }),
-       ],
-     }),
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       spacing: { before: 100 },
-       children: [
-         new TextRun({ text: `發行：超烜創意 / 虹靈御所`, size: 28, color: '666666' }),
-       ],
-     }),
-     new Paragraph({
-       children: [new PageBreak()],
-     })
-   );
-   
-   setStage('生成目錄...');
-   setProgress(25);
-   
-   // 目錄
-   children.push(
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       spacing: { before: 200, after: 600 },
-       border: {
-         bottom: { style: BorderStyle.SINGLE, size: 6, color: 'D4AF37' },
-       },
-       children: [
-         new TextRun({
-           text: '目    錄',
-           bold: true,
-           size: 48,
-           color: '1E3A8A',
-         }),
-       ],
-     })
-   );
-   
-   WHITEPAPER_SECTIONS.forEach((section, idx) => {
-     children.push(
-       new Paragraph({
-         spacing: { before: 200, after: 200 },
-         children: [
-           new TextRun({ text: `第 ${idx + 1} 章   `, size: 32, bold: true, color: 'D4AF37' }),
-           new TextRun({ text: section.title, size: 32, color: '333333' }),
-         ],
-       })
-     );
-   });
-   
-   children.push(new Paragraph({ children: [new PageBreak()] }));
-   
-   // 章節內容
-   setStage('生成章節內容...');
-   const totalSections = WHITEPAPER_SECTIONS.length;
-   
-   WHITEPAPER_SECTIONS.forEach((section, idx) => {
-     setProgress(30 + Math.floor((idx / totalSections) * 45));
-     setStage(`生成章節 ${idx + 1}/${totalSections}: ${section.title}...`);
-     
-     children.push(
-       new Paragraph({
-         heading: HeadingLevel.HEADING_1,
-         spacing: { before: 200, after: 400 },
-         shading: { fill: '1E3A8A', type: ShadingType.SOLID },
-         children: [
-           new TextRun({
-             text: `  第 ${idx + 1} 章：${section.title}  `,
-             bold: true,
-             size: 40,
-             color: 'D4AF37',
-           }),
-         ],
-       })
-     );
-     
-     section.content.forEach((item, i) => {
-       children.push(
-         new Paragraph({
-           spacing: { before: 200, after: 200 },
-           children: [
-             new TextRun({ text: `${i + 1}. `, bold: true, size: 28, color: '1E3A8A' }),
-             new TextRun({ text: item, size: 28, color: '333333' }),
-           ],
-         })
-       );
-     });
-     
-     if (idx < WHITEPAPER_SECTIONS.length - 1) {
-       children.push(new Paragraph({ children: [new PageBreak()] }));
-     }
-   });
-   
-   // 附錄
-   setStage('生成附錄...');
-   setProgress(80);
-   
-   children.push(
-     new Paragraph({ children: [new PageBreak()] }),
-     new Paragraph({
-       heading: HeadingLevel.HEADING_1,
-       spacing: { before: 200, after: 400 },
-       shading: { fill: '1E3A8A', type: ShadingType.SOLID },
-       children: [
-         new TextRun({
-           text: '  附    錄  ',
-           bold: true,
-           size: 40,
-           color: 'D4AF37',
-         }),
-       ],
-     }),
-     new Paragraph({
-       heading: HeadingLevel.HEADING_2,
-       spacing: { before: 300, after: 150 },
-       children: [
-         new TextRun({ text: 'A. 設計原則', bold: true, size: 36, color: '1E3A8A' }),
-       ],
-     }),
-     new Paragraph({
-       spacing: { before: 100, after: 100 },
-       children: [
-         new TextRun({ text: '• 清楚（Clarity）：', bold: true, size: 28 }),
-         new TextRun({ text: '精準呈現能量配置與傾向，避免模糊描述', size: 28 }),
-       ],
-     }),
-     new Paragraph({
-       spacing: { before: 100, after: 100 },
-       children: [
-         new TextRun({ text: '• 克制（Restraint）：', bold: true, size: 28 }),
-         new TextRun({ text: '區分可驗證資訊與推論，不恐嚇不操控', size: 28 }),
-       ],
-     }),
-     new Paragraph({
-       spacing: { before: 100, after: 100 },
-       children: [
-         new TextRun({ text: '• 可執行（Actionable）：', bold: true, size: 28 }),
-         new TextRun({ text: '提供具體可落地的行動建議與提醒', size: 28 }),
-       ],
-     }),
-     new Paragraph({
-       heading: HeadingLevel.HEADING_2,
-       spacing: { before: 400, after: 150 },
-       children: [
-         new TextRun({ text: 'B. 技術規格', bold: true, size: 36, color: '1E3A8A' }),
-       ],
-     }),
-     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• 前端：React 18 + TypeScript + Vite 5', size: 28 })] }),
-     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• UI：Tailwind CSS + shadcn/ui + Framer Motion', size: 28 })] }),
-     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• 後端：Supabase (PostgreSQL) + Edge Functions', size: 28 })] }),
-     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• AI：Lovable AI 整合', size: 28 })] }),
-     new Paragraph({
-       heading: HeadingLevel.HEADING_2,
-       spacing: { before: 400, after: 150 },
-       children: [
-         new TextRun({ text: 'C. 品牌識別', bold: true, size: 36, color: '1E3A8A' }),
-       ],
-     }),
-     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• 視覺風格：Cosmic Architect 設計系統', size: 28 })] }),
-     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• 主色調：深藍/靛色 (cosmic-void)', size: 28 })] }),
-     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• 強調色：金色/琥珀色 (cosmic-gold)', size: 28 })] }),
-     new Paragraph({ spacing: { before: 100, after: 100 }, children: [new TextRun({ text: '• 輔助色：紫色星雲 (cosmic-nebula)', size: 28 })] })
-   );
-   
-   // 免責聲明
-   setStage('生成免責聲明...');
-   setProgress(90);
-   
-   const disclaimersCN = [
-     '1. 本報告為八字（命理）系統的結構化呈現與解讀參考，目的在於提供觀察角度與可執行建議。',
-     '2. 本內容不構成醫療診斷、心理治療、法律建議、財務／投資建議或任何形式之專業服務。',
-     '3. 文中之趨勢、傾向、可能性描述，不等同於保證結果；使用者仍需依自身狀況做出判斷與選擇。',
-     '4. 涉及健康、心理、法律、財務等重大議題，請尋求合格專業人士協助。',
-     '5. 使用本內容即表示你理解並同意以上聲明。'
-   ];
- 
-   children.push(
-     new Paragraph({ children: [new PageBreak()] }),
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       spacing: { before: 200, after: 400 },
-       border: {
-         top: { style: BorderStyle.SINGLE, size: 6, color: 'D4AF37' },
-         bottom: { style: BorderStyle.SINGLE, size: 6, color: 'D4AF37' },
-       },
-       children: [
-         new TextRun({
-           text: '  免 責 聲 明  ',
-           bold: true,
-           size: 44,
-           color: '1E3A8A',
-         }),
-       ],
-     })
-   );
-   
-   disclaimersCN.forEach(d => {
-     children.push(
-       new Paragraph({
-         spacing: { before: 150, after: 150 },
-         children: [new TextRun({ text: d, size: 26, color: '444444' })],
-       })
-     );
-   });
-   
-   // 版權
-   children.push(
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       spacing: { before: 600 },
-       children: [
-         new TextRun({ text: `© ${now.getFullYear()} 超烜創意 / 虹靈御所`, size: 28, color: '666666' }),
-       ],
-     }),
-     new Paragraph({
-       alignment: AlignmentType.CENTER,
-       spacing: { before: 100 },
-       children: [
-         new TextRun({ text: '版本：RSBZS v3.0', size: 28, color: '666666' }),
-       ],
-     })
-   );
-   
-   setStage('打包 Word 檔案...');
-   setProgress(95);
-   
-   const doc = new Document({
-     sections: [{
-       properties: {
-         page: {
-           margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 },
-         },
-       },
-       children,
-     }],
-   });
-   
-   const blob = await Packer.toBlob(doc);
-   saveAs(blob, `RSBZS四時軍團八字人生兵法系統_白皮書_${new Date().toISOString().split('T')[0]}.docx`);
-   
-   setProgress(100);
-   toast.success('Word 白皮書下載成功');
- };
+// ============ Word 下載功能 ============
+const downloadWhitepaperWord = async (setProgress: (p: number) => void, setStage: (s: string) => void) => {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+  const font = 'Microsoft JhengHei';
+  
+  setStage('初始化 Word 引擎...');
+  setProgress(10);
+  
+  // ── 封面 ──
+  const coverChildren: any[] = [
+    new Paragraph({ spacing: { before: 2400 }, children: [new TextRun({ text: '' })] }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: '虹 靈 御 所', bold: true, size: 96, color: '1E3A8A', font })],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER, spacing: { before: 200 },
+      children: [new TextRun({ text: 'HONG LING YU SUO', size: 36, color: 'D4AF37', font: 'Arial' })],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER, spacing: { before: 800 },
+      border: {
+        top: { style: BorderStyle.SINGLE, size: 16, color: 'D4AF37' },
+        bottom: { style: BorderStyle.SINGLE, size: 16, color: 'D4AF37' },
+      },
+      children: [new TextRun({ text: '  RSBZS四時軍團八字人生兵法系統  ', bold: true, size: 56, color: '1E3A8A', font })],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER, spacing: { before: 400 },
+      children: [new TextRun({ text: '系 統 白 皮 書', bold: true, size: 48, color: '333333', font })],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER, spacing: { before: 400 },
+      children: [new TextRun({ text: '「這份分析是鏡子，不是劇本」', italics: true, size: 32, color: '888888', font })],
+    }),
+    new Paragraph({ spacing: { before: 1200 }, children: [new TextRun({ text: '' })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `版本：v3.0`, size: 28, color: '666666', font })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 100 }, children: [new TextRun({ text: `日期：${dateStr}`, size: 28, color: '666666', font })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 100 }, children: [new TextRun({ text: `發行：超烜創意 / 虹靈御所`, size: 28, color: '666666', font })] }),
+  ];
+  
+  // ── 內容 ──
+  const contentChildren: any[] = [];
+
+  setStage('生成目錄...');
+  setProgress(25);
+  
+  contentChildren.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER, spacing: { before: 400, after: 600 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: 'D4AF37' } },
+      children: [new TextRun({ text: '目    錄', bold: true, size: 56, color: '1E3A8A', font })],
+    })
+  );
+  
+  WHITEPAPER_SECTIONS.forEach((section, idx) => {
+    contentChildren.push(
+      new Paragraph({
+        spacing: { before: 240, after: 240 }, indent: { left: 720 },
+        children: [
+          new TextRun({ text: `第 ${idx + 1} 章   `, size: 36, bold: true, color: 'D4AF37', font }),
+          new TextRun({ text: section.title, size: 36, color: '333333', font }),
+        ],
+      })
+    );
+  });
+  contentChildren.push(
+    new Paragraph({ spacing: { before: 240, after: 240 }, indent: { left: 720 }, children: [
+      new TextRun({ text: '附 錄   ', size: 36, bold: true, color: 'D4AF37', font }),
+      new TextRun({ text: '設計原則・技術規格・品牌識別', size: 36, color: '333333', font }),
+    ] })
+  );
+  contentChildren.push(new Paragraph({ children: [new PageBreak()] }));
+  
+  // 章節
+  const totalSections = WHITEPAPER_SECTIONS.length;
+  WHITEPAPER_SECTIONS.forEach((section, idx) => {
+    setProgress(30 + Math.floor((idx / totalSections) * 40));
+    setStage(`生成章節 ${idx + 1}/${totalSections}: ${section.title}...`);
+    
+    contentChildren.push(
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        spacing: { before: 400, after: 400 },
+        shading: { fill: '0F172A', type: ShadingType.CLEAR },
+        children: [new TextRun({ text: `  第 ${idx + 1} 章：${section.title}  `, bold: true, size: 44, color: 'D4AF37', font })],
+      })
+    );
+    
+    section.content.forEach((item, i) => {
+      contentChildren.push(
+        new Paragraph({
+          spacing: { before: 200, after: 200 }, indent: { left: 360 },
+          border: { left: { style: BorderStyle.SINGLE, size: 8, color: 'D4AF37' } },
+          children: [
+            new TextRun({ text: `${i + 1}. `, bold: true, size: 32, color: '1E3A8A', font }),
+            new TextRun({ text: item, size: 32, color: '333333', font }),
+          ],
+        })
+      );
+    });
+    
+    if (idx < totalSections - 1) {
+      contentChildren.push(new Paragraph({ children: [new PageBreak()] }));
+    }
+  });
+  
+  // 附錄
+  setStage('生成附錄...');
+  setProgress(75);
+  
+  contentChildren.push(
+    new Paragraph({ children: [new PageBreak()] }),
+    new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      spacing: { before: 400, after: 400 },
+      shading: { fill: '0F172A', type: ShadingType.CLEAR },
+      children: [new TextRun({ text: '  附    錄  ', bold: true, size: 44, color: 'D4AF37', font })],
+    }),
+    new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 400, after: 200 }, children: [new TextRun({ text: 'A. 設計原則', bold: true, size: 40, color: '1E3A8A', font })] }),
+    ...['清楚（Clarity）：精準呈現能量配置與傾向，避免模糊描述', '克制（Restraint）：區分可驗證資訊與推論，不恐嚇不操控', '可執行（Actionable）：提供具體可落地的行動建議與提醒'].map(t => {
+      const [label, desc] = t.split('：');
+      return new Paragraph({ spacing: { before: 150, after: 150 }, indent: { left: 720 }, children: [
+        new TextRun({ text: `• ${label}：`, bold: true, size: 32, font }),
+        new TextRun({ text: desc, size: 32, font }),
+      ] });
+    }),
+    new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 400, after: 200 }, children: [new TextRun({ text: 'B. 技術規格', bold: true, size: 40, color: '1E3A8A', font })] }),
+    ...['前端：React 18 + TypeScript + Vite 5', 'UI：Tailwind CSS + shadcn/ui + Framer Motion', '後端：Supabase (PostgreSQL) + Edge Functions', 'AI：Lovable AI 整合'].map(t =>
+      new Paragraph({ spacing: { before: 150, after: 150 }, indent: { left: 720 }, children: [new TextRun({ text: `• ${t}`, size: 32, font })] })
+    ),
+    new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 400, after: 200 }, children: [new TextRun({ text: 'C. 品牌識別', bold: true, size: 40, color: '1E3A8A', font })] }),
+    ...['視覺風格：Cosmic Architect 設計系統', '主色調：深藍/靛色 (cosmic-void)', '強調色：金色/琥珀色 (cosmic-gold)', '輔助色：紫色星雲 (cosmic-nebula)'].map(t =>
+      new Paragraph({ spacing: { before: 150, after: 150 }, indent: { left: 720 }, children: [new TextRun({ text: `• ${t}`, size: 32, font })] })
+    )
+  );
+  
+  // 免責聲明
+  setStage('生成免責聲明...');
+  setProgress(90);
+  const disclaimersCN = [
+    '1. 本報告為八字（命理）系統的結構化呈現與解讀參考，目的在於提供觀察角度與可執行建議。',
+    '2. 本內容不構成醫療診斷、心理治療、法律建議、財務／投資建議或任何形式之專業服務。',
+    '3. 文中之趨勢、傾向、可能性描述，不等同於保證結果；使用者仍需依自身狀況做出判斷與選擇。',
+    '4. 涉及健康、心理、法律、財務等重大議題，請尋求合格專業人士協助。',
+    '5. 使用本內容即表示你理解並同意以上聲明。',
+  ];
+
+  contentChildren.push(
+    new Paragraph({ children: [new PageBreak()] }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER, spacing: { before: 400, after: 600 },
+      border: {
+        top: { style: BorderStyle.SINGLE, size: 8, color: 'D4AF37' },
+        bottom: { style: BorderStyle.SINGLE, size: 8, color: 'D4AF37' },
+      },
+      children: [new TextRun({ text: '  免 責 聲 明  ', bold: true, size: 52, color: '1E3A8A', font })],
+    })
+  );
+  disclaimersCN.forEach(d => {
+    contentChildren.push(new Paragraph({ spacing: { before: 200, after: 200 }, indent: { left: 720 }, children: [new TextRun({ text: d, size: 32, color: '444444', font })] }));
+  });
+  contentChildren.push(
+    new Paragraph({ spacing: { before: 800 }, children: [new TextRun({ text: '' })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `© ${now.getFullYear()} 超烜創意 / 虹靈御所`, size: 28, color: '666666', font })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 100 }, children: [new TextRun({ text: '版本：RSBZS v3.0', size: 28, color: '666666', font })] })
+  );
+  
+  setStage('打包 Word 檔案...');
+  setProgress(95);
+  
+  const doc = new Document({
+    styles: { default: { document: { run: { font, size: 32 } } } },
+    sections: [
+      {
+        properties: { page: { margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },
+        children: coverChildren,
+      },
+      {
+        properties: { page: { margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },
+        headers: {
+          default: new Header({ children: [new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: 'D4AF37' } },
+            children: [new TextRun({ text: 'RSBZS 四時軍團八字人生兵法系統 — 白皮書', size: 18, color: '999999', italics: true, font })],
+          })] }),
+        },
+        footers: {
+          default: new Footer({ children: [new Paragraph({
+            alignment: AlignmentType.CENTER,
+            border: { top: { style: BorderStyle.SINGLE, size: 4, color: 'D4AF37' } },
+            children: [
+              new TextRun({ text: '虹靈御所  ·  ', size: 18, color: '999999', font }),
+              new TextRun({ text: '第 ', size: 18, color: '999999' }),
+              new TextRun({ children: [PageNumber.CURRENT], size: 18, color: '999999' }),
+              new TextRun({ text: ' 頁', size: 18, color: '999999' }),
+            ],
+          })] }),
+        },
+        children: contentChildren,
+      },
+    ],
+  });
+  
+  const blob = await Packer.toBlob(doc);
+  saveAs(blob, `RSBZS四時軍團八字人生兵法系統_白皮書_${now.toISOString().split('T')[0]}.docx`);
+  setProgress(100);
+  toast.success('Word 白皮書下載成功');
+};
  
  // ============ 主元件 ============
  const SystemWhitepaper = () => {

@@ -1,5 +1,5 @@
  import React, { useState } from 'react';
- import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, PageBreak } from 'docx';
+ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType, ShadingType, PageBreak, Header, Footer, PageNumber } from 'docx';
  import { saveAs } from 'file-saver';
  import jsPDF from 'jspdf';
  import html2canvas from 'html2canvas';

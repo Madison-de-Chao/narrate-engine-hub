@@ -19,6 +19,7 @@ import Home from "./pages/Home";
 // Lazy-loaded pages
 const BaziAnalysis = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Subscribe = lazy(() => import("./pages/Subscribe"));
 const Admin = lazy(() => import("./pages/Admin"));
 const BaziTest = lazy(() => import("./pages/BaziTest"));
@@ -66,6 +67,7 @@ const App = () => (
                   <Route path="/" element={<Home />} />
                   <Route path="/bazi" element={<BaziAnalysis />} />
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/subscribe" element={<Subscribe />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/test" element={<BaziTest />} />

@@ -108,43 +108,6 @@ export function useUnifiedMembership(productId?: string): MembershipStatus {
     }
   }, []);
 
-  // 檢查本地訂閱
-  const checkLocalSubscription = useCallback(async (userId: string): Promise<{
-    hasAccess: boolean;
-    tier: MembershipTier;
-    expiresAt: string | null;
-  }> => {
-    try {
-      const { data, error: subError } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('status', 'active')
-        .maybeSingle();
-
-      if (subError) {
-        console.error('[useUnifiedMembership] Local subscription check error:', subError);
-        return { hasAccess: false, tier: 'free', expiresAt: null };
-      }
-
-      if (data) {
-        const notExpired = !data.expires_at || new Date(data.expires_at) > new Date();
-        if (notExpired) {
-          return {
-            hasAccess: true,
-            tier: data.plan as MembershipTier,
-            expiresAt: data.expires_at,
-          };
-        }
-      }
-
-      return { hasAccess: false, tier: 'free', expiresAt: null };
-    } catch (err) {
-      console.error('[useUnifiedMembership] Unexpected local check error:', err);
-      return { hasAccess: false, tier: 'free', expiresAt: null };
-    }
-  }, []);
-
   // 主要檢查邏輯
   const checkMembership = useCallback(async () => {
     try {
@@ -205,28 +168,7 @@ export function useUnifiedMembership(productId?: string): MembershipStatus {
         return;
       }
 
-      // 中央 API 失敗或無權限，檢查本地訂閱作為 fallback
-      const localResult = await checkLocalSubscription(session.user.id);
-
-      if (localResult.hasAccess) {
-        const result: Omit<CachedMembership, 'timestamp' | 'productId'> = {
-          hasAccess: true,
-          source: 'local',
-          tier: localResult.tier,
-          expiresAt: localResult.expiresAt,
-          entitlements: [],
-        };
-
-        setHasAccess(true);
-        setSource('local');
-        setTier(localResult.tier);
-        setExpiresAt(localResult.expiresAt);
-        setEntitlements([]);
-        setCache(result);
-        return;
-      }
-
-      // 兩者都無權限
+      // 已登入但中央回報無權限：一律以中央為準（本地 subscriptions 已不再作為來源）
       setHasAccess(false);
       setSource('none');
       setTier('free');
@@ -247,7 +189,7 @@ export function useUnifiedMembership(productId?: string): MembershipStatus {
     } finally {
       setLoading(false);
     }
-  }, [productId, getCached, setCache, checkLocalSubscription]);
+  }, [productId, getCached, setCache]);
 
   // 初始化檢查
   useEffect(() => {

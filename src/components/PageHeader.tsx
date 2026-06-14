@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
+import { redirectToCentralSubscribe } from '@/config/centralAuth';
 
 interface PageHeaderProps {
   title?: string;
@@ -110,15 +111,16 @@ export function PageHeader({
               hasAccess ? (
                 <MembershipBadge source={membershipSource} tier={tier} />
               ) : (
-                <Button
-                  onClick={() => navigate('/subscribe')}
-                  variant="outline"
-                  size="sm"
-                  className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
-                >
-                  <Crown className="mr-1 h-3 w-3" />
-                  升級
-                </Button>
+              <Button
+                onClick={() => redirectToCentralSubscribe()}
+                variant="outline"
+                size="sm"
+                className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+                title="前往主站升級"
+              >
+                <Crown className="mr-1 h-3 w-3" />
+                升級
+              </Button>
               )
             )}
 

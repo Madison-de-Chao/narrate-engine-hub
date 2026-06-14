@@ -34,6 +34,7 @@ import type { SolarTimeMode, ZiMode } from "@/types/bazi";
 import { TIMEZONE_PRESETS, fromJsTimezoneOffset } from "@/types/bazi";
 
 const GUEST_STORAGE_KEY = 'bazi_guest_form_data';
+const GUEST_STORAGE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
 // 時辰選項（子時到亥時）
 const HOUR_OPTIONS = [
@@ -111,9 +112,19 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
       const saved = localStorage.getItem(GUEST_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        setFormData(parsed);
-        setDataSource('guest');
-        return parsed;
+        // Support both legacy (plain data) and new envelope { data, expiresAt }
+        if (parsed && typeof parsed === 'object' && 'expiresAt' in parsed) {
+          if (Date.now() > parsed.expiresAt) {
+            localStorage.removeItem(GUEST_STORAGE_KEY);
+            return null;
+          }
+          setFormData(parsed.data);
+          setDataSource('guest');
+          return parsed.data;
+        }
+        // Legacy entries: discard to avoid keeping PII indefinitely
+        localStorage.removeItem(GUEST_STORAGE_KEY);
+        return null;
       }
     } catch (err) {
       console.error('載入訪客資料失敗:', err);
@@ -124,7 +135,10 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
   // 儲存訪客資料到 localStorage
   const saveGuestData = (data: typeof formData) => {
     try {
-      localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(
+        GUEST_STORAGE_KEY,
+        JSON.stringify({ data, expiresAt: Date.now() + GUEST_STORAGE_TTL_MS })
+      );
     } catch (err) {
       console.error('儲存訪客資料失敗:', err);
     }
@@ -165,7 +179,18 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
       const guestData = (() => {
         try {
           const saved = localStorage.getItem(GUEST_STORAGE_KEY);
-          if (saved) return JSON.parse(saved);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && typeof parsed === 'object' && 'expiresAt' in parsed) {
+              if (Date.now() > parsed.expiresAt) {
+                localStorage.removeItem(GUEST_STORAGE_KEY);
+                return null;
+              }
+              return parsed.data;
+            }
+            // Legacy entry — discard
+            localStorage.removeItem(GUEST_STORAGE_KEY);
+          }
         } catch { /* ignore */ }
         return null;
       })();

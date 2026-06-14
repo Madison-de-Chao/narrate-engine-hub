@@ -7,6 +7,7 @@ import { Loader2, Lock, LogIn, ExternalLink, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import type { MembershipSource, MembershipTier } from '@/lib/unified-member-sdk';
+import { redirectToCentralSubscribe, CENTRAL_SUBSCRIBE_URL } from '@/config/centralAuth';
 
 interface EntitlementGuardProps {
   children: ReactNode;
@@ -17,7 +18,7 @@ interface EntitlementGuardProps {
 export function EntitlementGuard({ 
   children, 
   productId,
-  fallbackUrl = 'https://momo.maison-de-chao.com'
+  fallbackUrl,
 }: EntitlementGuardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const { hasAccess, loading, error, source, tier } = useUnifiedMembership(productId);
@@ -112,11 +113,18 @@ export function EntitlementGuard({
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Button 
-              onClick={() => window.open(fallbackUrl, '_blank')}
+              onClick={() => {
+                if (fallbackUrl) {
+                  window.open(fallbackUrl, '_blank');
+                } else {
+                  redirectToCentralSubscribe();
+                }
+              }}
               className="w-full gap-2"
+              title={`前往主站：${CENTRAL_SUBSCRIBE_URL}`}
             >
               <ExternalLink className="h-4 w-4" />
-              前往購買會員
+              前往主站訂閱
             </Button>
             <Button variant="outline" onClick={() => navigate('/')} className="w-full">
               返回首頁

@@ -1030,32 +1030,13 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const authHeader = req.headers.get('Authorization');
-
-    // 重要：若有登入狀態，必須把 Authorization 帶入 client，否則資料庫寫入會以匿名身份執行而被 RLS 擋下
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-      global: {
-        headers: authHeader ? { Authorization: authHeader } : {},
-      },
+    // 嚴格 RLS：三張使用者表已禁止 anon/authenticated 直接寫入。
+    // 此處改以 service_role 執行所有 DB 操作；身份識別僅依 userEmail。
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
     });
-
-    // 支援訪客模式：嘗試獲取用戶，但不強制要求
-    let user = null;
-
-    if (authHeader) {
-      try {
-        const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        user = authUser;
-      } catch (error) {
-        console.log('Auth check failed, continuing as guest:', error);
-      }
-    }
+    const user = null;
 
     const { name, gender, birthDate, birthTime, location, useSolarTime, timezoneOffsetMinutes, userEmail } = await req.json();
 

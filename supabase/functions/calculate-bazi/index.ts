@@ -1237,7 +1237,7 @@ serve(async (req) => {
           calculationLogs,
           dayPillarDebug  // 新增：日柱計算詳細 debug 資訊
         },
-        isGuest: !user
+        isGuest: !userEmail
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

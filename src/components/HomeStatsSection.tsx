@@ -80,17 +80,11 @@ export const HomeStatsSection = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Fetch total users count - using a workaround since we can't directly count profiles
-        // We'll use bazi_calculations to estimate activity
-        const { count: calculationsCount } = await supabase
-          .from('bazi_calculations')
-          .select('*', { count: 'exact', head: true });
-
-        // Fetch active subscriptions
-        const { count: subscriptionsCount } = await supabase
-          .from('subscriptions')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'active');
+        // 透過 SECURITY DEFINER RPC 取得公開統計（嚴格 RLS 後不再直接讀資料表）
+        const { data: statsRows } = await supabase.rpc('public_site_stats');
+        const stats = Array.isArray(statsRows) ? statsRows[0] : statsRows;
+        const calculationsCount = Number(stats?.total_calculations ?? 0);
+        const subscriptionsCount = Number(stats?.active_subscriptions ?? 0);
 
         // Calculate estimated users based on calculations
         // Assuming average 2-3 calculations per user

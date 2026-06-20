@@ -356,7 +356,8 @@ const Index = () => {
               dataLabels
             },
             name: result.name,
-            calculationId: calculationId
+            calculationId: calculationId,
+            userEmail: identityEmail || null,
           }
         });
 

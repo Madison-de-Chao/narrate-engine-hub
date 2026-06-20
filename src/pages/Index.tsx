@@ -98,8 +98,11 @@ export interface BaziResult {
 const Index = () => {
   const navigate = useNavigate();
   const { isGuest, disableGuestMode } = useGuestMode();
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  // 身份識別已從 Supabase auth 改為主站 email（localStorage）。
+  // 維持 `user` 介面以最少侵入方式相容既有呼叫點：id 與 email 都設為 email。
+  const { email: identityEmail, clearEmail } = useIdentity();
+  const user = identityEmail ? ({ id: identityEmail, email: identityEmail } as SupabaseUser) : null;
+  const session = null as unknown as Session | null;
   const [baziResult, setBaziResult] = useState<BaziResult | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [calculatingUserName, setCalculatingUserName] = useState<string>("");
@@ -241,44 +244,13 @@ const Index = () => {
     };
   }, [baziResult]); // 當 baziResult 變化時重新設定監聽
 
-  useEffect(() => {
-    // 设置认证状态监听器
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Only redirect to auth if not in guest mode and no session
-        if (!session && !isGuest) {
-          navigate("/auth");
-        }
-      }
-    );
+  // 不再強制導向 /auth；未設定 email 也允許瀏覽（只是無法存檔）
 
-    // 检查当前会话
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      // Only redirect to auth if not in guest mode and no session
-      if (!session && !isGuest) {
-        navigate("/auth");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate, isGuest]);
-
-  const handleLogout = async () => {
-    if (isGuest) {
-      disableGuestMode();
-      toast.success("已退出訪客模式");
-      navigate("/auth");
-    } else {
-      await supabase.auth.signOut();
-      toast.success("已登出");
-      navigate("/auth");
-    }
+  const handleLogout = () => {
+    if (isGuest) disableGuestMode();
+    clearEmail();
+    toast.success("已清除身份");
+    navigate("/");
   };
 
   const generateLegionStories = async (result: BaziResult, calculationId?: string) => {
@@ -487,7 +459,8 @@ const Index = () => {
           birthTime: `${formData.hour}:00`,
           location: formData.location || null,
           useSolarTime: true,
-          timezoneOffsetMinutes: formData.timezoneOffsetMinutes || 480
+          timezoneOffsetMinutes: formData.timezoneOffsetMinutes || 480,
+          userEmail: identityEmail || null,
         }
       });
 

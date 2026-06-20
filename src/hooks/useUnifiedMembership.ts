@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useIdentity } from '@/hooks/useIdentity';
 import {
   MembershipSource,
   MembershipTier,
@@ -52,6 +53,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 // ============ Hook 實作 ============
 
 export function useUnifiedMembership(productId?: string): MembershipStatus {
+  const { email } = useIdentity();
   const [hasAccess, setHasAccess] = useState(false);
   const [source, setSource] = useState<MembershipSource>('none');
   const [tier, setTier] = useState<MembershipTier>('free');
@@ -114,10 +116,8 @@ export function useUnifiedMembership(productId?: string): MembershipStatus {
       setLoading(true);
       setError(null);
 
-      // 檢查登入狀態
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session) {
+      // 本站不再驗證；以 localStorage email 為身份
+      if (!email) {
         setHasAccess(false);
         setSource('none');
         setTier('free');
@@ -139,13 +139,11 @@ export function useUnifiedMembership(productId?: string): MembershipStatus {
         return;
       }
 
-      // 使用預設產品 ID（向後相容）
-      const effectiveProductId = productId || PRODUCT_IDS.REPORT_PLATFORM;
-
-      // 呼叫中央 API（透過本地 edge function 代理）
-      const queryParams = `?product_id=${encodeURIComponent(effectiveProductId)}`;
+      // 透過 edge function 代理呼叫中央 check-entitlement
       const { data, error: fnError } = await supabase.functions.invoke(
-        `check-entitlement${queryParams}`,
+        `check-entitlement?email=${encodeURIComponent(email)}${
+          productId ? `&product_id=${encodeURIComponent(productId)}` : ''
+        }`,
         { method: 'GET' }
       );
 
@@ -189,24 +187,13 @@ export function useUnifiedMembership(productId?: string): MembershipStatus {
     } finally {
       setLoading(false);
     }
-  }, [productId, getCached, setCache]);
+  }, [productId, email, getCached, setCache]);
 
-  // 初始化檢查
+  // email 變更或元件初始化時重檢
   useEffect(() => {
+    clearCache();
     checkMembership();
-  }, [checkMembership]);
-
-  // 監聽登入狀態變化
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-        clearCache();
-        checkMembership();
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [checkMembership, clearCache]);
+  }, [email, checkMembership, clearCache]);
 
   return {
     hasAccess,

@@ -662,6 +662,13 @@ export type Database = {
       }
       is_admin: { Args: { check_user_id: string }; Returns: boolean }
       is_premium: { Args: { check_user_id: string }; Returns: boolean }
+      public_site_stats: {
+        Args: never
+        Returns: {
+          active_subscriptions: number
+          total_calculations: number
+        }[]
+      }
       record_login_attempt: {
         Args: {
           p_identifier: string

@@ -246,11 +246,11 @@ ${bingfuSection || '此柱未顯現特殊兵符'}
         const supabase = createClient(supabaseUrl, serviceRoleKey);
         const dbType = dbTypeMap[legionType] || 'self';
         
-        // 從請求取得 user_id 或從 authorization header 解析
-        const authHeader = req.headers.get('authorization');
+        // 身份識別：優先讀取 body 的 userEmail（主站身份）；舊版仍嘗試 JWT sub 作為相容
+        const userEmail = body?.userEmail ?? null;
         let userId: string | null = null;
-        
-        if (authHeader) {
+        const authHeader = req.headers.get('authorization');
+        if (!userEmail && authHeader) {
           try {
             const token = authHeader.replace('Bearer ', '');
             const payload = JSON.parse(atob(token.split('.')[1]));
@@ -259,12 +259,13 @@ ${bingfuSection || '此柱未顯現特殊兵符'}
             console.log('Could not parse user from token');
           }
         }
-        
-        const { error } = await supabase.from('legion_stories').insert({ 
-          calculation_id: calculationId, 
-          legion_type: dbType, 
+
+        const { error } = await supabase.from('legion_stories').insert({
+          calculation_id: calculationId,
+          legion_type: dbType,
           story,
-          user_id: userId 
+          user_email: userEmail,
+          user_id: userId,
         });
         if (error) console.error('DB save error:', error);
         else console.log('Story saved to DB');

@@ -196,14 +196,15 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
       })();
 
       try {
-        const { data, error } = await supabase
-          .from('bazi_calculations')
-          .select('id, name, birth_date, birth_time, gender, location, hour_branch, created_at')
-          .eq('user_email', userId)
-          .order('created_at', { ascending: false })
-          .limit(10);
-
+        const { data: resp, error } = await supabase.functions.invoke('bazi-data', {
+          body: { op: 'list_calculations', email: userId, limit: 10 },
+        });
         if (error) throw error;
+        if (resp?.error) throw new Error(resp.error);
+        const data = (resp?.data ?? []) as Array<{
+          id: string; name: string; birth_date: string; birth_time: string | null;
+          gender: string | null; location: string | null; hour_branch: string | null; created_at: string;
+        }>;
 
         if (data && data.length > 0) {
           setHistoryRecords(data);
@@ -284,12 +285,11 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('bazi_calculations')
-        .delete()
-        .eq('id', deleteTarget.id);
-
+      const { data: resp, error } = await supabase.functions.invoke('bazi-data', {
+        body: { op: 'delete_calculation', email: userId, id: deleteTarget.id },
+      });
       if (error) throw error;
+      if (resp?.error) throw new Error(resp.error);
 
       setHistoryRecords(prev => prev.filter(r => r.id !== deleteTarget.id));
       toast.success('已刪除記錄');

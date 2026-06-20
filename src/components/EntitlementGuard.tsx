@@ -1,6 +1,6 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
 import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
-import { supabase } from '@/integrations/supabase/client';
+import { useIdentity } from '@/hooks/useIdentity';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Lock, LogIn, ExternalLink, Crown } from 'lucide-react';
@@ -20,27 +20,12 @@ export function EntitlementGuard({
   productId,
   fallbackUrl,
 }: EntitlementGuardProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const { hasAccess, loading, error, source, tier } = useUnifiedMembership(productId);
+  const { hasIdentity } = useIdentity();
+  const { hasAccess, loading, error } = useUnifiedMembership(productId);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-    };
-    
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setIsAuthenticated(!!session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   // Loading state
-  if (isAuthenticated === null || loading) {
+  if (hasIdentity && loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -51,8 +36,8 @@ export function EntitlementGuard({
     );
   }
 
-  // Not logged in
-  if (!isAuthenticated) {
+  // 未提供身份識別 email
+  if (!hasIdentity) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
@@ -60,14 +45,17 @@ export function EntitlementGuard({
             <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
               <LogIn className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle>請先登入</CardTitle>
+            <CardTitle>請先設定身份</CardTitle>
             <CardDescription>
-              您需要登入才能訪問此內容
+              請輸入您在主站使用的 email，我們將以此查詢您的 Premium 權限
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <Button onClick={() => navigate('/auth')} className="w-full">
-              前往登入
+            <Button
+              onClick={() => navigate(`/auth?return_to=${encodeURIComponent(window.location.pathname)}`)}
+              className="w-full"
+            >
+              前往設定身份
             </Button>
             <Button variant="outline" onClick={() => navigate('/')} className="w-full">
               返回首頁

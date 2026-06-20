@@ -180,6 +180,7 @@ export type Database = {
           ten_gods: Json | null
           updated_at: string | null
           use_solar_time: boolean | null
+          user_email: string | null
           user_id: string | null
           wuxing_scores: Json | null
           year_branch: string
@@ -211,6 +212,7 @@ export type Database = {
           ten_gods?: Json | null
           updated_at?: string | null
           use_solar_time?: boolean | null
+          user_email?: string | null
           user_id?: string | null
           wuxing_scores?: Json | null
           year_branch: string
@@ -242,6 +244,7 @@ export type Database = {
           ten_gods?: Json | null
           updated_at?: string | null
           use_solar_time?: boolean | null
+          user_email?: string | null
           user_id?: string | null
           wuxing_scores?: Json | null
           year_branch?: string
@@ -283,6 +286,7 @@ export type Database = {
           is_locked: boolean
           legion_type: string
           story: string
+          user_email: string | null
           user_id: string | null
           version: number
         }
@@ -293,6 +297,7 @@ export type Database = {
           is_locked?: boolean
           legion_type: string
           story: string
+          user_email?: string | null
           user_id?: string | null
           version?: number
         }
@@ -303,6 +308,7 @@ export type Database = {
           is_locked?: boolean
           legion_type?: string
           story?: string
+          user_email?: string | null
           user_id?: string | null
           version?: number
         }
@@ -456,7 +462,8 @@ export type Database = {
           last_purchase_at: string | null
           total_credits_purchased: number
           updated_at: string
-          user_id: string
+          user_email: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -465,7 +472,8 @@ export type Database = {
           last_purchase_at?: string | null
           total_credits_purchased?: number
           updated_at?: string
-          user_id: string
+          user_email?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -474,7 +482,8 @@ export type Database = {
           last_purchase_at?: string | null
           total_credits_purchased?: number
           updated_at?: string
-          user_id?: string
+          user_email?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

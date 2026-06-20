@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { BaziInputForm } from "@/components/BaziInputForm";
+import { useIdentity } from "@/hooks/useIdentity";
 import { TraditionalBaziDisplay } from "@/components/TraditionalBaziDisplay";
 import { LegionCards } from "@/components/LegionCards";
 import { AnalysisCharts } from "@/components/AnalysisCharts";

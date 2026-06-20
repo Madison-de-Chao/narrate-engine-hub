@@ -7,6 +7,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+/** 透過 bazi-data 閘道呼叫；strict RLS 後唯一的讀寫路徑 */
+async function callGateway<T = unknown>(op: string, email: string, extra: Record<string, unknown> = {}) {
+  const { data, error } = await supabase.functions.invoke('bazi-data', {
+    body: { op, email, ...extra },
+  });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data as T;
+}
+
 interface StoryRegenerationState {
   creditsRemaining: number;
   totalCreditsPurchased: number;
@@ -38,14 +48,11 @@ export function useStoryRegeneration(userId: string | undefined) {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('story_regeneration_credits')
-        .select('credits_remaining, total_credits_purchased')
-        .eq('user_email', userId)
-        .maybeSingle();
-
-      if (error) throw error;
-
+      const res = await callGateway<{ data: { credits_remaining: number; total_credits_purchased: number } | null }>(
+        'get_credits',
+        userId,
+      );
+      const data = res?.data ?? null;
       setState({
         creditsRemaining: data?.credits_remaining ?? 0,
         totalCreditsPurchased: data?.total_credits_purchased ?? 0,
@@ -63,20 +70,17 @@ export function useStoryRegeneration(userId: string | undefined) {
 
   // 檢查計算是否有已鎖定的故事
   const checkStoriesLocked = useCallback(async (calculationId: string): Promise<StoredStory[]> => {
+    if (!userId) return [];
     try {
-      const { data, error } = await supabase
-        .from('legion_stories')
-        .select('id, legion_type, story, is_locked, version, created_at')
-        .eq('calculation_id', calculationId)
-        .order('legion_type');
-
-      if (error) throw error;
-      return (data as StoredStory[]) || [];
+      const res = await callGateway<{ data: StoredStory[] }>('get_stories', userId, {
+        calculation_id: calculationId,
+      });
+      return res?.data ?? [];
     } catch (error) {
       console.error('Failed to check stories:', error);
       return [];
     }
-  }, []);
+  }, [userId]);
 
   // 儲存故事（鎖定）
   const saveAndLockStories = useCallback(async (
@@ -93,33 +97,10 @@ export function useStoryRegeneration(userId: string | undefined) {
     }
 
     try {
-      // 檢查是否已有故事
-      const existingStories = await checkStoriesLocked(calculationId);
-      
-      if (existingStories.length > 0 && existingStories.some(s => s.is_locked)) {
-        toast({
-          title: '故事已鎖定',
-          description: '此測算的軍團故事已生成並鎖定，無法覆蓋',
-          variant: 'destructive',
-        });
-        return false;
-      }
-
-      // 插入新故事
-      const storyRecords = Object.entries(stories).map(([legionType, story]) => ({
+      await callGateway('save_stories', userId, {
         calculation_id: calculationId,
-        user_email: userId,
-        legion_type: legionType,
-        story,
-        is_locked: true,
-        version: 1,
-      }));
-
-      const { error } = await supabase
-        .from('legion_stories')
-        .insert(storyRecords);
-
-      if (error) throw error;
+        stories,
+      });
 
       toast({
         title: '故事已保存',
@@ -129,6 +110,15 @@ export function useStoryRegeneration(userId: string | undefined) {
       return true;
     } catch (error) {
       console.error('Failed to save stories:', error);
+      const msg = error instanceof Error ? error.message : '';
+      if (msg.includes('locked')) {
+        toast({
+          title: '故事已鎖定',
+          description: '此測算的軍團故事已生成並鎖定，無法覆蓋',
+          variant: 'destructive',
+        });
+        return false;
+      }
       toast({
         title: '保存失敗',
         description: '無法保存軍團故事，請稍後再試',
@@ -136,7 +126,7 @@ export function useStoryRegeneration(userId: string | undefined) {
       });
       return false;
     }
-  }, [userId, checkStoriesLocked, toast]);
+  }, [userId, toast]);
 
   // 使用重生資格重新生成故事
   const regenerateStories = useCallback(async (
@@ -161,25 +151,10 @@ export function useStoryRegeneration(userId: string | undefined) {
     }
 
     try {
-      // 刪除舊故事（不保留舊版本）
-      const { error: deleteError } = await supabase
-        .from('legion_stories')
-        .delete()
-        .eq('calculation_id', calculationId)
-        .eq('user_email', userId);
-
-      if (deleteError) throw deleteError;
-
-      // 扣除重生資格
-      const { error: creditError } = await supabase
-        .from('story_regeneration_credits')
-        .update({ 
-          credits_remaining: state.creditsRemaining - 1,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_email', userId);
-
-      if (creditError) throw creditError;
+      await callGateway('delete_stories', userId, { calculation_id: calculationId });
+      await callGateway('update_credits', userId, {
+        credits_remaining: state.creditsRemaining - 1,
+      });
 
       // 更新本地狀態
       setState(prev => ({

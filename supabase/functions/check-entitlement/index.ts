@@ -1,220 +1,113 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
-import { checkRateLimit, createRateLimitResponse, RATE_LIMITS } from "../_shared/rateLimiter.ts";
+
+/**
+ * check-entitlement
+ * --------------------------------------------------------------
+ * 本站不再做使用者驗證。
+ * 前端傳 email（query 或 body）→ 後端用 x-api-key 呼叫主站
+ * story_builder_hub 的 check-entitlement，回傳是否擁有 Premium。
+ *
+ * 速率：60 秒記憶體快取，避免重複呼叫主站。
+ */
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
 
-// Central API endpoints - story_builder_hub 作為中央會員系統
-const CENTRAL_BASE_URL = 'https://yrdtgwoxxjksesynrjss.supabase.co/functions/v1';
-const ENTITLEMENTS_ME_URL = `${CENTRAL_BASE_URL}/entitlements-me`;
-const ENTITLEMENTS_LOOKUP_URL = `${CENTRAL_BASE_URL}/entitlements-lookup`;
+const CENTRAL_URL = 'https://yrdtgwoxxjksesynrjss.supabase.co/functions/v1/check-entitlement';
+const CENTRAL_PRODUCT_ID = '22222222-2222-2222-2222-222222222222';
+const CACHE_TTL_MS = 60 * 1000;
 
-// 產品 ID：使用中央系統的 story_builder_hub 產品
-const CENTRAL_PRODUCT_ID = 'story_builder_hub';
-const DEFAULT_PRODUCT_ID = 'bazi-premium';
+interface CacheEntry {
+  data: unknown;
+  expires: number;
+}
+const cache = new Map<string, CacheEntry>();
 
-interface EntitlementResponse {
-  hasAccess: boolean;
-  source: 'central' | 'central_fallback' | 'local' | 'error';
-  email?: string;
-  productId?: string;
-  tier?: string;
-  entitlements?: Array<{
-    product_id: string;
-    expires_at: string | null;
-    tier?: string;
-  }>;
-  expiresAt?: string | null;
-  error?: string;
-  centralStatus?: number;
+function bad(status: number, body: Record<string, unknown>) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const centralServiceRoleKey = Deno.env.get('CENTRAL_SUPABASE_SERVICE_ROLE_KEY');
-
-    // Get authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.log('No authorization header provided');
-      return new Response(
-        JSON.stringify({ error: 'No authorization header', hasAccess: false, source: 'error' } as EntitlementResponse),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const apiKey = Deno.env.get('CENTRAL_API_KEY');
+    if (!apiKey) {
+      console.error('CENTRAL_API_KEY not configured');
+      return bad(500, { hasAccess: false, source: 'error', error: 'Central API key not configured' });
     }
 
-    // Verify local user JWT
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
+    // 從 query 或 body 取 email
+    const url = new URL(req.url);
+    let email = url.searchParams.get('email');
+    const productId = url.searchParams.get('product_id') || CENTRAL_PRODUCT_ID;
+
+    if (!email && (req.method === 'POST')) {
+      try {
+        const body = await req.json();
+        email = body?.email ?? null;
+      } catch {
+        // ignore
+      }
+    }
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return bad(400, { hasAccess: false, source: 'error', error: 'Invalid or missing email' });
+    }
+
+    const cacheKey = `${email}|${productId}`;
+    const cached = cache.get(cacheKey);
+    if (cached && cached.expires > Date.now()) {
+      return new Response(JSON.stringify(cached.data), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'HIT' },
+      });
+    }
+
+    const centralUrl = `${CENTRAL_URL}?product_id=${encodeURIComponent(productId)}&email=${encodeURIComponent(email)}`;
+    const upstream = await fetch(centralUrl, {
+      method: 'GET',
+      headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
     });
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      console.error('User verification failed:', userError);
-      return new Response(
-        JSON.stringify({ error: 'Invalid user token', hasAccess: false, source: 'error' } as EntitlementResponse),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const userEmail = user.email;
-    if (!userEmail) {
-      console.error('User has no email');
-      return new Response(
-        JSON.stringify({ error: 'User email not found', hasAccess: false, source: 'error' } as EntitlementResponse),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Rate limiting check
-    const rateLimitResult = checkRateLimit(`entitlement:${user.id}`, RATE_LIMITS.CHECK_ENTITLEMENT);
-    if (!rateLimitResult.allowed) {
-      console.log(`[check-entitlement] Rate limit exceeded for user: ${user.id}`);
-      return createRateLimitResponse(rateLimitResult, corsHeaders);
-    }
-
-    // Get product_id and method from query params
-    const url = new URL(req.url);
-    const productId = url.searchParams.get('product_id') || DEFAULT_PRODUCT_ID;
-    const method = url.searchParams.get('method') || 'jwt'; // 'jwt' or 'lookup'
-
-    console.log(`Checking entitlement for email: ${userEmail}, product: ${productId}, method: ${method}`);
-
-    let response: EntitlementResponse;
-
-    // 使用中央會員系統的 product_id (story_builder_hub)
-    const centralProductId = CENTRAL_PRODUCT_ID;
-
-    // Step 1: Try Central API (JWT-based or lookup)
-    if (centralServiceRoleKey) {
-      console.log(`Checking Central API for product: ${centralProductId}`);
-      
-      // 優先使用 lookup 方法（透過 email 查詢）
-      response = await tryLookupMethod(centralServiceRoleKey, userEmail, centralProductId);
-      
-      if (response.hasAccess) {
-        console.log('Central API granted access');
-        // 保持原始請求的 productId 以便前端識別
-        response.productId = productId;
-      } else {
-        console.log('Central API no access, will check local subscriptions');
-      }
-    } else {
-      console.error('CENTRAL_SUPABASE_SERVICE_ROLE_KEY not configured');
-      response = {
+    if (!upstream.ok) {
+      const text = await upstream.text().catch(() => '');
+      console.error('Central API error', upstream.status, text);
+      return bad(502, {
         hasAccess: false,
         source: 'error',
-        error: 'Central API key not configured',
-        email: userEmail,
-        productId,
-      };
+        error: 'Central API request failed',
+        centralStatus: upstream.status,
+      });
     }
 
-    // If central API failed, try local subscription check
-    if (!response.hasAccess && (response.source === 'error' || response.source === 'central_fallback')) {
-      console.log('Central API unavailable or no access, checking local subscriptions');
-      
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .maybeSingle();
+    const data = await upstream.json();
+    const hasAccess = data?.hasAccess === true;
+    const result = {
+      hasAccess,
+      source: 'central' as const,
+      email,
+      productId,
+      tier: hasAccess ? 'premium' : 'free',
+      entitlements: data?.entitlement ? [data.entitlement] : [],
+      expiresAt: data?.entitlement?.ends_at ?? null,
+      raw: data,
+    };
 
-      if (subscription && (!subscription.expires_at || new Date(subscription.expires_at) > new Date())) {
-        console.log('Found active local subscription:', subscription.plan);
-        response = {
-          hasAccess: true,
-          source: 'local',
-          email: userEmail,
-          productId,
-          tier: subscription.plan,
-          expiresAt: subscription.expires_at,
-        };
-      }
-    }
+    cache.set(cacheKey, { data: result, expires: Date.now() + CACHE_TTL_MS });
 
-    return new Response(
-      JSON.stringify(response),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error) {
-    console.error('Unexpected error in check-entitlement:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error', hasAccess: false, source: 'error' } as EntitlementResponse),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'MISS' },
+    });
+  } catch (err) {
+    console.error('check-entitlement unexpected error:', err);
+    return bad(500, { hasAccess: false, source: 'error', error: 'Internal server error' });
   }
 });
-
-
-// Helper function for lookup method
-async function tryLookupMethod(
-  centralServiceRoleKey: string,
-  userEmail: string,
-  productId: string
-): Promise<EntitlementResponse> {
-  try {
-    const lookupUrl = `${ENTITLEMENTS_LOOKUP_URL}?email=${encodeURIComponent(userEmail)}&product_id=${encodeURIComponent(productId)}`;
-    
-    const lookupResponse = await fetch(lookupUrl, {
-      method: 'GET',
-      headers: {
-        'X-API-Key': centralServiceRoleKey,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!lookupResponse.ok) {
-      const errorText = await lookupResponse.text();
-      console.error('Central API lookup error:', lookupResponse.status, errorText);
-      
-      return {
-        hasAccess: false,
-        source: 'central_fallback',
-        error: 'Central API request failed',
-        centralStatus: lookupResponse.status,
-        email: userEmail,
-        productId,
-      };
-    }
-
-    const entitlementData = await lookupResponse.json();
-    console.log('Lookup entitlement response:', JSON.stringify(entitlementData));
-
-    const hasAccess = entitlementData.hasAccess === true ||
-      entitlementData.has_access === true ||
-      (Array.isArray(entitlementData.entitlements) && entitlementData.entitlements.length > 0);
-
-    return {
-      hasAccess,
-      source: 'central',
-      email: userEmail,
-      productId,
-      tier: entitlementData.tier || (hasAccess ? 'premium' : 'free'),
-      entitlements: entitlementData.entitlements || [],
-      expiresAt: entitlementData.expires_at || entitlementData.expiresAt || null,
-    };
-  } catch (error) {
-    console.error('Lookup method error:', error);
-    return {
-      hasAccess: false,
-      source: 'error',
-      error: 'Central API lookup failed',
-      email: userEmail,
-      productId,
-    };
-  }
-}

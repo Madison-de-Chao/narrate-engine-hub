@@ -1,118 +1,139 @@
-import { useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, ExternalLink, UserRound, Home } from "lucide-react";
-import { useGuestMode } from "@/hooks/useGuestMode";
-import { redirectToCentralLogin, CENTRAL_SITE_URL } from "@/config/centralAuth";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ExternalLink, Home, Mail, LogOut } from "lucide-react";
+import { useIdentity, isValidEmail } from "@/hooks/useIdentity";
+import { redirectToCentralSubscribe, CENTRAL_SITE_URL } from "@/config/centralAuth";
 import { toast } from "sonner";
 
 /**
- * 本網站已棄用本地認證 UI。
- * 此頁面僅作為「跳轉主站登入」的中繼站；
- * 若使用者已登入則直接導向首頁，否則自動跳轉主站。
+ * 身份識別頁
+ * --------------------------------------------------------------
+ * 本站不再做使用者驗證；只請使用者輸入「在主站使用的 email」，
+ * 作為查詢中央 Premium 權限的依據。
+ *
+ * ⚠️ 此 email 不會驗證真偽；僅作為個人收藏紀錄識別。
  */
 export default function Auth() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { enableGuestMode } = useGuestMode();
-  const [redirecting, setRedirecting] = useState(false);
+  const { email, setEmail, clearEmail } = useIdentity();
+  const [input, setInput] = useState(email ?? "");
+  const [submitting, setSubmitting] = useState(false);
 
   const returnTo = searchParams.get("return_to") || "/";
-  const autoRedirect = searchParams.get("auto") !== "0";
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate(returnTo, { replace: true });
-      } else if (autoRedirect) {
-        // 自動跳主站
-        setRedirecting(true);
-        setTimeout(() => redirectToCentralLogin(returnTo), 600);
-      }
-    });
-  }, [navigate, returnTo, autoRedirect]);
-
-  const handleGoCentral = () => {
-    setRedirecting(true);
-    redirectToCentralLogin(returnTo);
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const value = input.trim().toLowerCase();
+    if (!isValidEmail(value)) {
+      toast.error("請輸入有效的 email");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      setEmail(value);
+      toast.success(`已登入為 ${value}`);
+      navigate(returnTo, { replace: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "設定失敗");
+      setSubmitting(false);
+    }
   };
 
-  const handleGuest = () => {
-    enableGuestMode();
-    toast.success("已切換到訪客模式");
-    navigate("/");
+  const handleClear = () => {
+    clearEmail();
+    setInput("");
+    toast.success("已清除身份");
   };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(var(--cosmic-nebula)/0.15),_transparent_50%)] pointer-events-none" />
       <Card className="w-full max-w-md p-8 bg-card/80 backdrop-blur-sm border-primary/20 cosmic-glow relative z-10">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold cosmic-title-gradient">
-            虹靈御所八字人生兵法
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            登入由主站統一管理
-          </p>
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold cosmic-title-gradient">虹靈御所八字人生兵法</h1>
+          <p className="text-muted-foreground mt-2">身份識別</p>
         </div>
 
-        <div className="space-y-4">
-          <div className="text-sm text-muted-foreground leading-relaxed bg-muted/30 p-4 rounded-md border border-border/40">
-            <p className="mb-2">
-              為提供跨產品一致的會員體驗，本站已整合至中央會員系統。
-            </p>
-            <p>
-              點下方按鈕將前往主站登入；登入完成後會自動返回本站。
-            </p>
+        <div className="text-sm text-muted-foreground leading-relaxed bg-muted/30 p-4 rounded-md border border-border/40 mb-6">
+          <p className="mb-2">
+            本站不做獨立登入。請輸入你在
+            <a
+              href={CENTRAL_SITE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary underline mx-1"
+            >
+              主站
+            </a>
+            購買 / 註冊用的 email，
+            系統會以此 email 向主站查詢你的 Premium 權限。
+          </p>
+          <p className="text-xs">⚠️ 此 email 不會驗證真偽，僅作為個人收藏紀錄識別。</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="identity-email">主站 Email</Label>
+            <Input
+              id="identity-email"
+              type="email"
+              placeholder="you@example.com"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              autoComplete="email"
+              required
+              maxLength={255}
+            />
           </div>
 
           <Button
-            onClick={handleGoCentral}
-            disabled={redirecting}
-            className="w-full bg-primary hover:bg-primary/90"
+            type="submit"
+            disabled={submitting}
             size="lg"
+            className="w-full bg-primary hover:bg-primary/90"
           >
-            {redirecting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                正在前往主站…
-              </>
-            ) : (
-              <>
-                <ExternalLink className="mr-2 h-4 w-4" />
-                前往主站登入 / 註冊
-              </>
-            )}
+            <Mail className="mr-2 h-4 w-4" />
+            {email && email === input.trim().toLowerCase() ? "進入" : "設定為此身份"}
           </Button>
+        </form>
 
+        <div className="mt-4 space-y-2">
           <Button
             type="button"
             variant="outline"
-            onClick={handleGuest}
-            className="w-full border-dashed border-2"
-            disabled={redirecting}
+            onClick={() => redirectToCentralSubscribe()}
+            className="w-full"
           >
-            <UserRound className="mr-2 h-4 w-4" />
-            以訪客身份繼續
+            <ExternalLink className="mr-2 h-4 w-4" />
+            前往主站訂閱 / 升級
           </Button>
+
+          {email && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleClear}
+              className="w-full text-muted-foreground"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              清除身份（{email}）
+            </Button>
+          )}
 
           <Button
             type="button"
             variant="ghost"
             onClick={() => navigate("/")}
             className="w-full"
-            disabled={redirecting}
           >
             <Home className="mr-2 h-4 w-4" />
             回到首頁
           </Button>
-
-          <p className="text-xs text-center text-muted-foreground pt-2">
-            主站位置：
-            <span className="font-mono break-all"> {CENTRAL_SITE_URL}</span>
-          </p>
         </div>
       </Card>
     </div>

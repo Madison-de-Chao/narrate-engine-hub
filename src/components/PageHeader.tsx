@@ -1,12 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { Home, Crown, LogOut, Settings } from 'lucide-react';
+import { Home, Crown, LogOut, Settings, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
 import { MembershipBadge } from '@/components/EntitlementGuard';
-import { supabase } from '@/integrations/supabase/client';
+import { useIdentity } from '@/hooks/useIdentity';
 import { toast } from 'sonner';
-import { useState, useEffect } from 'react';
-import type { User } from '@supabase/supabase-js';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { redirectToCentralSubscribe } from '@/config/centralAuth';
 
@@ -36,27 +34,14 @@ export function PageHeader({
   rightSection
 }: PageHeaderProps) {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const { hasAccess, source: membershipSource, tier, loading: membershipLoading } = useUnifiedMembership('bazi-premium');
-  const { isAdmin } = useAdminStatus(user?.id);
+  const { email, clearEmail, hasIdentity } = useIdentity();
+  const { hasAccess, source: membershipSource, tier, loading: membershipLoading } = useUnifiedMembership();
+  // Admin 入口本地暫無 user id 可查；先停用（主站尚未提供 admin role 介接）
+  const { isAdmin } = useAdminStatus(undefined);
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    getUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("已登出");
+  const handleLogout = () => {
+    clearEmail();
+    toast.success("已清除身份");
     navigate("/auth");
   };
 
@@ -107,7 +92,7 @@ export function PageHeader({
             )}
             
             {/* 會員狀態 */}
-            {showMembershipBadge && user && !membershipLoading && (
+            {showMembershipBadge && hasIdentity && !membershipLoading && (
               hasAccess ? (
                 <MembershipBadge source={membershipSource} tier={tier} />
               ) : (
@@ -124,12 +109,26 @@ export function PageHeader({
               )
             )}
 
+            {/* 未設定身份 → 顯示前往設定 */}
+            {showMembershipBadge && !hasIdentity && (
+              <Button
+                onClick={() => navigate('/auth')}
+                variant="outline"
+                size="sm"
+                className="gap-1"
+              >
+                <UserRound className="h-3 w-3" />
+                設定身份
+              </Button>
+            )}
+
             {/* 登出按鈕 */}
-            {showLogout && user && (
+            {showLogout && hasIdentity && (
               <Button
                 onClick={handleLogout}
                 variant="ghost"
                 size="sm"
+                title={`清除身份（${email}）`}
               >
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -141,23 +140,8 @@ export function PageHeader({
   );
 }
 
-// Export user state for external components that need it
+// 向後相容：保留同名 hook 供舊頁面使用，回傳一個近似 user 物件（僅含 email）。
 export function usePageHeaderAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    getUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-  
-  return { user };
+  const { email } = useIdentity();
+  return { user: email ? ({ email, id: email } as { email: string; id: string }) : null };
 }

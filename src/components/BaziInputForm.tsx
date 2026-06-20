@@ -199,7 +199,7 @@ export const BaziInputForm = ({ onCalculate, isCalculating, userId }: BaziInputF
         const { data, error } = await supabase
           .from('bazi_calculations')
           .select('id, name, birth_date, birth_time, gender, location, hour_branch, created_at')
-          .eq('user_id', userId)
+          .eq('user_email', userId)
           .order('created_at', { ascending: false })
           .limit(10);
 

@@ -41,7 +41,7 @@ export function useStoryRegeneration(userId: string | undefined) {
       const { data, error } = await supabase
         .from('story_regeneration_credits')
         .select('credits_remaining, total_credits_purchased')
-        .eq('user_id', userId)
+        .eq('user_email', userId)
         .maybeSingle();
 
       if (error) throw error;
@@ -108,7 +108,7 @@ export function useStoryRegeneration(userId: string | undefined) {
       // 插入新故事
       const storyRecords = Object.entries(stories).map(([legionType, story]) => ({
         calculation_id: calculationId,
-        user_id: userId,
+        user_email: userId,
         legion_type: legionType,
         story,
         is_locked: true,
@@ -166,7 +166,7 @@ export function useStoryRegeneration(userId: string | undefined) {
         .from('legion_stories')
         .delete()
         .eq('calculation_id', calculationId)
-        .eq('user_id', userId);
+        .eq('user_email', userId);
 
       if (deleteError) throw deleteError;
 
@@ -177,7 +177,7 @@ export function useStoryRegeneration(userId: string | undefined) {
           credits_remaining: state.creditsRemaining - 1,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', userId);
+        .eq('user_email', userId);
 
       if (creditError) throw creditError;
 

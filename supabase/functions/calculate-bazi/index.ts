@@ -1057,7 +1057,7 @@ serve(async (req) => {
       }
     }
 
-    const { name, gender, birthDate, birthTime, location, useSolarTime, timezoneOffsetMinutes } = await req.json();
+    const { name, gender, birthDate, birthTime, location, useSolarTime, timezoneOffsetMinutes, userEmail } = await req.json();
 
     if (!name || !gender || !birthDate || !birthTime) {
       throw new Error('Missing required fields');
@@ -1178,11 +1178,13 @@ serve(async (req) => {
 
     // 僅在有登入用戶時保存到數據庫
     let calculationId = null;
-    if (user) {
+    // 寫入條件改為「有 userEmail（主站身份）」即可，不再依賴本地 auth.user
+    if (userEmail) {
       const { data: calculation, error: insertError } = await supabase
         .from('bazi_calculations')
         .insert({
-          user_id: user.id,
+          user_email: userEmail,
+          user_id: user?.id ?? null,
           name,
           gender,
           birth_date: birth.toISOString(),
@@ -1235,7 +1237,7 @@ serve(async (req) => {
           calculationLogs,
           dayPillarDebug  // 新增：日柱計算詳細 debug 資訊
         },
-        isGuest: !user
+        isGuest: !userEmail
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

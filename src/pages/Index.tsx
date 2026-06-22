@@ -688,25 +688,6 @@ const Index = () => {
       />
 
       <main className="mx-auto px-4 py-8 space-y-8 max-w-4xl lg:max-w-5xl xl:max-w-6xl">
-        {/* Guest Mode Alert */}
-        {isGuest && (
-          <Alert className="border-primary/50 bg-primary/5">
-            <UserRound className="h-4 w-4" />
-            <AlertDescription>
-              您正在使用訪客模式。
-              <Button
-                variant="link"
-                className="h-auto p-0 ml-1"
-                onClick={() => navigate("/auth")}
-              >
-                註冊帳戶
-              </Button>
-              以儲存您的計算歷史和享受完整功能。
-            </AlertDescription>
-          </Alert>
-        )}
-        
-
         {/* 區域1：資料輸入區 */}
         <section className="animate-fade-in space-y-4">
           <BaziInputForm onCalculate={handleCalculate} isCalculating={isCalculating} userId={user?.id} />

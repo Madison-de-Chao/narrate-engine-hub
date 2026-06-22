@@ -415,19 +415,6 @@ export const AiFortuneConsult: React.FC<AiFortuneConsultProps> = ({
                 <p className={`text-sm ${theme === 'dark' ? 'text-paper/60' : 'text-void/60'}`}>
                   請先登入以使用 AI 命理大師
                 </p>
-                <Button
-                  size="sm"
-                  onClick={() => navigate('/auth')}
-                  className={`
-                    ${theme === 'dark'
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-void hover:from-amber-400 hover:to-amber-300'
-                      : 'bg-gradient-to-r from-amber-500 to-amber-400 text-white hover:from-amber-400 hover:to-amber-300'
-                    }
-                  `}
-                >
-                  <LogIn className="w-4 h-4 mr-2" />
-                  登入
-                </Button>
               </div>
             )}
           </>

@@ -1,10 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { Home, Crown, LogOut, Settings, UserRound } from 'lucide-react';
+import { Home, Crown, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUnifiedMembership } from '@/hooks/useUnifiedMembership';
 import { MembershipBadge } from '@/components/EntitlementGuard';
 import { useIdentity } from '@/hooks/useIdentity';
-import { toast } from 'sonner';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { redirectToCentralSubscribe } from '@/config/centralAuth';
 
@@ -34,16 +33,10 @@ export function PageHeader({
   rightSection
 }: PageHeaderProps) {
   const navigate = useNavigate();
-  const { email, clearEmail, hasIdentity } = useIdentity();
+  const { hasIdentity } = useIdentity();
   const { hasAccess, source: membershipSource, tier, loading: membershipLoading } = useUnifiedMembership();
   // Admin 入口本地暫無 user id 可查；先停用（主站尚未提供 admin role 介接）
   const { isAdmin } = useAdminStatus(undefined);
-
-  const handleLogout = () => {
-    clearEmail();
-    toast.success("已清除身份");
-    navigate("/auth");
-  };
 
   return (
     <header className={`sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 ${className}`}>
@@ -107,31 +100,6 @@ export function PageHeader({
                 升級
               </Button>
               )
-            )}
-
-            {/* 未設定身份 → 顯示前往設定 */}
-            {showMembershipBadge && !hasIdentity && (
-              <Button
-                onClick={() => navigate('/auth')}
-                variant="outline"
-                size="sm"
-                className="gap-1"
-              >
-                <UserRound className="h-3 w-3" />
-                設定身份
-              </Button>
-            )}
-
-            {/* 登出按鈕 */}
-            {showLogout && hasIdentity && (
-              <Button
-                onClick={handleLogout}
-                variant="ghost"
-                size="sm"
-                title={`清除身份（${email}）`}
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
             )}
           </div>
         </div>

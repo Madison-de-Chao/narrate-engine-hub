@@ -188,7 +188,7 @@ const Home = () => {
           {/* Brand Badge */}
           <motion.div variants={itemVariants}>
             <Badge 
-              className="mb-4 sm:mb-6 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm bg-gradient-to-r from-primary/20 to-accent/20 border-primary/30 text-primary"
+              className="mb-4 sm:mb-6 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm bg-background/60 border border-primary/40 text-primary backdrop-blur-sm"
             >
               <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 sm:mr-1.5" />
               RSBZS v3.0 · 八字人生兵法

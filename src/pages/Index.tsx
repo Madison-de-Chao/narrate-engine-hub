@@ -441,13 +441,6 @@ const Index = () => {
   };
 
   const handleCalculate = async (formData: Record<string, unknown>) => {
-    // Guest users can calculate but won't save to database
-    if (!session && !isGuest) {
-      toast.error("請先登入");
-      navigate("/auth");
-      return;
-    }
-
     setCalculatingUserName(formData.name as string);
     setIsCalculating(true);
     

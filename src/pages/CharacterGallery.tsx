@@ -437,10 +437,7 @@ const CharacterGallery = () => {
                 className="text-center py-12"
               >
                 <Heart className="w-12 h-12 mx-auto mb-4 text-muted-foreground/30" />
-                <p className="text-muted-foreground mb-2">請先登入以使用收藏功能</p>
-                <Button variant="outline" onClick={() => window.location.href = '/auth'}>
-                  前往登入
-                </Button>
+                <p className="text-muted-foreground mb-2">收藏功能目前未開放</p>
               </motion.div>
             ) : favoritesLoading ? (
               <div className="text-center py-12">

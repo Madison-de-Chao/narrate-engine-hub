@@ -41,7 +41,6 @@
    { path: '/bazi', name: '八字解析', description: '輸入出生資訊，獲得完整八字分析報告（摘要/排盤/十神/神煞/性格/軍團/圖表/紀錄共 8 章節）', access: '公開', category: '核心' },
    { path: '/about', name: '關於我們', description: '品牌理念、系統特色、核心價值說明與團隊介紹', access: '公開', category: '品牌' },
    { path: '/subscribe', name: '訂閱方案', description: '會員方案（月/年訂閱）說明、故事重生資格購買與常見問題', access: '公開', category: '會員' },
-   { path: '/auth', name: '登入/註冊', description: '會員登入、註冊與密碼重設，支援登入鎖定保護機制', access: '公開', category: '會員' },
    { path: '/account', name: '會員中心', description: '個人資料編輯、訂閱狀態查看、報告歷史與收藏管理', access: '會員', category: '會員' },
    { path: '/gallery', name: '角色圖鑑', description: '22 個角色（10 天干指揮官 + 12 地支軍師）完整圖鑑，支援五行篩選、收藏、燈箱、比較', access: '公開', category: '內容' },
    { path: '/map', name: '導覽地圖', description: '系統功能視覺化導覽入口，以宇宙建築師風格呈現全站結構', access: '公開', category: '核心' },

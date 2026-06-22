@@ -51,13 +51,7 @@ export function EntitlementGuard({
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <Button
-              onClick={() => navigate(`/auth?return_to=${encodeURIComponent(window.location.pathname)}`)}
-              className="w-full"
-            >
-              前往設定身份
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/')} className="w-full">
+            <Button onClick={() => navigate('/')} className="w-full">
               返回首頁
             </Button>
           </CardContent>

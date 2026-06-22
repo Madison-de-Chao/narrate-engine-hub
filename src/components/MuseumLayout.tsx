@@ -30,7 +30,7 @@ interface MuseumLayoutProps {
 }
 
 // 不顯示博物館導覽條的路由
-const EXCLUDED_ROUTES = ['/admin', '/auth'];
+const EXCLUDED_ROUTES = ['/admin'];
 
 export const MuseumLayout: React.FC<MuseumLayoutProps> = ({ 
   children, 

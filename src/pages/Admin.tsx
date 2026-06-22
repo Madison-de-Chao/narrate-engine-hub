@@ -52,8 +52,8 @@ const Admin = () => {
             <CardDescription>請先登入才能訪問管理後台</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate('/auth')} className="w-full">
-              前往登入
+            <Button onClick={() => navigate('/')} className="w-full">
+              返回首頁
             </Button>
           </CardContent>
         </Card>

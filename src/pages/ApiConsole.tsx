@@ -227,8 +227,8 @@ const ApiConsole = () => {
             <CardDescription>您需要登入才能管理 API Keys</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <Button onClick={() => navigate('/auth')}>
-              前往登入
+            <Button onClick={() => navigate('/')}>
+              返回首頁
             </Button>
           </CardContent>
         </Card>

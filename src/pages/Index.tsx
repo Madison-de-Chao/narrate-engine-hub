@@ -666,24 +666,7 @@ const Index = () => {
           </div>
         }
         rightSection={
-          <>
-            {isGuest && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-1 rounded-md">
-                <UserRound className="h-4 w-4" />
-                <span>訪客模式</span>
-              </div>
-            )}
-            {(user || isGuest) && (
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                size="sm"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                {isGuest ? "退出訪客" : "登出"}
-              </Button>
-            )}
-          </>
+          null
         }
       />
 
